@@ -1,0 +1,11 @@
+api test:
+  image: maven:3.9.9-amazoncorretto-21
+  script:
+    - cd api
+    - mvn clean test
+  artifacts:
+    paths:
+      - api/target/reports/
+      - api/target/site/
+      - api/target/surefire-reports/
+
