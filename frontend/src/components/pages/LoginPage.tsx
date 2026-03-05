@@ -37,7 +37,7 @@ const LoginPage = () => {
       sx={{
         margin: 2,
         padding: 3,
-        backgroundColor: "primary.light",
+        backgroundColor: 'primary.light',
         borderRadius: 4,
         boxShadow: 2,
       }}
