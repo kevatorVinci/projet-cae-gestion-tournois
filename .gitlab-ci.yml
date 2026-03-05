@@ -9,3 +9,13 @@ api test:
       - api/target/site/
       - api/target/surefire-reports/
 
+frontend test:
+  image: node:20
+  script:
+    - cd frontend
+    - npm install
+    - npm run lint
+    - npm run coverage
+  artifacts:
+    paths:
+      - frontend/coverage/
