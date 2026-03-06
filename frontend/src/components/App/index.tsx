@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Navbar from './components/Navbar/Navbar';
-import HomePage from './components/pages/HomePage/HomePage';
+import Navbar from '../Navbar';
+import HomePage from '../pages/HomePage/HomePage';
 
 const App = () => (
   <Router>
