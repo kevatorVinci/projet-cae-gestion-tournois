@@ -20,9 +20,10 @@
     "@mui/material": "^6.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.23.1"
+    "react-router-dom": "^6.30.3"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.2.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
