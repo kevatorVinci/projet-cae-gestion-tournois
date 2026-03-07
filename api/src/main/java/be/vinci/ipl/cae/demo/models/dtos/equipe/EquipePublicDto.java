@@ -1,6 +1,6 @@
-package be.vinci.ipl.cae.demo.models.dtos.equipedto;
+package be.vinci.ipl.cae.demo.models.dtos.equipe;
 
-import be.vinci.ipl.cae.demo.models.dtos.membredto.MembrePublicDto;
+import be.vinci.ipl.cae.demo.models.dtos.membre.MembrePublicDto;
 import java.util.List;
 
 /**

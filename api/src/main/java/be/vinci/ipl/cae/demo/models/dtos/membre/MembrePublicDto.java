@@ -1,4 +1,4 @@
-package be.vinci.ipl.cae.demo.models.dtos.membredto;
+package be.vinci.ipl.cae.demo.models.dtos.membre;
 
 /**
  * DTO for public member information.

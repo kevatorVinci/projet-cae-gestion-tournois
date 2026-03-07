@@ -10,17 +10,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * Entité représentant un membre dans l'application.
  */
 @Entity
 @Table(name = "membres")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class Membre {
 

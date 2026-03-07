@@ -1,4 +1,4 @@
-package be.vinci.ipl.cae.demo.models.dtos.equipedto;
+package be.vinci.ipl.cae.demo.models.dtos.equipe;
 
 import jakarta.validation.constraints.NotBlank;
 

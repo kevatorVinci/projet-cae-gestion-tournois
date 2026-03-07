@@ -15,17 +15,15 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * Entité représentant une équipe dans l'application.
  */
 @Entity
 @Table(name = "equipes")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class Equipe {
 

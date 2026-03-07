@@ -1,7 +1,7 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.models.dtos.equipedto.EquipeCreationDto;
-import be.vinci.ipl.cae.demo.models.dtos.equipedto.EquipeJoinDto;
+import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeCreationDto;
+import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeJoinDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.Membre;
 import be.vinci.ipl.cae.demo.services.MembreService;
