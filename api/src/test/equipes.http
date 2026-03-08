@@ -1,0 +1,43 @@
+### ============================================================
+### equipes.http — Tests des endpoints Equipe
+### ============================================================
+
+@baseUrl = http://localhost:3000
+
+### Lister toutes les équipes
+GET {{baseUrl}}/equipes/
+
+### Récupérer une équipe par son id
+GET {{baseUrl}}/equipes/1
+
+### Créer une nouvelle équipe
+POST {{baseUrl}}/equipes/
+Content-Type: application/json
+
+{
+  "name": "Phoenix Rising"
+}
+
+### Créer une deuxième équipe
+POST {{baseUrl}}/equipes/
+Content-Type: application/json
+
+{
+  "name": "Iron Wolves"
+}
+
+### Créer une équipe avec un nom déjà existant (doit retourner 409 Conflict)
+POST {{baseUrl}}/equipes/
+Content-Type: application/json
+
+{
+  "name": "Les Invincibles"
+}
+
+### Créer une équipe avec un nom vide (doit retourner 400 Bad Request)
+POST {{baseUrl}}/equipes/
+Content-Type: application/json
+
+{
+  "name": ""
+}

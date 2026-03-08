@@ -1,0 +1,68 @@
+### ============================================================
+### membres.http — Tests des endpoints Membre
+### ============================================================
+
+@baseUrl = http://localhost:3000
+
+### Lister tous les membres
+GET {{baseUrl}}/membres/
+
+### Récupérer un membre par son id
+GET {{baseUrl}}/membres/1
+
+### Créer un nouveau membre (sans équipe)
+POST {{baseUrl}}/membres/
+Content-Type: application/json
+
+{
+  "mail": "nouveau@vinci.be",
+  "motDePasse": "password123",
+  "tagJeu": "NouveauTag",
+  "specialite": "architecte",
+  "estAdministrateur": false
+}
+
+### Créer un membre avec un mail déjà existant (doit retourner 409 Conflict)
+POST {{baseUrl}}/membres/
+Content-Type: application/json
+
+{
+  "mail": "alice@vinci.be",
+  "motDePasse": "password123",
+  "tagJeu": "DoubleTag",
+  "specialite": "gardien",
+  "estAdministrateur": false
+}
+
+### Créer un membre avec un mail vide (doit retourner 400 Bad Request)
+POST {{baseUrl}}/membres/
+Content-Type: application/json
+
+{
+  "mail": "",
+  "motDePasse": "password123",
+  "tagJeu": "BadTag",
+  "specialite": "gardien",
+  "estAdministrateur": false
+}
+
+### Créer une équipe via un membre existant
+### (le membre devient automatiquement responsable principal)
+POST {{baseUrl}}/membres/13/equipe/creer
+Content-Type: application/json
+
+{
+  "nomEquipe": "New Champions"
+}
+
+### Demander à rejoindre une équipe existante
+### (membre id=13 demande à rejoindre l'équipe id=1)
+POST {{baseUrl}}/membres/13/equipe/rejoindre/1
+
+### Demander à rejoindre une équipe alors qu'on en a déjà une
+### (doit retourner 409 Conflict)
+POST {{baseUrl}}/membres/1/equipe/rejoindre/2
+
+### Demander à rejoindre une équipe qui n'existe pas
+### (doit retourner 404 Not Found)
+POST {{baseUrl}}/membres/13/equipe/rejoindre/999
