@@ -40,7 +40,7 @@ public class User {
     private String team;
 
     @Column(nullable = false)
-    private java.time.LocalDate creationDate;
+    private LocalDate creationDate;
 
     public Long getId() {
         return id;
