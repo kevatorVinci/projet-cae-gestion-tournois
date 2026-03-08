@@ -10,6 +10,7 @@ import {
   Select,
   FormControl,
   InputLabel,
+  SelectChangeEvent,
 } from '@mui/material';
 
 export default function RegisterPage() {
@@ -149,8 +150,8 @@ export default function RegisterPage() {
           <Select
             value={specialty}
             label="Spécialité"
-            onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
-              setSpecialty(e.target.value as string)
+            onChange={(e: SelectChangeEvent<string>) =>
+              setSpecialty(e.target.value)
             }
           >
             {specialties.map((spec) => (
@@ -167,8 +168,8 @@ export default function RegisterPage() {
           <Select
             value={profileImage}
             label="Image de profil"
-            onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
-              setProfileImage(e.target.value as string)
+            onChange={(e: SelectChangeEvent<string>) =>
+              setProfileImage(e.target.value)
             }
           >
             {defaultImages.map((img) => (
