@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -10,36 +10,39 @@ import {
   Select,
   FormControl,
   InputLabel,
-} from "@mui/material";
+} from '@mui/material';
 
-/**
- * Composant RegisterPage
- * C'est la page visuelle où le futur membre va remplir ses informations pour s'inscrire.
- */
 export default function RegisterPage() {
   // Le "navigateur" nous permet de changer de page à la fin de l'inscription
   const navigate = useNavigate();
 
   // --- On prépare les "boîtes" (états) pour stocker ce que l'utilisateur tape ---
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [tag, setTag] = useState("");
-  const [specialty, setSpecialty] = useState("");
-  const [profileImage, setProfileImage] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // Pour afficher une erreur en rouge
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [tag, setTag] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [profileImage, setProfileImage] = useState('');
+  const [errorMessage, setErrorMessage] = useState(''); // Pour afficher une erreur en rouge
 
   // Les listes demandées par le client pour les choix
-  const specialties = ["architecte", "exécuteur", "tacticien", "gardien", "catalyseur", "perturbateur", "guérisseur"]; // 
-  const defaultImages = ["/images/avatar1.png", "/images/avatar2.png", "/images/avatar3.png"]; // [cite: 29]
+  const specialties = [
+    'architecte',
+    'exécuteur',
+    'tacticien',
+    'gardien',
+    'catalyseur',
+    'perturbateur',
+    'guérisseur',
+  ]; //
+  const defaultImages = [
+    '/images/avatar1.png',
+    '/images/avatar2.png',
+    '/images/avatar3.png',
+  ]; // [cite: 29]
 
-  /**
-   * Cette méthode s'active quand le joueur clique sur le bouton "S'inscrire".
-   *
-   * @param e "L'événement du formulaire, pour empêcher la page de se rafraîchir toute seule"
-   */
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault(); // On bloque le rechargement de la page
-    setErrorMessage(""); // On efface les anciennes erreurs
+    setErrorMessage(''); // On efface les anciennes erreurs
 
     // 1. On prépare le colis (les données) à envoyer à notre serveur IntelliJ
     const newUser = {
@@ -48,15 +51,15 @@ export default function RegisterPage() {
       tag: tag,
       specialty: specialty,
       profileImage: profileImage,
-      team: null // Pas de team au début comme on en a parlé !
+      team: null, // Pas de team au début comme on en a parlé !
     };
 
     try {
       // 2. On envoie le colis au serveur (au guichet AuthController qu'on a créé)
-      const response = await fetch("http://localhost:8080/auth/register", {
-        method: "POST",
+      const response = await fetch('http://localhost:8080/auth/register', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(newUser), // On transforme notre colis en texte (JSON)
       });
@@ -64,30 +67,45 @@ export default function RegisterPage() {
       // 3. On regarde la réponse du serveur
       if (response.ok) {
         // L'inscription a réussi ! On redirige vers la page de connexion comme demandé [cite: 305]
-        navigate("/login"); 
+        navigate('/login');
       } else if (response.status === 409) {
         // Erreur 409 = Conflit (Email déjà pris)
-        setErrorMessage("Cette adresse email est déjà utilisée."); // [cite: 304]
+        setErrorMessage('Cette adresse email est déjà utilisée.'); // [cite: 304]
       } else {
         // Autre erreur (ex: 400 Bad Request)
-        setErrorMessage("Erreur lors de l'inscription. Vérifiez vos informations."); // [cite: 304]
+        setErrorMessage(
+          "Erreur lors de l'inscription. Vérifiez vos informations.",
+        ); // [cite: 304]
       }
     } catch (error) {
-      setErrorMessage("Impossible de se connecter au serveur.");
+      setErrorMessage('Impossible de se connecter au serveur.');
     }
   };
 
   // --- Le rendu visuel de la page (HTML avec MUI) ---
   return (
-    <Box sx={{ maxWidth: 400, margin: "auto", mt: 5, padding: 3, boxShadow: 2, borderRadius: 2 }}>
+    <Box
+      sx={{
+        maxWidth: 400,
+        margin: 'auto',
+        mt: 5,
+        padding: 3,
+        boxShadow: 2,
+        borderRadius: 2,
+      }}
+    >
       <Typography variant="h4" gutterBottom>
         Inscription à Vinci Arena
       </Typography>
 
       {/* Si errorMessage n'est pas vide, on affiche une alerte rouge */}
-      {errorMessage && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
 
-      <form onSubmit={handleRegister}>
+      <Box component="form" onSubmit={handleRegister}>
         {/* Champ Email */}
         <TextField
           label="Adresse Email"
@@ -95,7 +113,9 @@ export default function RegisterPage() {
           margin="normal"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setEmail(e.target.value)
+          }
         />
 
         {/* Champ Mot de passe */}
@@ -106,7 +126,9 @@ export default function RegisterPage() {
           margin="normal"
           required
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setPassword(e.target.value)
+          }
         />
 
         {/* Champ Tag (Pseudo) */}
@@ -116,7 +138,9 @@ export default function RegisterPage() {
           margin="normal"
           required
           value={tag}
-          onChange={(e) => setTag(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setTag(e.target.value)
+          }
         />
 
         {/* Liste déroulante pour la Spécialité */}
@@ -125,7 +149,9 @@ export default function RegisterPage() {
           <Select
             value={specialty}
             label="Spécialité"
-            onChange={(e) => setSpecialty(e.target.value)}
+            onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
+              setSpecialty(e.target.value as string)
+            }
           >
             {specialties.map((spec) => (
               <MenuItem key={spec} value={spec}>
@@ -141,21 +167,29 @@ export default function RegisterPage() {
           <Select
             value={profileImage}
             label="Image de profil"
-            onChange={(e) => setProfileImage(e.target.value)}
+            onChange={(e: React.ChangeEvent<{ value: unknown }>) =>
+              setProfileImage(e.target.value as string)
+            }
           >
             {defaultImages.map((img) => (
               <MenuItem key={img} value={img}>
-                Image {img.replace("/images/avatar", "").replace(".png", "")}
+                Image {img.replace('/images/avatar', '').replace('.png', '')}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
 
         {/* Bouton pour valider */}
-        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 3 }}>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 3 }}
+        >
           S'inscrire
         </Button>
-      </form>
+      </Box>
     </Box>
   );
 }
