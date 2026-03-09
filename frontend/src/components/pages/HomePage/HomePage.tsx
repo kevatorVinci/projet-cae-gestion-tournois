@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -6,8 +7,9 @@ import {
   CardContent,
   Button,
 } from '@mui/material';
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType } from '../../../types';
 
-// Données pour tester
 const tournamentsEnCours = [
   {
     id: 1,
@@ -48,46 +50,49 @@ const tournamentsPassés = [
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
 
   return (
     <Container component="main" sx={{ mt: 4, mb: 4 }} maxWidth="lg">
-      {/* Slogan */}
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
         <Typography variant="h2" component="h1" gutterBottom>
           Where Genius Meets Battle
         </Typography>
         <Typography variant="h6" color="text.secondary" gutterBottom>
-          Rejoins la plateforme e-sport de Vinci Arena. Forme ta team,
-          inscris-toi aux tournois, domine l&apos;arène.
+          {authenticatedUser
+            ? "Rejoins les tournois et domine l'arène."
+            : "Rejoins la plateforme e-sport de Vinci Arena. Forme ta team, inscris-toi aux tournois, domine l'arène."}
         </Typography>
-        <div
-          style={{
-            display: 'flex',
-            gap: '16px',
-            justifyContent: 'center',
-            marginTop: '24px',
-          }}
-        >
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => navigate('/register')}
-            sx={{
-              backgroundColor: '#e8822a',
-              color: '#ffffff',
-              '&:hover': { backgroundColor: '#c86e20' },
+        {!authenticatedUser && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              justifyContent: 'center',
+              marginTop: '24px',
             }}
           >
-            S&apos;inscrire
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            onClick={() => navigate('/login')}
-          >
-            Se connecter
-          </Button>
-        </div>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate('/register')}
+              sx={{
+                backgroundColor: '#e8822a',
+                color: '#ffffff',
+                '&:hover': { backgroundColor: '#c86e20' },
+              }}
+            >
+              S&apos;inscrire
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => navigate('/login')}
+            >
+              Se connecter
+            </Button>
+          </div>
+        )}
       </div>
 
       <Typography variant="h4" component="h2" gutterBottom align="center">
@@ -95,7 +100,6 @@ const HomePage = () => {
       </Typography>
 
       <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
-        {/* Tournoi en cours */}
         <div style={{ flex: 1 }}>
           <Typography variant="h6" gutterBottom>
             Tournoi en cours
@@ -118,7 +122,6 @@ const HomePage = () => {
           ))}
         </div>
 
-        {/* Tournois à venir */}
         <div style={{ flex: 1 }}>
           <Typography variant="h6" gutterBottom>
             Tournoi à venir
@@ -145,7 +148,6 @@ const HomePage = () => {
           ))}
         </div>
 
-        {/* Tournois passés */}
         <div style={{ flex: 1 }}>
           <Typography variant="h6" gutterBottom>
             Tournois passés

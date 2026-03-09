@@ -45,7 +45,6 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
       setAuthenticatedUser(createdUser);
       storeAuthenticatedUser(createdUser);
-      console.log('createdUser: ', createdUser);
     } catch (err) {
       console.error('registerUser::error: ', err);
       throw err;
@@ -64,13 +63,13 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
       const response = await fetch('/api/auths/login', options);
 
-      if (!response.ok)
+      if (!response.ok) {
         throw new Error(
           `fetch error : ${response.status} : ${response.statusText}`,
         );
+      }
 
       const authenticatedUser: AuthenticatedUser = await response.json();
-      console.log('authenticatedUser: ', authenticatedUser);
 
       setAuthenticatedUser(authenticatedUser);
       storeAuthenticatedUser(authenticatedUser);
