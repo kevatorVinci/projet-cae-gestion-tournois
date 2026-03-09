@@ -6,26 +6,25 @@ import {
   TextField,
   Typography,
   Alert,
+  useTheme,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
   SelectChangeEvent,
 } from '@mui/material';
+import backgroundImage from '../../assets/images/background.png';
 
 export default function RegisterPage() {
-  // Le "navigateur" nous permet de changer de page à la fin de l'inscription
   const navigate = useNavigate();
-
-  // --- On prépare les "boîtes" (états) pour stocker ce que l'utilisateur tape ---
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tag, setTag] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [profileImage, setProfileImage] = useState('');
-  const [errorMessage, setErrorMessage] = useState(''); // Pour afficher une erreur en rouge
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Les listes demandées par le client pour les choix
   const specialties = [
     'architecte',
     'exécuteur',
@@ -34,162 +33,204 @@ export default function RegisterPage() {
     'catalyseur',
     'perturbateur',
     'guérisseur',
-  ]; //
+  ];
+
   const defaultImages = [
     '/images/avatar1.png',
     '/images/avatar2.png',
     '/images/avatar3.png',
-  ]; // [cite: 29]
+  ];
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault(); // On bloque le rechargement de la page
-    setErrorMessage(''); // On efface les anciennes erreurs
+    e.preventDefault();
+    setErrorMessage('');
 
-    // 1. On prépare le colis (les données) à envoyer à notre serveur IntelliJ
     const newUser = {
-      email: email,
-      password: password,
-      tag: tag,
-      specialty: specialty,
-      profileImage: profileImage,
-      team: null, // Pas de team au début comme on en a parlé !
+      email,
+      password,
+      tag,
+      specialty,
+      profileImage,
+      team: null,
     };
 
     try {
-      // 2. On envoie le colis au serveur (au guichet AuthController qu'on a créé)
-      const response = await fetch('http://localhost:8080/auth/register', {
+      const response = await fetch('/api/auths/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newUser), // On transforme notre colis en texte (JSON)
+        body: JSON.stringify(newUser),
       });
 
-      // 3. On regarde la réponse du serveur
       if (response.ok) {
-        // L'inscription a réussi ! On redirige vers la page de connexion comme demandé [cite: 305]
         navigate('/login');
       } else if (response.status === 409) {
-        // Erreur 409 = Conflit (Email déjà pris)
-        setErrorMessage('Cette adresse email est déjà utilisée.'); // [cite: 304]
+        setErrorMessage('Cette adresse email est déjà utilisée.');
       } else {
-        // Autre erreur (ex: 400 Bad Request)
         setErrorMessage(
           "Erreur lors de l'inscription. Vérifiez vos informations.",
-        ); // [cite: 304]
+        );
       }
-    } catch (error) {
+    } catch {
       setErrorMessage('Impossible de se connecter au serveur.');
     }
   };
 
-  // --- Le rendu visuel de la page (HTML avec MUI) ---
   return (
     <Box
       sx={{
-        maxWidth: 400,
-        margin: 'auto',
-        mt: 5,
-        padding: 3,
-        boxShadow: 2,
-        borderRadius: 2,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+        backgroundImage: `linear-gradient(rgba(8, 11, 20, 0.55), rgba(8, 11, 20, 0.55)), url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: 'background.default',
+        overflow: 'hidden',
       }}
     >
-      <Typography variant="h4" gutterBottom>
-        Inscription à Vinci Arena
-      </Typography>
+      <Box
+        sx={{
+          margin: 2,
+          padding: 3,
+          backgroundColor: '#1a2540',
+          borderRadius: 4,
+          boxShadow: 2,
+          width: '100%',
+          maxWidth: 400,
+        }}
+      >
+        <Typography variant="h5" color="white" textAlign="center" mb={3}>
+          Inscription
+        </Typography>
+        {errorMessage && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
 
-      {/* Si errorMessage n'est pas vide, on affiche une alerte rouge */}
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
-
-      <Box component="form" onSubmit={handleRegister}>
-        {/* Champ Email */}
-        <TextField
-          label="Adresse Email"
-          fullWidth
-          margin="normal"
-          required
-          value={email}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setEmail(e.target.value)
-          }
-        />
-
-        {/* Champ Mot de passe */}
-        <TextField
-          label="Mot de passe"
-          type="password"
-          fullWidth
-          margin="normal"
-          required
-          value={password}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setPassword(e.target.value)
-          }
-        />
-
-        {/* Champ Tag (Pseudo) */}
-        <TextField
-          label="Tag (Pseudo en jeu)"
-          fullWidth
-          margin="normal"
-          required
-          value={tag}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setTag(e.target.value)
-          }
-        />
-
-        {/* Liste déroulante pour la Spécialité */}
-        <FormControl fullWidth margin="normal" required>
-          <InputLabel>Spécialité</InputLabel>
-          <Select
-            value={specialty}
-            label="Spécialité"
-            onChange={(e: SelectChangeEvent<string>) =>
-              setSpecialty(e.target.value)
-            }
+        <Box component="form" onSubmit={handleRegister}>
+          <Box sx={{ marginBottom: 2 }}>
+            <TextField
+              label="Email"
+              type="email"
+              fullWidth
+              required
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              color="primary"
+              sx={{
+                input: { color: theme.palette.secondary.contrastText },
+              }}
+            />
+          </Box>
+          <Box sx={{ marginBottom: 2 }}>
+            <TextField
+              label="Password"
+              type="password"
+              fullWidth
+              required
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
+              color="primary"
+              sx={{
+                input: { color: theme.palette.secondary.contrastText },
+              }}
+            />
+          </Box>
+          <Box sx={{ marginBottom: 2 }}>
+            <TextField
+              label="Tag (Pseudo)"
+              fullWidth
+              required
+              value={tag}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setTag(e.target.value)
+              }
+              color="primary"
+              sx={{
+                input: { color: theme.palette.secondary.contrastText },
+              }}
+            />
+          </Box>
+          <Box sx={{ marginBottom: 2 }}>
+            <FormControl fullWidth required>
+              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                Spécialité
+              </InputLabel>
+              <Select
+                value={specialty}
+                label="Spécialité"
+                onChange={(e: SelectChangeEvent<string>) =>
+                  setSpecialty(e.target.value)
+                }
+                sx={{
+                  color: theme.palette.secondary.contrastText,
+                  '.MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
+                  },
+                }}
+              >
+                {specialties.map((spec) => (
+                  <MenuItem key={spec} value={spec}>
+                    {spec}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          <Box sx={{ marginBottom: 2 }}>
+            <FormControl fullWidth required>
+              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                Image de profil
+              </InputLabel>
+              <Select
+                value={profileImage}
+                label="Image de profil"
+                onChange={(e: SelectChangeEvent<string>) =>
+                  setProfileImage(e.target.value)
+                }
+                sx={{
+                  color: theme.palette.secondary.contrastText,
+                  '.MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
+                  },
+                }}
+              >
+                {defaultImages.map((img) => (
+                  <MenuItem key={img} value={img}>
+                    Avatar{' '}
+                    {img.replace('/images/avatar', '').replace('.png', '')}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{
+              backgroundColor: '#e8822a',
+              '&:hover': { backgroundColor: '#c86e20' },
+            }}
           >
-            {specialties.map((spec) => (
-              <MenuItem key={spec} value={spec}>
-                {spec}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Liste déroulante pour l'Image de Profil */}
-        <FormControl fullWidth margin="normal" required>
-          <InputLabel>Image de profil</InputLabel>
-          <Select
-            value={profileImage}
-            label="Image de profil"
-            onChange={(e: SelectChangeEvent<string>) =>
-              setProfileImage(e.target.value)
-            }
-          >
-            {defaultImages.map((img) => (
-              <MenuItem key={img} value={img}>
-                Image {img.replace('/images/avatar', '').replace('.png', '')}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Bouton pour valider */}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          sx={{ mt: 3 }}
-        >
-          S'inscrire
-        </Button>
+            S'inscrire
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
