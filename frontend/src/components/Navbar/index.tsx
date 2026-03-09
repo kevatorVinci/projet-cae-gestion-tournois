@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import { useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, Button, Typography } from '@mui/material';
-import logo from '../../assets/images/logo.png';
-
-const Navbar = () => {
-  const navigate = useNavigate();
-=======
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Button, Typography } from '@mui/material';
@@ -22,7 +14,6 @@ const Navbar = () => {
     clearUser();
     navigate('/');
   };
->>>>>>> origin/develop
 
   return (
     <AppBar position="static" sx={{ backgroundColor: '#1a2540' }}>
@@ -45,7 +36,6 @@ const Navbar = () => {
         <Button color="inherit" onClick={() => navigate('/teams')}>
           Teams
         </Button>
-<<<<<<< HEAD
         <Button color="inherit" onClick={() => navigate('/login')}>
           Connexion
         </Button>
@@ -61,7 +51,6 @@ const Navbar = () => {
         >
           Inscription
         </Button>
-=======
         {!authenticatedUser ? (
           <>
             <Button color="inherit" onClick={() => navigate('/login')}>
@@ -94,7 +83,6 @@ const Navbar = () => {
             Se déconnecter
           </Button>
         )}
->>>>>>> origin/develop
       </Toolbar>
     </AppBar>
   );

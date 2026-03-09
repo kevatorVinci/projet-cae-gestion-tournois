@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import { createContext, useState, ReactNode } from 'react';
 import {
   MaybeAuthenticatedUser,
@@ -99,4 +97,3 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export { UserContext, UserContextProvider };
->>>>>>> origin/develop

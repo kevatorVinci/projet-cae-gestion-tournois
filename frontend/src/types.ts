@@ -15,16 +15,6 @@ export interface MyTeamData extends Equipe {
   members: Membre[];
 }
 
-interface PizzeriaContext {
-  pizzas: Pizza[];
-  setPizzas: (pizzas: Pizza[]) => void;
-  actionToBePerformed: boolean;
-  setActionToBePerformed: (actionToBePerformed: boolean) => void;
-  clearActionToBePerformed: () => void;
-  drinks: Drink[];
-  addPizza: (newPizza: NewPizza) => Promise<void>;
-}
-
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
   registerUser: (newUser: User) => Promise<void>;
@@ -45,10 +35,6 @@ interface AuthenticatedUser {
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
 export type {
-  Pizza,
-  NewPizza,
-  Drink,
-  PizzeriaContext,
   User,
   AuthenticatedUser,
   MaybeAuthenticatedUser,
