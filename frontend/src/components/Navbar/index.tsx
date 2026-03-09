@@ -7,7 +7,8 @@ import { UserContextType } from '../../types';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { authenticatedUser, clearUser }: UserContextType = useContext(UserContext);
+  const { authenticatedUser, clearUser }: UserContextType =
+    useContext(UserContext);
 
   const handleLogout = () => {
     clearUser();
