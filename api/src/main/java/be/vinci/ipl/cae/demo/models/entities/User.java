@@ -6,26 +6,43 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
+import java.time.LocalDate;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * User entity.
+ * User entity representing a member of the Vinci Arena platform.
  */
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
 public class User {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
-  private String username;
+  @Column(unique = true, nullable = false)
+  private String email;
 
   @Column(nullable = false)
   private String password;
 
+  @Column(nullable = false)
+  private String tag;
+
+  @Column(nullable = false)
+  private String specialty;
+
+  @Column(nullable = false)
+  private String profileImageUrl;
+
+  @Column(nullable = true)
+  private String team;
+
+  @Column(nullable = false)
+  private LocalDate creationDate;
 }
