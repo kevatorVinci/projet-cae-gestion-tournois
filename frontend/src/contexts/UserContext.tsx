@@ -8,6 +8,7 @@ import {
 
 import {
   clearAuthenticatedUser,
+  getAuthenticatedUser,
   storeAuthenticatedUser,
 } from '../utils/session';
 
@@ -22,7 +23,7 @@ const UserContext = createContext<UserContextType>(defaultUserContext);
 
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUser] =
-    useState<MaybeAuthenticatedUser>(undefined);
+    useState<MaybeAuthenticatedUser>(getAuthenticatedUser());
 
   const registerUser = async (newUser: User) => {
     try {
@@ -51,7 +52,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const loginUser = async (user: User) => {
+  const loginUser = async (user: User, rememberMe: boolean) => {
     try {
       const options = {
         method: 'POST',
@@ -72,7 +73,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       const authenticatedUser: AuthenticatedUser = await response.json();
 
       setAuthenticatedUser(authenticatedUser);
-      storeAuthenticatedUser(authenticatedUser);
+      storeAuthenticatedUser(authenticatedUser, rememberMe);
     } catch (err) {
       console.error('loginUser::error: ', err);
       throw err;

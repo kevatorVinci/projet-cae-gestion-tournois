@@ -6,6 +6,8 @@ import {
   TextField,
   Typography,
   Alert,
+  Checkbox,
+  FormControlLabel,
   useTheme,
 } from '@mui/material';
 import { UserContextType } from '../../types';
@@ -17,6 +19,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const theme = useTheme();
 
@@ -24,7 +27,7 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       setError('');
-      await loginUser({ email, password });
+      await loginUser({ email, password }, rememberMe);
       navigate('/');
     } catch (err) {
       setError('Identifiants incorrects. Veuillez réessayer.');
@@ -40,6 +43,11 @@ const LoginPage = () => {
   const handlePasswordChange = (e: SyntheticEvent) => {
     const input = e.target as HTMLInputElement;
     setPassword(input.value);
+  };
+
+  const handleRememberMeChange = (e: SyntheticEvent) => {
+    const input = e.target as HTMLInputElement;
+    setRememberMe(input.checked);
   };
 
   return (
@@ -109,6 +117,19 @@ const LoginPage = () => {
               sx={{
                 input: { color: theme.palette.secondary.contrastText },
               }}
+            />
+          </Box>
+          <Box sx={{ marginBottom: 2 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={rememberMe}
+                  onChange={handleRememberMeChange}
+                  sx={{ color: theme.palette.secondary.contrastText }}
+                />
+              }
+              label="Se souvenir de moi"
+              sx={{ color: theme.palette.secondary.contrastText }}
             />
           </Box>
           <Button
