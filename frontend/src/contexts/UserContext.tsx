@@ -1,4 +1,4 @@
-import { createContext, useState, ReactNode } from 'react';
+import { createContext, useState, ReactNode, useEffect } from 'react';
 import {
   MaybeAuthenticatedUser,
   UserContextType,
@@ -10,6 +10,7 @@ import {
   clearAuthenticatedUser,
   getAuthenticatedUser,
   storeAuthenticatedUser,
+  isTokenExpired,
 } from '../utils/session';
 
 const defaultUserContext: UserContextType = {
@@ -42,10 +43,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
           `fetch error : ${response.status} : ${response.statusText}`,
         );
 
-      const createdUser: AuthenticatedUser = await response.json();
-
-      setAuthenticatedUser(createdUser);
-      storeAuthenticatedUser(createdUser);
+      await response.json();
     } catch (err) {
       console.error('registerUser::error: ', err);
       throw err;
@@ -84,6 +82,22 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     clearAuthenticatedUser();
     setAuthenticatedUser(undefined);
   };
+
+  useEffect(() => {
+    if (!authenticatedUser?.token) return;
+
+    const checkTokenExpiration = () => {
+      if (isTokenExpired(authenticatedUser.token)) {
+        clearUser();
+        window.location.href = '/login';
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiration, 60000);
+    checkTokenExpiration();
+
+    return () => clearInterval(interval);
+  }, [authenticatedUser]);
 
   const myContext: UserContextType = {
     authenticatedUser,

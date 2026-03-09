@@ -1,5 +1,15 @@
 import { AuthenticatedUser, MaybeAuthenticatedUser } from '../types';
 
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp * 1000;
+    return Date.now() >= exp;
+  } catch (e) {
+    return true;
+  }
+};
+
 const storeAuthenticatedUser = (
   authenticatedUser: AuthenticatedUser,
   rememberMe = true,
@@ -27,7 +37,14 @@ const getAuthenticatedUser = (): MaybeAuthenticatedUser => {
 
   if (!authenticatedUser) return undefined;
 
-  return JSON.parse(authenticatedUser);
+  const user: AuthenticatedUser = JSON.parse(authenticatedUser);
+
+  if (isTokenExpired(user.token)) {
+    clearAuthenticatedUser();
+    return undefined;
+  }
+
+  return user;
 };
 
 const clearAuthenticatedUser = () => {
@@ -35,4 +52,9 @@ const clearAuthenticatedUser = () => {
   sessionStorage.removeItem('authenticatedUser');
 };
 
-export { storeAuthenticatedUser, getAuthenticatedUser, clearAuthenticatedUser };
+export {
+  storeAuthenticatedUser,
+  getAuthenticatedUser,
+  clearAuthenticatedUser,
+  isTokenExpired,
+};
