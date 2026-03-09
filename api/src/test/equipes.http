@@ -4,40 +4,102 @@
 
 @baseUrl = http://localhost:3000
 
-### Lister toutes les équipes
+### ============================================================
+### 1. LISTER ET RÉCUPÉRER LES ÉQUIPES
+### ============================================================
+
+### Lister toutes les équipes (accès public)
 GET {{baseUrl}}/equipes/
 
-### Récupérer une équipe par son id
+### Récupérer une équipe par son id (accès public)
 GET {{baseUrl}}/equipes/1
 
-### Créer une nouvelle équipe
-POST {{baseUrl}}/equipes/
+### ============================================================
+### 2. CRÉER UNE ÉQUIPE
+### ============================================================
+
+### Alice (id=1) crée une nouvelle équipe
+POST {{baseUrl}}/equipes/1/equipes
 Content-Type: application/json
 
 {
   "name": "Phoenix Rising"
 }
 
-### Créer une deuxième équipe
-POST {{baseUrl}}/equipes/
+### Bob (id=2) crée une deuxième équipe
+POST {{baseUrl}}/equipes/2/equipes
 Content-Type: application/json
 
 {
   "name": "Iron Wolves"
 }
 
-### Créer une équipe avec un nom déjà existant (doit retourner 409 Conflict)
-POST {{baseUrl}}/equipes/
+### Emma (id=5) crée une équipe
+POST {{baseUrl}}/equipes/5/equipes
 Content-Type: application/json
 
 {
   "name": "Les Invincibles"
 }
 
+### Créer une équipe avec un nom déjà existant (doit retourner 409 Conflict)
+POST {{baseUrl}}/equipes/1/equipes
+Content-Type: application/json
+
+{
+  "name": "Phoenix Rising"
+}
+
 ### Créer une équipe avec un nom vide (doit retourner 400 Bad Request)
-POST {{baseUrl}}/equipes/
+POST {{baseUrl}}/equipes/1/equipes
 Content-Type: application/json
 
 {
   "name": ""
 }
+
+### ============================================================
+### 3. REJOINDRE UNE ÉQUIPE (CRÉER UNE DEMANDE)
+### ============================================================
+
+### Emma (id=5) demande à rejoindre Dragons (id=1)
+POST {{baseUrl}}/equipes/5/equipes/rejoindre
+Content-Type: application/json
+
+{
+  "equipeId": 1
+}
+
+### Frank (id=6) demande à rejoindre Phoenix (id=2)
+POST {{baseUrl}}/equipes/6/equipes/rejoindre
+Content-Type: application/json
+
+{
+  "equipeId": 2
+}
+
+### Carol (id=3) qui a déjà une équipe essaie de rejoindre une autre (doit retourner 409 Conflict)
+POST {{baseUrl}}/equipes/3/equipes/rejoindre
+Content-Type: application/json
+
+{
+  "equipeId": 2
+}
+
+### ============================================================
+### Notes pour les tests
+### ============================================================
+###
+### Structure des IDs (voir insert.sql) :
+### - ID 1 : Alice (responsable Dragons)
+### - ID 2 : Bob (responsable Phoenix)
+### - ID 3 : Carol (membre Dragons)
+### - ID 4 : David (membre Dragons)
+### - ID 5 : Emma (sans équipe)
+### - ID 6 : Frank (sans équipe)
+###
+### Équipes créées par défaut (dans insert.sql) :
+### - ID 1 : Dragons (Alice est responsable)
+### - ID 2 : Phoenix (Bob est responsable)
+
+

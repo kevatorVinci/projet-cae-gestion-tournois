@@ -1,0 +1,102 @@
+### ============================================================
+### demandes.http — Tests des endpoints de gestion des demandes
+### ============================================================
+
+@baseUrl = http://localhost:3000
+
+### ============================================================
+### 1. ACCEPTER UNE DEMANDE
+### ============================================================
+
+### Alice (responsable Dragons) accepte la demande d'Emma (id=1)
+### Retour : L'utilisateur Emma qui a été accepté
+POST {{baseUrl}}/demands/1/accepter
+Content-Type: application/json
+
+### Bob (responsable Phoenix) accepte la demande de Frank (id=2)
+POST {{baseUrl}}/demands/2/accepter
+Content-Type: application/json
+
+### ============================================================
+### 2. REFUSER UNE DEMANDE
+### ============================================================
+
+### Alice refuse la demande d'Emma (id=1) avec un motif
+POST {{baseUrl}}/demands/1/refuser
+Content-Type: application/json
+
+{
+  "raisonRefus": "Niveau insuffisant pour rejoindre l'équipe"
+}
+
+### Bob refuse la demande de Frank (id=2) avec un motif
+POST {{baseUrl}}/demands/2/refuser
+Content-Type: application/json
+
+{
+  "raisonRefus": "Pas de place disponible actuellement"
+}
+
+### Refuser une demande sans motif (raisonRefus = null)
+POST {{baseUrl}}/demands/1/refuser
+Content-Type: application/json
+
+{}
+
+### ============================================================
+### 3. GESTION DES ERREURS
+### ============================================================
+
+### Essayer d'accepter une demande inexistante (doit retourner 404 Not Found)
+POST {{baseUrl}}/demands/999/accepter
+Content-Type: application/json
+
+### Essayer de refuser une demande inexistante (doit retourner 404 Not Found)
+POST {{baseUrl}}/demands/999/refuser
+Content-Type: application/json
+
+{
+  "raisonRefus": "Non trouvée"
+}
+
+### Essayer d'accepter sans être responsable (403 Forbidden)
+### Carol (membre Dragons, id=3) essaie d'accepter la demande d'Emma
+POST {{baseUrl}}/demands/1/accepter
+Content-Type: application/json
+
+### Essayer de refuser sans être responsable (403 Forbidden)
+### Emma (id=5) essaie de refuser la demande
+POST {{baseUrl}}/demands/1/refuser
+Content-Type: application/json
+
+{
+  "raisonRefus": "Je refuse"
+}
+
+### ============================================================
+### Notes pour les tests
+### ============================================================
+###
+### Les demandes doivent être ACCEPTÉES et REFUSÉES par le responsable
+### principal ou le responsable secondaire de l'équipe UNIQUEMENT.
+###
+### Structure des IDs :
+### - Demande 1 : Emma demande Dragons
+### - Demande 2 : Frank demande Phoenix
+###
+### Responsables :
+### - Dragons : Alice (id=1)
+### - Phoenix : Bob (id=2)
+###
+### Statuts possibles des demandes :
+### - EN_ATTENTE : La demande n'a pas encore été traitée
+### - ACCEPTEE : La demande a été acceptée, l'utilisateur a été ajouté à l'équipe
+### - REFUSEE : La demande a été refusée avec un motif optionnel
+###
+### Codes HTTP attendus :
+### - 200 OK : L'action a réussi (accepter retourne l'utilisateur)
+### - 204 NO_CONTENT : La demande a été refusée (pas de contenu en retour)
+### - 400 Bad Request : Données mal formées
+### - 403 Forbidden : L'utilisateur n'est pas responsable de l'équipe
+### - 404 Not Found : La demande n'existe pas
+### - 401 Unauthorized : Non authentifié

@@ -46,7 +46,7 @@ public class Equipe {
    */
   @OneToMany(mappedBy = "equipe", fetch = FetchType.LAZY)
   @JsonManagedReference
-  private List<Membre> membres = new ArrayList<>();
+  private List<User> membres = new ArrayList<>();
 
   /**
    * Le membre désigné comme responsable principal de l'équipe. Relation stricte : 1 équipe maximum
@@ -55,7 +55,7 @@ public class Equipe {
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "primary_responsible_id", unique = true)
   @JsonIgnore
-  private Membre responsablePrincipal;
+  private User responsablePrincipal;
 
   /**
    * Le membre désigné comme responsable secondaire de l'équipe (optionnel). Relation stricte : 1
@@ -64,5 +64,5 @@ public class Equipe {
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "secondary_responsible_id", unique = true)
   @JsonIgnore
-  private Membre responsableSecondaire;
+  private User responsableSecondaire;
 }

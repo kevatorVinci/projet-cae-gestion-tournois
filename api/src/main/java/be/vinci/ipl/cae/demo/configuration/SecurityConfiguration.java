@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.configuration;
 import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,7 +34,7 @@ public class SecurityConfiguration {
   /**
    * FilterChain for the security configuration.
    *
-   * @param http the HttpSecurity.
+   * @param http        the HttpSecurity.
    * @param userService the UserService for JWT authentication.
    * @return the SecurityFilterChain.
    * @throws Exception the exception.
@@ -53,6 +54,7 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(authorize ->
             authorize
                 .requestMatchers("/auths/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/equipes", "/equipes/", "/equipes/**").permitAll()
                 .anyRequest().authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(exception -> exception

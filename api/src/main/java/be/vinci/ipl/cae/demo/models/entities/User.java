@@ -1,12 +1,15 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -40,9 +43,20 @@ public class User {
   @Column(nullable = false)
   private String profileImageUrl;
 
+  @Column(nullable = false)
+  private boolean estAdministrateur;
+
   @Column(nullable = true)
-  private String team;
+  private Long imageId;
 
   @Column(nullable = false)
-  private LocalDate creationDate;
+  private LocalDateTime dateCreationProfil;
+
+  /**
+   * Team membership relation.
+   */
+  @ManyToOne
+  @JoinColumn(name = "equipe_id")
+  @JsonBackReference
+  private Equipe equipe;
 }

@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service;
 
 /**
  * Service gérant la logique métier liée aux équipes.
- * <p>
- * Cette classe encapsule toutes les opérations possibles sur les équipes : - création d'une équipe
- * (avec vérification d'unicité du nom) - récupération de toutes les équipes - récupération d'une
- * équipe par son identifiant
- * <p>
- * Le service ne contient aucune logique liée à la base de données directement : il délègue au
+ *
+ * <p>Cette classe encapsule toutes les opérations possibles sur les équipes : - création d'une
+ * équipe (avec vérification d'unicité du nom) - récupération de toutes les équipes - récupération
+ * d'une équipe par son identifiant
+ *
+ * <p>Le service ne contient aucune logique liée à la base de données directement : il délègue au
  * repository, ce qui permet de le tester facilement via Mockito.
  */
 @Service

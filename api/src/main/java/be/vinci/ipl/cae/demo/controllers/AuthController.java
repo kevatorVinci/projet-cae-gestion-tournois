@@ -22,10 +22,11 @@ public class AuthController {
   /**
    * Constructor for AuthController.
    *
-   * @param userService the injected UserService.
+   * @param userService the injected UserService
    */
   public AuthController(UserService userService) {
     this.userService = userService;
+
   }
 
   /**

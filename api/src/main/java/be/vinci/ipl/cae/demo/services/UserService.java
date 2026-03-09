@@ -1,12 +1,15 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
+import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,16 +25,23 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final EquipeRepository equipeRepository;
+  private final DemandeService demandService;
 
   /**
    * Constructor.
    *
-   * @param passwordEncoder the password encoder
-   * @param userRepository  the user repository
+   * @param passwordEncoder  the password encoder
+   * @param userRepository   the user repository
+   * @param equipeRepository the team repository
+   * @param demandService    the demand service
    */
-  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
+      EquipeRepository equipeRepository, DemandeService demandService) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.equipeRepository = equipeRepository;
+    this.demandService = demandService;
   }
 
   /**
@@ -112,6 +122,58 @@ public class UserService {
   }
 
   /**
+   * Get a user by its id.
+   *
+   * @param id the user id
+   * @return optional user
+   */
+  public Optional<User> getById(Long id) {
+    return userRepository.findById(id);
+  }
+
+  /**
+   * Allows a user to create a team and become primary responsible.
+   *
+   * @param user      the creator
+   * @param nomEquipe team name
+   * @return created team or null when name already exists
+   */
+  public Equipe creerEquipe(User user, String nomEquipe) {
+    if (user.getEquipe() != null) {
+      throw new IllegalStateException("Le membre appartient deja a une equipe.");
+    }
+
+    if (equipeRepository.existsByName(nomEquipe)) {
+      return null;
+    }
+
+    User userPersisted = userRepository.save(user);
+
+    Equipe equipe = new Equipe();
+    equipe.setName(nomEquipe);
+    equipe.setResponsablePrincipal(userPersisted);
+    equipe.getMembres().add(userPersisted);
+
+    Equipe savedTeam = equipeRepository.save(equipe);
+    userPersisted.setEquipe(savedTeam);
+    userRepository.save(userPersisted);
+
+    return savedTeam;
+  }
+
+  /**
+   * Allows a user to request joining an existing team. Creates a join demand instead of directly
+   * adding user to team.
+   *
+   * @param user     user requesting to join
+   * @param equipeId target team id
+   */
+  public void demanderRejoindreEquipe(User user, Long equipeId) {
+    // Use the demand service to create a join request
+    demandService.creerDemande(user.getId(), equipeId);
+  }
+
+  /**
    * Create a new user.
    *
    * @param email    the email
@@ -125,7 +187,10 @@ public class UserService {
     user.setTag("");
     user.setSpecialty("");
     user.setProfileImageUrl("");
-    user.setCreationDate(LocalDate.now());
+    user.setEstAdministrateur(false);
+    user.setImageId(null);
+    user.setDateCreationProfil(LocalDateTime.now());
+    user.setEquipe(null);
     userRepository.save(user);
   }
 }
