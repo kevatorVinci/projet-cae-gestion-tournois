@@ -11,7 +11,15 @@ import {
   InputLabel,
   SelectChangeEvent,
   Grid,
+  // On importe les outils pour le bouton dans la case
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+
+// On importe les petits dessins de l'œil
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+
 import { UserContext } from '../../contexts/UserContext';
 
 import backgroundImage from '../../assets/images/background.png';
@@ -20,6 +28,7 @@ import pessiImg from '../../assets/images/imagesProfil/Pessi.jpg';
 import zoroImg from '../../assets/images/imagesProfil/R.png';
 import flashImg from '../../assets/images/imagesProfil/flash.jpg';
 import milesImg from '../../assets/images/imagesProfil/miles.jpg';
+
 export default function ProfilePage() {
   const { authenticatedUser } = useContext(UserContext);
 
@@ -27,6 +36,14 @@ export default function ProfilePage() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // --- NOUVEAU : La boîte pour savoir si on cache ou on montre le mot de passe 🫣 ---
+  const [showPassword, setShowPassword] = useState(false);
+
+  // --- NOUVEAU : La méthode qui change l'état de l'œil quand on clique dessus 🖱️ ---
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   // --- BOÎTES POUR L'IMAGE ET LA SPÉCIALITÉ ---
   const [specialty, setSpecialty] = useState(
@@ -122,6 +139,7 @@ export default function ProfilePage() {
                   flexWrap: 'wrap',
                 }}
               >
+                {/* On dessine chaque image de la liste */}
                 {defaultImages.map((img, index) => (
                   <Box
                     key={index}
@@ -173,6 +191,7 @@ export default function ProfilePage() {
                   <MenuItem value="" disabled>
                     <em>-- Sélectionner --</em>
                   </MenuItem>
+                  {/* On affiche chaque spécialité avec son petit émoji */}
                   {specialties.map((spec) => (
                     <MenuItem key={spec.name} value={spec.name}>
                       {spec.icon} {spec.name}
@@ -195,7 +214,8 @@ export default function ProfilePage() {
           <Box sx={{ mb: 2 }}>
             <TextField
               label="Mot de passe actuel"
-              type="password"
+              // On change le type de la case selon si on veut voir ou pas 👀
+              type={showPassword ? 'text' : 'password'}
               fullWidth
               placeholder="Requis pour changer de mot de passe"
               value={oldPassword}
@@ -205,6 +225,20 @@ export default function ProfilePage() {
                 backgroundColor: '#2a3b55',
                 borderRadius: 1,
               }}
+              // On ajoute le petit bouton avec l'œil à la fin de la case
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleClickShowPassword}
+                      edge="end"
+                      sx={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Box>
 
@@ -212,7 +246,7 @@ export default function ProfilePage() {
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Nouveau mot de passe"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 fullWidth
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -221,12 +255,25 @@ export default function ProfilePage() {
                   backgroundColor: '#2a3b55',
                   borderRadius: 1,
                 }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                        sx={{ color: 'rgba(255,255,255,0.7)' }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Confirmer le mot de passe"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 fullWidth
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -234,6 +281,19 @@ export default function ProfilePage() {
                   input: { color: 'white' },
                   backgroundColor: '#2a3b55',
                   borderRadius: 1,
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                        sx={{ color: 'rgba(255,255,255,0.7)' }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
                 }}
               />
             </Grid>
