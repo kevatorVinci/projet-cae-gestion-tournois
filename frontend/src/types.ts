@@ -1,52 +1,35 @@
-interface Pizza {
-  id: number;
-  title: string;
-  content: string;
+// --- LES VRAIS TYPES POUR VINCI ARENA ⚔️ ---
+
+interface User {
+  email: string;
+  password?: string;
+  tag?: string;
+  specialty?: string;
+  profileImage?: string;
+  team?: string | null;
 }
 
-type NewPizza = Omit<Pizza, 'id'>;
-
-interface Drink {
-  title: string;
-  image: string;
-  volume: string;
-  price: string;
+interface AuthenticatedUser {
+  email: string;
+  token: string;
+  // On ajoute les nouveautés dont ton profil a besoin !
+  tag?: string;
+  specialty?: string;
+  profileImage?: string;
 }
 
-interface PizzeriaContext {
-  pizzas: Pizza[];
-  setPizzas: (pizzas: Pizza[]) => void;
-  actionToBePerformed: boolean;
-  setActionToBePerformed: (actionToBePerformed: boolean) => void;
-  clearActionToBePerformed: () => void;
-  drinks: Drink[];
-  addPizza: (newPizza: NewPizza) => Promise<void>;
-}
+type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
 interface UserContextType {
+  // C'est ICI le fameux nom ! Ton joueur connecté s'appelle "authenticatedUser"
   authenticatedUser: MaybeAuthenticatedUser;
   registerUser: (newUser: User) => Promise<void>;
   loginUser: (user: User) => Promise<void>;
   clearUser: () => void;
 }
 
-interface User {
-  email: string;
-  password: string;
-}
-
-interface AuthenticatedUser {
-  email: string;
-  token: string;
-}
-
-type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
-
+// On n'exporte plus les pizzas !
 export type {
-  Pizza,
-  NewPizza,
-  Drink,
-  PizzeriaContext,
   User,
   AuthenticatedUser,
   MaybeAuthenticatedUser,
