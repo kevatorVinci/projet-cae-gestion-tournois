@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 // import { AuthenticatedUser, MaybeAuthenticatedUser } from '../types';
+=======
+import { AuthenticatedUser } from '../types';
+>>>>>>> origin/develop
 
 // const storeAuthenticatedUser = (authenticatedUser: AuthenticatedUser) => {
 //   localStorage.setItem('authenticatedUser', JSON.stringify(authenticatedUser));
 // };
 
+<<<<<<< HEAD
 // const getAuthenticatedUser = (): MaybeAuthenticatedUser => {
 //   const authenticatedUser = localStorage.getItem('authenticatedUser');
 
@@ -17,3 +22,10 @@
 // };
 
 // export { storeAuthenticatedUser, getAuthenticatedUser, clearAuthenticatedUser };
+=======
+const clearAuthenticatedUser = () => {
+  localStorage.removeItem('authenticatedUser');
+};
+
+export { storeAuthenticatedUser, clearAuthenticatedUser };
+>>>>>>> origin/develop

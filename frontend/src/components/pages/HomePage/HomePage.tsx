@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import { useContext } from 'react';
+>>>>>>> origin/develop
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -6,8 +10,14 @@ import {
   CardContent,
   Button,
 } from '@mui/material';
+<<<<<<< HEAD
 
 // Données pour tester
+=======
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType } from '../../../types';
+
+>>>>>>> origin/develop
 const tournamentsEnCours = [
   {
     id: 1,
@@ -48,15 +58,23 @@ const tournamentsPassés = [
 
 const HomePage = () => {
   const navigate = useNavigate();
+<<<<<<< HEAD
 
   return (
     <Container component="main" sx={{ mt: 4, mb: 4 }} maxWidth="lg">
       {/* Slogan */}
+=======
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
+
+  return (
+    <Container component="main" sx={{ mt: 4, mb: 4 }} maxWidth="lg">
+>>>>>>> origin/develop
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
         <Typography variant="h2" component="h1" gutterBottom>
           Where Genius Meets Battle
         </Typography>
         <Typography variant="h6" color="text.secondary" gutterBottom>
+<<<<<<< HEAD
           Rejoins la plateforme e-sport de Vinci Arena. Forme ta team,
           inscris-toi aux tournois, domine l&apos;arène.
         </Typography>
@@ -88,6 +106,42 @@ const HomePage = () => {
             Se connecter
           </Button>
         </div>
+=======
+          {authenticatedUser
+            ? "Rejoins les tournois et domine l'arène."
+            : "Rejoins la plateforme e-sport de Vinci Arena. Forme ta team, inscris-toi aux tournois, domine l'arène."}
+        </Typography>
+        {!authenticatedUser && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              justifyContent: 'center',
+              marginTop: '24px',
+            }}
+          >
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate('/register')}
+              sx={{
+                backgroundColor: '#e8822a',
+                color: '#ffffff',
+                '&:hover': { backgroundColor: '#c86e20' },
+              }}
+            >
+              S&apos;inscrire
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => navigate('/login')}
+            >
+              Se connecter
+            </Button>
+          </div>
+        )}
+>>>>>>> origin/develop
       </div>
 
       <Typography variant="h4" component="h2" gutterBottom align="center">
@@ -95,7 +149,10 @@ const HomePage = () => {
       </Typography>
 
       <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
+<<<<<<< HEAD
         {/* Tournoi en cours */}
+=======
+>>>>>>> origin/develop
         <div style={{ flex: 1 }}>
           <Typography variant="h6" gutterBottom>
             Tournoi en cours
@@ -118,7 +175,10 @@ const HomePage = () => {
           ))}
         </div>
 
+<<<<<<< HEAD
         {/* Tournois à venir */}
+=======
+>>>>>>> origin/develop
         <div style={{ flex: 1 }}>
           <Typography variant="h6" gutterBottom>
             Tournoi à venir
@@ -145,7 +205,10 @@ const HomePage = () => {
           ))}
         </div>
 
+<<<<<<< HEAD
         {/* Tournois passés */}
+=======
+>>>>>>> origin/develop
         <div style={{ flex: 1 }}>
           <Typography variant="h6" gutterBottom>
             Tournois passés
