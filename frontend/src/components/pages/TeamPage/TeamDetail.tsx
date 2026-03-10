@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { getEquipeById, type Equipe } from '../../../api/teams.ts';
+import { getEquipeById, type Equipe } from '../../../services/teams.ts';
 
 export default function TeamDetails() {
   const { id } = useParams<{ id: string }>();

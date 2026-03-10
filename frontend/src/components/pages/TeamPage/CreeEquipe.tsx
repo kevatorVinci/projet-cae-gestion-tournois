@@ -10,7 +10,7 @@ import {
   Stack,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { createEquipe } from '../../../api/teams';
+import { createEquipe } from '../../../services/teams';
 
 export function CreateEquipe() {
   const [teamName, setTeamName] = useState('');

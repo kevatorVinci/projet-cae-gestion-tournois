@@ -14,7 +14,7 @@ import {
   Paper,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { getAllEquipes, joinEquipe } from '../../../api/teams';
+import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import { Equipe } from '../../../types';
 
 export function RejoindreEquipe() {

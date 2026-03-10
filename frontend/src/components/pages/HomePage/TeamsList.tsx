@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { getAllEquipes } from '../../../api/teams.ts';
+import { getAllEquipes } from '../../../services/teams.ts';
 
 type TeamMember = {
   tag: string;
