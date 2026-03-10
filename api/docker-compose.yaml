@@ -8,3 +8,15 @@ services:
       POSTGRES_PASSWORD: cae
     ports:
       - "5432:5432"
+
+
+  backend:
+      build: .
+      ports:
+        - "3000:3000"
+      depends_on:
+        - db
+      environment:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/cae_db
+        SPRING_DATASOURCE_USERNAME: cae_user
+        SPRING_DATASOURCE_PASSWORD: cae
