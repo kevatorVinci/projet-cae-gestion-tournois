@@ -10,11 +10,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SuppressWarnings("PMD.UseUtilityClass")
 public class CaeApplication {
 
-  /**
-   * Main method to start the Spring Boot application.
-   *
-   * @param args command line arguments
-   */
   public static void main(String[] args) {
     SpringApplication.run(CaeApplication.class, args);
   }

@@ -6,8 +6,9 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +22,11 @@ public class UserService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
 
+
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+
   }
 
   /**
@@ -98,7 +101,20 @@ public class UserService {
   }
 
   /**
-   * Construit et sauvegarde le joueur dans la base de données avec les infos de React.
+   * Get a user by its id.
+   *
+   * @param id the user id
+   * @return optional user
+   */
+  public Optional<User> getById(Long id) {
+    return userRepository.findById(id);
+  }
+
+
+  /**
+   * Create a new user.
+   *
+   *          infos de React.
    */
   public User createOne(Credentials credentials) {
     // On cache le mot de passe pour la sécurité
@@ -115,7 +131,7 @@ public class UserService {
         credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
 
     // On note la date d'aujourd'hui comme date d'inscription
-    user.setCreationDate(LocalDate.now());
+    user.setDateCreationProfil(LocalDateTime.now());
 
     // On sauvegarde définitivement !
     return userRepository.save(user);
