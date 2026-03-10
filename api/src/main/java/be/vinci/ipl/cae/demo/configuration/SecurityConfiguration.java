@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -19,14 +18,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity()
 public class SecurityConfiguration {
 
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
   /**
-   * Bean for BCryptPasswordEncoder.
+   * Constructor for SecurityConfiguration.
    *
-   * @return the BCryptPasswordEncoder instance.
+   * @param jwtAuthenticationFilter the injected JwtAuthenticationFilter.
    */
-  @Bean
-  public BCryptPasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
+  public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
   }
 
   /**

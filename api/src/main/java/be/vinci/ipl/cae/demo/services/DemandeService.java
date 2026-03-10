@@ -8,6 +8,7 @@ import be.vinci.ipl.cae.demo.repositories.DemandeRepository;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 /**
@@ -61,6 +62,15 @@ public class DemandeService {
       throw new RuntimeException("L'equipe n'a aucun responsable.");
     }
 
+    if (!isEquipeEligibleForJoin(equipe)) {
+      throw new RuntimeException("Cette equipe n'est plus disponible pour les demandes.");
+    }
+
+    if (demandeRepo.existsByMembreIdAndEquipeIdAndEtat(
+        membreId, equipeId, EtatDemande.EN_ATTENTE)) {
+      throw new RuntimeException("Une demande en attente existe deja pour cette equipe.");
+    }
+
     Demande demande = new Demande();
     demande.setMembre(membre);
     demande.setEquipe(equipe);
@@ -77,6 +87,12 @@ public class DemandeService {
    * @return Une collection itérable contenant uniquement les demandes au statut EN_ATTENTE.
    */
   public Iterable<Demande> getDemandesEnAttentePourEquipe(Long equipeId) {
+    Equipe equipe = equipeRepo.findById(equipeId).orElse(null);
+    if (equipe != null && !isEquipeEligibleForJoin(equipe)) {
+      // Nettoyage defensif: evite des notifications orphelines pour une equipe invalide.
+      demandeRepo.deleteByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
+      return List.of();
+    }
     return demandeRepo.findByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
   }
 
@@ -93,14 +109,25 @@ public class DemandeService {
     Demande demande = getAndVerifyDemande(demandeId, currentUser);
     Equipe equipe = demande.getEquipe();
 
+    if (!isEquipeEligibleForJoin(equipe)) {
+      throw new RuntimeException("L'equipe cible n'est plus disponible.");
+    }
+
     demande.setEtat(EtatDemande.ACCEPTEE);
     demande.setDateTraitement(LocalDateTime.now());
 
-    User membre = demande.getMembre();
-    membre.setEquipe(equipe);
-    equipe.getMembres().add(membre);
-    userRepo.save(membre);
+    User user = demande.getMembre();
+    if (user.getEquipe() != null) {
+      throw new RuntimeException("Le joueur appartient deja a une equipe.");
+    }
+
+    user.setEquipe(equipe);
+    equipe.getMembres().add(user);
+    userRepo.save(user);
     equipeRepo.save(equipe);
+
+    // Toutes les autres demandes en attente de ce user deviennent obsoletes.
+    demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
 
     return demandeRepo.save(demande);
   }
@@ -165,5 +192,12 @@ public class DemandeService {
     if (!isPrincipal && !isSecondaire) {
       throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
     }
+  }
+
+  private boolean isEquipeEligibleForJoin(Equipe equipe) {
+    if (equipe == null) {
+      return false;
+    }
+    return equipe.getResponsablePrincipal() != null || equipe.getResponsableSecondaire() != null;
   }
 }

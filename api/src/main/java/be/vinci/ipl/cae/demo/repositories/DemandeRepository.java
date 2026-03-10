@@ -12,13 +12,29 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DemandeRepository extends JpaRepository<Demande, Long> {
 
-  // 🔍 Trouver toutes les demandes reçues par une équipe spécifique
+  /**
+   * Find all demands for a team.
+   *
+   * @param equipeId team id
+   * @return demands for the team
+   */
   Iterable<Demande> findByEquipeId(Long equipeId);
 
   //   🔍 Trouver toutes les candidatures envoyées par un joueur spécifique
   Iterable<Demande> findByMembreId(Long membreId);
 
-  // 🔍 Trouver les demandes d'une équipe selon leur statut
-  // (ex: Que les "EN_ATTENTE")
+  /**
+   * Find team demands by state.
+   *
+   * @param equipeId team id
+   * @param etat target state
+   * @return matching demands
+   */
   Iterable<Demande> findByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
+
+  boolean existsByMembreIdAndEquipeIdAndEtat(Long membreId, Long equipeId, EtatDemande etat);
+
+  void deleteByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
+
+  void deleteByMembreIdAndEtat(Long membreId, EtatDemande etat);
 }

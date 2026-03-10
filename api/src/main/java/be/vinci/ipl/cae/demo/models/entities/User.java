@@ -41,11 +41,8 @@ public class User {
   @Column(nullable = false)
   private String profileImageUrl;
 
-  @Column(nullable = false)
-  private boolean estAdministrateur;
-
   @Column(nullable = true)
-  private Long imageId;
+  private String team;
 
   @Column(nullable = false)
   private LocalDateTime dateCreationProfil;

@@ -12,6 +12,7 @@ import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/** Service for user authentication and profile management. */
 @Service
 public class UserService {
 
@@ -59,6 +60,12 @@ public class UserService {
     return authenticatedUser;
   }
 
+  /**
+   * Verify and decode a JWT token.
+   *
+   * @param token JWT token
+   * @return user email when token is valid, otherwise null
+   */
   public String verifyJwtToken(String token) {
     try {
       return JWT.require(ALGORITHM).build().verify(token).getClaim("email").asString();
@@ -91,14 +98,20 @@ public class UserService {
     return createJwtToken(newUser.getEmail());
   }
 
+  /**
+   * Read a user by email.
+   *
+   * @param email user email
+   * @return user or null
+   */
   public User readOneFromEmail(String email) {
     return userRepository.findByEmail(email);
   }
 
   /**
-   * Get a user by its id.
+   * Get a user by id.
    *
-   * @param id the user id
+   * @param id user id
    * @return optional user
    */
   public Optional<User> getById(Long id) {
@@ -124,7 +137,7 @@ public class UserService {
     user.setProfileImageUrl(
         credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
 
-    // On note la date d'aujourd'hui comme date d'inscription
+    // On note la date/heure actuelle comme date d'inscription
     user.setDateCreationProfil(LocalDateTime.now());
 
     // On sauvegarde définitivement !

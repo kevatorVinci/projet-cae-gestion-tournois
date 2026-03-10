@@ -9,6 +9,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EquipeRepository extends CrudRepository<Equipe, Long> {
 
+  /**
+   * Find a team by name.
+   *
+   * @param name team name
+   * @return optional team
+   */
   Optional<Equipe> findByName(String name);
 
   Iterable<Equipe> findByMembresIsNotEmpty();

@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/** AuthController to handle user authentication. */
+/**
+ * AuthController to handle user authentication.
+ */
 @RestController
 @RequestMapping("/auths")
 public class AuthController {
@@ -21,7 +23,7 @@ public class AuthController {
   /**
    * Constructor for AuthController.
    *
-   * @param userService the injected UserService
+   * @param userService the injected UserService.
    */
   public AuthController(UserService userService) {
     this.userService = userService;
@@ -35,6 +37,12 @@ public class AuthController {
         || credentials.getPassword().isBlank();
   }
 
+  /**
+   * Register a new user.
+   *
+   * @param credentials register payload
+   * @return authenticated user with token
+   */
   @PostMapping("/register")
   public AuthenticatedUser register(@RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
@@ -48,6 +56,12 @@ public class AuthController {
     return user;
   }
 
+  /**
+   * Authenticate an existing user.
+   *
+   * @param credentials login payload
+   * @return authenticated user with token
+   */
   @PostMapping("/login")
   public AuthenticatedUser login(@RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
