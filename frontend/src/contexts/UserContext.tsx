@@ -90,10 +90,10 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       // On prend l'ancien joueur, et on lui colle les nouvelles informations par-dessus
       const newUserData = { ...authenticatedUser, ...updatedData };
 
-      // On met à jour l'écran immédiatement (pour la Navbar)
       setAuthenticatedUser(newUserData);
-      // On sauvegarde dans le navigateur pour ne pas le perdre si on rafraîchit la page
-      storeAuthenticatedUser(newUserData);
+
+      const isRemembered = localStorage.getItem('authenticatedUser') !== null;
+      storeAuthenticatedUser(newUserData, isRemembered);
     }
   };
 

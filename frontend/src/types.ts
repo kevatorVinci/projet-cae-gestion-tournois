@@ -19,10 +19,10 @@ interface AuthenticatedUser {
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
 interface UserContextType {
-  // C'est ICI le fameux nom ! Ton joueur connecté s'appelle "authenticatedUser"
   authenticatedUser: MaybeAuthenticatedUser;
   registerUser: (newUser: User) => Promise<void>;
-  loginUser: (user: User) => Promise<void>;
+
+  loginUser: (user: User, rememberMe: boolean) => Promise<void>;
   clearUser: () => void;
   updateUser: (updatedData: Partial<AuthenticatedUser>) => void;
 }
