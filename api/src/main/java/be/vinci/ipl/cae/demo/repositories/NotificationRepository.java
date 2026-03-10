@@ -1,31 +1,35 @@
 package be.vinci.ipl.cae.demo.repositories;
 
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import be.vinci.ipl.cae.demo.models.entities.Notification;
-
-/**
- * Repository for managing notifications in the database.
- */
+/** Repository for managing notifications in the database. */
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
   /**
-   * Finds all notifications for a given member.
+   * Finds all notifications for a given user.
    *
-   * @param idMembre the ID of the member
-   * @return list of notifications belonging to the member
+   * @param userId the user id
+   * @return list of notifications belonging to the user
    */
-  List<Notification> findByMembreIdMembre(Long idMembre);
+  List<Notification> findByUserId(Long userId);
 
   /**
-   * Finds all notifications for a given member filtered by read status.
+   * Finds all notifications for a given user filtered by read status.
    *
-   * @param idMembre the ID of the member
+   * @param userId the user id
    * @param estLue whether the notification has been read
    * @return list of notifications matching the criteria
    */
-  List<Notification> findByMembreIdMembreAndEstLue(Long idMembre, Boolean estLue);
+  List<Notification> findByUserIdAndEstLue(Long userId, Boolean estLue);
+
+  /**
+   * Delete all notifications for a user.
+   *
+   * @param userId the user id
+   */
+  void deleteByUserId(Long userId);
 }

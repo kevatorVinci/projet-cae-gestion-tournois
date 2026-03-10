@@ -12,14 +12,54 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DemandeRepository extends JpaRepository<Demande, Long> {
 
-  // 🔍 Trouver toutes les demandes reçues par une équipe spécifique
+  /**
+   * Find all demands for a team.
+   *
+   * @param equipeId team id
+   * @return demands for the team
+   */
   Iterable<Demande> findByEquipeId(Long equipeId);
 
-  // 🔍 Trouver toutes les candidatures envoyées par un joueur spécifique
+  /**
+   * Find all demands created by a user.
+   *
+   * @param membreId user id
+   * @return demands created by this user
+   */
   Iterable<Demande> findByMembreId(Long membreId);
 
-  // 🔍 Trouver les demandes d'une équipe selon leur statut
-  // (ex: Que les "EN_ATTENTE")
+  /**
+   * Find team demands by state.
+   *
+   * @param equipeId team id
+   * @param etat target state
+   * @return matching demands
+   */
   Iterable<Demande> findByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
 
+  /**
+   * Check whether an equivalent pending demand already exists.
+   *
+   * @param membreId user id
+   * @param equipeId team id
+   * @param etat demand state
+   * @return true when a match exists
+   */
+  boolean existsByMembreIdAndEquipeIdAndEtat(Long membreId, Long equipeId, EtatDemande etat);
+
+  /**
+   * Delete all demands by team and state.
+   *
+   * @param equipeId team id
+   * @param etat demand state
+   */
+  void deleteByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
+
+  /**
+   * Delete all demands by user and state.
+   *
+   * @param membreId user id
+   * @param etat demand state
+   */
+  void deleteByMembreIdAndEtat(Long membreId, EtatDemande etat);
 }

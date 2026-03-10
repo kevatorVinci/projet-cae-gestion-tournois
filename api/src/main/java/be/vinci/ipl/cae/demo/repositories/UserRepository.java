@@ -4,9 +4,7 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * User repository.
- */
+/** User repository. */
 @Repository
 public interface UserRepository extends CrudRepository<User, Long> {
 

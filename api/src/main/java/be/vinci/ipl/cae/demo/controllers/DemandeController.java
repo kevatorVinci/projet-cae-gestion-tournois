@@ -15,9 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * REST controller for managing join demands (Demande).
- */
+/** REST controller for managing join demands (Demande). */
 @RestController
 @RequestMapping("/demands")
 public class DemandeController {
@@ -45,16 +43,12 @@ public class DemandeController {
     throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
   }
 
-  /**
-   * Accept a join demand (equipe responsible only).
-   */
+  /** Accept a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/accepter")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("isAuthenticated()")
   public User accepterDemande(
-      @PathVariable Long demandeId,
-      @AuthenticationPrincipal User currentUser
-  ) {
+      @PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
     try {
       Demande demande = demandeService.accepterDemande(demandeId, currentUser);
       return demande.getMembre();
@@ -64,17 +58,14 @@ public class DemandeController {
     }
   }
 
-  /**
-   * Reject a join demand (equipe responsible only).
-   */
+  /** Reject a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/refuser")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void refuserDemande(
       @PathVariable Long demandeId,
       @RequestBody(required = false) Map<String, String> body,
-      @AuthenticationPrincipal User currentUser
-  ) {
+      @AuthenticationPrincipal User currentUser) {
     try {
       String raisonRefus = (body != null) ? body.get("raisonRefus") : null;
       demandeService.refuserDemande(demandeId, raisonRefus, currentUser);
@@ -83,5 +74,3 @@ public class DemandeController {
     }
   }
 }
-
-

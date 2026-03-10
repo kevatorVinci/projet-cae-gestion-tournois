@@ -20,11 +20,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class EquipeServiceTest {
 
-  @Mock
-  private EquipeRepository equipeRepository;
+  @Mock private EquipeRepository equipeRepository;
 
-  @InjectMocks
-  private EquipeService equipeService;
+  @InjectMocks private EquipeService equipeService;
 
   // -------------------------------
   // getAllEquipes()

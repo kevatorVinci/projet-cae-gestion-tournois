@@ -28,10 +28,12 @@ public class EquipeService {
    * Constructeur injectant les repositories et services.
    *
    * @param equipeRepository le repository permettant d'accéder aux données persistées
-   * @param userRepository   the user repository
-   * @param demandService    the demand service
+   * @param userRepository the user repository
+   * @param demandService the demand service
    */
-  public EquipeService(EquipeRepository equipeRepository, UserRepository userRepository,
+  public EquipeService(
+      EquipeRepository equipeRepository,
+      UserRepository userRepository,
       DemandeService demandService) {
     this.equipeRepository = equipeRepository;
     this.userRepository = userRepository;
@@ -60,7 +62,7 @@ public class EquipeService {
   /**
    * Allows a user to create a team and become primary responsible.
    *
-   * @param user      the creator
+   * @param user the creator
    * @param nomEquipe team name
    * @return created team or null when name already exists
    */
@@ -91,7 +93,7 @@ public class EquipeService {
    * Allows a user to request joining an existing team. Creates a join demand instead of directly
    * adding user to team.
    *
-   * @param user     user requesting to join
+   * @param user user requesting to join
    * @param equipeId target team id
    */
   public void demanderRejoindreEquipe(User user, Long equipeId) {

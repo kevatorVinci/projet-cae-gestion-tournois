@@ -1,5 +1,5 @@
 package be.vinci.ipl.cae.demo.models.dtos;
 
-public class NotificationDTO {
-
-}
+/** Empty DTO placeholder for notification responses. */
+@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
+public class NotificationDTO {}

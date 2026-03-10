@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-// models/Notification.java
+/** Notification entity linked to a user. */
 @Entity
 @Table(name = "notification")
 public class Notification {
@@ -24,13 +24,13 @@ public class Notification {
   // New field for notification type (e.g., 'success', 'event')
   private String type;
 
-  @Column(name = "title", nullable = false)  // New field for notification title
+  @Column(name = "title", nullable = false) // New field for notification title
   private String title;
 
   @Column(name = "message", nullable = false)
   private String message;
 
-  @Column(name = "reason")  // New field for optional reason (e.g., for errors)
+  @Column(name = "reason") // New field for optional reason (e.g., for errors)
   private String reason;
 
   @Column(name = "date_envoi", nullable = false)
@@ -44,7 +44,7 @@ public class Notification {
 
   @ManyToOne
   @JoinColumn(name = "id_membre", nullable = false)
-  private Membre membre;
+  private User user;
 
   // Getters and setters (add these for all fields)
   public Long getIdNotification() {
@@ -111,11 +111,11 @@ public class Notification {
     this.dateLecture = dateLecture;
   }
 
-  public Membre getMembre() {
-    return membre;
+  public User getUser() {
+    return user;
   }
 
-  public void setMembre(Membre membre) {
-    this.membre = membre;
+  public void setUser(User user) {
+    this.user = user;
   }
 }

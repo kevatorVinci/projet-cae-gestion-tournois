@@ -8,9 +8,11 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/** Service for user authentication and profile management. */
 @Service
 public class UserService {
 
@@ -21,21 +23,28 @@ public class UserService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
 
+  /**
+   * Constructor.
+   *
+   * @param passwordEncoder password encoder bean
+   * @param userRepository user repository
+   */
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
   }
 
   /**
-   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site.
-   * Il récupère aussi la photo et la spécialité pour les afficher.
+   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site. Il récupère aussi
+   * la photo et la spécialité pour les afficher.
    */
   public AuthenticatedUser createJwtToken(String email) {
     // 1. On cherche le joueur dans la base de données grâce à son email
     User user = userRepository.findByEmail(email);
 
     // 2. On crée le ticket secret (le Token)
-    String token = JWT.create()
+    String token =
+        JWT.create()
             .withIssuer("auth0")
             .withClaim("email", email)
             .withIssuedAt(new Date())
@@ -57,6 +66,12 @@ public class UserService {
     return authenticatedUser;
   }
 
+  /**
+   * Verify and decode a JWT token.
+   *
+   * @param token JWT token
+   * @return user email when token is valid, otherwise null
+   */
   public String verifyJwtToken(String token) {
     try {
       return JWT.require(ALGORITHM).build().verify(token).getClaim("email").asString();
@@ -65,9 +80,7 @@ public class UserService {
     }
   }
 
-  /**
-   * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
-   */
+  /** Vérifie si le mot de passe est bon quand un joueur essaie de se connecter. */
   public AuthenticatedUser login(String email, String password) {
     User user = userRepository.findByEmail(email);
     if (user == null) {
@@ -80,9 +93,7 @@ public class UserService {
     return createJwtToken(email);
   }
 
-  /**
-   * Inscrit un tout nouveau joueur dans la base de données.
-   */
+  /** Inscrit un tout nouveau joueur dans la base de données. */
   public AuthenticatedUser register(Credentials credentials) {
     User user = userRepository.findByEmail(credentials.getEmail());
     if (user != null) {
@@ -93,13 +104,27 @@ public class UserService {
     return createJwtToken(newUser.getEmail());
   }
 
+  /**
+   * Read a user by email.
+   *
+   * @param email user email
+   * @return user or null
+   */
   public User readOneFromEmail(String email) {
     return userRepository.findByEmail(email);
   }
 
   /**
-   * Construit et sauvegarde le joueur dans la base de données avec les infos de React.
+   * Get a user by id.
+   *
+   * @param id user id
+   * @return optional user
    */
+  public Optional<User> getById(Long id) {
+    return userRepository.findById(id);
+  }
+
+  /** Construit et sauvegarde le joueur dans la base de données avec les infos de React. */
   public User createOne(Credentials credentials) {
     // On cache le mot de passe pour la sécurité
     String hashedPassword = passwordEncoder.encode(credentials.getPassword());
@@ -111,7 +136,8 @@ public class UserService {
     // On lie les données reçues de React (spécialité, image, etc.)
     user.setTag(credentials.getTag() != null ? credentials.getTag() : "");
     user.setSpecialty(credentials.getSpecialty() != null ? credentials.getSpecialty() : "");
-    user.setProfileImageUrl(credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
+    user.setProfileImageUrl(
+        credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
 
     // On note la date d'aujourd'hui comme date d'inscription
     user.setCreationDate(LocalDate.now());
@@ -120,10 +146,9 @@ public class UserService {
     return userRepository.save(user);
   }
 
-  /**
-   * Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe).
-   */
-  public AuthenticatedUser updateProfile(String email, String specialty, String profileImage, String oldPassword, String newPassword) {
+  /** Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe). */
+  public AuthenticatedUser updateProfile(
+      String email, String specialty, String profileImage, String oldPassword, String newPassword) {
     // 1. On retrouve le joueur grâce à son email
     User user = userRepository.findByEmail(email);
 
@@ -133,7 +158,10 @@ public class UserService {
       user.setProfileImageUrl(profileImage);
 
       // 3. On vérifie s'il veut changer de mot de passe
-      if (oldPassword != null && !oldPassword.isBlank() && newPassword != null && !newPassword.isBlank()) {
+      if (oldPassword != null
+          && !oldPassword.isBlank()
+          && newPassword != null
+          && !newPassword.isBlank()) {
         // On vérifie que son ancien mot de passe est correct
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
           // Si oui, on crypte et on sauvegarde le nouveau

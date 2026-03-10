@@ -7,33 +7,30 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- * Service handling notification business logic.
- */
+/** Service handling notification business logic. */
 @Service
 public class NotificationService {
 
-  @Autowired
-  private NotificationRepository notificationRepository;
+  @Autowired private NotificationRepository notificationRepository;
 
   /**
-   * Retrieves all notifications for a given member.
+   * Retrieves all notifications for a given user.
    *
-   * @param idMembre the ID of the member
-   * @return list of all notifications for the member
+   * @param userId the user id
+   * @return list of all notifications for the user
    */
-  public List<Notification> getByMembre(Long idMembre) {
-    return notificationRepository.findByMembreIdMembre(idMembre);
+  public List<Notification> getByUser(Long userId) {
+    return notificationRepository.findByUserId(userId);
   }
 
   /**
-   * Retrieves only unread notifications for a given member.
+   * Retrieves only unread notifications for a given user.
    *
-   * @param idMembre the ID of the member
+   * @param userId the user id
    * @return list of unread notifications
    */
-  public List<Notification> getUnread(Long idMembre) {
-    return notificationRepository.findByMembreIdMembreAndEstLue(idMembre, false);
+  public List<Notification> getUnread(Long userId) {
+    return notificationRepository.findByUserIdAndEstLue(userId, false);
   }
 
   /**
@@ -44,26 +41,37 @@ public class NotificationService {
    * @throws RuntimeException if the notification is not found
    */
   public Notification markAsRead(Long idNotification) {
-    Notification n = notificationRepository.findById(idNotification)
-        .orElseThrow(() -> new RuntimeException("Notification not found"));
+    Notification n =
+        notificationRepository
+            .findById(idNotification)
+            .orElseThrow(() -> new RuntimeException("Notification not found"));
     n.setEstLue(true);
     n.setDateLecture(LocalDateTime.now());
     return notificationRepository.save(n);
   }
 
   /**
-   * Marks all unread notifications of a member as read.
+   * Marks all unread notifications of a user as read.
    *
-   * @param idMembre the ID of the member
+   * @param userId the user id
    */
-  public void markAllAsRead(Long idMembre) {
-    List<Notification> unread = notificationRepository
-        .findByMembreIdMembreAndEstLue(idMembre, false);
-    unread.forEach(n -> {
-      n.setEstLue(true);
-      n.setDateLecture(LocalDateTime.now());
-    });
+  public void markAllAsRead(Long userId) {
+    List<Notification> unread = notificationRepository.findByUserIdAndEstLue(userId, false);
+    unread.forEach(
+        n -> {
+          n.setEstLue(true);
+          n.setDateLecture(LocalDateTime.now());
+        });
     notificationRepository.saveAll(unread);
+  }
+
+  /**
+   * Deletes all notifications for a user.
+   *
+   * @param userId the user id
+   */
+  public void deleteByUser(Long userId) {
+    notificationRepository.deleteByUserId(userId);
   }
 
   /**

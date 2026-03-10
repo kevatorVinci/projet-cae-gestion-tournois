@@ -19,9 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * REST controller for public team (Equipe) operations.
  *
- * <p>
- * Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions
- * sont liées aux
+ * <p>Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions sont liées aux
  * membres et sont donc dans MembreController.
  */
 @RestController
@@ -35,55 +33,47 @@ public class EquipeController {
    * Constructor for EquipeController.
    *
    * @param equipeService the injected service.
-   * @param userService   the injected user service.
+   * @param userService the injected user service.
    */
   public EquipeController(EquipeService equipeService, UserService userService) {
     this.equipeService = equipeService;
     this.userService = userService;
   }
 
-  /**
-   * Récupérer toutes les équipes (version publique).
-   */
-  @GetMapping({ "", "/" })
+  /** Récupérer toutes les équipes (version publique). */
+  @GetMapping({"", "/"})
   public Iterable<Equipe> readAllEquipes() {
     return equipeService.getAllEquipes();
   }
 
-  /**
-   * Récupérer une équipe par son identifiant.
-   */
+  /** Récupérer une équipe par son identifiant. */
   @GetMapping("/{id}")
   public Equipe readOneEquipe(@PathVariable Long id) {
-    return equipeService.getEquipeById(id)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Équipe introuvable"));
+    return equipeService
+        .getEquipeById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable"));
   }
 
   /**
    * Create a team for a given user id.
    *
    * @param userId user id
-   * @param dto    creation payload
+   * @param dto creation payload
    * @return created team
    */
   @PostMapping("/{userId}/equipes")
   @ResponseStatus(HttpStatus.CREATED)
-  public Equipe creerEquipe(
-      @PathVariable Long userId,
-      @RequestBody EquipeCreationDto dto) {
-    User user = userService.getById(userId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Utilisateur introuvable"));
+  public Equipe creerEquipe(@PathVariable Long userId, @RequestBody EquipeCreationDto dto) {
+    User user =
+        userService
+            .getById(userId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
 
     try {
       Equipe equipe = equipeService.creerEquipe(user, dto.name());
       if (equipe == null) {
-        throw new ResponseStatusException(
-            HttpStatus.CONFLICT,
-            "Nom d'equipe deja utilise");
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Nom d'equipe deja utilise");
       }
       return equipe;
     } catch (IllegalStateException e) {
@@ -95,17 +85,16 @@ public class EquipeController {
    * Join an existing team for a given user id.
    *
    * @param userId user id
-   * @param dto    join payload
+   * @param dto join payload
    */
   @PostMapping("/{userId}/equipes/rejoindre")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void rejoindreEquipe(
-      @PathVariable Long userId,
-      @RequestBody EquipeJoinDto dto) {
-    User user = userService.getById(userId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Utilisateur introuvable"));
+  public void rejoindreEquipe(@PathVariable Long userId, @RequestBody EquipeJoinDto dto) {
+    User user =
+        userService
+            .getById(userId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
 
     try {
       equipeService.demanderRejoindreEquipe(user, dto.equipeId());

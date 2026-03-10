@@ -12,36 +12,33 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST controller for managing notifications.
- */
+/** REST controller for managing notifications. */
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-  @Autowired
-  private NotificationService notificationService;
+  @Autowired private NotificationService notificationService;
 
   /**
    * Retrieves all notifications for a given member.
    *
-   * @param idMembre the ID of the member
+   * @param userId the ID of the user
    * @return list of all notifications for the member
    */
-  @GetMapping("/membre/{idMembre}")
-  public ResponseEntity<List<Notification>> getAll(@PathVariable Long idMembre) {
-    return ResponseEntity.ok(notificationService.getByMembre(idMembre));
+  @GetMapping("/users/{userId}")
+  public ResponseEntity<List<Notification>> getAll(@PathVariable Long userId) {
+    return ResponseEntity.ok(notificationService.getByUser(userId));
   }
 
   /**
    * Retrieves only unread notifications for a given member.
    *
-   * @param idMembre the ID of the member
+   * @param userId the ID of the user
    * @return list of unread notifications
    */
-  @GetMapping("/membre/{idMembre}/non-lues")
-  public ResponseEntity<List<Notification>> getUnread(@PathVariable Long idMembre) {
-    return ResponseEntity.ok(notificationService.getUnread(idMembre));
+  @GetMapping("/users/{userId}/non-lues")
+  public ResponseEntity<List<Notification>> getUnread(@PathVariable Long userId) {
+    return ResponseEntity.ok(notificationService.getUnread(userId));
   }
 
   /**
@@ -58,12 +55,12 @@ public class NotificationController {
   /**
    * Marks all notifications of a member as read.
    *
-   * @param idMembre the ID of the member
+   * @param userId the ID of the user
    * @return empty response with no content status
    */
-  @PatchMapping("/membre/{idMembre}/tous-lue")
-  public ResponseEntity<Void> markAllAsRead(@PathVariable Long idMembre) {
-    notificationService.markAllAsRead(idMembre);
+  @PatchMapping("/users/{userId}/tous-lue")
+  public ResponseEntity<Void> markAllAsRead(@PathVariable Long userId) {
+    notificationService.markAllAsRead(userId);
     return ResponseEntity.noContent().build();
   }
 

@@ -8,6 +8,7 @@ import be.vinci.ipl.cae.demo.repositories.DemandeRepository;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,11 +27,11 @@ public class DemandeService {
    * Constructeur injectant les dépendances nécessaires au service.
    *
    * @param demandeRepo Le repository gérant les demandes en base de données.
-   * @param userRepo    Le repository gérant les utilisateurs.
-   * @param equipeRepo  Le repository gérant les équipes.
+   * @param userRepo Le repository gérant les utilisateurs.
+   * @param equipeRepo Le repository gérant les équipes.
    */
-  public DemandeService(DemandeRepository demandeRepo, UserRepository userRepo,
-      EquipeRepository equipeRepo) {
+  public DemandeService(
+      DemandeRepository demandeRepo, UserRepository userRepo, EquipeRepository equipeRepo) {
     this.demandeRepo = demandeRepo;
     this.userRepo = userRepo;
     this.equipeRepo = equipeRepo;
@@ -44,20 +45,29 @@ public class DemandeService {
    * @param equipeId L'identifiant unique de l'équipe ciblée.
    * @return L'objet Demande fraîchement créé et sauvegardé avec le statut EN_ATTENTE.
    * @throws RuntimeException Si le joueur n'existe pas, si l'équipe n'existe pas, ou si le joueur
-   *                          est déjà membre d'une équipe.
+   *     est déjà membre d'une équipe.
    */
   public Demande creerDemande(Long membreId, Long equipeId) {
-    User membre = userRepo.findById(membreId)
-        .orElseThrow(() -> new RuntimeException("Joueur introuvable"));
-    Equipe equipe = equipeRepo.findById(equipeId)
-        .orElseThrow(() -> new RuntimeException("Équipe introuvable"));
+    User user =
+        userRepo.findById(membreId).orElseThrow(() -> new RuntimeException("Joueur introuvable"));
+    Equipe equipe =
+        equipeRepo.findById(equipeId).orElseThrow(() -> new RuntimeException("Équipe introuvable"));
 
-    if (membre.getEquipe() != null) {
+    if (user.getEquipe() != null) {
       throw new RuntimeException("Vous avez déjà une équipe !");
     }
 
+    if (!isEquipeEligibleForJoin(equipe)) {
+      throw new RuntimeException("Cette equipe n'est plus disponible pour les demandes.");
+    }
+
+    if (demandeRepo.existsByMembreIdAndEquipeIdAndEtat(
+        membreId, equipeId, EtatDemande.EN_ATTENTE)) {
+      throw new RuntimeException("Une demande en attente existe deja pour cette equipe.");
+    }
+
     Demande demande = new Demande();
-    demande.setMembre(membre);
+    demande.setMembre(user);
     demande.setEquipe(equipe);
     demande.setEtat(EtatDemande.EN_ATTENTE);
 
@@ -72,6 +82,12 @@ public class DemandeService {
    * @return Une collection itérable contenant uniquement les demandes au statut EN_ATTENTE.
    */
   public Iterable<Demande> getDemandesEnAttentePourEquipe(Long equipeId) {
+    Equipe equipe = equipeRepo.findById(equipeId).orElse(null);
+    if (equipe == null || !isEquipeEligibleForJoin(equipe)) {
+      // Nettoyage defensif: evite des notifications orphelines pour une equipe invalide.
+      demandeRepo.deleteByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
+      return List.of();
+    }
     return demandeRepo.findByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
   }
 
@@ -88,14 +104,25 @@ public class DemandeService {
     Demande demande = getAndVerifyDemande(demandeId, currentUser);
     Equipe equipe = demande.getEquipe();
 
+    if (!isEquipeEligibleForJoin(equipe)) {
+      throw new RuntimeException("L'equipe cible n'est plus disponible.");
+    }
+
     demande.setEtat(EtatDemande.ACCEPTEE);
     demande.setDateTraitement(LocalDateTime.now());
 
-    User membre = demande.getMembre();
-    membre.setEquipe(equipe);
-    equipe.getMembres().add(membre);
-    userRepo.save(membre);
+    User user = demande.getMembre();
+    if (user.getEquipe() != null) {
+      throw new RuntimeException("Le joueur appartient deja a une equipe.");
+    }
+
+    user.setEquipe(equipe);
+    equipe.getMembres().add(user);
+    userRepo.save(user);
     equipeRepo.save(equipe);
+
+    // Toutes les autres demandes en attente de ce user deviennent obsoletes.
+    demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
 
     return demandeRepo.save(demande);
   }
@@ -106,7 +133,7 @@ public class DemandeService {
    * actuellement désactivé.
    *
    * @param demandeId L'identifiant de la demande à rejeter.
-   * @param raison    Le texte expliquant le motif du refus (ex: "Niveau insuffisant").
+   * @param raison Le texte expliquant le motif du refus (ex: "Niveau insuffisant").
    * @return La demande mise à jour avec le statut REFUSEE et son motif.
    * @throws RuntimeException Si la demande spécifiée n'existe pas en base de données.
    */
@@ -123,15 +150,17 @@ public class DemandeService {
   /**
    * Récupère une demande et vérifie que l'utilisateur est responsable de l'équipe.
    *
-   * @param demandeId   L'identifiant de la demande.
+   * @param demandeId L'identifiant de la demande.
    * @param currentUser L'utilisateur courant.
    * @return La demande trouvée.
-   * @throws RuntimeException  Si la demande n'existe pas.
+   * @throws RuntimeException Si la demande n'existe pas.
    * @throws SecurityException Si l'utilisateur n'est pas responsable.
    */
   private Demande getAndVerifyDemande(Long demandeId, User currentUser) {
-    Demande demande = demandeRepo.findById(demandeId)
-        .orElseThrow(() -> new RuntimeException("Demande introuvable"));
+    Demande demande =
+        demandeRepo
+            .findById(demandeId)
+            .orElseThrow(() -> new RuntimeException("Demande introuvable"));
     verifyUserIsResponsible(demande.getEquipe(), currentUser);
     return demande;
   }
@@ -139,23 +168,30 @@ public class DemandeService {
   /**
    * Vérifie que l'utilisateur courant est responsable (principal ou secondaire) de l'équipe.
    *
-   * @param equipe      L'équipe à vérifier.
+   * @param equipe L'équipe à vérifier.
    * @param currentUser L'utilisateur courant.
    * @throws SecurityException Si l'utilisateur n'est pas responsable de l'équipe.
    */
   private void verifyUserIsResponsible(Equipe equipe, User currentUser) {
     // 1. On vérifie si c'est le principal (en s'assurant qu'il existe)
-    boolean isPrincipal = equipe.getResponsablePrincipal() != null
-        && equipe.getResponsablePrincipal().getId().equals(currentUser.getId());
+    boolean isPrincipal =
+        equipe.getResponsablePrincipal() != null
+            && equipe.getResponsablePrincipal().getId().equals(currentUser.getId());
 
     // 2. On vérifie si c'est le secondaire (en s'assurant qu'il n'est pas null !)
-    boolean isSecondaire = equipe.getResponsableSecondaire() != null
-        && equipe.getResponsableSecondaire().getId().equals(currentUser.getId());
+    boolean isSecondaire =
+        equipe.getResponsableSecondaire() != null
+            && equipe.getResponsableSecondaire().getId().equals(currentUser.getId());
 
     // 3. On applique la logique finale (Ni l'un, ET ni l'autre)
     if (!isPrincipal && !isSecondaire) {
-      throw new SecurityException(
-          "Seul le responsable de l'équipe peut gérer les membres.");
+      throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
     }
+  }
+
+  private boolean isEquipeEligibleForJoin(Equipe equipe) {
+    boolean hasResponsible =
+        equipe.getResponsablePrincipal() != null || equipe.getResponsableSecondaire() != null;
+    return hasResponsible && equipe.getMembres() != null && !equipe.getMembres().isEmpty();
   }
 }
