@@ -52,6 +52,7 @@ public class UserService {
       authenticatedUser.setTag(user.getTag());
       authenticatedUser.setSpecialty(user.getSpecialty());
       authenticatedUser.setProfileImage(user.getProfileImageUrl());
+      authenticatedUser.setAdmin(user.isAdmin());
     }
 
     return authenticatedUser;

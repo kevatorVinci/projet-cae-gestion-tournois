@@ -18,11 +18,6 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import backgroundImage from '../../assets/images/background.png';
-import luffyImg from '../../assets/images/imagesProfil/luffy.png';
-import pessiImg from '../../assets/images/imagesProfil/Pessi.jpg';
-import zoroImg from '../../assets/images/imagesProfil/R.png';
-import flashImg from '../../assets/images/imagesProfil/flash.jpg';
-import milesImg from '../../assets/images/imagesProfil/miles.jpg';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -50,7 +45,14 @@ export default function RegisterPage() {
     { name: 'Guérisseur', icon: '❤️' },
   ];
 
-  const defaultImages = [luffyImg, zoroImg, pessiImg, flashImg, milesImg];
+  const defaultImages = [
+    'luffy.png',
+    'R.png',
+    'Pessi.jpg',
+    'flash.jpg',
+    'miles.jpg',
+    'keke.jpg',
+  ];
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

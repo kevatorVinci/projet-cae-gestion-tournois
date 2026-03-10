@@ -45,4 +45,8 @@ public class User {
 
   @Column(nullable = false)
   private LocalDate creationDate;
+
+  @Column(nullable = false)
+  private boolean admin = false;
+
 }

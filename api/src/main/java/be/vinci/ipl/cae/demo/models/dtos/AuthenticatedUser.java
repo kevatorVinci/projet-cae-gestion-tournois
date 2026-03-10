@@ -15,4 +15,5 @@ public class AuthenticatedUser {
   private String tag;
   private String specialty;
   private String profileImage;
+  private boolean admin;
 }

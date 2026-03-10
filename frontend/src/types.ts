@@ -10,10 +10,10 @@ interface User {
 interface AuthenticatedUser {
   email: string;
   token: string;
-  // On ajoute les nouveautés dont ton profil a besoin !
   tag?: string;
   specialty?: string;
   profileImage?: string;
+  admin: boolean;
 }
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
@@ -27,7 +27,6 @@ interface UserContextType {
   updateUser: (updatedData: Partial<AuthenticatedUser>) => void;
 }
 
-// On n'exporte plus les pizzas !
 export type {
   User,
   AuthenticatedUser,

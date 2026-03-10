@@ -23,11 +23,6 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { UserContext } from '../../contexts/UserContext';
 
 import backgroundImage from '../../assets/images/background.png';
-import luffyImg from '../../assets/images/imagesProfil/luffy.png';
-import pessiImg from '../../assets/images/imagesProfil/Pessi.jpg';
-import zoroImg from '../../assets/images/imagesProfil/R.png';
-import flashImg from '../../assets/images/imagesProfil/flash.jpg';
-import milesImg from '../../assets/images/imagesProfil/miles.jpg';
 
 export default function ProfilePage() {
   const { authenticatedUser, updateUser } = useContext(UserContext);
@@ -57,16 +52,23 @@ export default function ProfilePage() {
   } | null>(null);
 
   const specialties = [
-    { name: 'Architecte', icon: '📐' },
-    { name: 'Exécuteur', icon: '🔨' },
-    { name: 'Tacticien', icon: '♟️' },
-    { name: 'Gardien', icon: '🛡️' },
-    { name: 'Catalyseur', icon: '⚡' },
-    { name: 'Perturbateur', icon: '🌪️' },
-    { name: 'Guérisseur', icon: '❤️' },
+    { name: 'architecte', icon: '📐' },
+    { name: 'exécuteur', icon: '🔨' },
+    { name: 'tacticien', icon: '♟️' },
+    { name: 'gardien', icon: '🛡️' },
+    { name: 'catalyseur', icon: '⚡' },
+    { name: 'perturbateur', icon: '🌪️' },
+    { name: 'guérisseur', icon: '❤️' },
   ];
 
-  const defaultImages = [luffyImg, zoroImg, pessiImg, flashImg, milesImg];
+  const defaultImages = [
+    'luffy.png',
+    'R.png',
+    'Pessi.jpg',
+    'flash.jpg',
+    'miles.jpg',
+    'keke.jpg',
+  ];
 
   // La méthode qui s'active quand on clique sur le gros bouton orange
   const handleSave = async (e: React.FormEvent) => {
@@ -86,8 +88,8 @@ export default function ProfilePage() {
       email: authenticatedUser?.email,
       specialty: specialty,
       profileImage: profileImage,
-      oldPassword: oldPassword, // ✨ On ajoute l'ancien
-      newPassword: newPassword, // ✨ On ajoute le nouveau
+      oldPassword: oldPassword,
+      newPassword: newPassword,
     };
 
     try {
