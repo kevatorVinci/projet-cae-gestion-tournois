@@ -12,4 +12,7 @@ public class AuthenticatedUser {
 
   private String email;
   private String token;
+  private String tag;
+  private String specialty;
+  private String profileImage;
 }

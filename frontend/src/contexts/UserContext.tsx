@@ -13,11 +13,13 @@ import {
   isTokenExpired,
 } from '../utils/session';
 
+// 1️⃣ On ajoute une action vide par défaut pour ne pas casser le site
 const defaultUserContext: UserContextType = {
   authenticatedUser: undefined,
   registerUser: async () => {},
   loginUser: async () => {},
   clearUser: () => {},
+  updateUser: () => {},
 };
 
 const UserContext = createContext<UserContextType>(defaultUserContext);
@@ -83,6 +85,18 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     setAuthenticatedUser(undefined);
   };
 
+  const updateUser = (updatedData: Partial<AuthenticatedUser>) => {
+    if (authenticatedUser) {
+      // On prend l'ancien joueur, et on lui colle les nouvelles informations par-dessus
+      const newUserData = { ...authenticatedUser, ...updatedData };
+
+      setAuthenticatedUser(newUserData);
+
+      const isRemembered = localStorage.getItem('authenticatedUser') !== null;
+      storeAuthenticatedUser(newUserData, isRemembered);
+    }
+  };
+
   useEffect(() => {
     if (!authenticatedUser?.token) return;
 
@@ -104,6 +118,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     registerUser,
     loginUser,
     clearUser,
+    updateUser,
   };
 
   return (
