@@ -44,8 +44,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
    * @throws IOException      the IO exception.
    */
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-      FilterChain filterChain) throws ServletException, IOException {
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
     String token = request.getHeader("Authorization");
     if (token != null) {
       String email = userService.verifyJwtToken(token);
@@ -57,8 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
           }
           UsernamePasswordAuthenticationToken authentication =
-              new UsernamePasswordAuthenticationToken(
-                  user, null, authorities);
+              new UsernamePasswordAuthenticationToken(user, null, authorities);
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }

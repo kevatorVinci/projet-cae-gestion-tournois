@@ -1,12 +1,11 @@
 package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.User;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * User repository.
- */
+/** User repository. */
 @Repository
 public interface UserRepository extends CrudRepository<User, Long> {
 
@@ -17,4 +16,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
    * @return the user
    */
   User findByEmail(String email);
+
+  Optional<User> findOptionalByEmail(String email);
 }

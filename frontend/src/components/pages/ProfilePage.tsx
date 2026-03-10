@@ -1,5 +1,4 @@
 import React, { useState, useContext } from 'react';
-// On importe useNavigate pour pouvoir voyager vers d'autres pages
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -22,17 +21,13 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import { UserContext } from '../../contexts/UserContext';
 
-import backgroundImage from '../../assets/images/background.png';
-
 export default function ProfilePage() {
   const { authenticatedUser, updateUser } = useContext(UserContext);
-
   const navigate = useNavigate();
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => {
@@ -85,20 +80,17 @@ export default function ProfilePage() {
     'crockmou.jpg',
   ];
 
-  // La méthode qui s'active quand on clique sur le gros bouton orange
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✨ NOUVEAU : On vérifie que le nouveau mot de passe et la confirmation sont identiques
     if (newPassword && newPassword !== confirmPassword) {
       setMessage({
         type: 'error',
         text: 'Les nouveaux mots de passe ne correspondent pas !',
       });
-      return; // On arrête tout si ça ne correspond pas
+      return;
     }
 
-    // 1. On prépare le colis complet, AVEC les mots de passe ! 📦
     const updatedInfo = {
       email: authenticatedUser?.email,
       specialty: specialty,
@@ -119,17 +111,11 @@ export default function ProfilePage() {
 
       if (response.ok) {
         if (updateUser) {
-          updateUser({
-            specialty: specialty,
-            profileImage: profileImage,
-          });
+          updateUser({ specialty: specialty, profileImage: profileImage });
         }
-
-        // On vide les cases de mot de passe par sécurité
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
-
         navigate('/');
       } else {
         setMessage({
@@ -145,6 +131,17 @@ export default function ProfilePage() {
     }
   };
 
+  const inputSx = {
+    input: { color: 'white' },
+    backgroundColor: '#1e2d4a',
+    borderRadius: 1,
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.25)' },
+      '&.Mui-focused fieldset': { borderColor: '#e8822a' },
+    },
+  };
+
   return (
     <Box
       sx={{
@@ -152,19 +149,19 @@ export default function ProfilePage() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
-        backgroundImage: `linear-gradient(rgba(8, 11, 20, 0.55), rgba(8, 11, 20, 0.55)), url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+        // Dégradé sombre à la place du background image
+        background:
+          'radial-gradient(ellipse 70% 45% at 50% 0%, rgba(17,43,79,0.6), transparent), #080b14',
       }}
     >
       <Box
         sx={{
           margin: 2,
           padding: 4,
-          backgroundColor: '#1a2540',
+          backgroundColor: '#111827',
+          border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 4,
-          boxShadow: 2,
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
           width: '100%',
           maxWidth: 600,
         }}
@@ -184,7 +181,7 @@ export default function ProfilePage() {
             variant="subtitle1"
             color="white"
             mb={2}
-            sx={{ borderBottom: '1px solid #2a3b55', pb: 1 }}
+            sx={{ borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 1 }}
           >
             Mes informations visuelles
           </Typography>
@@ -221,15 +218,16 @@ export default function ProfilePage() {
                       cursor: 'pointer',
                       border:
                         profileImage === img
-                          ? '3px solid #4285F4'
+                          ? '3px solid #e8822a'
                           : '3px solid transparent',
                       boxShadow:
                         profileImage === img
-                          ? '0 0 15px rgba(66, 133, 244, 0.5)'
+                          ? '0 0 15px rgba(232,130,42,0.4)'
                           : 'none',
                       transition: 'all 0.2s ease-in-out',
                       objectFit: 'cover',
-                      '&:hover': { transform: 'scale(1.05)' },
+                      opacity: profileImage === img ? 1 : 0.6,
+                      '&:hover': { transform: 'scale(1.05)', opacity: 1 },
                     }}
                   />
                 ))}
@@ -249,9 +247,15 @@ export default function ProfilePage() {
                   }
                   sx={{
                     color: 'white',
-                    backgroundColor: '#2a3b55',
+                    backgroundColor: '#1e2d4a',
                     '.MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(255, 255, 255, 0.23)',
+                      borderColor: 'rgba(255, 255, 255, 0.12)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.25)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#e8822a',
                     },
                   }}
                 >
@@ -272,7 +276,7 @@ export default function ProfilePage() {
             variant="subtitle1"
             color="white"
             mb={2}
-            sx={{ borderBottom: '1px solid #2a3b55', pb: 1 }}
+            sx={{ borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 1 }}
           >
             Sécurité du compte
           </Typography>
@@ -285,11 +289,7 @@ export default function ProfilePage() {
               placeholder="Requis pour changer de mot de passe"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              sx={{
-                input: { color: 'white' },
-                backgroundColor: '#2a3b55',
-                borderRadius: 1,
-              }}
+              sx={inputSx}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -314,11 +314,7 @@ export default function ProfilePage() {
                 fullWidth
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                sx={{
-                  input: { color: 'white' },
-                  backgroundColor: '#2a3b55',
-                  borderRadius: 1,
-                }}
+                sx={inputSx}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -341,11 +337,7 @@ export default function ProfilePage() {
                 fullWidth
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                sx={{
-                  input: { color: 'white' },
-                  backgroundColor: '#2a3b55',
-                  borderRadius: 1,
-                }}
+                sx={inputSx}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">

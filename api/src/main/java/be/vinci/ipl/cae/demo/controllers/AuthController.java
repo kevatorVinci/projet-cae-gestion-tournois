@@ -5,6 +5,11 @@ import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -33,6 +38,12 @@ public class AuthController {
         || credentials.getPassword().isBlank();
   }
 
+  /**
+   * Register a new user.
+   *
+   * @param credentials register payload
+   * @return authenticated user with token
+   */
   @PostMapping("/register")
   public AuthenticatedUser register(@RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
@@ -46,15 +57,18 @@ public class AuthController {
     return user;
   }
 
+  /**
+   * Authenticate an existing user.
+   *
+   * @param credentials login payload
+   * @return authenticated user with token
+   */
   @PostMapping("/login")
   public AuthenticatedUser login(@RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
-    AuthenticatedUser user = userService.login(
-        credentials.getEmail(),
-        credentials.getPassword()
-    );
+    AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }
@@ -63,23 +77,26 @@ public class AuthController {
 
   /**
    * Porte d'entrée pour modifier le profil.
+   *
    * @param credentials le colis envoyé par React
    */
   @PutMapping("/update")
   public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
-    AuthenticatedUser user = userService.updateProfile(
+    AuthenticatedUser user =
+        userService.updateProfile(
             credentials.getEmail(),
             credentials.getSpecialty(),
             credentials.getProfileImage(),
             credentials.getOldPassword(),
-            credentials.getNewPassword()
-    );
+            credentials.getNewPassword());
 
     if (user == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
+<<<<<<< HEAD
 
   /**
    * La route (URL) que React va appeler pour obtenir la liste des joueurs.
@@ -99,3 +116,6 @@ public class AuthController {
     userService.removeAdmin(email);
   }
 }
+=======
+}
+>>>>>>> origin/develop

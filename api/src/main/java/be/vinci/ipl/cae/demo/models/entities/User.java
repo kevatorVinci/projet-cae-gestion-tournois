@@ -1,19 +1,20 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * User entity representing a member of the Vinci Arena platform.
- */
+/** User entity representing a member of the Vinci Arena platform. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -49,4 +50,11 @@ public class User {
   @Column(nullable = false)
   private boolean admin = false;
 
+  private LocalDateTime dateCreationProfil;
+
+  /** Team membership relation. */
+  @ManyToOne
+  @JoinColumn(name = "equipe_id")
+  @JsonBackReference
+  private Equipe equipe;
 }
