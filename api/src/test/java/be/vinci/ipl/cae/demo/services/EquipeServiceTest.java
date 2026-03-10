@@ -24,6 +24,7 @@ class EquipeServiceTest {
   @Mock private EquipeRepository equipeRepository;
   @Mock private UserRepository userRepository;
   @Mock private DemandeService demandService;
+  @Mock private NotificationService notificationService;
 
   @InjectMocks private EquipeService equipeService;
 

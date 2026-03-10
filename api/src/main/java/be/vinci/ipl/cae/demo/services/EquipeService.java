@@ -24,6 +24,7 @@ public class EquipeService {
   private final EquipeRepository equipeRepository;
   private final UserRepository userRepository;
   private final DemandeService demandService;
+  private final NotificationService notificationService;
 
   /**
    * Constructeur injectant les repositories et services.
@@ -35,10 +36,12 @@ public class EquipeService {
   public EquipeService(
       EquipeRepository equipeRepository,
       UserRepository userRepository,
-      DemandeService demandService) {
+      DemandeService demandService,
+      NotificationService notificationService) {
     this.equipeRepository = equipeRepository;
     this.userRepository = userRepository;
     this.demandService = demandService;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -94,6 +97,7 @@ public class EquipeService {
     equipe.getMembres().add(userPersisted);
 
     Equipe savedTeam = equipeRepository.save(equipe);
+    notificationService.notifierCreationEquipe(userPersisted, savedTeam.getName());
     userPersisted.setEquipe(savedTeam);
     userRepository.save(userPersisted);
 

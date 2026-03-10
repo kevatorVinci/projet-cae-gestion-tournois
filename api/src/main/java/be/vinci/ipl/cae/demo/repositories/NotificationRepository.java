@@ -17,7 +17,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
    * @param userId the user id
    * @return list of notifications belonging to the user
    */
-  List<Notification> findByUserId(Long userId);
+  List<Notification> findByUser_IdOrderByDateEnvoiDesc(Long userId);
 
   /**
    * Finds all notifications for a given user filtered by read status.
@@ -26,12 +26,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
    * @param estLue whether the notification has been read
    * @return list of notifications matching the criteria
    */
-  List<Notification> findByUserIdAndEstLue(Long userId, Boolean estLue);
+  List<Notification> findByUser_IdAndEstLueOrderByDateEnvoiDesc(Long userId, Boolean estLue);
 
-  /**
-   * Delete all notifications for a user.
-   *
-   * @param userId the user id
-   */
-  void deleteByUserId(Long userId);
+
 }

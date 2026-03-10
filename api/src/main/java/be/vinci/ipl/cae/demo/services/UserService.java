@@ -22,10 +22,15 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
-  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+  public UserService(
+      BCryptPasswordEncoder passwordEncoder,
+      UserRepository userRepository,
+      NotificationService notificationService) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -141,7 +146,9 @@ public class UserService {
     user.setDateCreationProfil(LocalDateTime.now());
 
     // On sauvegarde définitivement !
-    return userRepository.save(user);
+    User savedUser = userRepository.save(user);
+    notificationService.notifierCreationCompte(savedUser);
+    return savedUser;
   }
 
   /** Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe). */
