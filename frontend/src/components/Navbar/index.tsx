@@ -70,21 +70,7 @@ const Navbar = () => {
 
         <Typography sx={{ flexGrow: 1 }} />
 
-<<<<<<< HEAD
         {/* CAS 1 : Joueur NON connecté */}
-=======
-        <Button color="inherit" onClick={() => navigate('/')}>
-          Accueil
-        </Button>
-        <Button color="inherit" onClick={() => navigate('/tournaments')}>
-          Tournois
-        </Button>
-        <Button color="inherit" onClick={() => navigate('/equipes')}>
-          Teams
-        </Button>
-
-        {/* Si le joueur n'est PAS connecté */}
->>>>>>> origin/develop
         {!authenticatedUser ? (
           <>
             {/* ✨ NOUVEAU : On applique notre style magique sur chaque bouton */}
@@ -121,7 +107,6 @@ const Navbar = () => {
             </Button>
           </>
         ) : (
-<<<<<<< HEAD
           /* CAS 2 : Le joueur EST connecté */
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {/* Si l'interrupteur est sur "Vue Admin" (Vrai) */}
@@ -202,19 +187,6 @@ const Navbar = () => {
               onClick={() => navigate('/profile')}
               sx={{ p: 0, ml: 2 }}
             >
-=======
-          // Si le joueur EST connecté
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              marginLeft: 2,
-            }}
-          >
-            {/* L'image de profil cliquable */}
-            <IconButton onClick={() => navigate('/profil')} sx={{ p: 0 }}>
->>>>>>> origin/develop
               <Avatar
                 alt="Profil du joueur"
                 src={`/${authenticatedUser?.profileImage}`}
