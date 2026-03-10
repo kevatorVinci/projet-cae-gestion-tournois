@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +48,16 @@ public class EquipeService {
    */
   public Iterable<Equipe> getAllEquipes() {
     return equipeRepository.findAll();
+  }
+
+  /**
+   * Récupère uniquement les équipes actives (celles qui ont au moins 1 membre). Idéal pour
+   * l'affichage sur la page "Teams" du frontend, pour cacher les coquilles vides.
+   *
+   * @return un Iterable contenant les équipes actives
+   */
+  public Iterable<Equipe> getEquipesActives() {
+    return equipeRepository.findByMembresIsNotEmpty();
   }
 
   /**
@@ -99,5 +110,191 @@ public class EquipeService {
   public void demanderRejoindreEquipe(User user, Long equipeId) {
     // Use the demand service to create a join request
     demandService.creerDemande(user.getId(), equipeId);
+  }
+
+  /**
+   * Checks whether the given user is one of the team responsibles.
+   *
+   * @param equipe team to inspect
+   * @param user user to check
+   * @return true when user is primary or secondary responsible
+   */
+  public boolean isUserResponsible(Equipe equipe, User user) {
+    if (equipe == null || user == null) {
+      return false;
+    }
+
+    Long userId = user.getId();
+    boolean isPrincipal =
+        equipe.getResponsablePrincipal() != null
+            && equipe.getResponsablePrincipal().getId().equals(userId);
+    boolean isSecondaire =
+        equipe.getResponsableSecondaire() != null
+            && equipe.getResponsableSecondaire().getId().equals(userId);
+    return isPrincipal || isSecondaire;
+  }
+
+  /**
+   * Promote a team member to responsible role.
+   *
+   * @param currentUser acting user (must already be responsible)
+   * @param membreId target member to promote
+   */
+  public void promouvoirResponsable(User currentUser, Long membreId) {
+    Equipe equipe = requireCurrentUserTeam(currentUser);
+    verifyCurrentUserIsResponsible(equipe, currentUser);
+
+    User membre = findMemberInTeam(equipe, membreId);
+    if (isUserResponsible(equipe, membre)) {
+      throw new IllegalStateException("Ce membre est deja responsable.");
+    }
+
+    if (equipe.getResponsablePrincipal() == null) {
+      equipe.setResponsablePrincipal(membre);
+    } else if (equipe.getResponsableSecondaire() == null) {
+      equipe.setResponsableSecondaire(membre);
+    } else {
+      throw new IllegalStateException("L'equipe a deja le nombre maximum de responsables.");
+    }
+
+    equipeRepository.save(equipe);
+  }
+
+  /**
+   * Demote a responsible to a regular member while preserving at least one responsible.
+   *
+   * @param currentUser acting user (must already be responsible)
+   * @param membreId target responsible to demote
+   */
+  public void depromouvoirResponsable(User currentUser, Long membreId) {
+    Equipe equipe = requireCurrentUserTeam(currentUser);
+    verifyCurrentUserIsResponsible(equipe, currentUser);
+
+    User membre = findMemberInTeam(equipe, membreId);
+    if (!isUserResponsible(equipe, membre)) {
+      throw new IllegalStateException("Ce membre n'est pas responsable.");
+    }
+
+    if (countResponsables(equipe) <= 1) {
+      throw new IllegalStateException("Impossible de depromouvoir le dernier responsable.");
+    }
+
+    removeResponsibleRole(equipe, membre.getId());
+    normalizeResponsibleSlots(equipe);
+    equipeRepository.save(equipe);
+  }
+
+  /**
+   * Removes a user from their current team.
+   *
+   * @param user persisted user that wants to leave the team
+   * @param nouveauResponsableId optional member id to promote when delegation is needed
+   */
+  public void quitterEquipe(User user, Long nouveauResponsableId) {
+    Equipe equipe = user.getEquipe();
+    if (equipe == null) {
+      throw new IllegalStateException("Le membre n'appartient a aucune equipe.");
+    }
+
+    boolean isResponsible = isUserResponsible(equipe, user);
+    List<User> membres = equipe.getMembres();
+
+    // If the responsible is the only member, leaving dissolves the team.
+    if (isResponsible && membres.size() == 1) {
+      equipe.getMembres().clear(); // 🧹 On vide la liste côté équipe !
+
+      user.setEquipe(null);
+      equipe.setResponsablePrincipal(null);
+      equipe.setResponsableSecondaire(null);
+
+      userRepository.save(user);
+      equipeRepository.save(equipe);
+      return;
+    }
+    if (isResponsible) {
+      boolean seulResponsable = countResponsables(equipe) == 1;
+      if (seulResponsable) {
+        if (nouveauResponsableId == null) {
+          throw new IllegalStateException(
+              "Vous devez designer un autre membre responsable avant de quitter l'equipe.");
+        }
+
+        User nouveauResponsable = findMemberInTeam(equipe, nouveauResponsableId);
+        if (nouveauResponsable.getId().equals(user.getId())) {
+          throw new IllegalStateException("Le nouveau responsable doit etre un autre membre.");
+        }
+        if (!isUserResponsible(equipe, nouveauResponsable)) {
+          if (equipe.getResponsablePrincipal() == null) {
+            equipe.setResponsablePrincipal(nouveauResponsable);
+          } else if (equipe.getResponsableSecondaire() == null) {
+            equipe.setResponsableSecondaire(nouveauResponsable);
+          }
+        }
+      }
+
+      removeResponsibleRole(equipe, user.getId());
+      normalizeResponsibleSlots(equipe);
+
+      if (countResponsables(equipe) == 0 && !equipe.getMembres().isEmpty()) {
+        throw new IllegalStateException("L'equipe doit toujours avoir au moins un responsable.");
+      }
+    }
+
+    equipe.getMembres().removeIf(member -> member.getId().equals(user.getId()));
+    user.setEquipe(null);
+
+    userRepository.save(user);
+    equipeRepository.save(equipe);
+  }
+
+  private Equipe requireCurrentUserTeam(User currentUser) {
+    Equipe equipe = currentUser.getEquipe();
+    if (equipe == null) {
+      throw new IllegalStateException("Le membre n'appartient a aucune equipe.");
+    }
+    return equipe;
+  }
+
+  private void verifyCurrentUserIsResponsible(Equipe equipe, User currentUser) {
+    if (!isUserResponsible(equipe, currentUser)) {
+      throw new IllegalStateException("Seul un responsable peut gerer les responsables.");
+    }
+  }
+
+  private User findMemberInTeam(Equipe equipe, Long membreId) {
+    return equipe.getMembres().stream()
+        .filter(membre -> membre.getId().equals(membreId))
+        .findFirst()
+        .orElseThrow(
+            () -> new IllegalStateException("Le membre cible n'appartient pas a l'equipe."));
+  }
+
+  private int countResponsables(Equipe equipe) {
+    int count = 0;
+    if (equipe.getResponsablePrincipal() != null) {
+      count++;
+    }
+    if (equipe.getResponsableSecondaire() != null) {
+      count++;
+    }
+    return count;
+  }
+
+  private void removeResponsibleRole(Equipe equipe, Long userId) {
+    if (equipe.getResponsablePrincipal() != null
+        && equipe.getResponsablePrincipal().getId().equals(userId)) {
+      equipe.setResponsablePrincipal(null);
+    }
+    if (equipe.getResponsableSecondaire() != null
+        && equipe.getResponsableSecondaire().getId().equals(userId)) {
+      equipe.setResponsableSecondaire(null);
+    }
+  }
+
+  private void normalizeResponsibleSlots(Equipe equipe) {
+    if (equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() != null) {
+      equipe.setResponsablePrincipal(equipe.getResponsableSecondaire());
+      equipe.setResponsableSecondaire(null);
+    }
   }
 }

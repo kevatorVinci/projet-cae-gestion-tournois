@@ -23,12 +23,6 @@ public class UserService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
 
-  /**
-   * Constructor.
-   *
-   * @param passwordEncoder password encoder bean
-   * @param userRepository user repository
-   */
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
@@ -124,7 +118,11 @@ public class UserService {
     return userRepository.findById(id);
   }
 
-  /** Construit et sauvegarde le joueur dans la base de données avec les infos de React. */
+  /**
+   * Create a new user.
+   *
+   * <p>infos de React.
+   */
   public User createOne(Credentials credentials) {
     // On cache le mot de passe pour la sécurité
     String hashedPassword = passwordEncoder.encode(credentials.getPassword());

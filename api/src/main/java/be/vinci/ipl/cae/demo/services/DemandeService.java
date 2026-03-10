@@ -48,13 +48,18 @@ public class DemandeService {
    *     est déjà membre d'une équipe.
    */
   public Demande creerDemande(Long membreId, Long equipeId) {
-    User user =
+    User membre =
         userRepo.findById(membreId).orElseThrow(() -> new RuntimeException("Joueur introuvable"));
     Equipe equipe =
         equipeRepo.findById(equipeId).orElseThrow(() -> new RuntimeException("Équipe introuvable"));
 
     if (user.getEquipe() != null) {
       throw new RuntimeException("Vous avez déjà une équipe !");
+    }
+    boolean hasNoResponsible =
+        equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() == null;
+    if (hasNoResponsible) {
+      throw new RuntimeException("L'equipe n'a aucun responsable.");
     }
 
     if (!isEquipeEligibleForJoin(equipe)) {
@@ -187,11 +192,5 @@ public class DemandeService {
     if (!isPrincipal && !isSecondaire) {
       throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
     }
-  }
-
-  private boolean isEquipeEligibleForJoin(Equipe equipe) {
-    boolean hasResponsible =
-        equipe.getResponsablePrincipal() != null || equipe.getResponsableSecondaire() != null;
-    return hasResponsible && equipe.getMembres() != null && !equipe.getMembres().isEmpty();
   }
 }

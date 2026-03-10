@@ -20,12 +20,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    */
   Iterable<Demande> findByEquipeId(Long equipeId);
 
-  /**
-   * Find all demands created by a user.
-   *
-   * @param membreId user id
-   * @return demands created by this user
-   */
+  //   🔍 Trouver toutes les candidatures envoyées par un joueur spécifique
   Iterable<Demande> findByMembreId(Long membreId);
 
   /**
@@ -36,30 +31,4 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    * @return matching demands
    */
   Iterable<Demande> findByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
-
-  /**
-   * Check whether an equivalent pending demand already exists.
-   *
-   * @param membreId user id
-   * @param equipeId team id
-   * @param etat demand state
-   * @return true when a match exists
-   */
-  boolean existsByMembreIdAndEquipeIdAndEtat(Long membreId, Long equipeId, EtatDemande etat);
-
-  /**
-   * Delete all demands by team and state.
-   *
-   * @param equipeId team id
-   * @param etat demand state
-   */
-  void deleteByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
-
-  /**
-   * Delete all demands by user and state.
-   *
-   * @param membreId user id
-   * @param etat demand state
-   */
-  void deleteByMembreIdAndEtat(Long membreId, EtatDemande etat);
 }

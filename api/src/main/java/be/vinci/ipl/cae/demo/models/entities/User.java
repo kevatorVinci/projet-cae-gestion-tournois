@@ -44,12 +44,12 @@ public class User {
   @Column(nullable = true)
   private String team;
 
-  /** Team membership relation used by Equipe and Demande services. */
+  @Column(nullable = false)
+  private LocalDateTime dateCreationProfil;
+
+  /** Team membership relation. */
   @ManyToOne
   @JoinColumn(name = "equipe_id")
   @JsonBackReference
   private Equipe equipe;
-
-  @Column(nullable = false)
-  private LocalDate creationDate;
 }

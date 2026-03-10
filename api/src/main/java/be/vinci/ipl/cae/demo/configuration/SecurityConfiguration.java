@@ -31,11 +31,15 @@ public class SecurityConfiguration {
    * FilterChain for the security configuration.
    *
    * @param http the HttpSecurity.
+   * @param userService the UserService for JWT authentication.
    * @return the SecurityFilterChain.
    * @throws Exception the exception.
    */
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, UserService userService)
+      throws Exception {
+    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(userService);
+
     return http.csrf(AbstractHttpConfigurer::disable)
         .cors(AbstractHttpConfigurer::disable)
         .httpBasic(AbstractHttpConfigurer::disable)
@@ -45,7 +49,13 @@ public class SecurityConfiguration {
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             authorize ->
-                authorize.requestMatchers("/auths/**").permitAll().anyRequest().authenticated())
+                authorize
+                    .requestMatchers("/auths/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/equipes", "/equipes/", "/equipes/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(
             exception ->
