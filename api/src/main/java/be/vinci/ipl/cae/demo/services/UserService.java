@@ -6,7 +6,7 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -137,8 +137,8 @@ public class UserService {
     user.setProfileImageUrl(
         credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
 
-    // On note la date d'aujourd'hui comme date d'inscription
-    user.setCreationDate(LocalDate.now());
+    // On note la date/heure actuelle comme date d'inscription
+    user.setDateCreationProfil(LocalDateTime.now());
 
     // On sauvegarde définitivement !
     return userRepository.save(user);

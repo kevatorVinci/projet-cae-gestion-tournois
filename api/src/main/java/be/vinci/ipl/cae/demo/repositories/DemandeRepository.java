@@ -31,4 +31,10 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    * @return matching demands
    */
   Iterable<Demande> findByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
+
+  boolean existsByMembreIdAndEquipeIdAndEtat(Long membreId, Long equipeId, EtatDemande etat);
+
+  void deleteByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
+
+  void deleteByMembreIdAndEtat(Long membreId, EtatDemande etat);
 }

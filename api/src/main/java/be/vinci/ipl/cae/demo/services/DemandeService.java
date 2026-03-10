@@ -53,7 +53,7 @@ public class DemandeService {
     Equipe equipe =
         equipeRepo.findById(equipeId).orElseThrow(() -> new RuntimeException("Équipe introuvable"));
 
-    if (user.getEquipe() != null) {
+    if (membre.getEquipe() != null) {
       throw new RuntimeException("Vous avez déjà une équipe !");
     }
     boolean hasNoResponsible =
@@ -72,7 +72,7 @@ public class DemandeService {
     }
 
     Demande demande = new Demande();
-    demande.setMembre(user);
+    demande.setMembre(membre);
     demande.setEquipe(equipe);
     demande.setEtat(EtatDemande.EN_ATTENTE);
 
@@ -88,7 +88,7 @@ public class DemandeService {
    */
   public Iterable<Demande> getDemandesEnAttentePourEquipe(Long equipeId) {
     Equipe equipe = equipeRepo.findById(equipeId).orElse(null);
-    if (equipe == null || !isEquipeEligibleForJoin(equipe)) {
+    if (equipe != null && !isEquipeEligibleForJoin(equipe)) {
       // Nettoyage defensif: evite des notifications orphelines pour une equipe invalide.
       demandeRepo.deleteByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
       return List.of();
@@ -192,5 +192,12 @@ public class DemandeService {
     if (!isPrincipal && !isSecondaire) {
       throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
     }
+  }
+
+  private boolean isEquipeEligibleForJoin(Equipe equipe) {
+    if (equipe == null) {
+      return false;
+    }
+    return equipe.getResponsablePrincipal() != null || equipe.getResponsableSecondaire() != null;
   }
 }
