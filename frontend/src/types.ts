@@ -1,5 +1,3 @@
-// --- LES VRAIS TYPES POUR VINCI ARENA ⚔️ ---
-
 interface User {
   email: string;
   password?: string;

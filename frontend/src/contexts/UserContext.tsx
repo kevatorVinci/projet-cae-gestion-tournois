@@ -1,4 +1,4 @@
-import { createContext, useState, ReactNode } from 'react';
+import { createContext, useState, ReactNode, useEffect } from 'react';
 import {
   MaybeAuthenticatedUser,
   UserContextType,
@@ -8,7 +8,9 @@ import {
 
 import {
   clearAuthenticatedUser,
+  getAuthenticatedUser,
   storeAuthenticatedUser,
+  isTokenExpired,
 } from '../utils/session';
 
 // 1️⃣ On ajoute une action vide par défaut pour ne pas casser le site
@@ -24,7 +26,7 @@ const UserContext = createContext<UserContextType>(defaultUserContext);
 
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUser] =
-    useState<MaybeAuthenticatedUser>(undefined);
+    useState<MaybeAuthenticatedUser>(getAuthenticatedUser());
 
   const registerUser = async (newUser: User) => {
     try {
@@ -43,17 +45,14 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
           `fetch error : ${response.status} : ${response.statusText}`,
         );
 
-      const createdUser: AuthenticatedUser = await response.json();
-
-      setAuthenticatedUser(createdUser);
-      storeAuthenticatedUser(createdUser);
+      await response.json();
     } catch (err) {
       console.error('registerUser::error: ', err);
       throw err;
     }
   };
 
-  const loginUser = async (user: User) => {
+  const loginUser = async (user: User, rememberMe: boolean) => {
     try {
       const options = {
         method: 'POST',
@@ -74,7 +73,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       const authenticatedUser: AuthenticatedUser = await response.json();
 
       setAuthenticatedUser(authenticatedUser);
-      storeAuthenticatedUser(authenticatedUser);
+      storeAuthenticatedUser(authenticatedUser, rememberMe);
     } catch (err) {
       console.error('loginUser::error: ', err);
       throw err;
@@ -86,7 +85,6 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     setAuthenticatedUser(undefined);
   };
 
-  // 2️⃣ NOUVEAU : La méthode qui met à jour l'image (ou la spécialité) dans tout le site !
   const updateUser = (updatedData: Partial<AuthenticatedUser>) => {
     if (authenticatedUser) {
       // On prend l'ancien joueur, et on lui colle les nouvelles informations par-dessus
@@ -99,7 +97,22 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 3️⃣ On n'oublie pas d'ajouter updateUser dans la boîte à outils finale
+  useEffect(() => {
+    if (!authenticatedUser?.token) return;
+
+    const checkTokenExpiration = () => {
+      if (isTokenExpired(authenticatedUser.token)) {
+        clearUser();
+        window.location.href = '/login';
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiration, 60000);
+    checkTokenExpiration();
+
+    return () => clearInterval(interval);
+  }, [authenticatedUser]);
+
   const myContext: UserContextType = {
     authenticatedUser,
     registerUser,
