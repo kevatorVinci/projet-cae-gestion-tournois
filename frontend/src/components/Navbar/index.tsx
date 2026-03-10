@@ -44,7 +44,7 @@ const Navbar = () => {
         <Button color="inherit" onClick={() => navigate('/tournaments')}>
           Tournois
         </Button>
-        <Button color="inherit" onClick={() => navigate('/teams')}>
+        <Button color="inherit" onClick={() => navigate('/equipes')}>
           Teams
         </Button>
 
@@ -78,7 +78,7 @@ const Navbar = () => {
             }}
           >
             {/* L'image de profil cliquable */}
-            <IconButton onClick={() => navigate('/profile')} sx={{ p: 0 }}>
+            <IconButton onClick={() => navigate('/profil')} sx={{ p: 0 }}>
               <Avatar
                 alt="Profil du joueur"
                 src={authenticatedUser?.profileImage}

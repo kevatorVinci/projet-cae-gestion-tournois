@@ -13,168 +13,279 @@ import {
   GroupAdd as JoinIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType } from '../../../types';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
 
-  // Simulation de l'utilisateur (sera remplacé par ton UserContext plus tard)
-  const user = {
-    tag: 'Pedrinho08',
-    specialty: 'Tacticien',
-    email: 'joueur25@gmail.com',
-    avatarSeed: 'Felix',
-    hasTeam: false, // Modifie ici pour tester l'affichage
-  };
+  const userTag = authenticatedUser?.tag || 'Joueur';
+  const userRole = authenticatedUser?.specialty || 'Rôle non défini';
+  const userEmail = authenticatedUser?.email || 'Email non disponible';
+  const userAvatar =
+    authenticatedUser?.profileImage ||
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${userTag}`;
+  const hasTeam = false;
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5, mb: 5 }}>
-      {/* 1. BANNIÈRE DE BIENVENUE */}
-      <Paper
-        elevation={0}
+    <Box
+      sx={{
+        minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+        py: 5,
+        position: 'relative',
+        overflow: 'hidden',
+        backgroundColor: 'background.default',
+      }}
+    >
+      {/* Dégradé bleu nuit en haut à la place du background image */}
+      <Box
         sx={{
-          p: 4,
-          borderRadius: 3,
-          bgcolor: '#112b4f',
-          color: 'white',
-          mb: 4,
-          position: 'relative',
-          overflow: 'hidden',
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(30,58,95,0.45), transparent)',
+          pointerEvents: 'none',
         }}
-      >
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Bonjour {user.tag} 👋
-        </Typography>
-        <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: 600 }}>
-          Bienvenue sur votre espace personnel. Il semble que vous ne fassiez
-          partie d'aucune équipe pour le moment. Pour participer aux tournois,
-          rejoignez une escouade ou fondez la vôtre !
-        </Typography>
-      </Paper>
-
-      {/* 2. CARTE PROFIL */}
-      <Paper
-        variant="outlined"
+      />
+      {/* Grille SVG très subtile */}
+      <Box
+        component="svg"
         sx={{
-          p: 3,
-          mb: 4,
-          borderRadius: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          opacity: 0.035,
+          pointerEvents: 'none',
         }}
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <Stack direction="row" spacing={3} alignItems="center">
-          <Avatar
-            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.avatarSeed}`}
-            sx={{ width: 80, height: 80, border: '2px solid #e2e8f0' }}
-          />
-          <Box>
-            <Typography variant="h5" fontWeight={700}>
-              {user.tag}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {user.specialty}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {user.email}
-            </Typography>
-          </Box>
-        </Stack>
-        <Button variant="outlined" startIcon={<EditIcon />} color="inherit">
-          Modifier le profil
-        </Button>
-      </Paper>
+        <defs>
+          <pattern
+            id="grid"
+            x="0"
+            y="0"
+            width="56"
+            height="56"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 56 0 L 0 0 0 56"
+              fill="none"
+              stroke="white"
+              strokeWidth="0.6"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </Box>
 
-      {/* 3. GRILLE DES ACTIONS (Créer / Rejoindre) */}
-      {!user.hasTeam && (
-        <Grid container spacing={3}>
-          {/* CARTE CRÉER */}
-          <Grid item xs={12} md={6}>
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 4,
-                textAlign: 'center',
-                height: '100%',
-                transition: '0.3s',
-                '&:hover': { transform: 'translateY(-5px)', boxShadow: 3 },
-              }}
-            >
-              <Avatar
-                sx={{
-                  bgcolor: '#eff6ff',
-                  color: '#2563eb',
-                  width: 60,
-                  height: 60,
-                  mx: 'auto',
-                  mb: 2,
-                }}
-              >
-                <CreateIcon fontSize="large" />
-              </Avatar>
-              <Typography variant="h6" fontWeight={700} gutterBottom>
-                Créer une équipe
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Vous avez l'âme d'un leader ? Fondez votre propre équipe,
-                recrutez des joueurs et devenez responsable.
-              </Typography>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={() => navigate('/equipes/creer')}
-                sx={{ bgcolor: '#2563eb' }}
-              >
-                Créer mon équipe
-              </Button>
-            </Paper>
-          </Grid>
+      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* 1. BANNIÈRE DE BIENVENUE */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            background:
+              'linear-gradient(135deg, rgba(17,43,79,0.9) 0%, rgba(26,37,64,0.9) 100%)',
+            border: '1px solid rgba(44,90,142,0.35)',
+            color: 'white',
+            mb: 4,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            Bonjour {userTag} 👋
+          </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: 600 }}>
+            Bienvenue sur votre espace personnel. Il semble que vous ne fassiez
+            partie d&apos;aucune équipe pour le moment. Pour participer aux
+            tournois, rejoignez une escouade ou fondez la vôtre !
+          </Typography>
+        </Paper>
 
-          {/* CARTE REJOINDRE */}
-          <Grid item xs={12} md={6}>
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 4,
-                textAlign: 'center',
-                height: '100%',
-                transition: '0.3s',
-                '&:hover': { transform: 'translateY(-5px)', boxShadow: 3 },
-              }}
-            >
-              <Avatar
-                sx={{
-                  bgcolor: '#fef3c7',
-                  color: '#d97706',
-                  width: 60,
-                  height: 60,
-                  mx: 'auto',
-                  mb: 2,
-                }}
-              >
-                <JoinIcon fontSize="large" />
-              </Avatar>
-              <Typography variant="h6" fontWeight={700} gutterBottom>
-                Rejoindre une équipe
+        {/* 2. CARTE PROFIL */}
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 2,
+            backgroundColor: '#111827',
+            border: '1px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Stack direction="row" spacing={3} alignItems="center">
+            <Avatar
+              src={userAvatar}
+              sx={{ width: 80, height: 80, border: '2px solid #e8822a' }}
+            />
+            <Box>
+              <Typography variant="h5" fontWeight={700} color="white">
+                {userTag}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Vous cherchez des frères d'armes ? Parcourez l'annuaire des
-                équipes et envoyez votre candidature.
+              <Typography variant="body2" color="text.secondary">
+                {userRole}
               </Typography>
-              <Button
-                fullWidth
+              <Typography variant="body2" color="text.secondary">
+                {userEmail}
+              </Typography>
+            </Box>
+          </Stack>
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => navigate('/profile')}
+            sx={{
+              borderColor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              '&:hover': {
+                borderColor: '#e8822a',
+                color: '#e8822a',
+                backgroundColor: 'rgba(232,130,42,0.08)',
+              },
+            }}
+          >
+            Modifier le profil
+          </Button>
+        </Paper>
+
+        {/* 3. GRILLE DES ACTIONS (Créer / Rejoindre) */}
+        {!hasTeam && (
+          <Grid container spacing={3}>
+            {/* CARTE CRÉER */}
+            <Grid item xs={12} md={6}>
+              <Paper
                 variant="outlined"
-                onClick={() => navigate('/equipes')}
-                sx={{ color: '#d97706', borderColor: '#d97706' }}
+                sx={{
+                  p: 4,
+                  textAlign: 'center',
+                  height: '100%',
+                  backgroundColor: '#111827',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  transition: '0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                    borderColor: '#e8822a',
+                  },
+                }}
               >
-                Chercher une équipe
-              </Button>
-            </Paper>
+                <Avatar
+                  sx={{
+                    bgcolor: '#e8822a',
+                    width: 60,
+                    height: 60,
+                    mx: 'auto',
+                    mb: 2,
+                  }}
+                >
+                  <CreateIcon fontSize="large" />
+                </Avatar>
+                <Typography
+                  variant="h6"
+                  fontWeight={700}
+                  gutterBottom
+                  color="white"
+                >
+                  Créer une équipe
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Vous avez l&apos;âme d&apos;un leader ? Fondez votre propre
+                  équipe, recrutez des joueurs et devenez responsable.
+                </Typography>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => navigate('/equipes/creer')}
+                  sx={{
+                    backgroundColor: '#e8822a',
+                    '&:hover': { backgroundColor: '#c86e20' },
+                  }}
+                >
+                  Créer mon équipe
+                </Button>
+              </Paper>
+            </Grid>
+
+            {/* CARTE REJOINDRE */}
+            <Grid item xs={12} md={6}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 4,
+                  textAlign: 'center',
+                  height: '100%',
+                  backgroundColor: '#111827',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  transition: '0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                    borderColor: '#e8822a',
+                  },
+                }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: 'rgba(232,130,42,0.15)',
+                    border: '2px solid #e8822a',
+                    color: '#e8822a',
+                    width: 60,
+                    height: 60,
+                    mx: 'auto',
+                    mb: 2,
+                  }}
+                >
+                  <JoinIcon fontSize="large" />
+                </Avatar>
+                <Typography
+                  variant="h6"
+                  fontWeight={700}
+                  gutterBottom
+                  color="white"
+                >
+                  Rejoindre une équipe
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Vous cherchez des frères d&apos;armes ? Parcourez
+                  l&apos;annuaire des équipes et envoyez votre candidature.
+                </Typography>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => navigate('/equipes')}
+                  sx={{
+                    color: '#e8822a',
+                    borderColor: '#e8822a',
+                    '&:hover': {
+                      borderColor: '#c86e20',
+                      backgroundColor: 'rgba(232,130,42,0.08)',
+                    },
+                  }}
+                >
+                  Chercher une équipe
+                </Button>
+              </Paper>
+            </Grid>
           </Grid>
-        </Grid>
-      )}
-    </Container>
+        )}
+      </Container>
+    </Box>
   );
 };
 
