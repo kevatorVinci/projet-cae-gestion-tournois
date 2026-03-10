@@ -36,21 +36,8 @@ const Navbar = () => {
         <Button color="inherit" onClick={() => navigate('/teams')}>
           Teams
         </Button>
-        <Button color="inherit" onClick={() => navigate('/login')}>
-          Connexion
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => navigate('/register')}
-          sx={{
-            backgroundColor: '#e8822a',
-            color: '#ffffff',
-            marginLeft: 1,
-            '&:hover': { backgroundColor: '#c86e20' },
-          }}
-        >
-          Inscription
-        </Button>
+
+        {/* 🛠️ La condition gère tout maintenant : soit Connexion/Inscription, soit Déconnexion */}
         {!authenticatedUser ? (
           <>
             <Button color="inherit" onClick={() => navigate('/login')}>
