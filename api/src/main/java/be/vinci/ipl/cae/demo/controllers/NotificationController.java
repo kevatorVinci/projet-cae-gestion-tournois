@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** REST controller for managing notifications. */
+/**
+ * REST controller for managing notifications.
+ */
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-  @Autowired private NotificationService notificationService;
+  @Autowired
+  private NotificationService notificationService;
 
   /**
    * Retrieves all notifications for a given member.

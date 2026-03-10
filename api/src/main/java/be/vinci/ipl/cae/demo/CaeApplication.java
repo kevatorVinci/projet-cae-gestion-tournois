@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SuppressWarnings("PMD.UseUtilityClass")
 /** Main Spring Boot application entry point. */
 public class CaeApplication {
+
   /**
    * Application bootstrap.
    *

@@ -10,7 +10,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
-/** Notification entity linked to a user. */
+/**
+ * Notification entity linked to a user.
+ */
 @Entity
 @Table(name = "notification")
 public class Notification {
