@@ -90,7 +90,6 @@ public class UserService {
       return null;
     }
     User newUser = createOne(credentials);
-    // ✨ CORRECTION ICI : On donne l'email du nouveau joueur au lieu du joueur entier !
     return createJwtToken(newUser.getEmail());
   }
 
@@ -98,26 +97,15 @@ public class UserService {
     return userRepository.findByEmail(email);
   }
 
-  /**
-   * Construit et sauvegarde le joueur dans la base de données avec les infos de React.
-   */
   public User createOne(Credentials credentials) {
-    // On cache le mot de passe pour la sécurité
-    String hashedPassword = passwordEncoder.encode(credentials.getPassword());
-
     User user = new User();
     user.setEmail(credentials.getEmail());
-    user.setPassword(hashedPassword);
+    user.setPassword(passwordEncoder.encode(credentials.getPassword()));
 
-    // On lie les données reçues de React (spécialité, image, etc.)
-    user.setTag(credentials.getTag() != null ? credentials.getTag() : "");
-    user.setSpecialty(credentials.getSpecialty() != null ? credentials.getSpecialty() : "");
-    user.setProfileImageUrl(credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
+    user.setTag(credentials.getTag());
+    user.setSpecialty(credentials.getSpecialty());
+    user.setProfileImageUrl(credentials.getProfileImage());
 
-    // On note la date d'aujourd'hui comme date d'inscription
-    user.setCreationDate(LocalDate.now());
-
-    // On sauvegarde définitivement !
     return userRepository.save(user);
   }
 

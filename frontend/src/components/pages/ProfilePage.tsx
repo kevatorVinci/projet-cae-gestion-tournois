@@ -40,8 +40,9 @@ export default function ProfilePage() {
   };
 
   const [specialty, setSpecialty] = useState(
-    authenticatedUser?.specialty || '',
+    authenticatedUser?.specialty?.toLowerCase() || '',
   );
+
   const [profileImage, setProfileImage] = useState(
     authenticatedUser?.profileImage || '',
   );
@@ -62,12 +63,26 @@ export default function ProfilePage() {
   ];
 
   const defaultImages = [
-    'luffy.png',
-    'R.png',
-    'Pessi.jpg',
+    'butcher.jpg',
+    'eren.png',
+    'erza.jpg',
+    'femmecars.jpg',
     'flash.jpg',
+    'garou.jpg',
+    'itadori.jpg',
+    'jjk.jpg',
+    'kaido.png',
+    'lookism.jpg',
+    'luffy.png',
+    'makima.jpg',
     'miles.jpg',
-    'keke.jpg',
+    'neon2.jpg',
+    'Pessi.jpg',
+    'pevin.jpg',
+    'pion.jpg',
+    'spiderman2099.jpg',
+    'tailong.jpg',
+    'crockmou.jpg',
   ];
 
   // La méthode qui s'active quand on clique sur le gros bouton orange

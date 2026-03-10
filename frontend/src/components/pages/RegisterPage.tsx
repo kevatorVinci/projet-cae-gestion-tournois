@@ -46,12 +46,26 @@ export default function RegisterPage() {
   ];
 
   const defaultImages = [
-    'luffy.png',
-    'R.png',
-    'Pessi.jpg',
+    'butcher.jpg',
+    'eren.png',
+    'erza.jpg',
+    'femmecars.jpg',
     'flash.jpg',
+    'garou.jpg',
+    'itadori.jpg',
+    'jjk.jpg',
+    'kaido.png',
+    'lookism.jpg',
+    'luffy.png',
+    'makima.jpg',
     'miles.jpg',
-    'keke.jpg',
+    'neon2.jpg',
+    'Pessi.jpg',
+    'pevin.jpg',
+    'pion.jpg',
+    'spiderman2099.jpg',
+    'tailong.jpg',
+    'crockmou.jpg',
   ];
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -115,7 +129,7 @@ export default function RegisterPage() {
           borderRadius: 4,
           boxShadow: 2,
           width: '100%',
-          maxWidth: 400,
+          maxWidth: 600,
         }}
       >
         <Typography variant="h5" color="white" textAlign="center" mb={3}>
@@ -230,8 +244,8 @@ export default function RegisterPage() {
                   alt={`Avatar ${index}`}
                   onClick={() => setProfileImage(img)}
                   sx={{
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     borderRadius: 2,
                     cursor: 'pointer',
                     border:
