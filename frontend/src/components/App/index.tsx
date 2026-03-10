@@ -2,7 +2,13 @@ import Box from '@mui/material/Box';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from '../Navbar';
 import HomePage from '../pages/HomePage/HomePage';
+<<<<<<< HEAD
 import Notifications from '../pages/Notifications/Notif_page';
+=======
+import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage';
+import ProfilePage from '../pages/ProfilePage';
+>>>>>>> develop
 
 const App = () => (
   <Router>
@@ -11,6 +17,9 @@ const App = () => (
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
     </Box>
   </Router>

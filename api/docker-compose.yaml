@@ -1,22 +1,10 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:14
     container_name: postgres_container
     environment:
       POSTGRES_DB: cae_db
-      POSTGRES_USER: cae_user
-      POSTGRES_PASSWORD: cae
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
-
-
-  backend:
-      build: .
-      ports:
-        - "3000:3000"
-      depends_on:
-        - db
-      environment:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/cae_db
-        SPRING_DATASOURCE_USERNAME: cae_user
-        SPRING_DATASOURCE_PASSWORD: cae
+      - "5433:5432"
