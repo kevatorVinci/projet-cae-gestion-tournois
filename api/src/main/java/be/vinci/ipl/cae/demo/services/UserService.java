@@ -6,7 +6,6 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import java.time.LocalDate;
 import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -161,7 +160,7 @@ public class UserService {
 
   public void addAdmin(String email) {
     // 1. On cherche le joueur
-    be.vinci.ipl.cae.demo.models.entities.User user = userRepository.findByEmail(email);
+    User user = userRepository.findByEmail(email);
     if (user != null) {
       // 2. On change son rôle
       user.setAdmin(true);
@@ -171,7 +170,7 @@ public class UserService {
   }
 
   public void removeAdmin(String email) {
-    be.vinci.ipl.cae.demo.models.entities.User user = userRepository.findByEmail(email);
+    User user = userRepository.findByEmail(email);
     if (user != null) {
       user.setAdmin(false);
       userRepository.save(user);
