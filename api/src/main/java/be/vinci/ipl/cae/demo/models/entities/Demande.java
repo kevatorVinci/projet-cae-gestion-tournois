@@ -15,9 +15,7 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entité représentant une demande pour rejoindre une équipe.
- */
+/** Entité représentant une demande pour rejoindre une équipe. */
 @Data
 @NoArgsConstructor
 @Entity
@@ -52,9 +50,7 @@ public class Demande {
   @Column(nullable = true)
   private LocalDateTime dateTraitement;
 
-  /**
-   * Liste stricte des états possibles pour une demande.
-   */
+  /** Liste stricte des états possibles pour une demande. */
   public enum EtatDemande {
     EN_ATTENTE,
     ACCEPTEE,

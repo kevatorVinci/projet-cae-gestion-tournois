@@ -22,11 +22,9 @@ public class UserService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
 
-
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
-
   }
 
   /**
@@ -38,12 +36,13 @@ public class UserService {
     User user = userRepository.findByEmail(email);
 
     // 2. On crée le ticket secret (le Token)
-    String token = JWT.create()
-        .withIssuer("auth0")
-        .withClaim("email", email)
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
-        .sign(ALGORITHM);
+    String token =
+        JWT.create()
+            .withIssuer("auth0")
+            .withClaim("email", email)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
+            .sign(ALGORITHM);
 
     // 3. On prépare le colis final à renvoyer à React
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
@@ -68,9 +67,7 @@ public class UserService {
     }
   }
 
-  /**
-   * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
-   */
+  /** Vérifie si le mot de passe est bon quand un joueur essaie de se connecter. */
   public AuthenticatedUser login(String email, String password) {
     User user = userRepository.findByEmail(email);
     if (user == null) {
@@ -83,9 +80,7 @@ public class UserService {
     return createJwtToken(email);
   }
 
-  /**
-   * Inscrit un tout nouveau joueur dans la base de données.
-   */
+  /** Inscrit un tout nouveau joueur dans la base de données. */
   public AuthenticatedUser register(Credentials credentials) {
     User user = userRepository.findByEmail(credentials.getEmail());
     if (user != null) {
@@ -110,11 +105,10 @@ public class UserService {
     return userRepository.findById(id);
   }
 
-
   /**
    * Create a new user.
    *
-   *          infos de React.
+   * <p>infos de React.
    */
   public User createOne(Credentials credentials) {
     // On cache le mot de passe pour la sécurité
@@ -137,11 +131,9 @@ public class UserService {
     return userRepository.save(user);
   }
 
-  /**
-   * Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe).
-   */
-  public AuthenticatedUser updateProfile(String email, String specialty, String profileImage,
-      String oldPassword, String newPassword) {
+  /** Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe). */
+  public AuthenticatedUser updateProfile(
+      String email, String specialty, String profileImage, String oldPassword, String newPassword) {
     // 1. On retrouve le joueur grâce à son email
     User user = userRepository.findByEmail(email);
 
@@ -151,7 +143,9 @@ public class UserService {
       user.setProfileImageUrl(profileImage);
 
       // 3. On vérifie s'il veut changer de mot de passe
-      if (oldPassword != null && !oldPassword.isBlank() && newPassword != null
+      if (oldPassword != null
+          && !oldPassword.isBlank()
+          && newPassword != null
           && !newPassword.isBlank()) {
         // On vérifie que son ancien mot de passe est correct
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {

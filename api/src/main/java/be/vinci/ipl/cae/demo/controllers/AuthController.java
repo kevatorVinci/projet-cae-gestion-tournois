@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * AuthController to handle user authentication.
- */
+/** AuthController to handle user authentication. */
 @RestController
 @RequestMapping("/auths")
 public class AuthController {
@@ -27,7 +25,6 @@ public class AuthController {
    */
   public AuthController(UserService userService) {
     this.userService = userService;
-
   }
 
   private boolean isInvalidCredentials(Credentials credentials) {
@@ -56,10 +53,7 @@ public class AuthController {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
-    AuthenticatedUser user = userService.login(
-        credentials.getEmail(),
-        credentials.getPassword()
-    );
+    AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }
@@ -73,17 +67,17 @@ public class AuthController {
    */
   @PutMapping("/update")
   public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
-    AuthenticatedUser user = userService.updateProfile(
-        credentials.getEmail(),
-        credentials.getSpecialty(),
-        credentials.getProfileImage(),
-        credentials.getOldPassword(),
-        credentials.getNewPassword()
-    );
+    AuthenticatedUser user =
+        userService.updateProfile(
+            credentials.getEmail(),
+            credentials.getSpecialty(),
+            credentials.getProfileImage(),
+            credentials.getOldPassword(),
+            credentials.getNewPassword());
 
     if (user == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-          "Mauvais mot de passe ou utilisateur introuvable");
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }

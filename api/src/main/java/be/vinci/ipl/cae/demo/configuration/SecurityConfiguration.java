@@ -13,9 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * SecurityConfiguration to handle security configuration.
- */
+/** SecurityConfiguration to handle security configuration. */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity()
@@ -34,7 +32,7 @@ public class SecurityConfiguration {
   /**
    * FilterChain for the security configuration.
    *
-   * @param http        the HttpSecurity.
+   * @param http the HttpSecurity.
    * @param userService the UserService for JWT authentication.
    * @return the SecurityFilterChain.
    * @throws Exception the exception.
@@ -44,23 +42,29 @@ public class SecurityConfiguration {
       throws Exception {
     JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(userService);
 
-    return http
-        .csrf(AbstractHttpConfigurer::disable)
+    return http.csrf(AbstractHttpConfigurer::disable)
         .cors(AbstractHttpConfigurer::disable)
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable)
-        .sessionManagement(sessionManagement ->
-            sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(authorize ->
-            authorize
-                .requestMatchers("/auths/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/equipes", "/equipes/", "/equipes/**").permitAll()
-                .anyRequest().authenticated())
+        .sessionManagement(
+            sessionManagement ->
+                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(
+            authorize ->
+                authorize
+                    .requestMatchers("/auths/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/equipes", "/equipes/", "/equipes/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .exceptionHandling(exception -> exception
-            .authenticationEntryPoint((request, response, authException) -> {
-              response.sendError(401, "Unauthorized");
-            }))
+        .exceptionHandling(
+            exception ->
+                exception.authenticationEntryPoint(
+                    (request, response, authException) -> {
+                      response.sendError(401, "Unauthorized");
+                    }))
         .build();
   }
 }
