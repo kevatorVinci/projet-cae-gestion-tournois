@@ -19,7 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * REST controller for public team (Equipe) operations.
  *
- * <p>Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions sont liées aux
+ * <p>
+ * Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions
+ * sont liées aux
  * membres et sont donc dans MembreController.
  */
 @RestController
@@ -43,7 +45,7 @@ public class EquipeController {
   /**
    * Récupérer toutes les équipes (version publique).
    */
-  @GetMapping({"", "/"})
+  @GetMapping({ "", "/" })
   public Iterable<Equipe> readAllEquipes() {
     return equipeService.getAllEquipes();
   }
@@ -56,10 +58,8 @@ public class EquipeController {
     return equipeService.getEquipeById(id)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
-            "Équipe introuvable"
-        ));
+            "Équipe introuvable"));
   }
-
 
   /**
    * Create a team for a given user id.
@@ -72,8 +72,7 @@ public class EquipeController {
   @ResponseStatus(HttpStatus.CREATED)
   public Equipe creerEquipe(
       @PathVariable Long userId,
-      @RequestBody EquipeCreationDto dto
-  ) {
+      @RequestBody EquipeCreationDto dto) {
     User user = userService.getById(userId)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
@@ -102,8 +101,7 @@ public class EquipeController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void rejoindreEquipe(
       @PathVariable Long userId,
-      @RequestBody EquipeJoinDto dto
-  ) {
+      @RequestBody EquipeJoinDto dto) {
     User user = userService.getById(userId)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,

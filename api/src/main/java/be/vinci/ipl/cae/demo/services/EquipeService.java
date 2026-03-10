@@ -28,8 +28,8 @@ public class EquipeService {
    * Constructeur injectant les repositories et services.
    *
    * @param equipeRepository le repository permettant d'accéder aux données persistées
-   * @param userRepository the user repository
-   * @param demandService the demand service
+   * @param userRepository   the user repository
+   * @param demandService    the demand service
    */
   public EquipeService(EquipeRepository equipeRepository, UserRepository userRepository,
       DemandeService demandService) {
