@@ -4,7 +4,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CaeDemoApplication {
+public final class CaeDemoApplication {
+
+  private CaeDemoApplication() {
+  }
+
   public static void main(String[] args) {
     SpringApplication.run(CaeDemoApplication.class, args);
   }

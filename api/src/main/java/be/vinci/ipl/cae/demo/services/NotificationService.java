@@ -14,13 +14,13 @@ public class NotificationService {
   @Autowired
   private NotificationRepository notificationRepository;
 
-  public List<Notification> getByMembre(Long idMembre) {
-    return notificationRepository.findByMembre_IdMembre(idMembre);
-  }
+ public List<Notification> getByMembre(Long idMembre) {
+    return notificationRepository.findByMembreIdMembre(idMembre);
+}
 
-  public List<Notification> getUnread(Long idMembre) {
-    return notificationRepository.findByMembre_IdMembreAndEstLue(idMembre, false);
-  }
+public List<Notification> getUnread(Long idMembre) {
+    return notificationRepository.findByMembreIdMembreAndEstLue(idMembre, false);
+}
 
   public Notification markAsRead(Long idNotification) {
     Notification n = notificationRepository.findById(idNotification)
@@ -32,7 +32,7 @@ public class NotificationService {
 
   public void markAllAsRead(Long idMembre) {
     List<Notification> unread = notificationRepository
-        .findByMembre_IdMembreAndEstLue(idMembre, false);
+        .findByMembreIdMembreAndEstLue(idMembre, false);
     unread.forEach(n -> {
       n.setEstLue(true);
       n.setDateLecture(LocalDateTime.now());
