@@ -96,7 +96,6 @@ public class AuthController {
     }
     return user;
   }
-<<<<<<< HEAD
 
   /**
    * La route (URL) que React va appeler pour obtenir la liste des joueurs.
@@ -116,6 +115,3 @@ public class AuthController {
     userService.removeAdmin(email);
   }
 }
-=======
-}
->>>>>>> origin/develop

@@ -17,7 +17,6 @@ public class Credentials {
   private String profileImage;
   private String oldPassword;
   private String newPassword;
-<<<<<<< HEAD
 
   public String getEmail() {
     return email;
@@ -75,6 +74,3 @@ public class Credentials {
     this.newPassword = newPassword;
   }
 }
-=======
-}
->>>>>>> origin/develop
