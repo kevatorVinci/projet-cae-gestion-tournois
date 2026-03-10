@@ -80,7 +80,7 @@ public class EquipeController {
             "Utilisateur introuvable"));
 
     try {
-      Equipe equipe = userService.creerEquipe(user, dto.name());
+      Equipe equipe = equipeService.creerEquipe(user, dto.name());
       if (equipe == null) {
         throw new ResponseStatusException(
             HttpStatus.CONFLICT,
@@ -110,7 +110,7 @@ public class EquipeController {
             "Utilisateur introuvable"));
 
     try {
-      userService.demanderRejoindreEquipe(user, dto.equipeId());
+      equipeService.demanderRejoindreEquipe(user, dto.equipeId());
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     } catch (IllegalArgumentException e) {
