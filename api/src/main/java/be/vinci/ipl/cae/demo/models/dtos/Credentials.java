@@ -12,4 +12,9 @@ public class Credentials {
 
   private String email;
   private String password;
+  private String tag;
+  private String specialty;
+  private String profileImage;
+  private String oldPassword;
+  private String newPassword;
 }
