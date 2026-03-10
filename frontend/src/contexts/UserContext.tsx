@@ -11,11 +11,13 @@ import {
   storeAuthenticatedUser,
 } from '../utils/session';
 
+// 1️⃣ On ajoute une action vide par défaut pour ne pas casser le site
 const defaultUserContext: UserContextType = {
   authenticatedUser: undefined,
   registerUser: async () => {},
   loginUser: async () => {},
   clearUser: () => {},
+  updateUser: () => {},
 };
 
 const UserContext = createContext<UserContextType>(defaultUserContext);
@@ -84,11 +86,26 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     setAuthenticatedUser(undefined);
   };
 
+  // 2️⃣ NOUVEAU : La méthode qui met à jour l'image (ou la spécialité) dans tout le site !
+  const updateUser = (updatedData: Partial<AuthenticatedUser>) => {
+    if (authenticatedUser) {
+      // On prend l'ancien joueur, et on lui colle les nouvelles informations par-dessus
+      const newUserData = { ...authenticatedUser, ...updatedData };
+
+      // On met à jour l'écran immédiatement (pour la Navbar)
+      setAuthenticatedUser(newUserData);
+      // On sauvegarde dans le navigateur pour ne pas le perdre si on rafraîchit la page
+      storeAuthenticatedUser(newUserData);
+    }
+  };
+
+  // 3️⃣ On n'oublie pas d'ajouter updateUser dans la boîte à outils finale
   const myContext: UserContextType = {
     authenticatedUser,
     registerUser,
     loginUser,
     clearUser,
+    updateUser,
   };
 
   return (

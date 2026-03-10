@@ -26,6 +26,7 @@ interface UserContextType {
   registerUser: (newUser: User) => Promise<void>;
   loginUser: (user: User) => Promise<void>;
   clearUser: () => void;
+  updateUser: (updatedData: Partial<AuthenticatedUser>) => void;
 }
 
 // On n'exporte plus les pizzas !

@@ -56,12 +56,17 @@ export default function RegisterPage() {
     e.preventDefault();
     setErrorMessage('');
 
+    if (!profileImage) {
+      setErrorMessage("N'oubliez pas de choisir un avatar !");
+      return;
+    }
+
     const newUser = {
       email,
       password,
       tag,
       specialty,
-      profileImage,
+      profileImage: profileImage,
       team: null,
     };
 
@@ -74,7 +79,7 @@ export default function RegisterPage() {
 
       if (response.ok) {
         navigate('/login');
-      } else if (response.status === 409) {
+      } else if (response.status === 401) {
         setErrorMessage('Cette adresse email est déjà utilisée.');
       } else {
         setErrorMessage(

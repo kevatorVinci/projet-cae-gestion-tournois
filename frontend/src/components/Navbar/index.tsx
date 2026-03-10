@@ -1,6 +1,5 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-// On importe Box, IconButton et Avatar pour créer l'image cliquable
 import {
   AppBar,
   Toolbar,
@@ -16,19 +15,19 @@ import { UserContextType } from '../../types';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  // On récupère le joueur actuel et le bouton pour le déconnecter
   const { authenticatedUser, clearUser }: UserContextType =
     useContext(UserContext);
 
-  // Méthode pour déconnecter le joueur et le renvoyer à l'accueil
+  // Méthode pour déconnecter le joueur
   const handleLogout = () => {
-    clearUser();
-    navigate('/');
+    clearUser(); // Efface la mémoire
+    navigate('/'); // Renvoie à l'accueil
   };
 
   return (
     <AppBar position="static" sx={{ backgroundColor: '#1a2540' }}>
       <Toolbar>
-        {/* Le logo de Vinci Arena cliquable qui ramène à l'accueil */}
         <img
           src={logo}
           alt="Vinci Arena"
@@ -36,6 +35,7 @@ const Navbar = () => {
           onClick={() => navigate('/')}
         />
 
+        {/* Espace vide pour pousser les boutons vers la droite */}
         <Typography sx={{ flexGrow: 1 }} />
 
         <Button color="inherit" onClick={() => navigate('/')}>
@@ -48,7 +48,7 @@ const Navbar = () => {
           Teams
         </Button>
 
-        {/* Si le joueur n'est PAS connecté, on affiche Connexion et Inscription */}
+        {/* Si le joueur n'est PAS connecté */}
         {!authenticatedUser ? (
           <>
             <Button color="inherit" onClick={() => navigate('/login')}>
@@ -68,7 +68,7 @@ const Navbar = () => {
             </Button>
           </>
         ) : (
-          // Si le joueur EST connecté, on affiche sa photo et le bouton Déconnexion
+          // Si le joueur EST connecté
           <Box
             sx={{
               display: 'flex',
@@ -77,22 +77,22 @@ const Navbar = () => {
               marginLeft: 2,
             }}
           >
-            {/* Le bouton invisible qui rend l'image cliquable vers le profil */}
+            {/* L'image de profil cliquable */}
             <IconButton onClick={() => navigate('/profile')} sx={{ p: 0 }}>
               <Avatar
                 alt="Profil du joueur"
-                // On récupère l'image choisie par le joueur dans la base de données
-                src={authenticatedUser.profileImage}
+                src={authenticatedUser?.profileImage}
                 sx={{
                   width: 45,
                   height: 45,
-                  border: '2px solid #e8822a', // Une petite bordure orange pour faire joli
+                  border: '2px solid #e8822a',
                   transition: 'transform 0.2s',
-                  '&:hover': { transform: 'scale(1.1)' }, // Petit zoom quand on passe la souris
+                  '&:hover': { transform: 'scale(1.1)' },
                 }}
               />
             </IconButton>
 
+            {/* Le bouton de déconnexion */}
             <Button
               variant="contained"
               onClick={handleLogout}

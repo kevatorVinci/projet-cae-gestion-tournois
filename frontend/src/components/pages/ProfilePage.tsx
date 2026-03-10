@@ -1,4 +1,6 @@
 import React, { useState, useContext } from 'react';
+// On importe useNavigate pour pouvoir voyager vers d'autres pages
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -11,12 +13,10 @@ import {
   InputLabel,
   SelectChangeEvent,
   Grid,
-  // On importe les outils pour le bouton dans la case
   InputAdornment,
   IconButton,
 } from '@mui/material';
 
-// On importe les petits dessins de l'œil
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
@@ -30,22 +30,20 @@ import flashImg from '../../assets/images/imagesProfil/flash.jpg';
 import milesImg from '../../assets/images/imagesProfil/miles.jpg';
 
 export default function ProfilePage() {
-  const { authenticatedUser } = useContext(UserContext);
+  const { authenticatedUser, updateUser } = useContext(UserContext);
 
-  // --- BOÎTES POUR LE MOT DE PASSE ---
+  const navigate = useNavigate();
+
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // --- NOUVEAU : La boîte pour savoir si on cache ou on montre le mot de passe 🫣 ---
   const [showPassword, setShowPassword] = useState(false);
 
-  // --- NOUVEAU : La méthode qui change l'état de l'œil quand on clique dessus 🖱️ ---
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
-  // --- BOÎTES POUR L'IMAGE ET LA SPÉCIALITÉ ---
   const [specialty, setSpecialty] = useState(
     authenticatedUser?.specialty || '',
   );
@@ -53,7 +51,6 @@ export default function ProfilePage() {
     authenticatedUser?.profileImage || '',
   );
 
-  // --- BOÎTES POUR LES MESSAGES ---
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -69,12 +66,66 @@ export default function ProfilePage() {
     { name: 'Guérisseur', icon: '❤️' },
   ];
 
-  // On utilise les variables qu'on a importées tout en haut ! 👇
   const defaultImages = [luffyImg, zoroImg, pessiImg, flashImg, milesImg];
 
+  // La méthode qui s'active quand on clique sur le gros bouton orange
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage({ type: 'success', text: 'Modifications enregistrées !' });
+
+    // ✨ NOUVEAU : On vérifie que le nouveau mot de passe et la confirmation sont identiques
+    if (newPassword && newPassword !== confirmPassword) {
+      setMessage({
+        type: 'error',
+        text: 'Les nouveaux mots de passe ne correspondent pas !',
+      });
+      return; // On arrête tout si ça ne correspond pas
+    }
+
+    // 1. On prépare le colis complet, AVEC les mots de passe ! 📦
+    const updatedInfo = {
+      email: authenticatedUser?.email,
+      specialty: specialty,
+      profileImage: profileImage,
+      oldPassword: oldPassword, // ✨ On ajoute l'ancien
+      newPassword: newPassword, // ✨ On ajoute le nouveau
+    };
+
+    try {
+      const response = await fetch('/api/auths/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authenticatedUser?.token || '',
+        },
+        body: JSON.stringify(updatedInfo),
+      });
+
+      if (response.ok) {
+        if (updateUser) {
+          updateUser({
+            specialty: specialty,
+            profileImage: profileImage,
+          });
+        }
+
+        // On vide les cases de mot de passe par sécurité
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+
+        navigate('/');
+      } else {
+        setMessage({
+          type: 'error',
+          text: "Erreur : L'ancien mot de passe est incorrect.",
+        });
+      }
+    } catch {
+      setMessage({
+        type: 'error',
+        text: 'Impossible de contacter le serveur Java.',
+      });
+    }
   };
 
   return (
@@ -139,7 +190,6 @@ export default function ProfilePage() {
                   flexWrap: 'wrap',
                 }}
               >
-                {/* On dessine chaque image de la liste */}
                 {defaultImages.map((img, index) => (
                   <Box
                     key={index}
@@ -191,7 +241,6 @@ export default function ProfilePage() {
                   <MenuItem value="" disabled>
                     <em>-- Sélectionner --</em>
                   </MenuItem>
-                  {/* On affiche chaque spécialité avec son petit émoji */}
                   {specialties.map((spec) => (
                     <MenuItem key={spec.name} value={spec.name}>
                       {spec.icon} {spec.name}
@@ -214,7 +263,6 @@ export default function ProfilePage() {
           <Box sx={{ mb: 2 }}>
             <TextField
               label="Mot de passe actuel"
-              // On change le type de la case selon si on veut voir ou pas 👀
               type={showPassword ? 'text' : 'password'}
               fullWidth
               placeholder="Requis pour changer de mot de passe"
@@ -225,7 +273,6 @@ export default function ProfilePage() {
                 backgroundColor: '#2a3b55',
                 borderRadius: 1,
               }}
-              // On ajoute le petit bouton avec l'œil à la fin de la case
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
