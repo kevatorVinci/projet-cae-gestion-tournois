@@ -22,6 +22,7 @@ class UserServiceTest {
 
   @Mock private UserRepository userRepository;
   @Mock private BCryptPasswordEncoder passwordEncoder;
+  @Mock private NotificationService notificationService;
 
   @InjectMocks private UserService userService;
 

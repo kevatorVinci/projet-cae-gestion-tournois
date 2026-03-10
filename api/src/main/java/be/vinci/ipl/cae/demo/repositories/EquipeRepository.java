@@ -17,7 +17,18 @@ public interface EquipeRepository extends CrudRepository<Equipe, Long> {
    */
   Optional<Equipe> findByName(String name);
 
+  /**
+   * Returns teams with at least one member.
+   *
+   * @return active teams
+   */
   Iterable<Equipe> findByMembresIsNotEmpty();
 
+  /**
+   * Checks if a team name already exists.
+   *
+   * @param name team name
+   * @return true when the name is already used
+   */
   boolean existsByName(String name);
 }

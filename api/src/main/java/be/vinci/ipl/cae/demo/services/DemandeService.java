@@ -166,7 +166,7 @@ public class DemandeService {
 
     Demande savedDemande = demandeRepo.save(demande);
     notificationService.notifierDemandeRefusee(
-      demande.getMembre(), demande.getEquipe().getName(), raisonNormalisee);
+        demande.getMembre(), demande.getEquipe().getName(), raisonNormalisee);
     return savedDemande;
   }
 

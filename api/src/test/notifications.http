@@ -1,0 +1,13 @@
+@baseUrl = http://localhost:3000
+
+### Get all notifications for user
+GET {{baseUrl}}/api/notifications/users/1
+
+### Get unread notifications for user
+GET {{baseUrl}}/api/notifications/users/1/non-lues
+
+### Mark one notification as read
+PATCH {{baseUrl}}/api/notifications/1/lue
+
+### Mark all notifications as read
+PATCH {{baseUrl}}/api/notifications/users/1/tous-lues

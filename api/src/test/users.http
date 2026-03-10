@@ -1,95 +1,53 @@
-### ============================================================
-### users.http — Tests des endpoints d'authentification
-### ============================================================
-
 @baseUrl = http://localhost:3000
 
-### ============================================================
-### 1. CONNEXION / LOGIN
-### ============================================================
-
-### Se connecter avec des identifiants valides (Alice)
+### Login admin seed (insert.sql)
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email": "alice@example.com",
-  "password": "password"
+  "email": "admin@vinci.be",
+  "password": "admin"
 }
 
-### Se connecter (Bob)
+### Register a new user
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "newuser@vinci.be",
+  "password": "password123",
+  "tag": "newbie",
+  "specialty": "support",
+  "profileImage": "avatar-1.png"
+}
+
+### Login the new user
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email": "bob@example.com",
-  "password": "password"
+  "email": "newuser@vinci.be",
+  "password": "password123"
 }
 
-### Se connecter (Emma)
+### Update profile (no JWT required on endpoint currently)
+PUT {{baseUrl}}/auths/update
+Content-Type: application/json
+
+{
+  "email": "newuser@vinci.be",
+  "specialty": "captain",
+  "profileImage": "avatar-2.png",
+  "oldPassword": "password123",
+  "newPassword": "password1234"
+}
+
+### Login should fail with wrong password
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email": "emma@example.com",
-  "password": "password"
+  "email": "newuser@vinci.be",
+  "password": "wrong-password"
 }
-
-### Se connecter avec un mot de passe incorrect (doit retourner 401 Unauthorized)
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "email": "alice@example.com",
-  "password": "wrongpassword"
-}
-
-### Se connecter avec un email inexistant (doit retourner 401 Unauthorized)
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "email": "nonexistent@example.com",
-  "password": "password"
-}
-
-### ============================================================
-### Notes pour les tests
-### ============================================================
-###
-### Utilisateurs disponibles dans la base de données (voir insert.sql) :
-###
-### ID 1 : Alice Smith
-###   Email : alice@example.com
-###   Mot de passe : password
-###   Équipe : Dragons (responsable principal)
-###
-### ID 2 : Bob Johnson
-###   Email : bob@example.com
-###   Mot de passe : password
-###   Équipe : Phoenix (responsable principal)
-###
-### ID 3 : Carol Davis
-###   Email : carol@example.com
-###   Mot de passe : password
-###   Équipe : Dragons (membre)
-###
-### ID 4 : David Wilson
-###   Email : david@example.com
-###   Mot de passe : password
-###   Équipe : Dragons (membre)
-###
-### ID 5 : Emma Brown
-###   Email : emma@example.com
-###   Mot de passe : password
-###   Équipe : Aucune (demande en attente pour Dragons)
-###
-### ID 6 : Frank Miller
-###   Email : frank@example.com
-###   Mot de passe : password
-###   Équipe : Aucune (demande en attente pour Phoenix)
-###
-### Réponses attendues :
-### - 200 OK + JWT Token si connexion réussie
-### - 401 Unauthorized si identifiants incorrects
 

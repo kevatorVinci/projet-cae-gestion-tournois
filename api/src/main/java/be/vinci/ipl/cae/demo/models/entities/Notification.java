@@ -2,8 +2,6 @@ package be.vinci.ipl.cae.demo.models.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,6 +12,7 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/** Notification entity linked to a user account. */
 @Entity
 @Table(name = "notification")
 @Data
@@ -24,7 +23,6 @@ public class Notification {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id_notification")
   private Long idNotification;
-
 
   @Column(name = "message", nullable = false)
   private String message;
@@ -38,5 +36,4 @@ public class Notification {
   @ManyToOne
   @JoinColumn(name = "id_membre", nullable = false)
   private User user;
-
-  } 
+}

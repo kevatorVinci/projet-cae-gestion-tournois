@@ -24,6 +24,13 @@ public class UserService {
   private final UserRepository userRepository;
   private final NotificationService notificationService;
 
+  /**
+   * Builds the user service.
+   *
+   * @param passwordEncoder encoder used for password hashing
+   * @param userRepository user repository
+   * @param notificationService notification service
+   */
   public UserService(
       BCryptPasswordEncoder passwordEncoder,
       UserRepository userRepository,

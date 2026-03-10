@@ -10,12 +10,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST endpoints for user notifications. */
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
   private final NotificationService notificationService;
 
+  /**
+   * Builds the notification controller.
+   *
+   * @param notificationService notification business service
+   */
   public NotificationController(NotificationService notificationService) {
     this.notificationService = notificationService;
   }
