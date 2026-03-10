@@ -14,9 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * User entity representing a member of the Vinci Arena platform.
- */
+/** User entity representing a member of the Vinci Arena platform. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -52,9 +50,7 @@ public class User {
   @Column(nullable = false)
   private LocalDateTime dateCreationProfil;
 
-  /**
-   * Team membership relation.
-   */
+  /** Team membership relation. */
   @ManyToOne
   @JoinColumn(name = "equipe_id")
   @JsonBackReference

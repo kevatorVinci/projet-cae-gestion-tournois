@@ -17,9 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/**
- * JwtAuthenticationFilter to handle user authentication.
- */
+/** JwtAuthenticationFilter to handle user authentication. */
 @Configuration
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -37,15 +35,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   /**
    * Filter to handle user authentication.
    *
-   * @param request     the request.
-   * @param response    the response.
+   * @param request the request.
+   * @param response the response.
    * @param filterChain the filter chain.
    * @throws ServletException the servlet exception.
-   * @throws IOException      the IO exception.
+   * @throws IOException the IO exception.
    */
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-      FilterChain filterChain) throws ServletException, IOException {
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
     String token = request.getHeader("Authorization");
     if (token != null) {
       String email = userService.verifyJwtToken(token);
@@ -57,8 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
           }
           UsernamePasswordAuthenticationToken authentication =
-              new UsernamePasswordAuthenticationToken(
-                  user, null, authorities);
+              new UsernamePasswordAuthenticationToken(user, null, authorities);
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
