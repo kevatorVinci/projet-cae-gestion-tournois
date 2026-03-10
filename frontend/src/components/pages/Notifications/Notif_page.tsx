@@ -24,7 +24,6 @@ const theme = createTheme({
   },
 });
 
-// Standardize notification interface to match API + derived fields
 interface Notification {
   idNotification: number;
   type: string;
@@ -207,7 +206,6 @@ export default function Notifications() {
             <Tab label="Historique" />
           </Tabs>
 
-          {/* Notifications List */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {filtered.length === 0 && (
               <Typography
