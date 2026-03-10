@@ -7,11 +7,14 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/** Service handling notification business logic. */
+/**
+ * Service handling notification business logic.
+ */
 @Service
 public class NotificationService {
 
-  @Autowired private NotificationRepository notificationRepository;
+  @Autowired
+  private NotificationRepository notificationRepository;
 
   /**
    * Retrieves all notifications for a given user.
