@@ -4,12 +4,8 @@ import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.bind.annotation.PutMapping;
 
 /**
  * AuthController to handle user authentication.
@@ -83,5 +79,23 @@ public class AuthController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
+  }
+
+  /**
+   * La route (URL) que React va appeler pour obtenir la liste des joueurs.
+   */
+  @GetMapping("/users")
+  public java.util.List<AuthenticatedUser> getAllUsers() {
+    return userService.getAllUsersForAdmin();
+  }
+
+  @PutMapping("/addAdmin")
+  public void addAdmin(@RequestBody String email) {
+    userService.addAdmin(email);
+  }
+
+  @PutMapping("/removeAdmin")
+  public void removeAdmin(@RequestBody String email) {
+    userService.removeAdmin(email);
   }
 }

@@ -23,12 +23,15 @@ const Navbar = () => {
   const { authenticatedUser, clearUser }: UserContextType =
     useContext(UserContext);
 
-  const [isAdminView, setIsAdminView] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(() => {
+    return localStorage.getItem('isAdminView') === 'true';
+  });
 
   const handleLogout = () => {
-    clearUser(); // Efface la mémoire
-    setIsAdminView(false); // On remet l'interrupteur à zéro quand on se déconnecte
-    navigate('/'); // Renvoie à l'accueil
+    clearUser();
+    setIsAdminView(false);
+    localStorage.removeItem('isAdminView');
+    navigate('/');
   };
 
   // ✨ NOUVEAU : Une petite méthode magique pour colorier le bouton
@@ -114,7 +117,7 @@ const Navbar = () => {
                 </Button>
 
                 <Button
-                  sx={getNavStyle('/admin')} // ✨ Application du style ici aussi
+                  sx={getNavStyle('/admin')}
                   onClick={() => navigate('/admin')}
                 >
                   Admin
@@ -129,6 +132,8 @@ const Navbar = () => {
                   }}
                   onClick={() => {
                     setIsAdminView(false);
+                    // ✨ NOUVEAU : On écrit "faux" dans la mémoire !
+                    localStorage.setItem('isAdminView', 'false');
                     navigate('/');
                   }}
                 >
@@ -165,6 +170,8 @@ const Navbar = () => {
                     }}
                     onClick={() => {
                       setIsAdminView(true);
+                      // ✨ NOUVEAU : On écrit "vrai" dans la mémoire !
+                      localStorage.setItem('isAdminView', 'true');
                       navigate('/admin');
                     }}
                   >

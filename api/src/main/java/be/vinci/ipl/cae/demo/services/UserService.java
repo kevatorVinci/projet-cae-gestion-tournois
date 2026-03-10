@@ -152,4 +152,41 @@ public class UserService {
     }
     return null;
   }
+
+  public java.util.List<AuthenticatedUser> getAllUsersForAdmin() {
+    java.util.List<AuthenticatedUser> usersList = new java.util.ArrayList<>();
+
+    Iterable<User> users = userRepository.findAll();
+
+    for (User user : users) {
+      AuthenticatedUser dto = new AuthenticatedUser();
+      dto.setEmail(user.getEmail());
+      dto.setTag(user.getTag());
+      dto.setSpecialty(user.getSpecialty());
+      dto.setProfileImage(user.getProfileImageUrl());
+      dto.setAdmin(user.isAdmin());
+
+      usersList.add(dto);
+    }
+    return usersList;
+  }
+
+  public void addAdmin(String email) {
+    // 1. On cherche le joueur
+    be.vinci.ipl.cae.demo.models.entities.User user = userRepository.findByEmail(email);
+    if (user != null) {
+      // 2. On change son rôle
+      user.setAdmin(true);
+      // 3. On sauvegarde la modification dans la base de données
+      userRepository.save(user);
+    }
+  }
+
+  public void removeAdmin(String email) {
+    be.vinci.ipl.cae.demo.models.entities.User user = userRepository.findByEmail(email);
+    if (user != null) {
+      user.setAdmin(false);
+      userRepository.save(user);
+    }
+  }
 }
