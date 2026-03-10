@@ -5,6 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class CaeApplication {
+
+ private CaeApplication() {
+    }
     public static void main(String[] args) {
         SpringApplication.run(CaeApplication.class, args);
     }
