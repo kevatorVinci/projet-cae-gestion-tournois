@@ -6,10 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @SuppressWarnings("PMD.UseUtilityClass")
 public class CaeApplication {
-    private CaeApplication() {
-    }
-
-    public static void main(String[] args) {
+public static void main(String[] args) {
         SpringApplication.run(CaeApplication.class, args);
     }
 }
