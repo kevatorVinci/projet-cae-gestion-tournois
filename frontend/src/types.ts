@@ -26,7 +26,7 @@ interface PizzeriaContext {
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
   registerUser: (newUser: User) => Promise<void>;
-  loginUser: (user: User) => Promise<void>;
+  loginUser: (user: User, rememberMe: boolean) => Promise<void>;
   clearUser: () => void;
 }
 

@@ -1,4 +1,4 @@
-import { createContext, useState, ReactNode } from 'react';
+import { createContext, useState, ReactNode, useEffect } from 'react';
 import {
   MaybeAuthenticatedUser,
   UserContextType,
@@ -8,7 +8,9 @@ import {
 
 import {
   clearAuthenticatedUser,
+  getAuthenticatedUser,
   storeAuthenticatedUser,
+  isTokenExpired,
 } from '../utils/session';
 
 const defaultUserContext: UserContextType = {
@@ -22,7 +24,7 @@ const UserContext = createContext<UserContextType>(defaultUserContext);
 
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUser] =
-    useState<MaybeAuthenticatedUser>(undefined);
+    useState<MaybeAuthenticatedUser>(getAuthenticatedUser());
 
   const registerUser = async (newUser: User) => {
     try {
@@ -41,17 +43,14 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
           `fetch error : ${response.status} : ${response.statusText}`,
         );
 
-      const createdUser: AuthenticatedUser = await response.json();
-
-      setAuthenticatedUser(createdUser);
-      storeAuthenticatedUser(createdUser);
+      await response.json();
     } catch (err) {
       console.error('registerUser::error: ', err);
       throw err;
     }
   };
 
-  const loginUser = async (user: User) => {
+  const loginUser = async (user: User, rememberMe: boolean) => {
     try {
       const options = {
         method: 'POST',
@@ -72,7 +71,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       const authenticatedUser: AuthenticatedUser = await response.json();
 
       setAuthenticatedUser(authenticatedUser);
-      storeAuthenticatedUser(authenticatedUser);
+      storeAuthenticatedUser(authenticatedUser, rememberMe);
     } catch (err) {
       console.error('loginUser::error: ', err);
       throw err;
@@ -83,6 +82,22 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     clearAuthenticatedUser();
     setAuthenticatedUser(undefined);
   };
+
+  useEffect(() => {
+    if (!authenticatedUser?.token) return;
+
+    const checkTokenExpiration = () => {
+      if (isTokenExpired(authenticatedUser.token)) {
+        clearUser();
+        window.location.href = '/login';
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiration, 60000);
+    checkTokenExpiration();
+
+    return () => clearInterval(interval);
+  }, [authenticatedUser]);
 
   const myContext: UserContextType = {
     authenticatedUser,
