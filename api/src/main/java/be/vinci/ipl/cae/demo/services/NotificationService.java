@@ -1,6 +1,6 @@
 package be.vinci.ipl.cae.demo.services;
 
-import be.vinci.ipl.cae.demo.models.Notification;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import java.time.LocalDateTime;
 import java.util.List;

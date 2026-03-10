@@ -1,9 +1,10 @@
 package be.vinci.ipl.cae.demo.repositories;
 
-import be.vinci.ipl.cae.demo.models.Notification;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 
 /**
  * Repository for managing notifications in the database.

@@ -1,15 +1,12 @@
 package be.vinci.ipl.cae.demo.configuration;
 
-import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -21,29 +18,26 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity()
 public class SecurityConfiguration {
 
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
   /**
-   * Bean for BCryptPasswordEncoder.
+   * Constructor for SecurityConfiguration.
    *
-   * @return the BCryptPasswordEncoder instance.
+   * @param jwtAuthenticationFilter the injected JwtAuthenticationFilter.
    */
-  @Bean
-  public BCryptPasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
+  public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
   }
 
   /**
    * FilterChain for the security configuration.
    *
-   * @param http        the HttpSecurity.
-   * @param userService the UserService for JWT authentication.
+   * @param http the HttpSecurity.
    * @return the SecurityFilterChain.
    * @throws Exception the exception.
    */
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, UserService userService)
-      throws Exception {
-    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(userService);
-
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     return http
         .csrf(AbstractHttpConfigurer::disable)
         .cors(AbstractHttpConfigurer::disable)
@@ -54,7 +48,6 @@ public class SecurityConfiguration {
         .authorizeHttpRequests(authorize ->
             authorize
                 .requestMatchers("/auths/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/equipes", "/equipes/", "/equipes/**").permitAll()
                 .anyRequest().authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(exception -> exception

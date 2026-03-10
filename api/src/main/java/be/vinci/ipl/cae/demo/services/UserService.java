@@ -6,9 +6,8 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Date;
-import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,16 +21,14 @@ public class UserService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
 
-
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
-
   }
 
   /**
-   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site. Il récupère aussi
-   * la photo et la spécialité pour les afficher.
+   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site.
+   * Il récupère aussi la photo et la spécialité pour les afficher.
    */
   public AuthenticatedUser createJwtToken(String email) {
     // 1. On cherche le joueur dans la base de données grâce à son email
@@ -39,11 +36,11 @@ public class UserService {
 
     // 2. On crée le ticket secret (le Token)
     String token = JWT.create()
-        .withIssuer("auth0")
-        .withClaim("email", email)
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
-        .sign(ALGORITHM);
+            .withIssuer("auth0")
+            .withClaim("email", email)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
+            .sign(ALGORITHM);
 
     // 3. On prépare le colis final à renvoyer à React
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
@@ -101,20 +98,7 @@ public class UserService {
   }
 
   /**
-   * Get a user by its id.
-   *
-   * @param id the user id
-   * @return optional user
-   */
-  public Optional<User> getById(Long id) {
-    return userRepository.findById(id);
-  }
-
-
-  /**
-   * Create a new user.
-   *
-   *          infos de React.
+   * Construit et sauvegarde le joueur dans la base de données avec les infos de React.
    */
   public User createOne(Credentials credentials) {
     // On cache le mot de passe pour la sécurité
@@ -127,11 +111,10 @@ public class UserService {
     // On lie les données reçues de React (spécialité, image, etc.)
     user.setTag(credentials.getTag() != null ? credentials.getTag() : "");
     user.setSpecialty(credentials.getSpecialty() != null ? credentials.getSpecialty() : "");
-    user.setProfileImageUrl(
-        credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
+    user.setProfileImageUrl(credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
 
     // On note la date d'aujourd'hui comme date d'inscription
-    user.setDateCreationProfil(LocalDateTime.now());
+    user.setCreationDate(LocalDate.now());
 
     // On sauvegarde définitivement !
     return userRepository.save(user);
@@ -140,8 +123,7 @@ public class UserService {
   /**
    * Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe).
    */
-  public AuthenticatedUser updateProfile(String email, String specialty, String profileImage,
-      String oldPassword, String newPassword) {
+  public AuthenticatedUser updateProfile(String email, String specialty, String profileImage, String oldPassword, String newPassword) {
     // 1. On retrouve le joueur grâce à son email
     User user = userRepository.findByEmail(email);
 
@@ -151,8 +133,7 @@ public class UserService {
       user.setProfileImageUrl(profileImage);
 
       // 3. On vérifie s'il veut changer de mot de passe
-      if (oldPassword != null && !oldPassword.isBlank() && newPassword != null
-          && !newPassword.isBlank()) {
+      if (oldPassword != null && !oldPassword.isBlank() && newPassword != null && !newPassword.isBlank()) {
         // On vérifie que son ancien mot de passe est correct
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
           // Si oui, on crypte et on sauvegarde le nouveau

@@ -1,6 +1,6 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.models.Notification;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.services.NotificationService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
