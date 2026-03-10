@@ -38,7 +38,7 @@ export default function Notifications() {
   const [tab, setTab] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const idMembre = 1;
+  const idMembre = 1; // Replace with actual member ID from context or JWT
   const unreadCount = notifications.filter((n) => !n.estLue).length;
 
   useEffect(() => {
