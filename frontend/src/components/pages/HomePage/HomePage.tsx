@@ -6,11 +6,11 @@ import {
   Card,
   CardContent,
   Button,
+  Box,
 } from '@mui/material';
-
-// Données pour tester
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType } from '../../../types';
+import backgroundImage from '../../../assets/images/background.png';
 
 const tournamentsEnCours = [
   {
@@ -55,124 +55,173 @@ const HomePage = () => {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
 
   return (
-    <Container component="main" sx={{ mt: 4, mb: 4 }} maxWidth="lg">
-      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <Typography variant="h2" component="h1" gutterBottom>
-          Where Genius Meets Battle
-        </Typography>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          {authenticatedUser
-            ? "Rejoins les tournois et domine l'arène."
-            : "Rejoins la plateforme e-sport de Vinci Arena. Forme ta team, inscris-toi aux tournois, domine l'arène."}
-        </Typography>
-        {!authenticatedUser && (
-          <div
-            style={{
-              display: 'flex',
-              gap: '16px',
-              justifyContent: 'center',
-              marginTop: '24px',
-            }}
-          >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate('/register')}
-              sx={{
-                backgroundColor: '#e8822a',
-                color: '#ffffff',
-                '&:hover': { backgroundColor: '#c86e20' },
+    <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>
+      {/* ── HERO ────────────────────────────────────────────────────── */}
+      <Box
+        sx={{
+          position: 'relative',
+          height: { xs: 340, md: 440 },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Background image assombri */}
+        <Box
+          component="img"
+          src={backgroundImage}
+          alt=""
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            filter: 'brightness(0.25)',
+          }}
+        />
+        {/* Dégradé bas pour transition douce */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 140,
+            background: 'linear-gradient(to bottom, transparent, #080b14)',
+            zIndex: 1,
+          }}
+        />
+
+        {/* Contenu hero — exactement le même que l'original */}
+        <Box
+          sx={{ position: 'relative', zIndex: 2, textAlign: 'center', px: 3 }}
+        >
+          <Typography variant="h2" component="h1" gutterBottom>
+            Where Genius Meets Battle
+          </Typography>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            {authenticatedUser
+              ? "Rejoins les tournois et domine l'arène."
+              : "Rejoins la plateforme e-sport de Vinci Arena. Forme ta team, inscris-toi aux tournois, domine l'arène."}
+          </Typography>
+          {!authenticatedUser && (
+            <div
+              style={{
+                display: 'flex',
+                gap: '16px',
+                justifyContent: 'center',
+                marginTop: '24px',
               }}
             >
-              S&apos;inscrire
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={() => navigate('/login')}
-            >
-              Se connecter
-            </Button>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/register')}
+                sx={{
+                  backgroundColor: '#e8822a',
+                  color: '#ffffff',
+                  '&:hover': { backgroundColor: '#c86e20' },
+                }}
+              >
+                S&apos;inscrire
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/login')}
+              >
+                Se connecter
+              </Button>
+            </div>
+          )}
+        </Box>
+      </Box>
+
+      {/* ── SECTION TOURNOIS ─────────────────────────────────────────── */}
+      <Container component="main" sx={{ mt: 4, mb: 4 }} maxWidth="lg">
+        <Typography variant="h4" component="h2" gutterBottom align="center">
+          Bienvenue sur VinciArena
+        </Typography>
+
+        <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
+          <div style={{ flex: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              Tournoi en cours
+            </Typography>
+            {tournamentsEnCours.map((tournament) => (
+              <Card
+                key={tournament.id}
+                sx={{
+                  cursor: 'pointer',
+                  mb: 2,
+                  borderLeft: '3px solid #e8822a',
+                }}
+                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+              >
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {tournament.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Du {tournament.startDate} au {tournament.endDate}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        )}
-      </div>
 
-      <Typography variant="h4" component="h2" gutterBottom align="center">
-        Bienvenue sur VinciArena
-      </Typography>
+          <div style={{ flex: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              Tournoi à venir
+            </Typography>
+            {tournamentsAVenir.map((tournament) => (
+              <Card
+                key={tournament.id}
+                sx={{ cursor: 'pointer', mb: 2 }}
+                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+              >
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {tournament.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Début : {tournament.startDate}
+                  </Typography>
+                  <Typography variant="body2" color="primary">
+                    👥 {tournament.teamsCount}/{tournament.teamsMax} Équipes
+                    inscrites
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
-        <div style={{ flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
-            Tournoi en cours
-          </Typography>
-          {tournamentsEnCours.map((tournament) => (
-            <Card
-              key={tournament.id}
-              sx={{ cursor: 'pointer', mb: 2 }}
-              onClick={() => navigate(`/tournaments/${tournament.id}`)}
-            >
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  {tournament.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Du {tournament.startDate} au {tournament.endDate}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
+          <div style={{ flex: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              Tournois passés
+            </Typography>
+            {tournamentsPassés.map((tournament) => (
+              <Card
+                key={tournament.id}
+                sx={{ cursor: 'pointer', mb: 2 }}
+                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+              >
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {tournament.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    🏆 Vainqueur : {tournament.winner}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-
-        <div style={{ flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
-            Tournoi à venir
-          </Typography>
-          {tournamentsAVenir.map((tournament) => (
-            <Card
-              key={tournament.id}
-              sx={{ cursor: 'pointer', mb: 2 }}
-              onClick={() => navigate(`/tournaments/${tournament.id}`)}
-            >
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  {tournament.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Début : {tournament.startDate}
-                </Typography>
-                <Typography variant="body2" color="primary">
-                  👥 {tournament.teamsCount}/{tournament.teamsMax} Équipes
-                  inscrites
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div style={{ flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
-            Tournois passés
-          </Typography>
-          {tournamentsPassés.map((tournament) => (
-            <Card
-              key={tournament.id}
-              sx={{ cursor: 'pointer', mb: 2 }}
-              onClick={() => navigate(`/tournaments/${tournament.id}`)}
-            >
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  {tournament.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  🏆 Vainqueur : {tournament.winner}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
