@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// controllers/NotificationController.java
+/**
+ * REST controller for managing notifications.
+ */
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
@@ -20,32 +22,57 @@ public class NotificationController {
   @Autowired
   private NotificationService notificationService;
 
-  // GET all notifications for a member
+  /**
+   * Retrieves all notifications for a given member.
+   *
+   * @param idMembre the ID of the member
+   * @return list of all notifications for the member
+   */
   @GetMapping("/membre/{idMembre}")
   public ResponseEntity<List<Notification>> getAll(@PathVariable Long idMembre) {
     return ResponseEntity.ok(notificationService.getByMembre(idMembre));
   }
 
-  // GET only unread
+  /**
+   * Retrieves only unread notifications for a given member.
+   *
+   * @param idMembre the ID of the member
+   * @return list of unread notifications
+   */
   @GetMapping("/membre/{idMembre}/non-lues")
   public ResponseEntity<List<Notification>> getUnread(@PathVariable Long idMembre) {
     return ResponseEntity.ok(notificationService.getUnread(idMembre));
   }
 
-  // PATCH mark one as read
+  /**
+   * Marks a single notification as read.
+   *
+   * @param idNotification the ID of the notification to mark as read
+   * @return the updated notification
+   */
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<Notification> markAsRead(@PathVariable Long idNotification) {
     return ResponseEntity.ok(notificationService.markAsRead(idNotification));
   }
 
-  // PATCH mark all as read
+  /**
+   * Marks all notifications of a member as read.
+   *
+   * @param idMembre the ID of the member
+   * @return empty response with no content status
+   */
   @PatchMapping("/membre/{idMembre}/tous-lue")
   public ResponseEntity<Void> markAllAsRead(@PathVariable Long idMembre) {
     notificationService.markAllAsRead(idMembre);
     return ResponseEntity.noContent().build();
   }
 
-  // DELETE one notification
+  /**
+   * Deletes a notification by its ID.
+   *
+   * @param idNotification the ID of the notification to delete
+   * @return empty response with no content status
+   */
   @DeleteMapping("/{idNotification}")
   public ResponseEntity<Void> delete(@PathVariable Long idNotification) {
     notificationService.delete(idNotification);

@@ -27,8 +27,8 @@ public class UserService {
   }
 
   /**
-   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site.
-   * Il récupère aussi la photo et la spécialité pour les afficher.
+   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site. Il récupère aussi
+   * la photo et la spécialité pour les afficher.
    */
   public AuthenticatedUser createJwtToken(String email) {
     // 1. On cherche le joueur dans la base de données grâce à son email
@@ -36,11 +36,11 @@ public class UserService {
 
     // 2. On crée le ticket secret (le Token)
     String token = JWT.create()
-            .withIssuer("auth0")
-            .withClaim("email", email)
-            .withIssuedAt(new Date())
-            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
-            .sign(ALGORITHM);
+        .withIssuer("auth0")
+        .withClaim("email", email)
+        .withIssuedAt(new Date())
+        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
+        .sign(ALGORITHM);
 
     // 3. On prépare le colis final à renvoyer à React
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
@@ -111,7 +111,8 @@ public class UserService {
     // On lie les données reçues de React (spécialité, image, etc.)
     user.setTag(credentials.getTag() != null ? credentials.getTag() : "");
     user.setSpecialty(credentials.getSpecialty() != null ? credentials.getSpecialty() : "");
-    user.setProfileImageUrl(credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
+    user.setProfileImageUrl(
+        credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
 
     // On note la date d'aujourd'hui comme date d'inscription
     user.setCreationDate(LocalDate.now());
@@ -123,7 +124,8 @@ public class UserService {
   /**
    * Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe).
    */
-  public AuthenticatedUser updateProfile(String email, String specialty, String profileImage, String oldPassword, String newPassword) {
+  public AuthenticatedUser updateProfile(String email, String specialty, String profileImage,
+      String oldPassword, String newPassword) {
     // 1. On retrouve le joueur grâce à son email
     User user = userRepository.findByEmail(email);
 
@@ -133,7 +135,8 @@ public class UserService {
       user.setProfileImageUrl(profileImage);
 
       // 3. On vérifie s'il veut changer de mot de passe
-      if (oldPassword != null && !oldPassword.isBlank() && newPassword != null && !newPassword.isBlank()) {
+      if (oldPassword != null && !oldPassword.isBlank() && newPassword != null
+          && !newPassword.isBlank()) {
         // On vérifie que son ancien mot de passe est correct
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
           // Si oui, on crypte et on sauvegarde le nouveau

@@ -20,7 +20,8 @@ public class Notification {
   @Column(name = "id_notification")
   private Long idNotification;
 
-  @Column(name = "type", nullable = false)  // New field for notification type (e.g., 'success', 'event')
+  @Column(name = "type", nullable = false)
+  // New field for notification type (e.g., 'success', 'event')
   private String type;
 
   @Column(name = "title", nullable = false)  // New field for notification title
@@ -46,30 +47,75 @@ public class Notification {
   private Membre membre;
 
   // Getters and setters (add these for all fields)
-  public Long getIdNotification() { return idNotification; }
-  public void setIdNotification(Long idNotification) { this.idNotification = idNotification; }
+  public Long getIdNotification() {
+    return idNotification;
+  }
 
-  public String getType() { return type; }
-  public void setType(String type) { this.type = type; }
+  public void setIdNotification(Long idNotification) {
+    this.idNotification = idNotification;
+  }
 
-  public String getTitle() { return title; }
-  public void setTitle(String title) { this.title = title; }
+  public String getType() {
+    return type;
+  }
 
-  public String getMessage() { return message; }
-  public void setMessage(String message) { this.message = message; }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-  public String getReason() { return reason; }
-  public void setReason(String reason) { this.reason = reason; }
+  public String getTitle() {
+    return title;
+  }
 
-  public LocalDateTime getDateEnvoi() { return dateEnvoi; }
-  public void setDateEnvoi(LocalDateTime dateEnvoi) { this.dateEnvoi = dateEnvoi; }
+  public void setTitle(String title) {
+    this.title = title;
+  }
 
-  public Boolean getEstLue() { return estLue; }
-  public void setEstLue(Boolean estLue) { this.estLue = estLue; }
+  public String getMessage() {
+    return message;
+  }
 
-  public LocalDateTime getDateLecture() { return dateLecture; }
-  public void setDateLecture(LocalDateTime dateLecture) { this.dateLecture = dateLecture; }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-  public Membre getMembre() { return membre; }
-  public void setMembre(Membre membre) { this.membre = membre; }
+  public String getReason() {
+    return reason;
+  }
+
+  public void setReason(String reason) {
+    this.reason = reason;
+  }
+
+  public LocalDateTime getDateEnvoi() {
+    return dateEnvoi;
+  }
+
+  public void setDateEnvoi(LocalDateTime dateEnvoi) {
+    this.dateEnvoi = dateEnvoi;
+  }
+
+  public Boolean getEstLue() {
+    return estLue;
+  }
+
+  public void setEstLue(Boolean estLue) {
+    this.estLue = estLue;
+  }
+
+  public LocalDateTime getDateLecture() {
+    return dateLecture;
+  }
+
+  public void setDateLecture(LocalDateTime dateLecture) {
+    this.dateLecture = dateLecture;
+  }
+
+  public Membre getMembre() {
+    return membre;
+  }
+
+  public void setMembre(Membre membre) {
+    this.membre = membre;
+  }
 }

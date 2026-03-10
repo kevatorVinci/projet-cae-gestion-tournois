@@ -67,20 +67,22 @@ public class AuthController {
 
   /**
    * Porte d'entrée pour modifier le profil.
+   *
    * @param credentials le colis envoyé par React
    */
   @PutMapping("/update")
   public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
     AuthenticatedUser user = userService.updateProfile(
-            credentials.getEmail(),
-            credentials.getSpecialty(),
-            credentials.getProfileImage(),
-            credentials.getOldPassword(),
-            credentials.getNewPassword()
+        credentials.getEmail(),
+        credentials.getSpecialty(),
+        credentials.getProfileImage(),
+        credentials.getOldPassword(),
+        credentials.getNewPassword()
     );
 
     if (user == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
