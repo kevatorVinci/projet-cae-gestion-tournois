@@ -189,8 +189,8 @@ public class UserService {
       userRepository.save(user);
     }
   }
-  
-  public User getById(Long id) {
-    return userRepository.findById(id).orElse(null);
+
+  public java.util.Optional<User> getById(Long id) {
+    return userRepository.findById(id);
   }
 }
