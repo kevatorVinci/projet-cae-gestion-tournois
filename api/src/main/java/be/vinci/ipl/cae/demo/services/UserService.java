@@ -10,7 +10,9 @@ import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-/** Service for user authentication and profile management. */
+/**
+ * Service for user authentication and profile management.
+ */
 @Service
 public class UserService {
 
@@ -33,17 +35,14 @@ public class UserService {
   }
 
   /**
-   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site. Il récupère aussi
-   * la photo et la spécialité pour les afficher.
+   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site.
    *
    * @param email l'email de l'utilisateur
    * @return les infos de l'utilisateur authentifié
    */
   public AuthenticatedUser createJwtToken(String email) {
-    // 1. On cherche le joueur dans la base de données grâce à son email
     User user = userRepository.findByEmail(email);
 
-    // 2. On crée le ticket secret (le Token)
     String token =
             JWT.create()
                     .withIssuer("auth0")
@@ -52,12 +51,10 @@ public class UserService {
                     .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
                     .sign(ALGORITHM);
 
-    // 3. On prépare le colis final à renvoyer à React
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
     authenticatedUser.setEmail(email);
     authenticatedUser.setToken(token);
 
-    // 4. Si le joueur existe, on ajoute ses informations visuelles dans le colis
     if (user != null) {
       authenticatedUser.setTag(user.getTag());
       authenticatedUser.setSpecialty(user.getSpecialty());
@@ -82,7 +79,8 @@ public class UserService {
     }
   }
 
-  /** * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
+  /**
+   * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
    *
    * @param email l'email
    * @param password le mot de passe
@@ -99,7 +97,8 @@ public class UserService {
     return createJwtToken(email);
   }
 
-  /** * Inscrit un tout nouveau joueur dans la base de données.
+  /**
+   * Inscrit un tout nouveau joueur dans la base de données.
    *
    * @param credentials les identifiants fournis
    * @return l'utilisateur authentifié ou null
@@ -123,7 +122,8 @@ public class UserService {
     return userRepository.findByEmail(email);
   }
 
-  /** * Crée une entité utilisateur à partir des credentials.
+  /**
+   * Crée une entité utilisateur à partir des credentials.
    *
    * @param credentials les données
    * @return l'utilisateur sauvegardé
@@ -140,7 +140,8 @@ public class UserService {
     return userRepository.save(user);
   }
 
-  /** * Met à jour les informations visuelles du joueur.
+  /**
+   * Met à jour les informations visuelles du joueur.
    *
    * @param email email du joueur
    * @param specialty nouvelle spécialité
@@ -150,7 +151,8 @@ public class UserService {
    * @return l'utilisateur mis à jour ou null
    */
   public AuthenticatedUser updateProfile(
-          String email, String specialty, String profileImage, String oldPassword, String newPassword) {
+          String email, String specialty, String profileImage,
+          String oldPassword, String newPassword) {
     User user = userRepository.findByEmail(email);
 
     if (user != null) {
@@ -174,7 +176,8 @@ public class UserService {
     return null;
   }
 
-  /** * Récupère tous les utilisateurs pour le panneau admin.
+  /**
+   * Récupère tous les utilisateurs pour le panneau admin.
    *
    * @return la liste des utilisateurs
    */
