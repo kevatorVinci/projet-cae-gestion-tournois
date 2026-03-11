@@ -7,7 +7,6 @@ import be.vinci.ipl.cae.demo.models.dtos.membre.MembrePublicDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.EquipeService;
-import be.vinci.ipl.cae.demo.services.UserService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +40,7 @@ public class EquipeController {
    * @param equipeService the injected service.
    * @param userService the injected user service.
    */
-  public EquipeController(EquipeService equipeService, UserService userService) {
+  public EquipeController(EquipeService equipeService) {
     this.equipeService = equipeService;
   }
 
