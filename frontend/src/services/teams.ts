@@ -1,8 +1,4 @@
-import {
-  clearAuthenticatedUser,
-  decodeJwtPayload,
-  getAuthenticatedUser,
-} from '../utils/session';
+import { decodeJwtPayload, getAuthenticatedUser } from '../utils/session';
 import { Equipe, User } from '../types';
 
 type BackendMembre = {
@@ -40,11 +36,6 @@ function getRequiredAuthToken(): string {
 }
 
 async function parseError(response: Response, fallbackMessage: string) {
-  if (response.status === 401) {
-    clearAuthenticatedUser();
-    return 'Session expiree. Veuillez vous reconnecter.';
-  }
-
   try {
     const body = (await response.json()) as { message?: string };
     if (body.message) {

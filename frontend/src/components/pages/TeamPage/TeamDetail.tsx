@@ -78,10 +78,6 @@ export default function TeamDetails() {
               {team.name}
             </Typography>
 
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              Responsable : {team.responsable?.tag ?? 'N/A'}
-            </Typography>
-
             <Typography variant="body1" color="text.secondary">
               Membres : {team.members.length}
             </Typography>

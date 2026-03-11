@@ -158,9 +158,6 @@ export function RejoindreEquipe() {
                     </Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    👑 Responsable : {team.responsable?.tag ?? 'Non defini'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
                     👥 {team.members.length} Membres
                   </Typography>
                 </CardContent>

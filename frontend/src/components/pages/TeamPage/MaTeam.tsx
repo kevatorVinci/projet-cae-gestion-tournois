@@ -26,7 +26,7 @@ import {
 import { ExitToApp as LeaveIcon } from '@mui/icons-material';
 import {
   depromoteResponsable,
-  getAllEquipes,
+  getUserTeam,
   isCurrentUserResponsable,
   leaveEquipe,
   promoteResponsable,
@@ -34,9 +34,10 @@ import {
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType } from '../../../types';
 import { useNavigate } from 'react-router-dom';
+import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 
 export function MyTeam() {
-  const { authenticatedUser }: UserContextType = useContext(UserContext);
+  const {}: UserContextType = useContext(UserContext);
   const navigate = useNavigate();
   const [team, setTeam] = useState<Equipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,32 +50,42 @@ export function MyTeam() {
   const [replacementResponsibleId, setReplacementResponsibleId] = useState<
     number | null
   >(null);
+  const [promoteConfirmOpen, setPromoteConfirmOpen] = useState(false);
+  const [pendingPromoteMember, setPendingPromoteMember] = useState<{
+    id: number;
+    tag?: string;
+  } | null>(null);
 
-  const handleAuthFailure = useCallback((err: unknown): boolean => {
-    const errorMessage = err instanceof Error ? err.message : '';
-    if (
-      errorMessage.includes('Session expiree') ||
-      errorMessage.includes('Utilisateur non authentifie') ||
-      errorMessage.includes('HTTP 401')
-    ) {
-      navigate('/login');
-      return true;
-    }
-    return false;
-  }, [navigate]);
+  const currentUserId = (() => {
+    const token = getAuthenticatedUser()?.token;
+    if (!token) return undefined;
+    const payload = decodeJwtPayload(token);
+    if (typeof payload?.id === 'number') return payload.id;
+    const subAsNumber = Number(payload?.sub);
+    return Number.isFinite(subAsNumber) ? subAsNumber : undefined;
+  })();
+
+  const handleAuthFailure = useCallback(
+    (err: unknown): boolean => {
+      const errorMessage = err instanceof Error ? err.message : '';
+      if (
+        errorMessage.includes('Session expiree') ||
+        errorMessage.includes('Utilisateur non authentifie')
+      ) {
+        navigate('/login');
+        return true;
+      }
+      return false;
+    },
+    [navigate],
+  );
 
   const loadMyTeam = useCallback(async () => {
     try {
-      const [equipes, responsable] = await Promise.all([
-        getAllEquipes(),
+      const [myTeam, responsable] = await Promise.all([
+        getUserTeam(),
         isCurrentUserResponsable(),
       ]);
-
-      const myTag = authenticatedUser?.tag;
-      const myTeam =
-        equipes.find((equipe) =>
-          equipe.members.some((member) => member.tag === myTag),
-        ) ?? null;
 
       setTeam(myTeam);
       setIsResponsable(responsable);
@@ -87,7 +98,7 @@ export function MyTeam() {
     } finally {
       setLoading(false);
     }
-  }, [authenticatedUser?.tag]);
+  }, [handleAuthFailure]);
 
   useEffect(() => {
     loadMyTeam();
@@ -99,7 +110,7 @@ export function MyTeam() {
     }
 
     const otherMembers = team.members.filter(
-      (member) => member.tag !== authenticatedUser?.tag,
+      (member) => member.id !== currentUserId,
     );
 
     if (isResponsable && otherMembers.length > 0) {
@@ -122,7 +133,11 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
-      setMessage("Impossible de quitter l'equipe actuellement.");
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : "Impossible de quitter l'equipe actuellement.",
+      );
     }
   };
 
@@ -148,7 +163,11 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
-      setMessage("Impossible de quitter l'equipe actuellement.");
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : "Impossible de quitter l'equipe actuellement.",
+      );
     }
   };
 
@@ -163,10 +182,28 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
-      setMessage('Impossible de nommer ce membre responsable.');
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de nommer ce membre responsable.',
+      );
     } finally {
       setMemberActionLoadingId(null);
     }
+  };
+
+  const openPromoteConfirm = (memberId: number, memberTag?: string) => {
+    setPendingPromoteMember({ id: memberId, tag: memberTag });
+    setPromoteConfirmOpen(true);
+  };
+
+  const handleConfirmPromote = async () => {
+    if (!pendingPromoteMember) {
+      return;
+    }
+    setPromoteConfirmOpen(false);
+    await handlePromote(pendingPromoteMember.id, pendingPromoteMember.tag);
+    setPendingPromoteMember(null);
   };
 
   const handleDepromote = async (memberId: number, memberTag?: string) => {
@@ -180,7 +217,11 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
-      setMessage('Impossible de deheriter ce responsable.');
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de deheriter ce responsable.',
+      );
     } finally {
       setMemberActionLoadingId(null);
     }
@@ -220,7 +261,7 @@ export function MyTeam() {
   }
 
   const otherMembers = team.members.filter(
-    (member) => member.tag !== authenticatedUser?.tag,
+    (member) => member.id !== currentUserId,
   );
 
   return (
@@ -333,7 +374,7 @@ export function MyTeam() {
                             color="white"
                           >
                             {member.tag}{' '}
-                            {member.tag === authenticatedUser?.tag && '(Vous)'}
+                            {member.id === currentUserId && '(Vous)'}
                           </Typography>
                         </Typography>
                         <Chip
@@ -350,48 +391,47 @@ export function MyTeam() {
                             color: 'white',
                           }}
                         />
-                        {isResponsable &&
-                          member.tag !== authenticatedUser?.tag && (
-                            <Button
-                              size="small"
-                              variant={
-                                member.isResponsable ? 'outlined' : 'contained'
+                        {isResponsable && member.id !== currentUserId && (
+                          <Button
+                            size="small"
+                            variant={
+                              member.isResponsable ? 'outlined' : 'contained'
+                            }
+                            disabled={memberActionLoadingId === member.id}
+                            onClick={() => {
+                              const targetMemberId = member.id;
+                              if (typeof targetMemberId !== 'number') {
+                                return;
                               }
-                              disabled={memberActionLoadingId === member.id}
-                              onClick={() => {
-                                const targetMemberId = member.id;
-                                if (typeof targetMemberId !== 'number') {
-                                  return;
-                                }
 
-                                if (member.isResponsable) {
-                                  handleDepromote(targetMemberId, member.tag);
-                                } else {
-                                  handlePromote(targetMemberId, member.tag);
-                                }
-                              }}
-                              sx={{
-                                textTransform: 'none',
-                                fontSize: 11,
-                                minWidth: 130,
+                              if (member.isResponsable) {
+                                handleDepromote(targetMemberId, member.tag);
+                              } else {
+                                openPromoteConfirm(targetMemberId, member.tag);
+                              }
+                            }}
+                            sx={{
+                              textTransform: 'none',
+                              fontSize: 11,
+                              minWidth: 130,
+                              bgcolor: member.isResponsable
+                                ? 'transparent'
+                                : '#e8822a',
+                              color: 'white',
+                              borderColor: 'rgba(255,255,255,0.35)',
+                              '&:hover': {
                                 bgcolor: member.isResponsable
-                                  ? 'transparent'
-                                  : '#e8822a',
-                                color: 'white',
-                                borderColor: 'rgba(255,255,255,0.35)',
-                                '&:hover': {
-                                  bgcolor: member.isResponsable
-                                    ? '#080b14'
-                                    : '#c86e20',
-                                  borderColor: '#c86e20',
-                                },
-                              }}
-                            >
-                              {member.isResponsable
-                                ? 'Deheriter'
-                                : 'Nommer responsable'}
-                            </Button>
-                          )}
+                                  ? '#080b14'
+                                  : '#c86e20',
+                                borderColor: '#c86e20',
+                              },
+                            }}
+                          >
+                            {member.isResponsable
+                              ? 'Deheriter'
+                              : 'Nommer responsable'}
+                          </Button>
+                        )}
                       </Stack>
                     }
                     secondary={
@@ -450,6 +490,38 @@ export function MyTeam() {
             onClick={handleConfirmLeaveTeam}
             disabled={!replacementResponsibleId}
           >
+            Confirmer
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={promoteConfirmOpen}
+        onClose={() => {
+          setPromoteConfirmOpen(false);
+          setPendingPromoteMember(null);
+        }}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Confirmer la promotion</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Voulez-vous vraiment nommer{' '}
+            <strong>{pendingPromoteMember?.tag || 'ce membre'}</strong>{' '}
+            responsable ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setPromoteConfirmOpen(false);
+              setPendingPromoteMember(null);
+            }}
+          >
+            Annuler
+          </Button>
+          <Button variant="contained" onClick={handleConfirmPromote}>
             Confirmer
           </Button>
         </DialogActions>

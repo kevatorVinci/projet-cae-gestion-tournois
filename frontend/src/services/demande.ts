@@ -1,4 +1,4 @@
-import { clearAuthenticatedUser, getAuthenticatedUser } from '../utils/session';
+import { getAuthenticatedUser } from '../utils/session';
 import { DemandeDecisionResult, DemandePendingItem } from '../types';
 
 const API_BASE = '/api';
@@ -12,11 +12,6 @@ function getRequiredAuthToken(): string {
 }
 
 async function parseError(response: Response, fallbackMessage: string) {
-  if (response.status === 401) {
-    clearAuthenticatedUser();
-    return 'Session expiree. Veuillez vous reconnecter.';
-  }
-
   try {
     const body = (await response.json()) as { message?: string };
     if (body.message) {
