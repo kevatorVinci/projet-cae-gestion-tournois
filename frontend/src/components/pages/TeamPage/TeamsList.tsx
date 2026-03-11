@@ -13,28 +13,18 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { getAllEquipes } from '../../../services/teams.ts';
-
-type TeamMember = {
-  tag: string;
-};
-
-type Team = {
-  id: number;
-  name: string;
-  responsable?: TeamMember;
-  members: TeamMember[];
-};
+import { getAllEquipes } from '../../../services/teams';
+import { Equipe } from '../../../types';
 
 const TeamsList = () => {
   const [query, setQuery] = useState('');
-  const [teamsState, setTeamsState] = useState<Team[]>([]);
+  const [teamsState, setTeamsState] = useState<Equipe[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadTeams = async () => {
       try {
-        const data = (await getAllEquipes()) as Team[];
+        const data = await getAllEquipes();
         setTeamsState(data);
       } catch (err: unknown) {
         console.error('Erreur API :', err);
@@ -216,7 +206,7 @@ const TeamsList = () => {
                         component="span"
                         sx={{ color: 'rgba(255,255,255,0.7)' }}
                       >
-                        {team.responsable?.tag}
+                        {team.responsable?.tag ?? 'Non defini'}
                       </Box>
                     </Typography>
                     <Typography variant="body2" color="text.secondary">

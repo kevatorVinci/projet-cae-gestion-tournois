@@ -1,3 +1,4 @@
+import { useContext, useEffect, useState } from 'react';
 import {
   Container,
   Typography,
@@ -12,44 +13,104 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { ExitToApp as LeaveIcon } from '@mui/icons-material';
+import {
+  getAllEquipes,
+  isCurrentUserResponsable,
+  leaveEquipe,
+} from '../../../services/teams';
+import { UserContext } from '../../../contexts/UserContext';
+import { Equipe, UserContextType } from '../../../types';
 
 export function MyTeam() {
-  // Simulation de données (À lier à ton API plus tard)
-  const team = {
-    name: 'Dark Legion',
-    wins: 2,
-    members: [
-      {
-        id: 1,
-        tag: 'SarahC',
-        role: 'RESPONSABLE',
-        specialty: '📐 Architecte',
-        avatarSeed: 'Sara',
-      },
-      {
-        id: 2,
-        tag: 'MarcO',
-        role: 'MEMBRE',
-        specialty: '🛡️ Gardien',
-        avatarSeed: 'Brian',
-      },
-      {
-        id: 3,
-        tag: 'ProGamer2024',
-        role: 'MEMBRE',
-        specialty: '🔨 Exécuteur',
-        avatarSeed: 'Jack',
-      },
-    ],
-  };
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
+  const [team, setTeam] = useState<Equipe | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isResponsable, setIsResponsable] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const handleLeaveTeam = () => {
-    if (window.confirm(`Êtes-vous sûr de vouloir quitter ${team.name} ?`)) {
-      console.log('Équipe quittée');
+  useEffect(() => {
+    const loadMyTeam = async () => {
+      try {
+        const [equipes, responsable] = await Promise.all([
+          getAllEquipes(),
+          isCurrentUserResponsable(),
+        ]);
+
+        const myTag = authenticatedUser?.tag;
+        const myTeam =
+          equipes.find((equipe) =>
+            equipe.members.some((member) => member.tag === myTag),
+          ) ?? null;
+
+        setTeam(myTeam);
+        setIsResponsable(responsable);
+      } catch (err: unknown) {
+        console.error('Erreur API :', err);
+        setMessage('Impossible de charger votre equipe pour le moment.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMyTeam();
+  }, [authenticatedUser?.tag]);
+
+  const handleLeaveTeam = async () => {
+    if (!team) {
+      return;
+    }
+
+    if (!window.confirm(`Etes-vous sur de vouloir quitter ${team.name} ?`)) {
+      return;
+    }
+
+    try {
+      await leaveEquipe();
+      setTeam(null);
+      setIsResponsable(false);
+      setMessage('Vous avez quitte votre equipe.');
+    } catch (err: unknown) {
+      console.error('Erreur API :', err);
+      setMessage("Impossible de quitter l'equipe actuellement.");
     }
   };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'background.default',
+        }}
+      >
+        <CircularProgress color="secondary" />
+      </Box>
+    );
+  }
+
+  if (!team) {
+    return (
+      <Box
+        sx={{
+          minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'background.default',
+          p: 3,
+        }}
+      >
+        <Alert severity="info">Vous n&apos;etes dans aucune equipe.</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -60,6 +121,8 @@ export function MyTeam() {
       }}
     >
       <Container maxWidth="lg" sx={{ mb: 1 }}>
+        {message && <Alert sx={{ mb: 2 }}>{message}</Alert>}
+
         {/* 1. BANNIÈRE HEADER */}
         <Paper
           elevation={0}
@@ -86,9 +149,6 @@ export function MyTeam() {
             <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
               <Typography variant="body2">
                 👥 {team.members.length} Membres
-              </Typography>
-              <Typography variant="body2">
-                🏆 {team.wins} Tournois gagnés
               </Typography>
             </Stack>
           </Box>
@@ -129,7 +189,7 @@ export function MyTeam() {
                 <ListItem sx={{ py: 2, px: 0 }}>
                   <ListItemAvatar>
                     <Avatar
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.avatarSeed}`}
+                      src={member.profileImageUrl || member.profileImage}
                       sx={{
                         width: 50,
                         height: 50,
@@ -152,7 +212,8 @@ export function MyTeam() {
                         </Typography>
                         <Chip
                           label={
-                            member.role === 'RESPONSABLE'
+                            isResponsable &&
+                            member.tag === authenticatedUser?.tag
                               ? 'Responsable'
                               : 'Membre'
                           }
@@ -161,7 +222,8 @@ export function MyTeam() {
                             fontSize: 10,
                             fontWeight: 700,
                             bgcolor:
-                              member.role === 'RESPONSABLE'
+                              isResponsable &&
+                              member.tag === authenticatedUser?.tag
                                 ? '#e8822a'
                                 : '#080b14',
                             color: 'white',
@@ -171,7 +233,7 @@ export function MyTeam() {
                     }
                     secondary={
                       <Chip
-                        label={member.specialty}
+                        label={member.specialty || 'Membre'}
                         size="small"
                         variant="outlined"
                         sx={{

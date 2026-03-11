@@ -10,7 +10,8 @@ import {
   Typography,
 } from '@mui/material';
 
-import { getEquipeById, type Equipe } from '../../../types/';
+import { getEquipeById } from '../../../services/teams';
+import { Equipe } from '../../../types';
 
 export default function TeamDetails() {
   const { id } = useParams<{ id: string }>();
