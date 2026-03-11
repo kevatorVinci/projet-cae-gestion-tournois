@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Container,
   Typography,
@@ -31,13 +31,11 @@ import {
   leaveEquipe,
   promoteResponsable,
 } from '../../../services/teams';
-import { UserContext } from '../../../contexts/UserContext';
-import { Equipe, UserContextType } from '../../../types';
+import { Equipe } from '../../../types';
 import { useNavigate } from 'react-router-dom';
 import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 
 export function MyTeam() {
-  const {}: UserContextType = useContext(UserContext);
   const navigate = useNavigate();
   const [team, setTeam] = useState<Equipe | null>(null);
   const [loading, setLoading] = useState(true);
