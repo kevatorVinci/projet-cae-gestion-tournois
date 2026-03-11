@@ -61,7 +61,10 @@ export function RejoindreEquipe() {
     } catch (err) {
       setMessage({
         type: 'error',
-        text: "Erreur lors de l'envoi de la demande.",
+        text:
+          err instanceof Error
+            ? err.message
+            : "Erreur lors de l'envoi de la demande.",
       });
     }
   };

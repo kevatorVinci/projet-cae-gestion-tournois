@@ -36,7 +36,11 @@ export function CreateEquipe() {
       await createEquipe(teamName);
       navigate('/maTeam');
     } catch (err) {
-      setError('Le nom est peut-être déjà pris ou le serveur est éteint.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la creation de l'equipe.",
+      );
     } finally {
       setLoading(false);
     }

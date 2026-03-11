@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from '../utils/session';
+import { decodeJwtPayload, getAuthenticatedUser } from '../utils/session';
 import { Equipe, User } from '../types';
 
 type BackendMembre = {
@@ -63,29 +63,22 @@ function resolveUserId(userId?: number): number {
 
   const token = getAuthenticatedUser()?.token;
   if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1])) as {
-        id?: number;
-        userId?: number;
-        sub?: string;
-      };
+    const payload = decodeJwtPayload(token);
 
-      if (typeof payload.id === 'number') {
-        return payload.id;
-      }
-      if (typeof payload.userId === 'number') {
-        return payload.userId;
-      }
-      const subAsNumber = Number(payload.sub);
-      if (!Number.isNaN(subAsNumber) && Number.isFinite(subAsNumber)) {
-        return subAsNumber;
-      }
-    } catch {
-      // Ignore malformed token payload and fallback below.
+    if (typeof payload?.id === 'number') {
+      return payload.id;
+    }
+    if (typeof payload?.userId === 'number') {
+      return payload.userId;
+    }
+
+    const subAsNumber = Number(payload?.sub);
+    if (!Number.isNaN(subAsNumber) && Number.isFinite(subAsNumber)) {
+      return subAsNumber;
     }
   }
 
-  return 1;
+  throw new Error('Utilisateur non authentifie. Veuillez vous reconnecter.');
 }
 
 export async function getAllEquipes(): Promise<Equipe[]> {
@@ -207,5 +200,22 @@ export async function leaveEquipe(
     throw new Error(
       await parseError(response, "Impossible de quitter l'equipe."),
     );
+  }
+}
+
+export async function getUserTeam(): Promise<Equipe | null> {
+  try {
+    const userId = resolveUserId();
+    const equipes = await getAllEquipes();
+
+    for (const equipe of equipes) {
+      if (equipe.members.some((member) => member.id === userId)) {
+        return equipe;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
   }
 }

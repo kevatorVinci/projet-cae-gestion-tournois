@@ -23,16 +23,16 @@ const App = () => (
         <Route path="/" element={<HomePage />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/equipes" element={<TeamsList />} />
-        <Route path="/equipes/:id" element={<TeamDetails />} />
-        <Route path="/profil" element={<Profile />} />
         <Route path="/equipes/creer" element={<CreateEquipe />} />
         <Route path="/equipes/rejoindre" element={<RejoindreEquipe />} />
+        <Route path="/equipes/demande" element={<DemandesAdhesion />} />
+        <Route path="/equipes/:id" element={<TeamDetails />} />
+        <Route path="/profil" element={<Profile />} />
         <Route path="/maTeam" element={<MyTeam />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/equipes/demande" element={<DemandesAdhesion />} />
       </Routes>
     </Box>
   </Router>

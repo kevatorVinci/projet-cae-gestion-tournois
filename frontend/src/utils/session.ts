@@ -1,13 +1,38 @@
 import { AuthenticatedUser, MaybeAuthenticatedUser } from '../types';
 
-const isTokenExpired = (token: string): boolean => {
+type JwtPayload = {
+  exp?: number;
+  id?: number;
+  userId?: number;
+  sub?: string;
+};
+
+const decodeBase64Url = (value: string): string => {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  return atob(padded);
+};
+
+const decodeJwtPayload = (token: string): JwtPayload | undefined => {
+  const [, payload] = token.split('.');
+
+  if (!payload) return undefined;
+
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const exp = payload.exp * 1000;
-    return Date.now() >= exp;
-  } catch (e) {
+    return JSON.parse(decodeBase64Url(payload)) as JwtPayload;
+  } catch {
+    return undefined;
+  }
+};
+
+const isTokenExpired = (token: string): boolean => {
+  const payload = decodeJwtPayload(token);
+
+  if (!payload?.exp) {
     return true;
   }
+
+  return Date.now() >= payload.exp * 1000;
 };
 
 const storeAuthenticatedUser = (
@@ -57,4 +82,5 @@ export {
   getAuthenticatedUser,
   clearAuthenticatedUser,
   isTokenExpired,
+  decodeJwtPayload,
 };
