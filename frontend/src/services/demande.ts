@@ -1,4 +1,5 @@
 import { getAuthenticatedUser } from '../utils/session';
+import { DemandeDecisionResult } from '../types';
 
 const API_BASE = '/api';
 
@@ -22,13 +23,6 @@ async function parseError(response: Response, fallbackMessage: string) {
   }
   return fallbackMessage;
 }
-
-export type DemandeDecisionResult = {
-  id?: number;
-  tag?: string;
-  specialty?: string;
-  profileImageUrl?: string;
-};
 
 export async function accepterDemande(
   demandeId: number,

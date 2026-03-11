@@ -188,6 +188,16 @@ public class EquipeController {
     executeTeamAction(() -> equipeService.depromouvoirResponsable(currentUser, membreId));
   }
 
+  /** Vérifie si l'utilisateur courant est responsable de son équipe. */
+  @GetMapping("/me/isResponsable")
+  @PreAuthorize("isAuthenticated()")
+  public boolean isCurrentUserResponsable(@AuthenticationPrincipal User currentUser) {
+    if (currentUser.getEquipe() == null) {
+      return false;
+    }
+    return equipeService.isUserResponsible(currentUser.getEquipe(), currentUser);
+  }
+
   private void ensureSelfTeamManagement(Long userId, User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(

@@ -1,15 +1,40 @@
 export interface Equipe {
   id: number;
   name: string;
+  responsable?: User;
+  members: User[];
+  isResponsable?: boolean;
 }
 
 interface User {
-  email: string;
+  id?: number;
+  email?: string;
   password?: string;
   tag?: string;
   specialty?: string;
-  profileImage?: string;
+  profileImageUrl?: string;
   team?: string | null;
+  creationDate?: string;
+  dateCreationProfil?: string;
+  admin?: boolean;
+  equipe?: Equipe | null;
+
+  // Compatibility aliases used in some existing components.
+  profileImage?: string;
+}
+
+interface NotificationItem {
+  idNotification: number;
+  message: string;
+  dateEnvoi: string;
+  estLue: boolean;
+}
+
+interface DemandeDecisionResult {
+  id?: number;
+  tag?: string;
+  specialty?: string;
+  profileImageUrl?: string;
 }
 
 interface AuthenticatedUser {
@@ -36,4 +61,6 @@ export type {
   AuthenticatedUser,
   MaybeAuthenticatedUser,
   UserContextType,
+  NotificationItem,
+  DemandeDecisionResult,
 };

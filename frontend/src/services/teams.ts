@@ -1,19 +1,5 @@
 import { getAuthenticatedUser } from '../utils/session';
-
-export type EquipeMember = {
-  id?: number;
-  tag: string;
-  avatar?: string;
-  speciality?: string;
-  role?: string;
-};
-
-export type Equipe = {
-  id: number;
-  name: string;
-  responsable?: EquipeMember;
-  members: EquipeMember[];
-};
+import { Equipe, User } from '../types';
 
 type BackendMembre = {
   id: number;
@@ -53,17 +39,20 @@ async function parseError(response: Response, fallbackMessage: string) {
 }
 
 function mapEquipe(dto: BackendEquipe): Equipe {
+  const members: User[] = (dto.membres ?? []).map((member) => ({
+    id: member.id,
+    tag: member.tag,
+    specialty: member.specialty,
+    profileImageUrl: member.profileImageUrl,
+    profileImage: member.profileImageUrl,
+  }));
+
   return {
     id: dto.id,
     name: dto.name,
-    members: (dto.membres ?? []).map((member) => ({
-      id: member.id,
-      tag: member.tag,
-      avatar: member.profileImageUrl,
-      speciality: member.specialty,
-      role: undefined,
-    })),
+    members,
     responsable: undefined,
+    isResponsable: dto.isResponsable,
   };
 }
 
@@ -159,6 +148,14 @@ export async function createEquipe(
     name: data.name,
     members: [],
   };
+}
+
+export async function isCurrentUserResponsable(): Promise<boolean> {
+  const response = await fetch(`${API_BASE}/equipes/me/isResponsable`, {
+    headers: { ...getAuthHeaders() },
+  });
+  if (!response.ok) return false;
+  return response.json() as Promise<boolean>;
 }
 
 export async function joinEquipe(

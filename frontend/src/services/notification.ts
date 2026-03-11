@@ -1,11 +1,5 @@
 import { getAuthenticatedUser } from '../utils/session';
-
-export type NotificationItem = {
-  idNotification: number;
-  message: string;
-  dateEnvoi: string;
-  estLue: boolean;
-};
+import { NotificationItem } from '../types';
 
 const API_BASE = '/api/api/notifications';
 

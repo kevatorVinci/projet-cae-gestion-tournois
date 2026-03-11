@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { getEquipeById, type Equipe } from '../../../services/teams.ts';
+import { getEquipeById, type Equipe } from '../../../types/';
 
 export default function TeamDetails() {
   const { id } = useParams<{ id: string }>();
@@ -104,7 +104,7 @@ export default function TeamDetails() {
               <CardContent>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Avatar
-                    src={member.avatar}
+                    src={member.profileImageUrl || member.profileImage}
                     alt={member.tag}
                     sx={{ width: 56, height: 56 }}
                   />
@@ -115,11 +115,7 @@ export default function TeamDetails() {
                     </Typography>
 
                     <Typography variant="body2" color="text.secondary">
-                      {member.speciality ?? 'Membre'}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary">
-                      {member.role === 'RESPONSABLE' ? 'Responsable' : 'Membre'}
+                      {member.specialty ?? 'Membre'}
                     </Typography>
                   </Box>
                 </Stack>
