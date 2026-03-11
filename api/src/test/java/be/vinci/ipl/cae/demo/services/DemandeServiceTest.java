@@ -27,6 +27,7 @@ class DemandeServiceTest {
   @Mock private DemandeRepository demandeRepo;
   @Mock private UserRepository userRepo;
   @Mock private EquipeRepository equipeRepo;
+  @Mock private NotificationService notificationService;
 
   @InjectMocks private DemandeService demandeService;
 

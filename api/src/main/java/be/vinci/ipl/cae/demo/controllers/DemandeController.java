@@ -15,9 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * REST controller for managing join demands (Demande).
- */
+/** REST controller for managing join demands (Demande). */
 @RestController
 @RequestMapping("/demands")
 public class DemandeController {
@@ -45,9 +43,7 @@ public class DemandeController {
     throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
   }
 
-  /**
-   * Accept a join demand (equipe responsible only).
-   */
+  /** Accept a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/accepter")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("isAuthenticated()")
@@ -62,9 +58,7 @@ public class DemandeController {
     }
   }
 
-  /**
-   * Reject a join demand (equipe responsible only).
-   */
+  /** Reject a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/refuser")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")

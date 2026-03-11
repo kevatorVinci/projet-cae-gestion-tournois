@@ -1,95 +1,52 @@
-### ============================================================
-### users.http — Tests des endpoints d'authentification
-### ============================================================
-
 @baseUrl = http://localhost:3000
+@email = http-user@example.com
+@password = password123
+@tag = httptest
+@specialty = support
 
-### ============================================================
-### 1. CONNEXION / LOGIN
-### ============================================================
+### 1. Register a user
+# @name registerUser
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
 
-### Se connecter avec des identifiants valides (Alice)
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "tag": "{{tag}}",
+  "specialty": "{{specialty}}",
+  "profileImage": "avatar-1.png"
+}
+
+### 2. Login the same user
+# @name loginUser
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email": "alice@example.com",
-  "password": "password"
+  "email": "{{email}}",
+  "password": "{{password}}"
 }
 
-### Se connecter (Bob)
+### Copy the token from loginUser response body before testing protected endpoints.
+
+### 3. Update profile
+PUT {{baseUrl}}/auths/update
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "specialty": "captain",
+  "profileImage": "avatar-2.png",
+  "oldPassword": "{{password}}",
+  "newPassword": "password1234"
+}
+
+### 4. Wrong password should return 401
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email": "bob@example.com",
-  "password": "password"
+  "email": "{{email}}",
+  "password": "wrong-password"
 }
-
-### Se connecter (Emma)
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "email": "emma@example.com",
-  "password": "password"
-}
-
-### Se connecter avec un mot de passe incorrect (doit retourner 401 Unauthorized)
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "email": "alice@example.com",
-  "password": "wrongpassword"
-}
-
-### Se connecter avec un email inexistant (doit retourner 401 Unauthorized)
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "email": "nonexistent@example.com",
-  "password": "password"
-}
-
-### ============================================================
-### Notes pour les tests
-### ============================================================
-###
-### Utilisateurs disponibles dans la base de données (voir insert.sql) :
-###
-### ID 1 : Alice Smith
-###   Email : alice@example.com
-###   Mot de passe : password
-###   Équipe : Dragons (responsable principal)
-###
-### ID 2 : Bob Johnson
-###   Email : bob@example.com
-###   Mot de passe : password
-###   Équipe : Phoenix (responsable principal)
-###
-### ID 3 : Carol Davis
-###   Email : carol@example.com
-###   Mot de passe : password
-###   Équipe : Dragons (membre)
-###
-### ID 4 : David Wilson
-###   Email : david@example.com
-###   Mot de passe : password
-###   Équipe : Dragons (membre)
-###
-### ID 5 : Emma Brown
-###   Email : emma@example.com
-###   Mot de passe : password
-###   Équipe : Aucune (demande en attente pour Dragons)
-###
-### ID 6 : Frank Miller
-###   Email : frank@example.com
-###   Mot de passe : password
-###   Équipe : Aucune (demande en attente pour Phoenix)
-###
-### Réponses attendues :
-### - 200 OK + JWT Token si connexion réussie
-### - 401 Unauthorized si identifiants incorrects
 

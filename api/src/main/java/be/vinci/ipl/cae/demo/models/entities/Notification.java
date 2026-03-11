@@ -9,12 +9,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * Notification entity linked to a user.
- */
+/** Notification entity linked to a user account. */
 @Entity
 @Table(name = "notification")
+@Data
+@NoArgsConstructor
 public class Notification {
 
   @Id
@@ -22,102 +24,16 @@ public class Notification {
   @Column(name = "id_notification")
   private Long idNotification;
 
-  @Column(name = "type", nullable = false)
-  // New field for notification type (e.g., 'success', 'event')
-  private String type;
-
-  @Column(name = "title", nullable = false) // New field for notification title
-  private String title;
-
   @Column(name = "message", nullable = false)
   private String message;
 
-  @Column(name = "reason") // New field for optional reason (e.g., for errors)
-  private String reason;
-
   @Column(name = "date_envoi", nullable = false)
-  private LocalDateTime dateEnvoi;
+  private LocalDateTime dateEnvoi = LocalDateTime.now();
 
   @Column(name = "est_lue", nullable = false)
   private Boolean estLue = false;
 
-  @Column(name = "date_lecture")
-  private LocalDateTime dateLecture; // nullable
-
   @ManyToOne
   @JoinColumn(name = "id_membre", nullable = false)
   private User user;
-
-  // Getters and setters (add these for all fields)
-  public Long getIdNotification() {
-    return idNotification;
-  }
-
-  public void setIdNotification(Long idNotification) {
-    this.idNotification = idNotification;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  public String getReason() {
-    return reason;
-  }
-
-  public void setReason(String reason) {
-    this.reason = reason;
-  }
-
-  public LocalDateTime getDateEnvoi() {
-    return dateEnvoi;
-  }
-
-  public void setDateEnvoi(LocalDateTime dateEnvoi) {
-    this.dateEnvoi = dateEnvoi;
-  }
-
-  public Boolean getEstLue() {
-    return estLue;
-  }
-
-  public void setEstLue(Boolean estLue) {
-    this.estLue = estLue;
-  }
-
-  public LocalDateTime getDateLecture() {
-    return dateLecture;
-  }
-
-  public void setDateLecture(LocalDateTime dateLecture) {
-    this.dateLecture = dateLecture;
-  }
-
-  public User getUser() {
-    return user;
-  }
-
-  public void setUser(User user) {
-    this.user = user;
-  }
 }

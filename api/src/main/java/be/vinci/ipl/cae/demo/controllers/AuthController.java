@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * AuthController to handle user authentication.
- */
+/** AuthController to handle user authentication. */
 @RestController
 @RequestMapping("/auths")
 public class AuthController {

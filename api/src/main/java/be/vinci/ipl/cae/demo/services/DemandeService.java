@@ -22,6 +22,7 @@ public class DemandeService {
   private final DemandeRepository demandeRepo;
   private final UserRepository userRepo;
   private final EquipeRepository equipeRepo;
+  private final NotificationService notificationService;
 
   /**
    * Constructeur injectant les dépendances nécessaires au service.
@@ -31,10 +32,14 @@ public class DemandeService {
    * @param equipeRepo Le repository gérant les équipes.
    */
   public DemandeService(
-      DemandeRepository demandeRepo, UserRepository userRepo, EquipeRepository equipeRepo) {
+      DemandeRepository demandeRepo,
+      UserRepository userRepo,
+      EquipeRepository equipeRepo,
+      NotificationService notificationService) {
     this.demandeRepo = demandeRepo;
     this.userRepo = userRepo;
     this.equipeRepo = equipeRepo;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -76,7 +81,13 @@ public class DemandeService {
     demande.setEquipe(equipe);
     demande.setEtat(EtatDemande.EN_ATTENTE);
 
-    return demandeRepo.save(demande);
+    Demande savedDemande = demandeRepo.save(demande);
+    notificationService.notifierDemandEnvoyee(membre, equipe.getName());
+    if (equipe.getResponsablePrincipal() != null) {
+      notificationService.notifierNouvelleDemandeResponsable(
+          equipe.getResponsablePrincipal(), membre.getTag(), equipe.getName());
+    }
+    return savedDemande;
   }
 
   /**
@@ -129,7 +140,9 @@ public class DemandeService {
     // Toutes les autres demandes en attente de ce user deviennent obsoletes.
     demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
 
-    return demandeRepo.save(demande);
+    Demande savedDemande = demandeRepo.save(demande);
+    notificationService.notifierDemandeAcceptee(user, equipe.getName());
+    return savedDemande;
   }
 
   /**
@@ -144,12 +157,17 @@ public class DemandeService {
    */
   public Demande refuserDemande(Long demandeId, String raison, User currentUser) {
     Demande demande = getAndVerifyDemande(demandeId, currentUser);
+    String raisonNormalisee =
+        (raison == null || raison.isBlank()) ? "Aucune raison precisee." : raison.trim();
 
     demande.setEtat(EtatDemande.REFUSEE);
-    demande.setRaisonRefus(raison);
+    demande.setRaisonRefus(raisonNormalisee);
     demande.setDateTraitement(LocalDateTime.now());
 
-    return demandeRepo.save(demande);
+    Demande savedDemande = demandeRepo.save(demande);
+    notificationService.notifierDemandeRefusee(
+        demande.getMembre(), demande.getEquipe().getName(), raisonNormalisee);
+    return savedDemande;
   }
 
   /**

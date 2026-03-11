@@ -6,6 +6,7 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import java.time.LocalDateTime;
 import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,16 +23,22 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
   /**
-   * Constructeur du service utilisateur.
+   * Builds the user service.
    *
-   * @param passwordEncoder outil pour crypter les mots de passe
-   * @param userRepository dépôt des données utilisateurs
+   * @param passwordEncoder encoder used for password hashing
+   * @param userRepository user repository
+   * @param notificationService notification service
    */
-  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+  public UserService(
+      BCryptPasswordEncoder passwordEncoder,
+      UserRepository userRepository,
+      NotificationService notificationService) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -137,7 +144,13 @@ public class UserService {
     user.setSpecialty(credentials.getSpecialty());
     user.setProfileImageUrl(credentials.getProfileImage());
 
-    return userRepository.save(user);
+    // On note la date/heure actuelle comme date d'inscription
+    user.setDateCreationProfil(LocalDateTime.now());
+
+    // On sauvegarde définitivement !
+    User savedUser = userRepository.save(user);
+    notificationService.notifierCreationCompte(savedUser);
+    return savedUser;
   }
 
   /**
