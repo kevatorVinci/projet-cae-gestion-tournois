@@ -55,6 +55,10 @@ class EquipeServiceTest {
 
     responsable.setEquipe(equipe);
     membre.setEquipe(equipe);
+
+    lenient().when(userRepository.findById(1L)).thenReturn(Optional.of(responsable));
+    lenient().when(userRepository.findById(2L)).thenReturn(Optional.of(membre));
+    lenient().when(userRepository.findById(3L)).thenReturn(Optional.of(tiers));
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -329,6 +333,37 @@ class EquipeServiceTest {
 
     assertThrows(
         IllegalStateException.class, () -> equipeService.quitterEquipe(userSansEquipe, null));
+  }
+
+  @Test
+  void quitterEquipe_membreAvecRelationDesynchronisee_quitteQuandMeme() {
+    membre.setEquipe(null);
+    when(equipeRepository.findAll()).thenReturn(List.of(equipe));
+    when(userRepository.findById(2L)).thenReturn(Optional.of(membre));
+
+    equipeService.quitterEquipe(membre, null);
+
+    assertNull(membre.getEquipe());
+    assertFalse(equipe.getMembres().contains(membre));
+    verify(userRepository).save(membre);
+    verify(equipeRepository).save(equipe);
+  }
+
+  @Test
+  void quitterEquipe_utilisateurDetache_rechargePuisQuitteCorrectement() {
+    User currentUserDetache = new User();
+    currentUserDetache.setId(2L);
+    currentUserDetache.setTag("BetaTag");
+    currentUserDetache.setEquipe(equipe);
+
+    when(userRepository.findById(2L)).thenReturn(Optional.of(membre));
+
+    equipeService.quitterEquipe(currentUserDetache, null);
+
+    assertNull(membre.getEquipe());
+    assertFalse(equipe.getMembres().contains(membre));
+    verify(userRepository).save(membre);
+    verify(equipeRepository).save(equipe);
   }
 
   @Test

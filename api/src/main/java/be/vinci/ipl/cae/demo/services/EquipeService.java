@@ -7,6 +7,7 @@ import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service gérant la logique métier liée aux équipes.
@@ -139,6 +140,20 @@ public class EquipeService {
   }
 
   /**
+   * Checks whether the current user is responsible in their resolved team.
+   *
+   * @param currentUser authenticated user
+   * @return true when the user is responsible of their team
+   */
+  public boolean isCurrentUserResponsible(User currentUser) {
+    try {
+      return isUserResponsible(resolveCurrentUserTeam(currentUser), currentUser);
+    } catch (IllegalStateException e) {
+      return false;
+    }
+  }
+
+  /**
    * Promote a team member to responsible role.
    *
    * @param currentUser acting user (must already be responsible)
@@ -194,24 +209,27 @@ public class EquipeService {
    * @param user persisted user that wants to leave the team
    * @param nouveauResponsableId optional member id to promote when delegation is needed
    */
+  @Transactional
   public void quitterEquipe(User user, Long nouveauResponsableId) {
-    Equipe equipe = user.getEquipe();
-    if (equipe == null) {
-      throw new IllegalStateException("Le membre n'appartient a aucune equipe.");
-    }
+    User persistedUser =
+        userRepository
+            .findById(user.getId())
+            .orElseThrow(() -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
 
-    boolean isResponsible = isUserResponsible(equipe, user);
+    Equipe equipe = resolveCurrentUserTeam(persistedUser);
+
+    boolean isResponsible = isUserResponsible(equipe, persistedUser);
     List<User> membres = equipe.getMembres();
 
     // If the responsible is the only member, leaving dissolves the team.
     if (isResponsible && membres.size() == 1) {
       equipe.getMembres().clear(); // 🧹 On vide la liste côté équipe !
 
-      user.setEquipe(null);
+      persistedUser.setEquipe(null);
       equipe.setResponsablePrincipal(null);
       equipe.setResponsableSecondaire(null);
 
-      userRepository.save(user);
+      userRepository.save(persistedUser);
       equipeRepository.save(equipe);
       return;
     }
@@ -224,7 +242,7 @@ public class EquipeService {
         }
 
         User nouveauResponsable = findMemberInTeam(equipe, nouveauResponsableId);
-        if (nouveauResponsable.getId().equals(user.getId())) {
+        if (nouveauResponsable.getId().equals(persistedUser.getId())) {
           throw new IllegalStateException("Le nouveau responsable doit etre un autre membre.");
         }
         if (!isUserResponsible(equipe, nouveauResponsable)) {
@@ -236,7 +254,7 @@ public class EquipeService {
         }
       }
 
-      removeResponsibleRole(equipe, user.getId());
+      removeResponsibleRole(equipe, persistedUser.getId());
       normalizeResponsibleSlots(equipe);
 
       if (countResponsables(equipe) == 0 && !equipe.getMembres().isEmpty()) {
@@ -244,19 +262,36 @@ public class EquipeService {
       }
     }
 
-    equipe.getMembres().removeIf(member -> member.getId().equals(user.getId()));
-    user.setEquipe(null);
+    equipe.getMembres().removeIf(member -> member.getId().equals(persistedUser.getId()));
+    persistedUser.setEquipe(null);
 
-    userRepository.save(user);
+    userRepository.save(persistedUser);
     equipeRepository.save(equipe);
   }
 
   private Equipe requireCurrentUserTeam(User currentUser) {
-    Equipe equipe = currentUser.getEquipe();
-    if (equipe == null) {
+    return resolveCurrentUserTeam(currentUser);
+  }
+
+  private Equipe resolveCurrentUserTeam(User currentUser) {
+    if (currentUser == null || currentUser.getId() == null) {
       throw new IllegalStateException("Le membre n'appartient a aucune equipe.");
     }
-    return equipe;
+
+    if (currentUser.getEquipe() != null) {
+      return currentUser.getEquipe();
+    }
+
+    for (Equipe equipe : equipeRepository.findAll()) {
+      boolean isMember =
+          equipe.getMembres().stream()
+              .anyMatch(member -> member.getId().equals(currentUser.getId()));
+      if (isMember || isUserResponsible(equipe, currentUser)) {
+        return equipe;
+      }
+    }
+
+    throw new IllegalStateException("Le membre n'appartient a aucune equipe.");
   }
 
   private void verifyCurrentUserIsResponsible(Equipe equipe, User currentUser) {

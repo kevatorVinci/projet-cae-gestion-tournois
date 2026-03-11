@@ -1,6 +1,7 @@
 package be.vinci.ipl.cae.demo.configuration;
 
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,16 +19,19 @@ public class DataInitializer {
   /**
    * Crée des utilisateurs par défaut au démarrage.
    *
+   * @param equipeRepository le dépôt des équipes
    * @param userRepository le dépôt des utilisateurs
    * @param passwordEncoder l'outil de cryptage
    * @return une instance de CommandLineRunner
    */
   @Bean
-  public CommandLineRunner initDatabase(UserRepository userRepository,
+  public CommandLineRunner initDatabase(EquipeRepository equipeRepository,
+      UserRepository userRepository,
       PasswordEncoder passwordEncoder) {
     return args -> {
-      // Nettoyage de la base pour éviter les doublons
-      userRepository.deleteAll();
+      if (equipeRepository.count() > 0 || userRepository.count() > 0) {
+        return;
+      }
 
       String defaultPassword = passwordEncoder.encode("123");
 
