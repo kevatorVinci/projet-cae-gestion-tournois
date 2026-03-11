@@ -18,11 +18,6 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import backgroundImage from '../../assets/images/background.png';
-import luffyImg from '../../assets/images/imagesProfil/luffy.png';
-import pessiImg from '../../assets/images/imagesProfil/Pessi.jpg';
-import zoroImg from '../../assets/images/imagesProfil/R.png';
-import flashImg from '../../assets/images/imagesProfil/flash.jpg';
-import milesImg from '../../assets/images/imagesProfil/miles.jpg';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -50,7 +45,28 @@ export default function RegisterPage() {
     { name: 'Guérisseur', icon: '❤️' },
   ];
 
-  const defaultImages = [luffyImg, zoroImg, pessiImg, flashImg, milesImg];
+  const defaultImages = [
+    'butcher.jpg',
+    'eren.png',
+    'erza.jpg',
+    'femmecars.jpg',
+    'flash.jpg',
+    'garou.jpg',
+    'itadori.jpg',
+    'jjk.jpg',
+    'kaido.png',
+    'lookism.jpg',
+    'luffy.png',
+    'makima.jpg',
+    'miles.jpg',
+    'neon2.jpg',
+    'Pessi.jpg',
+    'pevin.jpg',
+    'pion.jpg',
+    'spiderman2099.jpg',
+    'tailong.jpg',
+    'crockmou.jpg',
+  ];
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +129,7 @@ export default function RegisterPage() {
           borderRadius: 4,
           boxShadow: 2,
           width: '100%',
-          maxWidth: 400,
+          maxWidth: 600,
         }}
       >
         <Typography variant="h5" color="white" textAlign="center" mb={3}>
@@ -228,8 +244,8 @@ export default function RegisterPage() {
                   alt={`Avatar ${index}`}
                   onClick={() => setProfileImage(img)}
                   sx={{
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     borderRadius: 2,
                     cursor: 'pointer',
                     border:

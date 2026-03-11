@@ -21,12 +21,6 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import { UserContext } from '../../contexts/UserContext';
 
-import luffyImg from '../../assets/images/imagesProfil/luffy.png';
-import pessiImg from '../../assets/images/imagesProfil/Pessi.jpg';
-import zoroImg from '../../assets/images/imagesProfil/R.png';
-import flashImg from '../../assets/images/imagesProfil/flash.jpg';
-import milesImg from '../../assets/images/imagesProfil/miles.jpg';
-
 export default function ProfilePage() {
   const { authenticatedUser, updateUser } = useContext(UserContext);
   const navigate = useNavigate();
@@ -41,8 +35,9 @@ export default function ProfilePage() {
   };
 
   const [specialty, setSpecialty] = useState(
-    authenticatedUser?.specialty || '',
+    authenticatedUser?.specialty?.toLowerCase() || '',
   );
+
   const [profileImage, setProfileImage] = useState(
     authenticatedUser?.profileImage || '',
   );
@@ -53,16 +48,37 @@ export default function ProfilePage() {
   } | null>(null);
 
   const specialties = [
-    { name: 'Architecte', icon: '📐' },
-    { name: 'Exécuteur', icon: '🔨' },
-    { name: 'Tacticien', icon: '♟️' },
-    { name: 'Gardien', icon: '🛡️' },
-    { name: 'Catalyseur', icon: '⚡' },
-    { name: 'Perturbateur', icon: '🌪️' },
-    { name: 'Guérisseur', icon: '❤️' },
+    { name: 'architecte', icon: '📐' },
+    { name: 'exécuteur', icon: '🔨' },
+    { name: 'tacticien', icon: '♟️' },
+    { name: 'gardien', icon: '🛡️' },
+    { name: 'catalyseur', icon: '⚡' },
+    { name: 'perturbateur', icon: '🌪️' },
+    { name: 'guérisseur', icon: '❤️' },
   ];
 
-  const defaultImages = [luffyImg, zoroImg, pessiImg, flashImg, milesImg];
+  const defaultImages = [
+    'butcher.jpg',
+    'eren.png',
+    'erza.jpg',
+    'femmecars.jpg',
+    'flash.jpg',
+    'garou.jpg',
+    'itadori.jpg',
+    'jjk.jpg',
+    'kaido.png',
+    'lookism.jpg',
+    'luffy.png',
+    'makima.jpg',
+    'miles.jpg',
+    'neon2.jpg',
+    'Pessi.jpg',
+    'pevin.jpg',
+    'pion.jpg',
+    'spiderman2099.jpg',
+    'tailong.jpg',
+    'crockmou.jpg',
+  ];
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
