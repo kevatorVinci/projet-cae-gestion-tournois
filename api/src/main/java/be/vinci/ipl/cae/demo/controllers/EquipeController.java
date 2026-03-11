@@ -34,7 +34,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class EquipeController {
 
   private final EquipeService equipeService;
-  private final UserService userService;
 
   /**
    * Constructor for EquipeController.
@@ -44,7 +43,6 @@ public class EquipeController {
    */
   public EquipeController(EquipeService equipeService, UserService userService) {
     this.equipeService = equipeService;
-    this.userService = userService;
   }
 
   /** Récupérer toutes les équipes (version publique). */
