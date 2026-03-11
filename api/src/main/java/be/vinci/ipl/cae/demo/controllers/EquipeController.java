@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -77,15 +78,18 @@ public class EquipeController {
    */
   @PostMapping("/{userId}/equipes")
   @ResponseStatus(HttpStatus.CREATED)
-  public Equipe creerEquipe(@PathVariable Long userId, @RequestBody EquipeCreationDto dto) {
-    User user =
-        userService
-            .getById(userId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+  @PreAuthorize("isAuthenticated()")
+  public Equipe creerEquipe(
+      @PathVariable Long userId,
+      @RequestBody EquipeCreationDto dto,
+      @AuthenticationPrincipal User currentUser) {
+    if (currentUser == null || !userId.equals(currentUser.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Vous ne pouvez créer une équipe que pour votre propre compte.");
+    }
 
     try {
-      Equipe equipe = equipeService.creerEquipe(user, dto.name());
+      Equipe equipe = equipeService.creerEquipe(currentUser, dto.name());
       if (equipe == null) {
         throw new ResponseStatusException(HttpStatus.CONFLICT, "Nom d'equipe deja utilise");
       }
@@ -103,15 +107,18 @@ public class EquipeController {
    */
   @PostMapping("/{userId}/equipes/rejoindre")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void rejoindreEquipe(@PathVariable Long userId, @RequestBody EquipeJoinDto dto) {
-    User user =
-        userService
-            .getById(userId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+  @PreAuthorize("isAuthenticated()")
+  public void rejoindreEquipe(
+      @PathVariable Long userId,
+      @RequestBody EquipeJoinDto dto,
+      @AuthenticationPrincipal User currentUser) {
+    if (currentUser == null || !userId.equals(currentUser.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
+    }
 
     try {
-      equipeService.demanderRejoindreEquipe(user, dto.equipeId());
+      equipeService.demanderRejoindreEquipe(currentUser, dto.equipeId());
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     } catch (IllegalArgumentException e) {
@@ -127,6 +134,7 @@ public class EquipeController {
    */
   @PostMapping("/{userId}/equipes/quitter")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("isAuthenticated()")
   public void quitterEquipe(
       @PathVariable Long userId,
       @RequestBody(required = false) Map<String, Long> body,
@@ -153,6 +161,7 @@ public class EquipeController {
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/promouvoir")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("isAuthenticated()")
   public void promouvoirResponsable(
       @PathVariable Long userId,
       @PathVariable Long membreId,
@@ -170,6 +179,7 @@ public class EquipeController {
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/depromouvoir")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("isAuthenticated()")
   public void depromouvoirResponsable(
       @PathVariable Long userId,
       @PathVariable Long membreId,
