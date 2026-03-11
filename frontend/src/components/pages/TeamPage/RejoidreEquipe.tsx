@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useContext, useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -16,10 +16,12 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { getAllEquipes, joinEquipe } from '../../../services/teams';
-import { Equipe } from '../../../types';
+import { UserContext } from '../../../contexts/UserContext';
+import { Equipe, UserContextType } from '../../../types';
 
 export function RejoindreEquipe() {
   const navigate = useNavigate();
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
   const [teams, setTeams] = useState<Equipe[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -45,6 +47,11 @@ export function RejoindreEquipe() {
   }, [teams, query]);
 
   const handleJoin = async (teamId: number, teamName: string) => {
+    if (!authenticatedUser) {
+      navigate('/login');
+      return;
+    }
+
     try {
       await joinEquipe(teamId);
       setMessage({

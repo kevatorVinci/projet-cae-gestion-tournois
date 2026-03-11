@@ -50,13 +50,19 @@ public class UserService {
   public AuthenticatedUser createJwtToken(String email) {
     User user = userRepository.findByEmail(email);
 
-    String token =
-            JWT.create()
-                    .withIssuer("auth0")
-                    .withClaim("email", email)
-                    .withIssuedAt(new Date())
-                    .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
-                    .sign(ALGORITHM);
+    var tokenBuilder =
+        JWT.create()
+            .withIssuer("auth0")
+            .withClaim("email", email)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
+
+    if (user != null && user.getId() != null) {
+      tokenBuilder =
+          tokenBuilder.withSubject(String.valueOf(user.getId())).withClaim("id", user.getId());
+    }
+
+    String token = tokenBuilder.sign(ALGORITHM);
 
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
     authenticatedUser.setEmail(email);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import {
   Container,
   Typography,
@@ -11,15 +11,24 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { createEquipe } from '../../../services/teams';
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType } from '../../../types';
 
 export function CreateEquipe() {
   const [teamName, setTeamName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!authenticatedUser) {
+      navigate('/login');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
