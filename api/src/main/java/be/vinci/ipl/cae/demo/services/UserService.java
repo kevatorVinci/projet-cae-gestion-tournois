@@ -6,13 +6,13 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-/** Service for user authentication and profile management. */
+/**
+ * Service for user authentication and profile management.
+ */
 @Service
 public class UserService {
 
@@ -41,32 +41,31 @@ public class UserService {
   }
 
   /**
-   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site. Il récupère aussi
-   * la photo et la spécialité pour les afficher.
+   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site.
+   *
+   * @param email l'email de l'utilisateur
+   * @return les infos de l'utilisateur authentifié
    */
   public AuthenticatedUser createJwtToken(String email) {
-    // 1. On cherche le joueur dans la base de données grâce à son email
     User user = userRepository.findByEmail(email);
 
-    // 2. On crée le ticket secret (le Token)
     String token =
-        JWT.create()
-            .withIssuer("auth0")
-            .withClaim("email", email)
-            .withIssuedAt(new Date())
-            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
-            .sign(ALGORITHM);
+            JWT.create()
+                    .withIssuer("auth0")
+                    .withClaim("email", email)
+                    .withIssuedAt(new Date())
+                    .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT))
+                    .sign(ALGORITHM);
 
-    // 3. On prépare le colis final à renvoyer à React
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
     authenticatedUser.setEmail(email);
     authenticatedUser.setToken(token);
 
-    // 4. Si le joueur existe, on ajoute ses informations visuelles dans le colis
     if (user != null) {
       authenticatedUser.setTag(user.getTag());
       authenticatedUser.setSpecialty(user.getSpecialty());
       authenticatedUser.setProfileImage(user.getProfileImageUrl());
+      authenticatedUser.setAdmin(user.isAdmin());
     }
 
     return authenticatedUser;
@@ -86,7 +85,13 @@ public class UserService {
     }
   }
 
-  /** Vérifie si le mot de passe est bon quand un joueur essaie de se connecter. */
+  /**
+   * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
+   *
+   * @param email l'email
+   * @param password le mot de passe
+   * @return l'utilisateur authentifié ou null
+   */
   public AuthenticatedUser login(String email, String password) {
     User user = userRepository.findByEmail(email);
     if (user == null) {
@@ -95,18 +100,21 @@ public class UserService {
     if (!passwordEncoder.matches(password, user.getPassword())) {
       return null;
     }
-    // ✨ CORRECTION ICI : On donne seulement l'email, pas l'objet complet !
     return createJwtToken(email);
   }
 
-  /** Inscrit un tout nouveau joueur dans la base de données. */
+  /**
+   * Inscrit un tout nouveau joueur dans la base de données.
+   *
+   * @param credentials les identifiants fournis
+   * @return l'utilisateur authentifié ou null
+   */
   public AuthenticatedUser register(Credentials credentials) {
     User user = userRepository.findByEmail(credentials.getEmail());
     if (user != null) {
       return null;
     }
     User newUser = createOne(credentials);
-    // ✨ CORRECTION ICI : On donne l'email du nouveau joueur au lieu du joueur entier !
     return createJwtToken(newUser.getEmail());
   }
 
@@ -121,33 +129,19 @@ public class UserService {
   }
 
   /**
-   * Get a user by id.
+   * Crée une entité utilisateur à partir des credentials.
    *
-   * @param id user id
-   * @return optional user
-   */
-  public Optional<User> getById(Long id) {
-    return userRepository.findById(id);
-  }
-
-  /**
-   * Create a new user.
-   *
-   * <p>infos de React.
+   * @param credentials les données
+   * @return l'utilisateur sauvegardé
    */
   public User createOne(Credentials credentials) {
-    // On cache le mot de passe pour la sécurité
-    String hashedPassword = passwordEncoder.encode(credentials.getPassword());
-
     User user = new User();
     user.setEmail(credentials.getEmail());
-    user.setPassword(hashedPassword);
+    user.setPassword(passwordEncoder.encode(credentials.getPassword()));
 
-    // On lie les données reçues de React (spécialité, image, etc.)
-    user.setTag(credentials.getTag() != null ? credentials.getTag() : "");
-    user.setSpecialty(credentials.getSpecialty() != null ? credentials.getSpecialty() : "");
-    user.setProfileImageUrl(
-        credentials.getProfileImage() != null ? credentials.getProfileImage() : "");
+    user.setTag(credentials.getTag());
+    user.setSpecialty(credentials.getSpecialty());
+    user.setProfileImageUrl(credentials.getProfileImage());
 
     // On note la date/heure actuelle comme date d'inscription
     user.setDateCreationProfil(LocalDateTime.now());
@@ -158,37 +152,98 @@ public class UserService {
     return savedUser;
   }
 
-  /** Met à jour les informations visuelles du joueur (Photo, Spécialité et Mot de passe). */
+  /**
+   * Met à jour les informations visuelles du joueur.
+   *
+   * @param email email du joueur
+   * @param specialty nouvelle spécialité
+   * @param profileImage nouvelle image
+   * @param oldPassword ancien mdp
+   * @param newPassword nouveau mdp
+   * @return l'utilisateur mis à jour ou null
+   */
   public AuthenticatedUser updateProfile(
-      String email, String specialty, String profileImage, String oldPassword, String newPassword) {
-    // 1. On retrouve le joueur grâce à son email
+          String email, String specialty, String profileImage,
+          String oldPassword, String newPassword) {
     User user = userRepository.findByEmail(email);
 
     if (user != null) {
-      // 2. On change sa spécialité et sa photo
       user.setSpecialty(specialty);
       user.setProfileImageUrl(profileImage);
 
-      // 3. On vérifie s'il veut changer de mot de passe
       if (oldPassword != null
-          && !oldPassword.isBlank()
-          && newPassword != null
-          && !newPassword.isBlank()) {
-        // On vérifie que son ancien mot de passe est correct
+              && !oldPassword.isBlank()
+              && newPassword != null
+              && !newPassword.isBlank()) {
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
-          // Si oui, on crypte et on sauvegarde le nouveau
           user.setPassword(passwordEncoder.encode(newPassword));
         } else {
-          // Si l'ancien mot de passe est faux, on bloque et on renvoie null
           return null;
         }
       }
 
-      // 4. On sauvegarde les changements
       userRepository.save(user);
-      // 5. On renvoie un nouveau ticket à React
       return createJwtToken(email);
     }
     return null;
+  }
+
+  /**
+   * Récupère tous les utilisateurs pour le panneau admin.
+   *
+   * @return la liste des utilisateurs
+   */
+  public java.util.List<AuthenticatedUser> getAllUsersForAdmin() {
+    java.util.List<AuthenticatedUser> usersList = new java.util.ArrayList<>();
+
+    Iterable<User> users = userRepository.findAll();
+
+    for (User user : users) {
+      AuthenticatedUser dto = new AuthenticatedUser();
+      dto.setEmail(user.getEmail());
+      dto.setTag(user.getTag());
+      dto.setSpecialty(user.getSpecialty());
+      dto.setProfileImage(user.getProfileImageUrl());
+      dto.setAdmin(user.isAdmin());
+
+      usersList.add(dto);
+    }
+    return usersList;
+  }
+
+  /**
+   * Ajoute un administrateur.
+   *
+   * @param email email de l'utilisateur
+   */
+  public void addAdmin(String email) {
+    User user = userRepository.findByEmail(email);
+    if (user != null) {
+      user.setAdmin(true);
+      userRepository.save(user);
+    }
+  }
+
+  /**
+   * Retire un administrateur.
+   *
+   * @param email email de l'utilisateur
+   */
+  public void removeAdmin(String email) {
+    User user = userRepository.findByEmail(email);
+    if (user != null) {
+      user.setAdmin(false);
+      userRepository.save(user);
+    }
+  }
+
+  /**
+   * Récupère un utilisateur par son ID.
+   *
+   * @param id identifiant unique
+   * @return un Optional contenant l'utilisateur
+   */
+  public java.util.Optional<User> getById(Long id) {
+    return userRepository.findById(id);
   }
 }

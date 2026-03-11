@@ -9,12 +9,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** User entity representing a member of the Vinci Arena platform. */
+/**
+ * Entité représentant un utilisateur.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -45,6 +48,11 @@ public class User {
   private String team;
 
   @Column(nullable = false)
+  private LocalDate creationDate;
+
+  @Column(nullable = false)
+  private boolean admin = false;
+
   private LocalDateTime dateCreationProfil;
 
   /** Team membership relation. */
