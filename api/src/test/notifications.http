@@ -1,13 +1,22 @@
 @baseUrl = http://localhost:3000
+@token = replace-with-jwt-token
+@userId = 1
+
+### All notification endpoints require a valid JWT.
+### @userId must match an existing user in the database.
 
 ### Get all notifications for user
-GET {{baseUrl}}/api/notifications/users/1
+GET {{baseUrl}}/api/notifications/users/{{userId}}
+Authorization: Bearer {{token}}
 
 ### Get unread notifications for user
-GET {{baseUrl}}/api/notifications/users/1/non-lues
+GET {{baseUrl}}/api/notifications/users/{{userId}}/non-lues
+Authorization: Bearer {{token}}
 
 ### Mark one notification as read
 PATCH {{baseUrl}}/api/notifications/1/lue
+Authorization: Bearer {{token}}
 
 ### Mark all notifications as read
-PATCH {{baseUrl}}/api/notifications/users/1/tous-lues
+PATCH {{baseUrl}}/api/notifications/users/{{userId}}/tous-lues
+Authorization: Bearer {{token}}

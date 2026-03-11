@@ -1,47 +1,61 @@
 @baseUrl = http://localhost:3000
+@token = replace-with-jwt-token
+@userId = 1
+@targetEquipeId = 1
+
+### Public endpoints work without token.
+### Protected POST endpoints below require a valid JWT in @token.
+### @userId must be an existing user id in your database.
 
 ### Public list teams
 GET {{baseUrl}}/equipes/
 
+
 ### Public read one team
 GET {{baseUrl}}/equipes/1
 
-### Create a team for user 1
-POST {{baseUrl}}/equipes/1/equipes
+### Create a team for an existing user
+POST {{baseUrl}}/equipes/{{userId}}/equipes
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "name": "Nova Team"
 }
 
 ### Create same name again -> conflict expected
-POST {{baseUrl}}/equipes/1/equipes
+POST {{baseUrl}}/equipes/{{userId}}/equipes
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "name": "Nova Team"
 }
 
 ### Ask to join an existing team
-POST {{baseUrl}}/equipes/2/equipes/rejoindre
+POST {{baseUrl}}/equipes/{{userId}}/equipes/rejoindre
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-  "equipeId": 1
+  "equipeId": {{targetEquipeId}}
 }
 
 ### Leave team (provide remplacement when needed)
-POST {{baseUrl}}/equipes/1/equipes/quitter
+POST {{baseUrl}}/equipes/{{userId}}/equipes/quitter
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nouveauResponsableId": 2
 }
 
 ### Promote member 2 as responsible in current user's team
-POST {{baseUrl}}/equipes/1/equipes/responsables/2/promouvoir
+POST {{baseUrl}}/equipes/{{userId}}/equipes/responsables/2/promouvoir
+Authorization: Bearer {{token}}
 
 ### Demote member 2 from responsible role
-POST {{baseUrl}}/equipes/1/equipes/responsables/2/depromouvoir
+POST {{baseUrl}}/equipes/{{userId}}/equipes/responsables/2/depromouvoir
+Authorization: Bearer {{token}}
 
 

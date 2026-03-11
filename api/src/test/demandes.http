@@ -1,30 +1,40 @@
 @baseUrl = http://localhost:3000
+@token = replace-with-jwt-token
+@demandeId = 1
+
+### These endpoints are protected.
+### Use a JWT from users.http and an existing pending demand id.
 
 ### Accept one pending demand
-POST {{baseUrl}}/demands/1/accepter
+POST {{baseUrl}}/demands/{{demandeId}}/accepter
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 ### Refuse one pending demand with reason
-POST {{baseUrl}}/demands/1/refuser
+POST {{baseUrl}}/demands/{{demandeId}}/refuser
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "raisonRefus": "Profil non adapte pour le moment"
 }
 
 ### Refuse without reason (backend normalizes reason)
-POST {{baseUrl}}/demands/1/refuser
+POST {{baseUrl}}/demands/{{demandeId}}/refuser
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {}
 
 ### Non-existing demand
 POST {{baseUrl}}/demands/999/accepter
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 ### Non-existing demand with refuse endpoint
 POST {{baseUrl}}/demands/999/refuser
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "raisonRefus": "Non trouvée"
