@@ -15,7 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class DataInitializer {
 
- /**
+  /**
    * Crée des utilisateurs par défaut au démarrage.
    *
    * @param userRepository le dépôt des utilisateurs

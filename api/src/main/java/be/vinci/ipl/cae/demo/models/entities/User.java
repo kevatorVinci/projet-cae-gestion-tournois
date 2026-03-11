@@ -18,8 +18,6 @@ import lombok.Setter;
 /**
  * Entité représentant un utilisateur.
  */
-
-/** User entity representing a member of the Vinci Arena platform. */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -3,9 +3,11 @@ package be.vinci.ipl.cae.demo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/**
+ * Main Spring Boot application entry point.
+ */
 @SpringBootApplication
 @SuppressWarnings("PMD.UseUtilityClass")
-/** Main Spring Boot application entry point. */
 public class CaeApplication {
 
   /**
