@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -7,10 +7,15 @@ import {
   CardContent,
   Button,
   Box,
+  Alert,
 } from '@mui/material';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType } from '../../../types';
 import backgroundImage from '../../../assets/images/background.png';
+import {
+  getCurrentUserIdFromToken,
+  getUnreadNotificationsByUser,
+} from '../../../services/notifications';
 
 const tournamentsEnCours = [
   {
@@ -53,6 +58,26 @@ const tournamentsPassés = [
 const HomePage = () => {
   const navigate = useNavigate();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      if (!authenticatedUser) {
+        setUnreadCount(0);
+        return;
+      }
+
+      try {
+        const userId = getCurrentUserIdFromToken();
+        const unread = await getUnreadNotificationsByUser(userId);
+        setUnreadCount(unread.length);
+      } catch {
+        setUnreadCount(0);
+      }
+    };
+
+    loadUnreadCount();
+  }, [authenticatedUser]);
 
   return (
     <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>
@@ -144,6 +169,17 @@ const HomePage = () => {
         <Typography variant="h4" component="h2" gutterBottom align="center">
           Bienvenue sur VinciArena
         </Typography>
+
+        {authenticatedUser && unreadCount > 0 && (
+          <Alert
+            severity="error"
+            sx={{ mb: 3, cursor: 'pointer' }}
+            onClick={() => navigate('/notifications')}
+          >
+            Vous avez {unreadCount} notification{unreadCount > 1 ? 's' : ''} non
+            lue{unreadCount > 1 ? 's' : ''}. Cliquez ici pour les consulter.
+          </Alert>
+        )}
 
         <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
           <div style={{ flex: 1 }}>

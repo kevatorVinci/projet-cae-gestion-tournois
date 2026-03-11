@@ -8,26 +8,41 @@ import {
   Box,
   IconButton,
   Avatar,
+  Badge,
 } from '@mui/material';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import logo from '../../assets/images/logo.png';
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType } from '../../types';
 import { getUserTeam } from '../../services/teams';
+import {
+  getCurrentUserIdFromToken,
+  getUnreadNotificationsByUser,
+} from '../../services/notifications';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { authenticatedUser, clearUser }: UserContextType =
     useContext(UserContext);
   const [hasTeam, setHasTeam] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (authenticatedUser) {
       getUserTeam()
         .then((team) => setHasTeam(!!team))
         .catch(() => setHasTeam(false));
+      try {
+        const userId = getCurrentUserIdFromToken();
+        getUnreadNotificationsByUser(userId)
+          .then((unread) => setUnreadCount(unread.length))
+          .catch(() => setUnreadCount(0));
+      } catch {
+        setUnreadCount(0);
+      }
     } else {
       setHasTeam(false);
+      setUnreadCount(0);
     }
   }, [authenticatedUser]);
 
@@ -63,14 +78,31 @@ const Navbar = () => {
           </Button>
         )}
         {authenticatedUser && (
-          <IconButton
-            color="inherit"
-            aria-label="notifications"
-            onClick={() => navigate('/notifications')}
-            sx={{ ml: 1 }}
+          <Badge
+            badgeContent={unreadCount > 0 ? '●' : 0}
+            color="error"
+            sx={{
+              '& .MuiBadge-badge': {
+                backgroundColor: '#ef4444',
+                color: '#ef4444',
+                fontSize: '0.4rem',
+                minWidth: '8px',
+                height: '8px',
+                padding: '0',
+                right: '0px',
+                top: '4px',
+              },
+            }}
           >
-            <NotificationsNoneIcon />
-          </IconButton>
+            <IconButton
+              color="inherit"
+              aria-label="notifications"
+              onClick={() => navigate('/notifications')}
+              sx={{ ml: 1 }}
+            >
+              <NotificationsNoneIcon />
+            </IconButton>
+          </Badge>
         )}
 
         {/* Si le joueur n'est pas connecté */}
