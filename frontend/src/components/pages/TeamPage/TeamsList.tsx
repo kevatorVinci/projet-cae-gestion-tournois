@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -13,28 +13,20 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { getAllEquipes } from '../../../services/teams.ts';
-
-type TeamMember = {
-  tag: string;
-};
-
-type Team = {
-  id: number;
-  name: string;
-  responsable?: TeamMember;
-  members: TeamMember[];
-};
+import { getAllEquipes } from '../../../services/teams';
+import { UserContext } from '../../../contexts/UserContext';
+import { Equipe, UserContextType } from '../../../types';
 
 const TeamsList = () => {
   const [query, setQuery] = useState('');
-  const [teamsState, setTeamsState] = useState<Team[]>([]);
+  const [teamsState, setTeamsState] = useState<Equipe[]>([]);
   const navigate = useNavigate();
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
 
   useEffect(() => {
     const loadTeams = async () => {
       try {
-        const data = (await getAllEquipes()) as Team[];
+        const data = await getAllEquipes();
         setTeamsState(data);
       } catch (err: unknown) {
         console.error('Erreur API :', err);
@@ -45,6 +37,14 @@ const TeamsList = () => {
   }, []);
 
   const normalizedQuery = query.trim().toLowerCase();
+
+  const handleRejoindrClick = () => {
+    if (!authenticatedUser) {
+      navigate('/login');
+      return;
+    }
+    navigate('/equipes/rejoindre');
+  };
 
   const filteredTeams = useMemo(
     () =>
@@ -211,16 +211,7 @@ const TeamsList = () => {
 
                   <Stack spacing={0.8} mb={2.5}>
                     <Typography variant="body2" color="text.secondary">
-                      Responsable :{' '}
-                      <Box
-                        component="span"
-                        sx={{ color: 'rgba(255,255,255,0.7)' }}
-                      >
-                        {team.responsable?.tag}
-                      </Box>
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Membres :{' '}
+                      Nombre de personnes :{' '}
                       <Box
                         component="span"
                         sx={{ color: '#e8822a', fontWeight: 700 }}
@@ -233,7 +224,7 @@ const TeamsList = () => {
                   <Button
                     fullWidth
                     variant="contained"
-                    onClick={() => navigate('/equipes/rejoindre')}
+                    onClick={handleRejoindrClick}
                     sx={{
                       backgroundColor: '#e8822a',
                       fontWeight: 700,

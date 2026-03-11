@@ -1,27 +1,56 @@
 export interface Equipe {
   id: number;
   name: string;
-}
-export interface Membre {
-  id: number;
-  tag: string;
-  role: 'RESPONSABLE' | 'MEMBRE';
-  specialty: string;
-  avatarSeed: string;
-}
-
-export interface MyTeamData extends Equipe {
-  wins: number;
-  members: Membre[];
+  responsable?: User;
+  members: User[];
+  isResponsable?: boolean;
 }
 
 interface User {
-  email: string;
+  id?: number;
+  email?: string;
   password?: string;
   tag?: string;
+  isResponsable?: boolean;
   specialty?: string;
-  profileImage?: string;
+  profileImageUrl?: string;
   team?: string | null;
+  creationDate?: string;
+  dateCreationProfil?: string;
+  admin?: boolean;
+  equipe?: Equipe | null;
+
+  // Compatibility aliases used in some existing components.
+  profileImage?: string;
+}
+
+interface NotificationItem {
+  idNotification: number;
+  message: string;
+  dateEnvoi: string;
+  estLue: boolean;
+}
+
+interface DemandeDecisionResult {
+  id?: number;
+  tag?: string;
+  specialty?: string;
+  profileImageUrl?: string;
+}
+
+interface DemandePendingItem {
+  idDemande: number;
+  membreId: number;
+  membreEmail?: string;
+  membreTag?: string;
+  membreSpecialty?: string;
+  membreProfileImageUrl?: string;
+  equipeId: number;
+  equipeName?: string;
+  etat?: 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+  dateDemande?: string;
+  dateTraitement?: string;
+  raisonRefus?: string;
 }
 
 interface AuthenticatedUser {
@@ -48,4 +77,7 @@ export type {
   AuthenticatedUser,
   MaybeAuthenticatedUser,
   UserContextType,
+  NotificationItem,
+  DemandeDecisionResult,
+  DemandePendingItem,
 };

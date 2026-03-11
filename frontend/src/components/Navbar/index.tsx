@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -13,11 +13,23 @@ import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import logo from '../../assets/images/logo.png';
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType } from '../../types';
+import { getUserTeam } from '../../services/teams';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { authenticatedUser, clearUser }: UserContextType =
     useContext(UserContext);
+  const [hasTeam, setHasTeam] = useState(false);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      getUserTeam()
+        .then((team) => setHasTeam(!!team))
+        .catch(() => setHasTeam(false));
+    } else {
+      setHasTeam(false);
+    }
+  }, [authenticatedUser]);
 
   const handleLogout = () => {
     clearUser();
@@ -45,6 +57,11 @@ const Navbar = () => {
         <Button color="inherit" onClick={() => navigate('/equipes')}>
           Teams
         </Button>
+        {authenticatedUser && hasTeam && (
+          <Button color="inherit" onClick={() => navigate('/maTeam')}>
+            Ma Team
+          </Button>
+        )}
         {authenticatedUser && (
           <IconButton
             color="inherit"

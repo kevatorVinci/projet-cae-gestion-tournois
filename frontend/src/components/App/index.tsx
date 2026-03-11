@@ -13,6 +13,7 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import ProfilePage from '../pages/ProfilePage';
 import AdminPage from '../pages/AdminPage';
+import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
 
 const App = () => (
   <Router>
@@ -22,10 +23,11 @@ const App = () => (
         <Route path="/" element={<HomePage />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/equipes" element={<TeamsList />} />
-        <Route path="/equipes/:id" element={<TeamDetails />} />
-        <Route path="/profil" element={<Profile />} />
         <Route path="/equipes/creer" element={<CreateEquipe />} />
         <Route path="/equipes/rejoindre" element={<RejoindreEquipe />} />
+        <Route path="/equipes/demande" element={<DemandesAdhesion />} />
+        <Route path="/equipes/:id" element={<TeamDetails />} />
+        <Route path="/profil" element={<Profile />} />
         <Route path="/maTeam" element={<MyTeam />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

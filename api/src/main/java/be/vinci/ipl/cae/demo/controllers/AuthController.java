@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -79,6 +80,7 @@ public class AuthController {
    * @param credentials le colis envoyé par React
    */
   @PutMapping("/update")
+  @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
     AuthenticatedUser user =
         userService.updateProfile(
@@ -99,16 +101,19 @@ public class AuthController {
    * La route (URL) que React va appeler pour obtenir la liste des joueurs.
    */
   @GetMapping("/users")
+  @PreAuthorize("isAuthenticated()")
   public java.util.List<AuthenticatedUser> getAllUsers() {
     return userService.getAllUsersForAdmin();
   }
 
   @PutMapping("/addAdmin")
+  @PreAuthorize("isAuthenticated()")
   public void addAdmin(@RequestBody String email) {
     userService.addAdmin(email);
   }
 
   @PutMapping("/removeAdmin")
+  @PreAuthorize("isAuthenticated()")
   public void removeAdmin(@RequestBody String email) {
     userService.removeAdmin(email);
   }

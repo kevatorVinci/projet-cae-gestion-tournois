@@ -13,14 +13,26 @@ import {
   GroupAdd as JoinIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType } from '../../../types';
+import { getUserTeam } from '../../../services/teams';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
+  const [hasTeam, setHasTeam] = useState(false);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      getUserTeam()
+        .then((team) => setHasTeam(!!team))
+        .catch(() => setHasTeam(false));
+    } else {
+      setHasTeam(false);
+    }
+  }, [authenticatedUser]);
 
   const userTag = authenticatedUser?.tag || 'Joueur';
   const userRole = authenticatedUser?.specialty || 'Rôle non défini';
@@ -28,7 +40,6 @@ const Profile = () => {
   const userAvatar =
     authenticatedUser?.profileImage ||
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${userTag}`;
-  const hasTeam = false;
 
   return (
     <Box
@@ -103,9 +114,9 @@ const Profile = () => {
             Bonjour {userTag} 👋
           </Typography>
           <Typography variant="body1" sx={{ opacity: 0.8, maxWidth: 600 }}>
-            Bienvenue sur votre espace personnel. Il semble que vous ne fassiez
-            partie d&apos;aucune équipe pour le moment. Pour participer aux
-            tournois, rejoignez une escouade ou fondez la vôtre !
+            {hasTeam
+              ? "Vous faites partie d'une équipe. Accédez à votre espace d'équipe pour gérer les membres et suivre votre progression !"
+              : "Bienvenue sur votre espace personnel. Il semble que vous ne fassiez partie d'aucune équipe pour le moment. Pour participer aux tournois, rejoignez une escouade ou fondez la vôtre !"}
           </Typography>
         </Paper>
 
