@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -9,75 +10,105 @@ import {
   Chip,
   Tabs,
   Tab,
+  Alert,
 } from '@mui/material';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-
-interface Notification {
-  idNotification: number;
-  type: string;
-  title: string;
-  message: string;
-  reason?: string;
-  dateEnvoi: string;
-  estLue: boolean;
-}
-
-const TYPE_ACCENT: Record<string, string> = {
-  success: '#22c55e',
-  error: '#ef4444',
-  event: '#e8822a',
-  team: '#3b82f6',
-  mail: '#e8822a',
-};
+import { NotificationItem } from '../../../types';
+import {
+  getCurrentUserIdFromToken,
+  getNotificationsByUser,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from '../../../services/notifications';
 
 export default function Notifications() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState(0);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
   const unreadCount = notifications.filter((n) => !n.estLue).length;
 
-  const markAllRead = () => {
-    setNotifications((current) => current.map((n) => ({ ...n, estLue: true })));
-  };
-
-  const markOneRead = (id: number) => {
-    setNotifications((current) =>
-      current.map((n) =>
-        n.idNotification === id ? { ...n, estLue: true } : n,
-      ),
-    );
-  };
-
-  const deleteNotif = (id: number) => {
-    setNotifications((current) =>
-      current.filter((n) => n.idNotification !== id),
-    );
-  };
-
-  const getActions = (n: Notification) => {
-    switch (n.type) {
-      case 'success':
-        return [
-          { label: 'Voir le classement', color: '#e8822a' },
-          { label: 'Marquer comme lu', color: 'rgba(255,255,255,0.4)' },
-        ];
-      case 'event':
-        return [
-          { label: 'Voir le tournoi', color: '#e8822a' },
-          { label: 'Supprimer', color: '#ef4444' },
-        ];
-      case 'team':
-        return [
-          { label: 'Voir mon équipe', color: '#e8822a' },
-          { label: 'Supprimer', color: '#ef4444' },
-        ];
-      case 'error':
-        return [{ label: 'Supprimer', color: '#ef4444' }];
-      case 'mail':
-        return [{ label: 'Supprimer', color: '#ef4444' }];
-      default:
-        return [{ label: 'Supprimer', color: '#ef4444' }];
+  const loadNotifications = async (targetUserId: number) => {
+    try {
+      setError(null);
+      const data = await getNotificationsByUser(targetUserId);
+      setNotifications(data);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de recuperer les notifications.',
+      );
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    try {
+      const id = getCurrentUserIdFromToken();
+      setUserId(id);
+      loadNotifications(id);
+    } catch (err: unknown) {
+      setLoading(false);
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de recuperer l utilisateur connecte.',
+      );
+    }
+  }, []);
+
+  const markAllRead = async () => {
+    if (!userId) return;
+    try {
+      await markAllNotificationsAsRead(userId);
+      setNotifications((current) =>
+        current.map((n) => ({ ...n, estLue: true })),
+      );
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de marquer toutes les notifications comme lues.',
+      );
+    }
+  };
+
+  const markOneRead = async (id: number) => {
+    try {
+      await markNotificationAsRead(id);
+      setNotifications((current) =>
+        current.map((n) =>
+          n.idNotification === id ? { ...n, estLue: true } : n,
+        ),
+      );
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de marquer la notification comme lue.',
+      );
+    }
+  };
+
+  const formatDate = (dateValue: string) => {
+    const parsed = new Date(dateValue);
+    if (Number.isNaN(parsed.getTime())) {
+      return dateValue;
+    }
+    return parsed.toLocaleString('fr-BE');
+  };
+
+  const isJoinRequestNotification = (message: string) => {
+    const normalized = message.toLowerCase();
+    return (
+      normalized.includes('nouvelle demande') ||
+      normalized.includes('souhaite rejoindre')
+    );
   };
 
   const filtered =
@@ -108,6 +139,12 @@ export default function Notifications() {
       />
 
       <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Box
           sx={{
             display: 'flex',
@@ -191,7 +228,11 @@ export default function Notifications() {
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {filtered.length === 0 && (
+          {loading && (
+            <Alert severity="info">Chargement des notifications...</Alert>
+          )}
+
+          {!loading && filtered.length === 0 && (
             <Box
               sx={{
                 textAlign: 'center',
@@ -211,129 +252,139 @@ export default function Notifications() {
             </Box>
           )}
 
-          {filtered.map((n) => {
-            const accent = TYPE_ACCENT[n.type] ?? '#e8822a';
-            const actions = getActions(n);
-            return (
-              <Card
-                key={n.idNotification}
-                sx={{
-                  bgcolor: '#111827',
-                  border: n.estLue
-                    ? '1px solid rgba(255,255,255,0.07)'
-                    : `1px solid ${accent}55`,
-                  borderRadius: 2,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'border-color 0.2s',
-                  '&:hover': {
-                    borderColor: `${accent}99`,
-                  },
-                }}
-              >
-                <Box
+          {!loading &&
+            filtered.map((n) => {
+              return (
+                <Card
+                  key={n.idNotification}
                   sx={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: 3,
-                    bgcolor: accent,
-                    opacity: n.estLue ? 0.35 : 1,
+                    bgcolor: '#111827',
+                    border: n.estLue
+                      ? '1px solid rgba(255,255,255,0.07)'
+                      : '1px solid rgba(232,130,42,0.45)',
+                    borderRadius: 2,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'border-color 0.2s',
+                    '&:hover': {
+                      borderColor: 'rgba(232,130,42,0.65)',
+                    },
                   }}
-                />
-
-                {!n.estLue && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 16,
-                      right: 16,
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      bgcolor: accent,
-                      boxShadow: `0 0 8px ${accent}`,
-                    }}
-                  />
-                )}
-
-                <CardContent
-                  sx={{ pl: 3, pr: 3, py: 2, '&:last-child': { pb: 2 } }}
                 >
                   <Box
                     sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      mb: 0.5,
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 3,
+                      bgcolor: '#e8822a',
+                      opacity: n.estLue ? 0.35 : 1,
                     }}
-                  >
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
+                  />
+
+                  {!n.estLue && (
+                    <Box
                       sx={{
-                        color: n.estLue ? 'rgba(255,255,255,0.6)' : 'white',
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: '#e8822a',
+                        boxShadow: '0 0 8px rgba(232,130,42,0.8)',
                       }}
-                    >
-                      {n.title}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ flexShrink: 0, ml: 2 }}
-                    >
-                      {n.dateEnvoi}
-                    </Typography>
-                  </Box>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: n.reason ? 0.5 : 1.5, lineHeight: 1.6 }}
-                  >
-                    {n.message}
-                  </Typography>
-
-                  {n.reason && (
-                    <Typography
-                      variant="caption"
-                      sx={{ color: '#ef4444', display: 'block', mb: 1.5 }}
-                    >
-                      {n.reason}
-                    </Typography>
+                    />
                   )}
 
-                  <Box sx={{ display: 'flex', gap: 2.5 }}>
-                    {actions.map((a, i) => (
+                  <CardContent
+                    sx={{ pl: 3, pr: 3, py: 2, '&:last-child': { pb: 2 } }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        mb: 0.5,
+                      }}
+                    >
                       <Typography
-                        key={i}
-                        variant="caption"
-                        onClick={() => {
-                          if (a.label === 'Supprimer')
-                            deleteNotif(n.idNotification);
-                          if (a.label === 'Marquer comme lu')
-                            markOneRead(n.idNotification);
-                        }}
+                        variant="body2"
                         sx={{
-                          color: a.color,
-                          cursor: 'pointer',
-                          fontWeight: 600,
-                          letterSpacing: '0.02em',
-                          '&:hover': {
-                            textDecoration: 'underline',
-                            opacity: 0.8,
-                          },
+                          fontWeight: 700,
+                          color: n.estLue ? 'rgba(255,255,255,0.6)' : 'white',
                         }}
                       >
-                        {a.label}
+                        Notification
                       </Typography>
-                    ))}
-                  </Box>
-                </CardContent>
-              </Card>
-            );
-          })}
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ flexShrink: 0, ml: 2 }}
+                      >
+                        {formatDate(n.dateEnvoi)}
+                      </Typography>
+                    </Box>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mb:
+                          n.estLue && !isJoinRequestNotification(n.message)
+                            ? 0
+                            : 1.5,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {n.message}
+                    </Typography>
+
+                    {(isJoinRequestNotification(n.message) || !n.estLue) && (
+                      <Box sx={{ display: 'flex', gap: 2.5 }}>
+                        {isJoinRequestNotification(n.message) && (
+                          <Typography
+                            variant="caption"
+                            onClick={() => navigate('/equipes/demande')}
+                            sx={{
+                              color: '#e8822a',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              letterSpacing: '0.02em',
+                              '&:hover': {
+                                textDecoration: 'underline',
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            Voir les demandes d'adhésion
+                          </Typography>
+                        )}
+
+                        <Typography
+                          variant="caption"
+                          onClick={() => markOneRead(n.idNotification)}
+                          sx={{
+                            color: 'rgba(255,255,255,0.75)',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            letterSpacing: '0.02em',
+                            display: n.estLue ? 'none' : 'inline',
+                            '&:hover': {
+                              textDecoration: 'underline',
+                              opacity: 0.8,
+                            },
+                          }}
+                        >
+                          Marquer comme lu
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
         </Box>
       </Container>
     </Box>

@@ -31,6 +31,17 @@ type PendingDemandeView = {
   equipeName?: string;
 };
 
+const normalizeAvatarUrl = (avatar?: string): string | undefined => {
+  if (!avatar) return undefined;
+  if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+    return avatar;
+  }
+  if (avatar.startsWith('/')) {
+    return avatar;
+  }
+  return `/${avatar}`;
+};
+
 export function DemandesAdhesion() {
   const [demandes, setDemandes] = useState<PendingDemandeView[]>([]);
 
@@ -56,7 +67,7 @@ export function DemandesAdhesion() {
           id: d.idDemande,
           tag: d.membreTag ?? d.membreEmail ?? `Membre #${d.membreId}`,
           specialty: d.membreSpecialty ?? 'Inconnue',
-          avatarUrl: d.membreProfileImageUrl,
+          avatarUrl: normalizeAvatarUrl(d.membreProfileImageUrl),
           equipeName: d.equipeName,
         }));
 
