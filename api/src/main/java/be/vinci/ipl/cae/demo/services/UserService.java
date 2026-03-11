@@ -170,7 +170,9 @@ public class UserService {
     }
     return usersList;
   }
-
+  /**
+   * Ajoute un administrateur.
+   */
   public void addAdmin(String email) {
     // 1. On cherche le joueur
     User user = userRepository.findByEmail(email);
@@ -181,7 +183,9 @@ public class UserService {
       userRepository.save(user);
     }
   }
-
+  /**
+   * Retire un administrateur.
+   */
   public void removeAdmin(String email) {
     User user = userRepository.findByEmail(email);
     if (user != null) {
@@ -189,7 +193,9 @@ public class UserService {
       userRepository.save(user);
     }
   }
-
+  /**
+   * Récupère un utilisateur par son ID.
+   */
   public java.util.Optional<User> getById(Long id) {
     return userRepository.findById(id);
   }
