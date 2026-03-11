@@ -35,7 +35,7 @@ async function parseError(response: Response, fallbackMessage: string) {
   } catch {
     // Ignore JSON parsing errors and use fallback message.
   }
-  return fallbackMessage;
+  return `${fallbackMessage} (HTTP ${response.status})`;
 }
 
 function mapEquipe(dto: BackendEquipe): Equipe {
