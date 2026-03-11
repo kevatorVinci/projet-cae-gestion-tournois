@@ -170,6 +170,7 @@ public class UserService {
     }
     return usersList;
   }
+  
   /**
    * Ajoute un administrateur.
    */
@@ -183,6 +184,7 @@ public class UserService {
       userRepository.save(user);
     }
   }
+
   /**
    * Retire un administrateur.
    */
@@ -193,6 +195,7 @@ public class UserService {
       userRepository.save(user);
     }
   }
+
   /**
    * Récupère un utilisateur par son ID.
    */
