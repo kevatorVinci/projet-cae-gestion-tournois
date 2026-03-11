@@ -1,9 +1,14 @@
-import { decodeJwtPayload, getAuthenticatedUser } from '../utils/session';
+import {
+  clearAuthenticatedUser,
+  decodeJwtPayload,
+  getAuthenticatedUser,
+} from '../utils/session';
 import { Equipe, User } from '../types';
 
 type BackendMembre = {
   id: number;
   tag: string;
+  isResponsable?: boolean;
   specialty?: string;
   profileImageUrl?: string;
 };
@@ -26,7 +31,20 @@ function getAuthHeaders(): HeadersInit {
     : {};
 }
 
+function getRequiredAuthToken(): string {
+  const token = getAuthenticatedUser()?.token;
+  if (!token) {
+    throw new Error('Session expiree. Veuillez vous reconnecter.');
+  }
+  return token;
+}
+
 async function parseError(response: Response, fallbackMessage: string) {
+  if (response.status === 401) {
+    clearAuthenticatedUser();
+    return 'Session expiree. Veuillez vous reconnecter.';
+  }
+
   try {
     const body = (await response.json()) as { message?: string };
     if (body.message) {
@@ -42,6 +60,7 @@ function mapEquipe(dto: BackendEquipe): Equipe {
   const members: User[] = (dto.membres ?? []).map((member) => ({
     id: member.id,
     tag: member.tag,
+    isResponsable: member.isResponsable,
     specialty: member.specialty,
     profileImageUrl: member.profileImageUrl,
     profileImage: member.profileImageUrl,
@@ -115,6 +134,7 @@ export async function createEquipe(
   name: string,
   userId?: number,
 ): Promise<Equipe> {
+  const token = getRequiredAuthToken();
   const resolvedUserId = resolveUserId(userId);
 
   const response = await fetch(
@@ -123,7 +143,7 @@ export async function createEquipe(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeaders(),
+        Authorization: token,
       },
       body: JSON.stringify({ name }),
     },
@@ -155,6 +175,7 @@ export async function joinEquipe(
   teamId: number,
   userId?: number,
 ): Promise<void> {
+  const token = getRequiredAuthToken();
   const resolvedUserId = resolveUserId(userId);
 
   const response = await fetch(
@@ -163,7 +184,7 @@ export async function joinEquipe(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeaders(),
+        Authorization: token,
       },
       body: JSON.stringify({ equipeId: teamId }),
     },
@@ -180,6 +201,7 @@ export async function leaveEquipe(
   userId?: number,
   nouveauResponsableId?: number,
 ): Promise<void> {
+  const token = getRequiredAuthToken();
   const resolvedUserId = resolveUserId(userId);
 
   const response = await fetch(
@@ -188,7 +210,7 @@ export async function leaveEquipe(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeaders(),
+        Authorization: token,
       },
       body: JSON.stringify(
         nouveauResponsableId ? { nouveauResponsableId } : {},
@@ -199,6 +221,48 @@ export async function leaveEquipe(
   if (!response.ok) {
     throw new Error(
       await parseError(response, "Impossible de quitter l'equipe."),
+    );
+  }
+}
+
+export async function promoteResponsable(membreId: number): Promise<void> {
+  const token = getRequiredAuthToken();
+  const resolvedUserId = resolveUserId();
+
+  const response = await fetch(
+    `${API_BASE}/equipes/${resolvedUserId}/equipes/responsables/${membreId}/promouvoir`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: token,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await parseError(response, 'Impossible de nommer ce membre responsable.'),
+    );
+  }
+}
+
+export async function depromoteResponsable(membreId: number): Promise<void> {
+  const token = getRequiredAuthToken();
+  const resolvedUserId = resolveUserId();
+
+  const response = await fetch(
+    `${API_BASE}/equipes/${resolvedUserId}/equipes/responsables/${membreId}/depromouvoir`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: token,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await parseError(response, 'Impossible de retirer le role responsable.'),
     );
   }
 }

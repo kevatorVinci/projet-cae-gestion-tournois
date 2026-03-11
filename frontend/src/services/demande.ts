@@ -1,18 +1,22 @@
-import { getAuthenticatedUser } from '../utils/session';
-import { DemandeDecisionResult } from '../types';
+import { clearAuthenticatedUser, getAuthenticatedUser } from '../utils/session';
+import { DemandeDecisionResult, DemandePendingItem } from '../types';
 
 const API_BASE = '/api';
 
-function getAuthHeaders(): HeadersInit {
+function getRequiredAuthToken(): string {
   const token = getAuthenticatedUser()?.token;
-  return token
-    ? {
-        Authorization: token,
-      }
-    : {};
+  if (!token) {
+    throw new Error('Session expiree. Veuillez vous reconnecter.');
+  }
+  return token;
 }
 
 async function parseError(response: Response, fallbackMessage: string) {
+  if (response.status === 401) {
+    clearAuthenticatedUser();
+    return 'Session expiree. Veuillez vous reconnecter.';
+  }
+
   try {
     const body = (await response.json()) as { message?: string };
     if (body.message) {
@@ -27,10 +31,11 @@ async function parseError(response: Response, fallbackMessage: string) {
 export async function accepterDemande(
   demandeId: number,
 ): Promise<DemandeDecisionResult> {
+  const token = getRequiredAuthToken();
   const response = await fetch(`${API_BASE}/demands/${demandeId}/accepter`, {
     method: 'POST',
     headers: {
-      ...getAuthHeaders(),
+      Authorization: token,
     },
   });
 
@@ -47,11 +52,12 @@ export async function refuserDemande(
   demandeId: number,
   raisonRefus?: string,
 ): Promise<void> {
+  const token = getRequiredAuthToken();
   const response = await fetch(`${API_BASE}/demands/${demandeId}/refuser`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeaders(),
+      Authorization: token,
     },
     body: JSON.stringify(raisonRefus ? { raisonRefus } : {}),
   });
@@ -61,4 +67,26 @@ export async function refuserDemande(
       await parseError(response, 'Impossible de refuser la demande.'),
     );
   }
+}
+
+export async function getDemandesEnAttenteResponsable(): Promise<
+  DemandePendingItem[]
+> {
+  const token = getRequiredAuthToken();
+  const response = await fetch(`${API_BASE}/demands/me/en-attente`, {
+    headers: {
+      Authorization: token,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await parseError(
+        response,
+        'Impossible de recuperer les demandes en attente.',
+      ),
+    );
+  }
+
+  return response.json() as Promise<DemandePendingItem[]>;
 }

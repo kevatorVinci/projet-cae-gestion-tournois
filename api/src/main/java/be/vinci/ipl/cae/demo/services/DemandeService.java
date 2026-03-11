@@ -108,6 +108,37 @@ public class DemandeService {
   }
 
   /**
+   * Returns pending demands for the current responsible user's team.
+   *
+   * @param currentUser authenticated user
+   * @return pending demands for current user's team
+   */
+  public Iterable<Demande> getDemandesEnAttentePourResponsable(User currentUser) {
+    if (currentUser == null) {
+      throw new SecurityException("Utilisateur non authentifie.");
+    }
+
+    Equipe equipe = currentUser.getEquipe();
+
+    // Primary path: use membership relation when available and valid.
+    if (equipe != null) {
+      verifyUserIsResponsible(equipe, currentUser);
+      return getDemandesEnAttentePourEquipe(equipe.getId());
+    }
+
+    // Fallback path: handles inconsistent data where user.equipe is null but
+    // the user is still configured as primary/secondary responsible.
+    equipe =
+        equipeRepo
+            .findByResponsablePrincipalIdOrResponsableSecondaireId(
+                currentUser.getId(), currentUser.getId())
+            .orElseThrow(
+                () -> new SecurityException("Vous n'etes responsable d'aucune equipe."));
+
+    return getDemandesEnAttentePourEquipe(equipe.getId());
+  }
+
+  /**
    * Accepte officiellement la candidature d'un joueur. Modifie le statut de la demande, enregistre
    * la date de traitement, et affecte immédiatement le joueur à sa nouvelle équipe dans la base de
    * données.

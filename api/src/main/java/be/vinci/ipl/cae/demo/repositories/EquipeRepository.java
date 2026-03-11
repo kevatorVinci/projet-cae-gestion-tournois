@@ -31,4 +31,14 @@ public interface EquipeRepository extends CrudRepository<Equipe, Long> {
    * @return true when the name is already used
    */
   boolean existsByName(String name);
+
+  /**
+   * Finds the team where the given user is a responsible (primary or secondary).
+   *
+   * @param principalId user id to match as primary responsible
+   * @param secondaryId user id to match as secondary responsible
+   * @return matching team when found
+   */
+  Optional<Equipe> findByResponsablePrincipalIdOrResponsableSecondaireId(
+      Long principalId, Long secondaryId);
 }

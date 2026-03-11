@@ -192,10 +192,7 @@ public class EquipeController {
   @GetMapping("/me/isResponsable")
   @PreAuthorize("isAuthenticated()")
   public boolean isCurrentUserResponsable(@AuthenticationPrincipal User currentUser) {
-    if (currentUser.getEquipe() == null) {
-      return false;
-    }
-    return equipeService.isUserResponsible(currentUser.getEquipe(), currentUser);
+    return equipeService.isCurrentUserResponsible(currentUser);
   }
 
   private void ensureSelfTeamManagement(Long userId, User currentUser) {
@@ -223,7 +220,8 @@ public class EquipeController {
                         member.getId(),
                         member.getTag(),
                         member.getSpecialty(),
-                        member.getProfileImageUrl()))
+                    member.getProfileImageUrl(),
+                    equipeService.isUserResponsible(equipe, member)))
             .toList();
 
     boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);

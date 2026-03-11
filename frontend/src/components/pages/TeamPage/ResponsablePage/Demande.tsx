@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container,
   Typography,
@@ -17,13 +17,22 @@ import {
   Alert,
 } from '@mui/material';
 import { Check as AcceptIcon, Close as RefuseIcon } from '@mui/icons-material';
+import {
+  accepterDemande,
+  getDemandesEnAttenteResponsable,
+  refuserDemande,
+} from '../../../../services/demande';
+
+type PendingDemandeView = {
+  id: number;
+  tag: string;
+  specialty: string;
+  avatarUrl?: string;
+  equipeName?: string;
+};
 
 export function DemandesAdhesion() {
-  // 1️⃣ Simulation des données (les candidatures en attente)
-  const [demandes, setDemandes] = useState([
-    { id: 1, tag: 'NoobSlayer', specialty: 'Tacticien', avatarSeed: 'Felix' },
-    { id: 2, tag: 'EmmaL', specialty: 'Guérisseur', avatarSeed: 'Sara' },
-  ]);
+  const [demandes, setDemandes] = useState<PendingDemandeView[]>([]);
 
   // 2️⃣ États pour gérer la modale de refus
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,14 +41,64 @@ export function DemandesAdhesion() {
     tag: string;
   } | null>(null);
   const [motifRefus, setMotifRefus] = useState('');
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [teamName, setTeamName] = useState('Votre equipe');
+
+  useEffect(() => {
+    const loadDemandes = async () => {
+      try {
+        setErrorMessage(null);
+        const rawDemandes = await getDemandesEnAttenteResponsable();
+        const mappedDemandes: PendingDemandeView[] = rawDemandes.map((d) => ({
+          id: d.idDemande,
+          tag: d.membreTag ?? d.membreEmail ?? `Membre #${d.membreId}`,
+          specialty: d.membreSpecialty ?? 'Inconnue',
+          avatarUrl: d.membreProfileImageUrl,
+          equipeName: d.equipeName,
+        }));
+
+        setDemandes(mappedDemandes);
+        if (rawDemandes.length > 0 && rawDemandes[0].equipeName) {
+          setTeamName(rawDemandes[0].equipeName);
+        }
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : 'Impossible de charger les demandes en attente.';
+        setErrorMessage(msg);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    loadDemandes();
+  }, []);
 
   // 🟢 Action : Accepter un joueur
-  const handleAccept = (id: number, tag: string) => {
+  const handleAccept = async (id: number, tag: string) => {
     if (
       window.confirm(`Voulez-vous vraiment accepter ${tag} dans l'équipe ?`)
     ) {
-      setDemandes(demandes.filter((d) => d.id !== id));
-      // TODO: Appel API (POST /demands/{id}/accepter)
+      try {
+        setErrorMessage(null);
+        setFeedback(null);
+        setActionLoading(id);
+        await accepterDemande(id);
+        setDemandes((prev) => prev.filter((d) => d.id !== id));
+        setFeedback(`La candidature de ${tag} a ete acceptee.`);
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : "Impossible d'accepter la demande.";
+        setErrorMessage(msg);
+      } finally {
+        setActionLoading(null);
+      }
     }
   };
 
@@ -50,17 +109,35 @@ export function DemandesAdhesion() {
   };
 
   // 🔴 Action : Confirmer le refus
-  const handleConfirmRefusal = () => {
+  const handleConfirmRefusal = async () => {
     if (!motifRefus.trim()) {
       alert('Le motif du refus est obligatoire.');
       return;
     }
 
-    setDemandes(demandes.filter((d) => d.id !== demandeRefusee?.id));
-    // TODO: Appel API (POST /demands/{id}/refuser + envoi du motif)
+    if (!demandeRefusee) {
+      return;
+    }
 
-    setIsModalOpen(false);
-    setMotifRefus('');
+    try {
+      setErrorMessage(null);
+      setFeedback(null);
+      setActionLoading(demandeRefusee.id);
+      await refuserDemande(demandeRefusee.id, motifRefus.trim());
+      setDemandes((prev) => prev.filter((d) => d.id !== demandeRefusee.id));
+      setFeedback(`La candidature de ${demandeRefusee.tag} a ete refusee.`);
+      setIsModalOpen(false);
+      setMotifRefus('');
+      setDemandeRefusee(null);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'Impossible de refuser la demande.';
+      setErrorMessage(msg);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   return (
@@ -72,6 +149,17 @@ export function DemandesAdhesion() {
       }}
     >
       <Container maxWidth="md">
+        {feedback && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {feedback}
+          </Alert>
+        )}
+        {errorMessage && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
+
         {/* --- EN-TÊTE DE LA PAGE --- */}
         <Box
           sx={{
@@ -97,10 +185,16 @@ export function DemandesAdhesion() {
             </Typography>
           </Box>
           <Chip
-            label="Team : Dark Legion"
+            label={`Team : ${teamName}`}
             sx={{ bgcolor: '#e8822a', color: 'white', fontWeight: 600 }}
           />
         </Box>
+
+        {pageLoading && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Chargement des demandes en attente...
+          </Alert>
+        )}
 
         {/* --- LISTE DES DEMANDES --- */}
         {demandes.length === 0 ? (
@@ -134,7 +228,7 @@ export function DemandesAdhesion() {
                 {/* Infos du joueur */}
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Avatar
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${demande.avatarSeed}`}
+                    src={demande.avatarUrl}
                     sx={{
                       width: 60,
                       height: 60,
@@ -164,6 +258,7 @@ export function DemandesAdhesion() {
                     variant="contained"
                     color="success"
                     startIcon={<AcceptIcon />}
+                    disabled={actionLoading === demande.id}
                     onClick={() => handleAccept(demande.id, demande.tag)}
                   >
                     Accepter
@@ -172,6 +267,7 @@ export function DemandesAdhesion() {
                     variant="outlined"
                     color="error"
                     startIcon={<RefuseIcon />}
+                    disabled={actionLoading === demande.id}
                     onClick={() =>
                       handleOpenRefuseModal(demande.id, demande.tag)
                     }

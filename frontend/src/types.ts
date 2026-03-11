@@ -11,6 +11,7 @@ interface User {
   email?: string;
   password?: string;
   tag?: string;
+  isResponsable?: boolean;
   specialty?: string;
   profileImageUrl?: string;
   team?: string | null;
@@ -35,6 +36,21 @@ interface DemandeDecisionResult {
   tag?: string;
   specialty?: string;
   profileImageUrl?: string;
+}
+
+interface DemandePendingItem {
+  idDemande: number;
+  membreId: number;
+  membreEmail?: string;
+  membreTag?: string;
+  membreSpecialty?: string;
+  membreProfileImageUrl?: string;
+  equipeId: number;
+  equipeName?: string;
+  etat?: 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+  dateDemande?: string;
+  dateTraitement?: string;
+  raisonRefus?: string;
 }
 
 interface AuthenticatedUser {
@@ -63,4 +79,5 @@ export type {
   UserContextType,
   NotificationItem,
   DemandeDecisionResult,
+  DemandePendingItem,
 };
