@@ -8,8 +8,12 @@ import {
   Alert,
   Checkbox,
   FormControlLabel,
+  InputAdornment,
+  IconButton,
   useTheme,
 } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { UserContextType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import backgroundImage from '../../assets/images/background.png';
@@ -19,9 +23,14 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const theme = useTheme();
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
@@ -108,7 +117,7 @@ const LoginPage = () => {
               id="password"
               name="password"
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               variant="outlined"
               value={password}
               onChange={handlePasswordChange}
@@ -116,6 +125,19 @@ const LoginPage = () => {
               color="primary"
               sx={{
                 input: { color: theme.palette.secondary.contrastText },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleClickShowPassword}
+                      edge="end"
+                      sx={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
               }}
             />
           </Box>
