@@ -145,6 +145,7 @@ public class UserService {
     user.setProfileImageUrl(credentials.getProfileImage());
 
     // On note la date/heure actuelle comme date d'inscription
+    user.setCreationDate(java.time.LocalDate.now());
     user.setDateCreationProfil(LocalDateTime.now());
 
     // On sauvegarde définitivement !
