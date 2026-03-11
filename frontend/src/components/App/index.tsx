@@ -13,6 +13,7 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import ProfilePage from '../pages/ProfilePage';
 import AdminPage from '../pages/AdminPage';
+import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
 
 const App = () => (
   <Router>
@@ -31,6 +32,7 @@ const App = () => (
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/equipes/demande" element={<DemandesAdhesion />} />
       </Routes>
     </Box>
   </Router>

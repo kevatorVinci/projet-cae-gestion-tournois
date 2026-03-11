@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Typography,
@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import axios from 'axios';
 
 interface Notification {
   idNotification: number;
@@ -35,56 +34,24 @@ const TYPE_ACCENT: Record<string, string> = {
 export default function Notifications() {
   const [tab, setTab] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const idMembre = 1;
   const unreadCount = notifications.filter((n) => !n.estLue).length;
 
-  useEffect(() => {
-    axios
-      .get<Notification[]>(
-        `http://localhost:3000/api/notifications/membre/${idMembre}`,
-      )
-      .then((res) => {
-        setNotifications(res.data);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        console.error('Error fetching notifications:', err);
-        setLoading(false);
-      });
-  }, [idMembre]);
-
   const markAllRead = () => {
-    axios
-      .patch(
-        `http://localhost:3000/api/notifications/membre/${idMembre}/tous-lue`,
-      )
-      .then(() =>
-        setNotifications(notifications.map((n) => ({ ...n, estLue: true }))),
-      )
-      .catch((err: unknown) => {
-        console.error('Error marking all as read:', err);
-      });
+    setNotifications((current) => current.map((n) => ({ ...n, estLue: true })));
   };
 
   const markOneRead = (id: number) => {
-    axios
-      .patch(`http://localhost:3000/api/notifications/${id}/lue`)
-      .then(() =>
-        setNotifications(
-          notifications.map((n) =>
-            n.idNotification === id ? { ...n, estLue: true } : n,
-          ),
-        ),
-      );
+    setNotifications((current) =>
+      current.map((n) =>
+        n.idNotification === id ? { ...n, estLue: true } : n,
+      ),
+    );
   };
 
   const deleteNotif = (id: number) => {
-    axios
-      .delete(`http://localhost:3000/api/notifications/${id}`)
-      .then(() =>
-        setNotifications(notifications.filter((n) => n.idNotification !== id)),
-      );
+    setNotifications((current) =>
+      current.filter((n) => n.idNotification !== id),
+    );
   };
 
   const getActions = (n: Notification) => {
@@ -119,24 +86,6 @@ export default function Notifications() {
       : tab === 1
         ? notifications.filter((n) => !n.estLue)
         : notifications.filter((n) => n.estLue);
-
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
-          bgcolor: 'background.default',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Typography variant="h6" color="text.secondary">
-          Chargement des notifications...
-        </Typography>
-      </Box>
-    );
-  }
 
   return (
     <Box
