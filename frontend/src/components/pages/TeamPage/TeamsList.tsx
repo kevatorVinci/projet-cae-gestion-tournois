@@ -18,6 +18,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType } from '../../../types';
+import { decodeJwtPayload } from '../../../utils/session';
 
 const TeamsList = () => {
   const [query, setQuery] = useState('');
@@ -47,9 +48,61 @@ const TeamsList = () => {
 
   const normalizedQuery = query.trim().toLowerCase();
 
+  const currentUserId = (() => {
+    const token = authenticatedUser?.token;
+    if (!token) return undefined;
+    const payload = decodeJwtPayload(token);
+    if (typeof payload?.id === 'number') return payload.id;
+    const subAsNumber = Number(payload?.sub);
+    return Number.isFinite(subAsNumber) ? subAsNumber : undefined;
+  })();
+
+  const isCurrentUsersTeam = (team: Equipe) => {
+    return team.members.some(
+      (member) =>
+        (typeof currentUserId === 'number' && member.id === currentUserId) ||
+        (!!authenticatedUser?.email &&
+          member.email === authenticatedUser.email) ||
+        (!!authenticatedUser?.tag && member.tag === authenticatedUser.tag),
+    );
+  };
+
   const handlePostulerClick = async (teamId: number, teamName: string) => {
     if (!authenticatedUser) {
       navigate('/login');
+      return;
+    }
+
+    const selectedTeam = teamsState.find((team) => team.id === teamId);
+    const currentUsersTeam = teamsState.find((team) =>
+      isCurrentUsersTeam(team),
+    );
+
+    if (
+      selectedTeam &&
+      currentUsersTeam &&
+      selectedTeam.id !== currentUsersTeam.id
+    ) {
+      setMessage({
+        type: 'error',
+        text: 'Vous êtes déjà dans une équipe, quittez votre équipe pour la rejoindre.',
+      });
+      return;
+    }
+
+    if (selectedTeam && selectedTeam.members.length === 0) {
+      setMessage({
+        type: 'error',
+        text: 'Impossible de postuler à une équipe sans effectif.',
+      });
+      return;
+    }
+
+    if (selectedTeam && isCurrentUsersTeam(selectedTeam)) {
+      setMessage({
+        type: 'error',
+        text: 'Vous faites deja partie de cette equipe.',
+      });
       return;
     }
 
@@ -59,6 +112,8 @@ const TeamsList = () => {
         type: 'success',
         text: `Demande envoyée pour rejoindre ${teamName} ! 🛡️`,
       });
+      window.dispatchEvent(new Event('team-membership-changed'));
+      navigate('/maTeam');
     } catch (err) {
       setMessage({
         type: 'error',
@@ -222,77 +277,101 @@ const TeamsList = () => {
               gap: 2.5,
             }}
           >
-            {filteredTeams.map((team) => (
-              <Card
-                key={team.id}
-                sx={{
-                  borderRadius: 2,
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  backgroundColor: '#111827',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'transform 0.2s ease, border-color 0.2s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    borderColor: '#e8822a',
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    height: 3,
-                    background: 'linear-gradient(90deg, #e8822a, transparent)',
-                  }}
-                />
+            {filteredTeams.map((team) =>
+              (() => {
+                const isOwnTeam = isCurrentUsersTeam(team);
+                const hasNoMembers = team.members.length === 0;
+                const isPostulerDisabled = isOwnTeam || hasNoMembers;
 
-                <CardContent sx={{ p: 2.5 }}>
-                  <Typography
-                    variant="h6"
-                    fontWeight={700}
-                    color="white"
-                    mb={1.5}
+                return (
+                  <Card
+                    key={team.id}
+                    sx={{
+                      borderRadius: 2,
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      backgroundColor: '#111827',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      transition: 'transform 0.2s ease, border-color 0.2s ease',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        borderColor: '#e8822a',
+                      },
+                    }}
                   >
-                    {team.name}
-                  </Typography>
-
-                  <Stack spacing={0.8} mb={2.5}>
-                    <Typography variant="body2" color="text.secondary">
-                      Nombre de personnes :{' '}
-                      <Box
-                        component="span"
-                        sx={{ color: '#e8822a', fontWeight: 700 }}
-                      >
-                        {team.members.length}
-                      </Box>
-                    </Typography>
-                  </Stack>
-
-                  <Box
-                    sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}
-                  >
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={() => navigate(`/equipes/${team.id}`)}
-                    >
-                      Voir les détails
-                    </Button>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      onClick={() => handlePostulerClick(team.id, team.name)}
+                    <Box
                       sx={{
-                        backgroundColor: '#e8822a',
-                        fontWeight: 700,
-                        '&:hover': { backgroundColor: '#c86e20' },
+                        height: 3,
+                        background:
+                          'linear-gradient(90deg, #e8822a, transparent)',
                       }}
-                    >
-                      Postuler
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
+                    />
+
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Typography
+                        variant="h6"
+                        fontWeight={700}
+                        color="white"
+                        mb={1.5}
+                      >
+                        {team.name}
+                      </Typography>
+
+                      <Stack spacing={0.8} mb={2.5}>
+                        <Typography variant="body2" color="text.secondary">
+                          Nombre de personnes :{' '}
+                          <Box
+                            component="span"
+                            sx={{ color: '#e8822a', fontWeight: 700 }}
+                          >
+                            {team.members.length}
+                          </Box>
+                        </Typography>
+                      </Stack>
+
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 1.2,
+                        }}
+                      >
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          onClick={() => navigate(`/equipes/${team.id}`)}
+                        >
+                          Voir les détails
+                        </Button>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          onClick={() =>
+                            handlePostulerClick(team.id, team.name)
+                          }
+                          disabled={isPostulerDisabled}
+                          sx={{
+                            backgroundColor: '#e8822a',
+                            fontWeight: 700,
+                            '&.Mui-disabled': {
+                              backgroundColor: 'rgba(255,255,255,0.15)',
+                              color: 'rgba(255,255,255,0.5)',
+                            },
+                            '&:hover': { backgroundColor: '#c86e20' },
+                          }}
+                        >
+                          {isOwnTeam
+                            ? 'Votre équipe'
+                            : hasNoMembers
+                              ? 'Équipe indisponible'
+                              : 'Postuler'}
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                );
+              })(),
+            )}
           </Box>
         )}
       </Container>
