@@ -1,6 +1,5 @@
 package be.vinci.ipl.cae.demo.configuration;
 
-import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -44,24 +43,19 @@ public class SecurityConfiguration {
             .httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
             .sessionManagement(
-                    sessionManagement ->
-                            sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    session ->
+                            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(
-                    authorize ->
-                            authorize
-                                    .requestMatchers("/auths/**").permitAll() // Laisser passer la connexion
-                                    .requestMatchers(HttpMethod.GET, "/equipes/**").permitAll() // Voir les équipes
-                                    // 2. On accepte les requêtes vers nos indisponibilités
-                                    .requestMatchers("/indisponibilites", "/indisponibilites/**").authenticated()
-                                    .anyRequest().authenticated())
-            // 3. IMPORTANT : Utiliser "this.jwtAuthenticationFilter"
-            .addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                    auth -> auth
+                            .requestMatchers("/auths/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/equipes/**").permitAll()
+                            .requestMatchers("/indisponibilites", "/indisponibilites/**").authenticated()
+                            .anyRequest().authenticated())
+            .addFilterBefore(this.jwtAuthenticationFilter,
+                    UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(
-                    exception ->
-                            exception.authenticationEntryPoint(
-                                    (request, response, authException) -> {
-                                      response.sendError(401, "Unauthorized");
-                                    }))
+                    ex -> ex.authenticationEntryPoint(
+                            (request, response, authException) -> response.sendError(401, "Unauthorized")))
             .build();
   }
 }

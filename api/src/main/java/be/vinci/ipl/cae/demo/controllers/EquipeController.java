@@ -57,11 +57,9 @@ public class EquipeController {
   @GetMapping("/{id}")
   public EquipePublicDto readOneEquipe(
           @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
-    Equipe equipe =
-            equipeService
-                    .getEquipeById(id)
-                    .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable"));
+    Equipe equipe = equipeService.getEquipeById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Équipe introuvable"));
     return toPublicDto(equipe, currentUser);
   }
 
@@ -79,9 +77,11 @@ public class EquipeController {
           @PathVariable Long userId,
           @RequestBody EquipeCreationDto dto,
           @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN, "Vous ne pouvez créer une équipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez créer une équipe que pour votre propre compte.");
     }
 
     try {
@@ -108,6 +108,7 @@ public class EquipeController {
           @PathVariable Long userId,
           @RequestBody EquipeJoinDto dto,
           @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
@@ -136,9 +137,11 @@ public class EquipeController {
           @PathVariable Long userId,
           @RequestBody(required = false) Map<String, Long> body,
           @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN, "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
     }
 
     try {
@@ -209,17 +212,14 @@ public class EquipeController {
   }
 
   private EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
-    List<MembrePublicDto> membres =
-            equipe.getMembres().stream()
-                    .map(
-                            member ->
-                                    new MembrePublicDto(
-                                            member.getId(),
-                                            member.getTag(),
-                                            member.getSpecialty(),
-                                            member.getProfileImageUrl(),
-                                            equipeService.isUserResponsible(equipe, member)))
-                    .toList();
+    List<MembrePublicDto> membres = equipe.getMembres().stream()
+            .map(m -> new MembrePublicDto(
+                    m.getId(),
+                    m.getTag(),
+                    m.getSpecialty(),
+                    m.getProfileImageUrl(),
+                    equipeService.isUserResponsible(equipe, m)))
+            .toList();
 
     boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
     return new EquipePublicDto(equipe.getId(), equipe.getName(), membres, isResponsable);

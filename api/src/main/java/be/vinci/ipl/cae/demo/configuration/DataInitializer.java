@@ -20,7 +20,7 @@ public class DataInitializer {
   /**
    * Méthode qui s'exécute automatiquement au lancement du serveur.
    *
-   * @param equipeRepository l'outil pour interagir avec la table des équipes dans la base de données
+   * @param equipeRepository l'outil pour la table des équipes
    * @param userRepository l'outil pour interagir avec la table des utilisateurs
    * @param passwordEncoder l'outil qui sert à hacher (sécuriser) les mots de passe
    * @return un CommandLineRunner contenant les instructions à exécuter
