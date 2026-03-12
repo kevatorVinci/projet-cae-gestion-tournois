@@ -63,7 +63,7 @@ public class DataInitializer {
       ines.setCreationDate(LocalDate.parse("2026-01-18"));
       ines.setAdmin(true);
       ines.setPassword(defaultPassword);
-      ines.setProfileImageUrl("Pessi.jpg");
+      ines.setProfileImageUrl("erza.jpg");
 
       // 4. Tibo
       User tibo = new User();
