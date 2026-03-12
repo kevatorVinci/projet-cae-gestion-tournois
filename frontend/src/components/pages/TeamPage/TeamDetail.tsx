@@ -18,6 +18,17 @@ export default function TeamDetails() {
 
   const [team, setTeam] = useState<Equipe | null>(null);
 
+  const normalizeAvatarUrl = (avatar?: string) => {
+    if (!avatar) return undefined;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return avatar;
+    }
+    if (avatar.startsWith('/')) {
+      return avatar;
+    }
+    return `/${avatar}`;
+  };
+
   useEffect(() => {
     if (!id) {
       return;
@@ -89,6 +100,12 @@ export default function TeamDetails() {
         </Typography>
 
         <Stack spacing={2}>
+          {team.members.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              Cette équipe n'a plus de membre.
+            </Typography>
+          )}
+
           {team.members.map((member, index) => (
             <Card
               key={`${member.tag}-${index}`}
@@ -101,7 +118,9 @@ export default function TeamDetails() {
               <CardContent>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Avatar
-                    src={member.profileImageUrl || member.profileImage}
+                    src={normalizeAvatarUrl(
+                      member.profileImageUrl || member.profileImage,
+                    )}
                     alt={member.tag}
                     sx={{ width: 56, height: 56 }}
                   />

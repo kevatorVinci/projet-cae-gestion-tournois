@@ -45,6 +45,7 @@ export function MyTeam() {
     number | null
   >(null);
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const [isSimpleLeaveDialogOpen, setIsSimpleLeaveDialogOpen] = useState(false);
   const [replacementResponsibleId, setReplacementResponsibleId] = useState<
     number | null
   >(null);
@@ -92,7 +93,7 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
-      setMessage('Impossible de charger votre equipe pour le moment.');
+      setMessage('Impossible de charger votre équipe pour le moment.');
     } finally {
       setLoading(false);
     }
@@ -110,14 +111,22 @@ export function MyTeam() {
     const otherMembers = team.members.filter(
       (member) => member.id !== currentUserId,
     );
+    const responsablesCount = team.members.filter(
+      (member) => member.isResponsable,
+    ).length;
+    const mustChooseReplacement = isResponsable && responsablesCount === 1;
 
-    if (isResponsable && otherMembers.length > 0) {
+    if (mustChooseReplacement && otherMembers.length > 0) {
       setReplacementResponsibleId(null);
       setIsLeaveDialogOpen(true);
       return;
     }
 
-    if (!window.confirm(`Etes-vous sur de vouloir quitter ${team.name} ?`)) {
+    setIsSimpleLeaveDialogOpen(true);
+  };
+
+  const handleConfirmSimpleLeaveTeam = async () => {
+    if (!team) {
       return;
     }
 
@@ -125,7 +134,10 @@ export function MyTeam() {
       await leaveEquipe();
       setTeam(null);
       setIsResponsable(false);
-      setMessage('Vous avez quitte votre equipe.');
+      setIsSimpleLeaveDialogOpen(false);
+      setMessage('Vous avez quitté votre équipe.');
+      window.dispatchEvent(new Event('team-membership-changed'));
+      navigate('/equipes');
     } catch (err: unknown) {
       console.error('Erreur API :', err);
       if (handleAuthFailure(err)) {
@@ -134,7 +146,7 @@ export function MyTeam() {
       setMessage(
         err instanceof Error
           ? err.message
-          : "Impossible de quitter l'equipe actuellement.",
+          : "Impossible de quitter l'équipe actuellement.",
       );
     }
   };
@@ -155,7 +167,9 @@ export function MyTeam() {
       setIsResponsable(false);
       setIsLeaveDialogOpen(false);
       setReplacementResponsibleId(null);
-      setMessage('Vous avez quitte votre equipe.');
+      setMessage('Vous avez quitté votre équipe.');
+      window.dispatchEvent(new Event('team-membership-changed'));
+      navigate('/equipes');
     } catch (err: unknown) {
       console.error('Erreur API :', err);
       if (handleAuthFailure(err)) {
@@ -164,7 +178,7 @@ export function MyTeam() {
       setMessage(
         err instanceof Error
           ? err.message
-          : "Impossible de quitter l'equipe actuellement.",
+          : "Impossible de quitter l'équipe actuellement.",
       );
     }
   };
@@ -253,7 +267,7 @@ export function MyTeam() {
           p: 3,
         }}
       >
-        <Alert severity="info">Vous n&apos;etes dans aucune equipe.</Alert>
+        <Alert severity="info">Vous n&apos;êtes dans aucune équipe.</Alert>
       </Box>
     );
   }
@@ -261,6 +275,10 @@ export function MyTeam() {
   const otherMembers = team.members.filter(
     (member) => member.id !== currentUserId,
   );
+  const responsablesCount = team.members.filter(
+    (member) => member.isResponsable,
+  ).length;
+  const canPromoteMore = responsablesCount < 2;
 
   return (
     <Box
@@ -313,7 +331,7 @@ export function MyTeam() {
                   '&:hover': { bgcolor: '#c86e20' },
                 }}
               >
-                Demandes d'adhesion
+                Demandes d'adhésion
               </Button>
             )}
             <Button
@@ -326,7 +344,7 @@ export function MyTeam() {
                 '&:hover': { bgcolor: '#c86e20', borderColor: '#c86e20' },
               }}
             >
-              Quitter l'equipe
+              Quitter l'équipe
             </Button>
           </Stack>
         </Paper>
@@ -389,47 +407,52 @@ export function MyTeam() {
                             color: 'white',
                           }}
                         />
-                        {isResponsable && member.id !== currentUserId && (
-                          <Button
-                            size="small"
-                            variant={
-                              member.isResponsable ? 'outlined' : 'contained'
-                            }
-                            disabled={memberActionLoadingId === member.id}
-                            onClick={() => {
-                              const targetMemberId = member.id;
-                              if (typeof targetMemberId !== 'number') {
-                                return;
+                        {isResponsable &&
+                          member.id !== currentUserId &&
+                          (member.isResponsable || canPromoteMore) && (
+                            <Button
+                              size="small"
+                              variant={
+                                member.isResponsable ? 'outlined' : 'contained'
                               }
+                              disabled={memberActionLoadingId === member.id}
+                              onClick={() => {
+                                const targetMemberId = member.id;
+                                if (typeof targetMemberId !== 'number') {
+                                  return;
+                                }
 
-                              if (member.isResponsable) {
-                                handleDepromote(targetMemberId, member.tag);
-                              } else {
-                                openPromoteConfirm(targetMemberId, member.tag);
-                              }
-                            }}
-                            sx={{
-                              textTransform: 'none',
-                              fontSize: 11,
-                              minWidth: 130,
-                              bgcolor: member.isResponsable
-                                ? 'transparent'
-                                : '#e8822a',
-                              color: 'white',
-                              borderColor: 'rgba(255,255,255,0.35)',
-                              '&:hover': {
+                                if (member.isResponsable) {
+                                  handleDepromote(targetMemberId, member.tag);
+                                } else {
+                                  openPromoteConfirm(
+                                    targetMemberId,
+                                    member.tag,
+                                  );
+                                }
+                              }}
+                              sx={{
+                                textTransform: 'none',
+                                fontSize: 11,
+                                minWidth: 130,
                                 bgcolor: member.isResponsable
-                                  ? '#080b14'
-                                  : '#c86e20',
-                                borderColor: '#c86e20',
-                              },
-                            }}
-                          >
-                            {member.isResponsable
-                              ? 'Deheriter'
-                              : 'Nommer responsable'}
-                          </Button>
-                        )}
+                                  ? 'transparent'
+                                  : '#e8822a',
+                                color: 'white',
+                                borderColor: 'rgba(255,255,255,0.35)',
+                                '&:hover': {
+                                  bgcolor: member.isResponsable
+                                    ? '#080b14'
+                                    : '#c86e20',
+                                  borderColor: '#c86e20',
+                                },
+                              }}
+                            >
+                              {member.isResponsable
+                                ? 'Deheriter'
+                                : 'Nommer responsable'}
+                            </Button>
+                          )}
                       </Stack>
                     }
                     secondary={
@@ -455,14 +478,73 @@ export function MyTeam() {
       </Container>
 
       <Dialog
+        open={isSimpleLeaveDialogOpen}
+        onClose={() => setIsSimpleLeaveDialogOpen(false)}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            bgcolor: '#1a2540',
+            color: 'white',
+            border: '1px solid rgba(255,255,255,0.12)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
+          Quitter l&apos;équipe
+        </DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            Êtes-vous sûr de vouloir quitter {team.name} ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setIsSimpleLeaveDialogOpen(false)}
+            sx={{
+              color: 'white',
+              borderColor: 'rgba(255,255,255,0.35)',
+              '&:hover': {
+                bgcolor: '#080b14',
+                borderColor: '#c86e20',
+              },
+            }}
+            variant="outlined"
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirmSimpleLeaveTeam}
+            sx={{
+              bgcolor: '#e8822a',
+              color: 'white',
+              '&:hover': { bgcolor: '#c86e20' },
+            }}
+          >
+            Quitter
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
         open={isLeaveDialogOpen}
         onClose={() => setIsLeaveDialogOpen(false)}
         fullWidth
         maxWidth="sm"
+        PaperProps={{
+          sx: {
+            bgcolor: '#1a2540',
+            color: 'white',
+            border: '1px solid rgba(255,255,255,0.12)',
+          },
+        }}
       >
-        <DialogTitle>Choisir un nouveau responsable</DialogTitle>
+        <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
+          Choisir un nouveau responsable
+        </DialogTitle>
         <DialogContent>
-          <Typography sx={{ mb: 2 }}>
+          <Typography sx={{ mb: 2 }} color="text.secondary">
             Avant de quitter l'equipe, vous devez designer un autre responsable.
           </Typography>
           <RadioGroup
@@ -475,18 +557,44 @@ export function MyTeam() {
               <FormControlLabel
                 key={member.id}
                 value={member.id?.toString() || ''}
-                control={<Radio />}
+                control={
+                  <Radio
+                    sx={{
+                      color: 'rgba(255,255,255,0.6)',
+                      '&.Mui-checked': { color: '#e8822a' },
+                    }}
+                  />
+                }
                 label={`${member.tag} (${member.specialty || 'Membre'})`}
+                sx={{ color: 'white' }}
               />
             ))}
           </RadioGroup>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsLeaveDialogOpen(false)}>Annuler</Button>
+          <Button
+            onClick={() => setIsLeaveDialogOpen(false)}
+            sx={{
+              color: 'white',
+              borderColor: 'rgba(255,255,255,0.35)',
+              '&:hover': {
+                bgcolor: '#080b14',
+                borderColor: '#c86e20',
+              },
+            }}
+            variant="outlined"
+          >
+            Annuler
+          </Button>
           <Button
             variant="contained"
             onClick={handleConfirmLeaveTeam}
             disabled={!replacementResponsibleId}
+            sx={{
+              bgcolor: '#e8822a',
+              color: 'white',
+              '&:hover': { bgcolor: '#c86e20' },
+            }}
           >
             Confirmer
           </Button>

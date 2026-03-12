@@ -136,7 +136,7 @@ public class NotificationService {
       User responsable, String tagCandidat, String nomEquipe) {
     createNotification(
         responsable,
-        "Nouvelle demande : " + tagCandidat + " souhaite rejoindre l'equipe '" + nomEquipe + "'.");
+        "Nouvelle demande : " + tagCandidat + " souhaite rejoindre l'équipe '" + nomEquipe + "'.");
   }
 
   /** Envoyée au membre quand sa demande est acceptée. */

@@ -25,7 +25,7 @@ async function parseError(response: Response, fallbackMessage: string) {
 
 export async function accepterDemande(
   demandeId: number,
-): Promise<DemandeDecisionResult> {
+): Promise<DemandeDecisionResult | null> {
   const token = getRequiredAuthToken();
   const response = await fetch(`${API_BASE}/demands/${demandeId}/accepter`, {
     method: 'POST',
@@ -40,7 +40,16 @@ export async function accepterDemande(
     );
   }
 
-  return response.json() as Promise<DemandeDecisionResult>;
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    return null;
+  }
+
+  try {
+    return (await response.json()) as DemandeDecisionResult;
+  } catch {
+    return null;
+  }
 }
 
 export async function refuserDemande(

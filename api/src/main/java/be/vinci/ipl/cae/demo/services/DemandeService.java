@@ -168,10 +168,12 @@ public class DemandeService {
     userRepo.save(user);
     equipeRepo.save(equipe);
 
-    // Toutes les autres demandes en attente de ce user deviennent obsoletes.
+    // ✅ On sauvegarde D'ABORD la demande acceptée
+    Demande savedDemande = demandeRepo.save(demande);
+
+    // ✅ ENSUITE on supprime les autres demandes en attente de ce user
     demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
 
-    Demande savedDemande = demandeRepo.save(demande);
     notificationService.notifierDemandeAcceptee(user, equipe.getName());
     return savedDemande;
   }

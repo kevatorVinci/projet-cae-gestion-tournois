@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import BackButton from '../../components/BoutonRetour';
 import {
   Box,
   Typography,
@@ -96,6 +97,7 @@ export default function AdminPage() {
 
   return (
     <Box sx={{ padding: 4, backgroundColor: '#080b14', minHeight: '100vh' }}>
+      <BackButton />
       <Typography variant="h4" color="white" mb={4} textAlign="center">
         Gestion des Administrateurs 👑
       </Typography>

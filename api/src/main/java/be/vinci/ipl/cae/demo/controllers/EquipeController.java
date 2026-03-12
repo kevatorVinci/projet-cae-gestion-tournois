@@ -56,12 +56,10 @@ public class EquipeController {
   /** Récupérer une équipe par son identifiant. */
   @GetMapping("/{id}")
   public EquipePublicDto readOneEquipe(
-      @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
-    Equipe equipe =
-        equipeService
-            .getEquipeById(id)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable"));
+          @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+    Equipe equipe = equipeService.getEquipeById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Équipe introuvable"));
     return toPublicDto(equipe, currentUser);
   }
 
@@ -76,12 +74,14 @@ public class EquipeController {
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("isAuthenticated()")
   public Equipe creerEquipe(
-      @PathVariable Long userId,
-      @RequestBody EquipeCreationDto dto,
-      @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId,
+          @RequestBody EquipeCreationDto dto,
+          @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez créer une équipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez créer une équipe que pour votre propre compte.");
     }
 
     try {
@@ -133,12 +133,14 @@ public class EquipeController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void quitterEquipe(
-      @PathVariable Long userId,
-      @RequestBody(required = false) Map<String, Long> body,
-      @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId,
+          @RequestBody(required = false) Map<String, Long> body,
+          @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
     }
 
     try {
@@ -160,9 +162,9 @@ public class EquipeController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void promouvoirResponsable(
-      @PathVariable Long userId,
-      @PathVariable Long membreId,
-      @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId,
+          @PathVariable Long membreId,
+          @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> equipeService.promouvoirResponsable(currentUser, membreId));
   }
@@ -178,9 +180,9 @@ public class EquipeController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void depromouvoirResponsable(
-      @PathVariable Long userId,
-      @PathVariable Long membreId,
-      @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId,
+          @PathVariable Long membreId,
+          @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> equipeService.depromouvoirResponsable(currentUser, membreId));
   }
@@ -192,11 +194,12 @@ public class EquipeController {
     return equipeService.isCurrentUserResponsible(currentUser);
   }
 
+  // 👇 Ici, on a bien nos deux paramètres ! (C'est ce qui faisait l'erreur rouge)
   private void ensureSelfTeamManagement(Long userId, User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez gerer les responsables que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez gerer les responsables que pour votre propre compte.");
     }
   }
 
@@ -209,16 +212,13 @@ public class EquipeController {
   }
 
   private EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
-    List<MembrePublicDto> membres =
-        equipe.getMembres().stream()
-            .map(
-                member ->
-                    new MembrePublicDto(
-                        member.getId(),
-                        member.getTag(),
-                        member.getSpecialty(),
-                    member.getProfileImageUrl(),
-                    equipeService.isUserResponsible(equipe, member)))
+    List<MembrePublicDto> membres = equipe.getMembres().stream()
+            .map(m -> new MembrePublicDto(
+                    m.getId(),
+                    m.getTag(),
+                    m.getSpecialty(),
+                    m.getProfileImageUrl(),
+                    equipeService.isUserResponsible(equipe, m)))
             .toList();
 
     boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
