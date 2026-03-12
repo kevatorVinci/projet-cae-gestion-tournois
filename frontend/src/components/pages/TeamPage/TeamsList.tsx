@@ -113,7 +113,7 @@ const TeamsList = () => {
         text: `Demande envoyée pour rejoindre ${teamName} ! 🛡️`,
       });
       window.dispatchEvent(new Event('team-membership-changed'));
-      navigate('/maTeam');
+      navigate('/notifications');
     } catch (err) {
       setMessage({
         type: 'error',
