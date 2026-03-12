@@ -1,5 +1,6 @@
 import { useState, SyntheticEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../components/BoutonRetour';
 import {
   Box,
   Button,
@@ -85,6 +86,7 @@ const LoginPage = () => {
           maxWidth: 400,
         }}
       >
+        <BackButton />
         <Typography variant="h5" color="white" textAlign="center" mb={3}>
           Connexion
         </Typography>

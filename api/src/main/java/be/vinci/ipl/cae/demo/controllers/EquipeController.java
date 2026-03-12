@@ -25,7 +25,9 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * REST controller for public team (Equipe) operations.
  *
- * <p>Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions sont liées aux
+ * <p>
+ * Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions
+ * sont liées aux
  * membres et sont donc dans MembreController.
  */
 @RestController
@@ -44,7 +46,7 @@ public class EquipeController {
   }
 
   /** Récupérer toutes les équipes (version publique). */
-  @GetMapping({"", "/"})
+  @GetMapping({ "", "/" })
   public Iterable<EquipePublicDto> readAllEquipes(@AuthenticationPrincipal User currentUser) {
     List<EquipePublicDto> equipes = new ArrayList<>();
     for (Equipe equipe : equipeService.getAllEquipes()) {
@@ -67,7 +69,7 @@ public class EquipeController {
    * Create a team for a given user id.
    *
    * @param userId user id
-   * @param dto creation payload
+   * @param dto    creation payload
    * @return created team
    */
   @PostMapping("/{userId}/equipes")
@@ -99,7 +101,7 @@ public class EquipeController {
    * Join an existing team for a given user id.
    *
    * @param userId user id
-   * @param dto join payload
+   * @param dto    join payload
    */
   @PostMapping("/{userId}/equipes/rejoindre")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -127,7 +129,7 @@ public class EquipeController {
   /**
    * Leave current team for a given user id.
    *
-   * @param userId user id
+   * @param userId      user id
    * @param currentUser authenticated user
    */
   @PostMapping("/{userId}/equipes/quitter")
@@ -155,8 +157,8 @@ public class EquipeController {
   /**
    * Promote a member to responsible role.
    *
-   * @param userId authenticated user id
-   * @param membreId member id to promote
+   * @param userId      authenticated user id
+   * @param membreId    member id to promote
    * @param currentUser authenticated user
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/promouvoir")
@@ -173,8 +175,8 @@ public class EquipeController {
   /**
    * Demote a responsible to regular member.
    *
-   * @param userId authenticated user id
-   * @param membreId responsible member id to demote
+   * @param userId      authenticated user id
+   * @param membreId    responsible member id to demote
    * @param currentUser authenticated user
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/depromouvoir")
@@ -195,8 +197,8 @@ public class EquipeController {
     return equipeService.isCurrentUserResponsible(currentUser);
   }
 
-  private void ensureSelfTeamManagement(Long userId, User currentUser) {
-    if (currentUser == null || !userId.equals(currentUser.getId())) {
+  private void ensureSelfTeamManagement(User currentUser) {
+    if (currentUser == null) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
               "Vous ne pouvez gerer les responsables que pour votre propre compte.");
@@ -213,13 +215,14 @@ public class EquipeController {
 
   private EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
     List<MembrePublicDto> membres = equipe.getMembres().stream()
-            .map(m -> new MembrePublicDto(
-                    m.getId(),
-                    m.getTag(),
-                    m.getSpecialty(),
-                    m.getProfileImageUrl(),
-                    equipeService.isUserResponsible(equipe, m)))
-            .toList();
+        .map(
+            member -> new MembrePublicDto(
+                member.getId(),
+                member.getTag(),
+                member.getSpecialty(),
+                member.getProfileImageUrl(),
+                equipeService.isUserResponsible(equipe, member)))
+        .toList();
 
     boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
     return new EquipePublicDto(equipe.getId(), equipe.getName(), membres, isResponsable);
