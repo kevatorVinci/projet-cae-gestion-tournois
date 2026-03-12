@@ -22,73 +22,70 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/indisponibilites")
 public class IndisponibiliteController {
 
-    private final IndisponibiliteRepository indisponibiliteRepository;
-    private final UserService userService;
+  private final IndisponibiliteRepository indisponibiliteRepository;
+  private final UserService userService;
 
-    /**
-     * Constructeur du contrôleur.
-     *
-     * @param indisponibiliteRepository le dépôt des indisponibilités
-     * @param userService               le service des utilisateurs
-     */
-    public IndisponibiliteController(
-            IndisponibiliteRepository indisponibiliteRepository,
-            UserService userService) {
-        this.indisponibiliteRepository = indisponibiliteRepository;
-        this.userService = userService;
-    }
+  /**
+   * Constructeur du contrôleur.
+   *
+   * @param indisponibiliteRepository le dépôt des indisponibilités
+   * @param userService le service des utilisateurs
+   */
+  public IndisponibiliteController(
+          IndisponibiliteRepository indisponibiliteRepository, UserService userService) {
+    this.indisponibiliteRepository = indisponibiliteRepository;
+    this.userService = userService;
+  }
 
-    /**
-     * Récupère la liste des indisponibilités du joueur connecté.
-     *
-     * @param auth les informations de connexion du joueur
-     * @return la liste des périodes
-     */
-    @GetMapping
-    public Iterable<Indisponibilite> getMesIndisponibilites(Authentication auth) {
-        User user = userService.readOneFromEmail(auth.getName());
-        return indisponibiliteRepository.findByUser(user);
-    }
+  /**
+   * Récupère la liste des indisponibilités du joueur connecté.
+   *
+   * @param auth les informations de connexion du joueur
+   * @return la liste des périodes
+   */
+  @GetMapping
+  public Iterable<Indisponibilite> getMesIndisponibilites(Authentication auth) {
+    User user = userService.readOneFromEmail(auth.getName());
+    return indisponibiliteRepository.findByUser(user);
+  }
 
-    /**
-     * Enregistre une nouvelle période d'indisponibilité.
-     *
-     * @param auth            les informations de connexion
-     * @param indisponibilite la nouvelle période envoyée par React
-     * @return la période sauvegardée
-     */
-    @PostMapping
-    public Indisponibilite addIndisponibilite(
-            Authentication auth,
-            @RequestBody Indisponibilite indisponibilite) {
+  /**
+   * Enregistre une nouvelle période d'indisponibilité.
+   *
+   * @param auth les informations de connexion
+   * @param indisponibilite la nouvelle période envoyée par React
+   * @return la période sauvegardée
+   */
+  @PostMapping
+  public Indisponibilite addIndisponibilite(
+          Authentication auth, @RequestBody Indisponibilite indisponibilite) {
 
         System.out.println(">>> Requête reçue pour : " + auth.getName());
         System.out.println(
-                ">>> Dates : "
-                        + indisponibilite.getDateDebut()
-                        + " au "
-                        + indisponibilite.getDateFin());
+                        ">>> Dates : "
+                                        + indisponibilite.getDateDebut()
+                                        + " au "
+                                        + indisponibilite.getDateFin());
         String email = auth.getName();
 
         User user = userService.readOneFromEmail(email);
 
         if (user == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
         }
 
         indisponibilite.setUser(user);
 
         return indisponibiliteRepository.save(indisponibilite);
-    }
+  }
 
-    /**
-     * Supprime une période d'indisponibilité grâce à son ID.
-     *
-     * @param id l'identifiant de la période
-     */
-    @DeleteMapping("/{id}")
-    public void deleteIndisponibilite(@PathVariable Long id) {
+  /**
+   * Supprime une période d'indisponibilité grâce à son ID.
+   *
+   * @param id l'identifiant de la période
+   */
+  @DeleteMapping("/{id}")
+  public void deleteIndisponibilite(@PathVariable Long id) {
         indisponibiliteRepository.deleteById(id);
-    }
+  }
 }
