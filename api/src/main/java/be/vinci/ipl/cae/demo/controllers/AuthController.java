@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,10 +32,10 @@ public class AuthController {
 
   private boolean isInvalidCredentials(Credentials credentials) {
     return credentials == null
-        || credentials.getEmail() == null
-        || credentials.getEmail().isBlank()
-        || credentials.getPassword() == null
-        || credentials.getPassword().isBlank();
+            || credentials.getEmail() == null
+            || credentials.getEmail().isBlank()
+            || credentials.getPassword() == null
+            || credentials.getPassword().isBlank();
   }
 
   /**
@@ -48,7 +49,6 @@ public class AuthController {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
-    // ✨ On lui donne l'objet "credentials" en entier, et plus juste l'email et le mot de passe !
     AuthenticatedUser user = userService.register(credentials);
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -78,40 +78,53 @@ public class AuthController {
    * Porte d'entrée pour modifier le profil.
    *
    * @param credentials le colis envoyé par React
+   * @return le profil mis à jour avec un nouveau token
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
     AuthenticatedUser user =
-        userService.updateProfile(
-            credentials.getEmail(),
-            credentials.getSpecialty(),
-            credentials.getProfileImage(),
-            credentials.getOldPassword(),
-            credentials.getNewPassword());
+            userService.updateProfile(
+                    credentials.getEmail(),
+                    credentials.getSpecialty(),
+                    credentials.getProfileImage(),
+                    credentials.getOldPassword(),
+                    credentials.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+              HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
 
   /**
-   * La route (URL) que React va appeler pour obtenir la liste des joueurs.
+   * Retourne la liste de tous les utilisateurs pour l'administration.
+   *
+   * @return la liste des utilisateurs authentifiés
    */
   @GetMapping("/users")
   @PreAuthorize("isAuthenticated()")
-  public java.util.List<AuthenticatedUser> getAllUsers() {
+  public List<AuthenticatedUser> getAllUsers() {
     return userService.getAllUsersForAdmin();
   }
 
+  /**
+   * Ajoute le rôle administrateur à un utilisateur.
+   *
+   * @param email l'adresse email de l'utilisateur à promouvoir
+   */
   @PutMapping("/addAdmin")
   @PreAuthorize("isAuthenticated()")
   public void addAdmin(@RequestBody String email) {
     userService.addAdmin(email);
   }
 
+  /**
+   * Retire le rôle administrateur à un utilisateur.
+   *
+   * @param email l'adresse email de l'utilisateur à rétrograder
+   */
   @PutMapping("/removeAdmin")
   @PreAuthorize("isAuthenticated()")
   public void removeAdmin(@RequestBody String email) {

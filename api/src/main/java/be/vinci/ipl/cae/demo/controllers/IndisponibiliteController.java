@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.models.entities.Indisponibilite;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.IndisponibiliteRepository;
 import be.vinci.ipl.cae.demo.services.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Contrôleur pour gérer les appels liés aux indisponibilités.
@@ -29,7 +31,9 @@ public class IndisponibiliteController {
      * @param indisponibiliteRepository le dépôt des indisponibilités
      * @param userService               le service des utilisateurs
      */
-    public IndisponibiliteController(IndisponibiliteRepository indisponibiliteRepository, UserService userService) {
+    public IndisponibiliteController(
+            IndisponibiliteRepository indisponibiliteRepository,
+            UserService userService) {
         this.indisponibiliteRepository = indisponibiliteRepository;
         this.userService = userService;
     }
@@ -54,23 +58,27 @@ public class IndisponibiliteController {
      * @return la période sauvegardée
      */
     @PostMapping
-    public Indisponibilite addIndisponibilite(Authentication auth, @RequestBody Indisponibilite indisponibilite) {
+    public Indisponibilite addIndisponibilite(
+            Authentication auth,
+            @RequestBody Indisponibilite indisponibilite) {
 
         System.out.println(">>> Requête reçue pour : " + auth.getName());
-        System.out.println(">>> Dates : " + indisponibilite.getDateDebut() + " au " + indisponibilite.getDateFin());
+        System.out.println(
+                ">>> Dates : "
+                        + indisponibilite.getDateDebut()
+                        + " au "
+                        + indisponibilite.getDateFin());
         String email = auth.getName();
 
-        // 2. On cherche le vrai utilisateur complet dans la DB
         User user = userService.readOneFromEmail(email);
 
         if (user == null) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
         }
 
-        // 3. On lie l'indisponibilité au joueur
         indisponibilite.setUser(user);
 
-        // 4. On sauvegarde enfin
         return indisponibiliteRepository.save(indisponibilite);
     }
 

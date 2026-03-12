@@ -214,7 +214,8 @@ public class EquipeService {
     User persistedUser =
         userRepository
             .findById(user.getId())
-            .orElseThrow(() -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
+            .orElseThrow(
+                    () -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
 
     Equipe equipe = resolveCurrentUserTeam(persistedUser);
 
