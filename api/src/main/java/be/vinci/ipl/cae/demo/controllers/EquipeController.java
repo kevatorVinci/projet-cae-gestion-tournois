@@ -165,7 +165,7 @@ public class EquipeController {
       @PathVariable Long userId,
       @PathVariable Long membreId,
       @AuthenticationPrincipal User currentUser) {
-    ensureSelfTeamManagement(userId, currentUser);
+    ensureSelfTeamManagement(currentUser);
     executeTeamAction(() -> equipeService.promouvoirResponsable(currentUser, membreId));
   }
 
@@ -183,7 +183,7 @@ public class EquipeController {
       @PathVariable Long userId,
       @PathVariable Long membreId,
       @AuthenticationPrincipal User currentUser) {
-    ensureSelfTeamManagement(userId, currentUser);
+    ensureSelfTeamManagement(currentUser);
     executeTeamAction(() -> equipeService.depromouvoirResponsable(currentUser, membreId));
   }
 
@@ -194,9 +194,7 @@ public class EquipeController {
     return equipeService.isCurrentUserResponsible(currentUser);
   }
 
-  private void ensureSelfTeamManagement(Long userId, User currentUser) {
-    // We rely on the authenticated principal for authorization.
-    // The path userId is kept for backward compatibility with existing clients.
+  private void ensureSelfTeamManagement(User currentUser) {
     if (currentUser == null) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
