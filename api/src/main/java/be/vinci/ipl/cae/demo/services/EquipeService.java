@@ -12,11 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service gérant la logique métier liée aux équipes.
  *
- * <p>Cette classe encapsule toutes les opérations possibles sur les équipes : - création d'une
- * équipe (avec vérification d'unicité du nom) - récupération de toutes les équipes - récupération
+ * <p>
+ * Cette classe encapsule toutes les opérations possibles sur les équipes : -
+ * création d'une
+ * équipe (avec vérification d'unicité du nom) - récupération de toutes les
+ * équipes - récupération
  * d'une équipe par son identifiant
  *
- * <p>Le service ne contient aucune logique liée à la base de données directement : il délègue au
+ * <p>
+ * Le service ne contient aucune logique liée à la base de données directement :
+ * il délègue au
  * repository, ce qui permet de le tester facilement via Mockito.
  */
 @Service
@@ -30,9 +35,10 @@ public class EquipeService {
   /**
    * Constructeur injectant les repositories et services.
    *
-   * @param equipeRepository le repository permettant d'accéder aux données persistées
-   * @param userRepository the user repository
-   * @param demandService the demand service
+   * @param equipeRepository le repository permettant d'accéder aux données
+   *                         persistées
+   * @param userRepository   the user repository
+   * @param demandService    the demand service
    */
   public EquipeService(
       EquipeRepository equipeRepository,
@@ -55,7 +61,8 @@ public class EquipeService {
   }
 
   /**
-   * Récupère uniquement les équipes actives (celles qui ont au moins 1 membre). Idéal pour
+   * Récupère uniquement les équipes actives (celles qui ont au moins 1 membre).
+   * Idéal pour
    * l'affichage sur la page "Teams" du frontend, pour cacher les coquilles vides.
    *
    * @return un Iterable contenant les équipes actives
@@ -77,7 +84,7 @@ public class EquipeService {
   /**
    * Allows a user to create a team and become primary responsible.
    *
-   * @param user the creator
+   * @param user      the creator
    * @param nomEquipe team name
    * @return created team or null when name already exists
    */
@@ -106,10 +113,11 @@ public class EquipeService {
   }
 
   /**
-   * Allows a user to request joining an existing team. Creates a join demand instead of directly
+   * Allows a user to request joining an existing team. Creates a join demand
+   * instead of directly
    * adding user to team.
    *
-   * @param user user requesting to join
+   * @param user     user requesting to join
    * @param equipeId target team id
    */
   public void demanderRejoindreEquipe(User user, Long equipeId) {
@@ -121,7 +129,7 @@ public class EquipeService {
    * Checks whether the given user is one of the team responsibles.
    *
    * @param equipe team to inspect
-   * @param user user to check
+   * @param user   user to check
    * @return true when user is primary or secondary responsible
    */
   public boolean isUserResponsible(Equipe equipe, User user) {
@@ -130,12 +138,10 @@ public class EquipeService {
     }
 
     Long userId = user.getId();
-    boolean isPrincipal =
-        equipe.getResponsablePrincipal() != null
-            && equipe.getResponsablePrincipal().getId().equals(userId);
-    boolean isSecondaire =
-        equipe.getResponsableSecondaire() != null
-            && equipe.getResponsableSecondaire().getId().equals(userId);
+    boolean isPrincipal = equipe.getResponsablePrincipal() != null
+        && equipe.getResponsablePrincipal().getId().equals(userId);
+    boolean isSecondaire = equipe.getResponsableSecondaire() != null
+        && equipe.getResponsableSecondaire().getId().equals(userId);
     return isPrincipal || isSecondaire;
   }
 
@@ -158,7 +164,7 @@ public class EquipeService {
    * Promote a team member to responsible role.
    *
    * @param currentUser acting user (must already be responsible)
-   * @param membreId target member to promote
+   * @param membreId    target member to promote
    */
   @Transactional
   public void promouvoirResponsable(User currentUser, Long membreId) {
@@ -183,10 +189,11 @@ public class EquipeService {
   }
 
   /**
-   * Demote a responsible to a regular member while preserving at least one responsible.
+   * Demote a responsible to a regular member while preserving at least one
+   * responsible.
    *
    * @param currentUser acting user (must already be responsible)
-   * @param membreId target responsible to demote
+   * @param membreId    target responsible to demote
    */
   @Transactional
   public void depromouvoirResponsable(User currentUser, Long membreId) {
@@ -211,16 +218,16 @@ public class EquipeService {
   /**
    * Removes a user from their current team.
    *
-   * @param user persisted user that wants to leave the team
-   * @param nouveauResponsableId optional member id to promote when delegation is needed
+   * @param user                 persisted user that wants to leave the team
+   * @param nouveauResponsableId optional member id to promote when delegation is
+   *                             needed
    */
   @Transactional
   public void quitterEquipe(User user, Long nouveauResponsableId) {
-    User persistedUser =
-        userRepository
-            .findById(user.getId())
-            .orElseThrow(
-                () -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
+    User persistedUser = userRepository
+        .findById(user.getId())
+        .orElseThrow(
+            () -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
 
     Equipe equipe = resolveCurrentUserTeam(persistedUser);
 
@@ -289,9 +296,8 @@ public class EquipeService {
     }
 
     for (Equipe equipe : equipeRepository.findAll()) {
-      boolean isMember =
-          equipe.getMembres().stream()
-              .anyMatch(member -> member.getId().equals(currentUser.getId()));
+      boolean isMember = equipe.getMembres().stream()
+          .anyMatch(member -> member.getId().equals(currentUser.getId()));
       if (isMember || isUserResponsible(equipe, currentUser)) {
         return equipe;
       }

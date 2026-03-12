@@ -400,46 +400,49 @@ export function MyTeam() {
                         {isResponsable &&
                           member.id !== currentUserId &&
                           (member.isResponsable || canPromoteMore) && (
-                          <Button
-                            size="small"
-                            variant={
-                              member.isResponsable ? 'outlined' : 'contained'
-                            }
-                            disabled={memberActionLoadingId === member.id}
-                            onClick={() => {
-                              const targetMemberId = member.id;
-                              if (typeof targetMemberId !== 'number') {
-                                return;
+                            <Button
+                              size="small"
+                              variant={
+                                member.isResponsable ? 'outlined' : 'contained'
                               }
+                              disabled={memberActionLoadingId === member.id}
+                              onClick={() => {
+                                const targetMemberId = member.id;
+                                if (typeof targetMemberId !== 'number') {
+                                  return;
+                                }
 
-                              if (member.isResponsable) {
-                                handleDepromote(targetMemberId, member.tag);
-                              } else {
-                                openPromoteConfirm(targetMemberId, member.tag);
-                              }
-                            }}
-                            sx={{
-                              textTransform: 'none',
-                              fontSize: 11,
-                              minWidth: 130,
-                              bgcolor: member.isResponsable
-                                ? 'transparent'
-                                : '#e8822a',
-                              color: 'white',
-                              borderColor: 'rgba(255,255,255,0.35)',
-                              '&:hover': {
+                                if (member.isResponsable) {
+                                  handleDepromote(targetMemberId, member.tag);
+                                } else {
+                                  openPromoteConfirm(
+                                    targetMemberId,
+                                    member.tag,
+                                  );
+                                }
+                              }}
+                              sx={{
+                                textTransform: 'none',
+                                fontSize: 11,
+                                minWidth: 130,
                                 bgcolor: member.isResponsable
-                                  ? '#080b14'
-                                  : '#c86e20',
-                                borderColor: '#c86e20',
-                              },
-                            }}
-                          >
-                            {member.isResponsable
-                              ? 'Deheriter'
-                              : 'Nommer responsable'}
-                          </Button>
-                        )}
+                                  ? 'transparent'
+                                  : '#e8822a',
+                                color: 'white',
+                                borderColor: 'rgba(255,255,255,0.35)',
+                                '&:hover': {
+                                  bgcolor: member.isResponsable
+                                    ? '#080b14'
+                                    : '#c86e20',
+                                  borderColor: '#c86e20',
+                                },
+                              }}
+                            >
+                              {member.isResponsable
+                                ? 'Deheriter'
+                                : 'Nommer responsable'}
+                            </Button>
+                          )}
                       </Stack>
                     }
                     secondary={

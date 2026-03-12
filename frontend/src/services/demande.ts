@@ -23,9 +23,7 @@ async function parseError(response: Response, fallbackMessage: string) {
   return fallbackMessage;
 }
 
-export async function accepterDemande(
-  demandeId: number,
-): Promise<void> {
+export async function accepterDemande(demandeId: number): Promise<void> {
   const token = getRequiredAuthToken();
   const response = await fetch(`${API_BASE}/demands/${demandeId}/accepter`, {
     method: 'POST',

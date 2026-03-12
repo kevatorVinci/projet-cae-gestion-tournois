@@ -233,7 +233,7 @@ export async function promoteResponsable(membreId: number): Promise<void> {
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error(
-        "Votre session a expire. Reconnectez-vous pour nommer un responsable.",
+        'Votre session a expire. Reconnectez-vous pour nommer un responsable.',
       );
     }
     throw new Error(
