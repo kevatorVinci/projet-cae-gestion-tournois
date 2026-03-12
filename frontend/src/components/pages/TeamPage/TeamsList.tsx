@@ -1,5 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../../components/BoutonRetour';
 import {
   Box,
   Button,
@@ -76,6 +77,7 @@ const TeamsList = () => {
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         <Box sx={{ textAlign: 'center', mb: 5 }}>
+          <BackButton />
           <Typography
             variant="h3"
             component="h1"
