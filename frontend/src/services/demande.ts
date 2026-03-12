@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from '../utils/session';
-import { DemandeDecisionResult, DemandePendingItem } from '../types';
+import { DemandePendingItem } from '../types';
 
 const API_BASE = '/api';
 
@@ -25,7 +25,7 @@ async function parseError(response: Response, fallbackMessage: string) {
 
 export async function accepterDemande(
   demandeId: number,
-): Promise<DemandeDecisionResult> {
+): Promise<void> {
   const token = getRequiredAuthToken();
   const response = await fetch(`${API_BASE}/demands/${demandeId}/accepter`, {
     method: 'POST',
@@ -39,8 +39,6 @@ export async function accepterDemande(
       await parseError(response, "Impossible d'accepter la demande."),
     );
   }
-
-  return response.json() as Promise<DemandeDecisionResult>;
 }
 
 export async function refuserDemande(

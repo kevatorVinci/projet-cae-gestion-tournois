@@ -78,16 +78,13 @@ public class DemandeController {
 
   /** Accept a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/accepter")
-  @ResponseStatus(HttpStatus.OK)
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
-  public User accepterDemande(
-      @PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
+  public void accepterDemande(@PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
     try {
-      Demande demande = demandeService.accepterDemande(demandeId, currentUser);
-      return demande.getMembre();
+      demandeService.accepterDemande(demandeId, currentUser);
     } catch (RuntimeException e) {
       handleDemandeException(e);
-      return null; // jamais atteint mais requis par le compilateur
     }
   }
 

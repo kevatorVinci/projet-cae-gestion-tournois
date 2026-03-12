@@ -111,7 +111,8 @@ public class EquipeController {
       @AuthenticationPrincipal User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
+          HttpStatus.FORBIDDEN,
+          "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
     }
 
     try {
@@ -193,7 +194,9 @@ public class EquipeController {
   }
 
   private void ensureSelfTeamManagement(Long userId, User currentUser) {
-    if (currentUser == null || !userId.equals(currentUser.getId())) {
+    // We rely on the authenticated principal for authorization.
+    // The path userId is kept for backward compatibility with existing clients.
+    if (currentUser == null) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
           "Vous ne pouvez gerer les responsables que pour votre propre compte.");

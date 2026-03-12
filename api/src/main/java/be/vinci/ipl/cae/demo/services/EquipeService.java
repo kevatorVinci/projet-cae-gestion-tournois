@@ -147,7 +147,8 @@ public class EquipeService {
    */
   public boolean isCurrentUserResponsible(User currentUser) {
     try {
-      return isUserResponsible(resolveCurrentUserTeam(currentUser), currentUser);
+      User persistedCurrentUser = loadPersistedUser(currentUser);
+      return isUserResponsible(resolveCurrentUserTeam(persistedCurrentUser), persistedCurrentUser);
     } catch (IllegalStateException e) {
       return false;
     }
@@ -159,9 +160,11 @@ public class EquipeService {
    * @param currentUser acting user (must already be responsible)
    * @param membreId target member to promote
    */
+  @Transactional
   public void promouvoirResponsable(User currentUser, Long membreId) {
-    Equipe equipe = requireCurrentUserTeam(currentUser);
-    verifyCurrentUserIsResponsible(equipe, currentUser);
+    User persistedCurrentUser = loadPersistedUser(currentUser);
+    Equipe equipe = requireCurrentUserTeam(persistedCurrentUser);
+    verifyCurrentUserIsResponsible(equipe, persistedCurrentUser);
 
     User membre = findMemberInTeam(equipe, membreId);
     if (isUserResponsible(equipe, membre)) {
@@ -185,9 +188,11 @@ public class EquipeService {
    * @param currentUser acting user (must already be responsible)
    * @param membreId target responsible to demote
    */
+  @Transactional
   public void depromouvoirResponsable(User currentUser, Long membreId) {
-    Equipe equipe = requireCurrentUserTeam(currentUser);
-    verifyCurrentUserIsResponsible(equipe, currentUser);
+    User persistedCurrentUser = loadPersistedUser(currentUser);
+    Equipe equipe = requireCurrentUserTeam(persistedCurrentUser);
+    verifyCurrentUserIsResponsible(equipe, persistedCurrentUser);
 
     User membre = findMemberInTeam(equipe, membreId);
     if (!isUserResponsible(equipe, membre)) {
@@ -214,7 +219,8 @@ public class EquipeService {
     User persistedUser =
         userRepository
             .findById(user.getId())
-            .orElseThrow(() -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
+            .orElseThrow(
+                () -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
 
     Equipe equipe = resolveCurrentUserTeam(persistedUser);
 
@@ -306,6 +312,16 @@ public class EquipeService {
         .findFirst()
         .orElseThrow(
             () -> new IllegalStateException("Le membre cible n'appartient pas a l'equipe."));
+  }
+
+  private User loadPersistedUser(User currentUser) {
+    if (currentUser == null || currentUser.getId() == null) {
+      throw new IllegalStateException("Le membre n'appartient a aucune equipe.");
+    }
+
+    return userRepository
+        .findById(currentUser.getId())
+        .orElseThrow(() -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
   }
 
   private int countResponsables(Equipe equipe) {

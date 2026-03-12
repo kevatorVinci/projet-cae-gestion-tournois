@@ -110,8 +110,12 @@ export function MyTeam() {
     const otherMembers = team.members.filter(
       (member) => member.id !== currentUserId,
     );
+    const responsablesCount = team.members.filter(
+      (member) => member.isResponsable,
+    ).length;
+    const mustChooseReplacement = isResponsable && responsablesCount === 1;
 
-    if (isResponsable && otherMembers.length > 0) {
+    if (mustChooseReplacement && otherMembers.length > 0) {
       setReplacementResponsibleId(null);
       setIsLeaveDialogOpen(true);
       return;
@@ -261,6 +265,10 @@ export function MyTeam() {
   const otherMembers = team.members.filter(
     (member) => member.id !== currentUserId,
   );
+  const responsablesCount = team.members.filter(
+    (member) => member.isResponsable,
+  ).length;
+  const canPromoteMore = responsablesCount < 2;
 
   return (
     <Box
@@ -389,7 +397,9 @@ export function MyTeam() {
                             color: 'white',
                           }}
                         />
-                        {isResponsable && member.id !== currentUserId && (
+                        {isResponsable &&
+                          member.id !== currentUserId &&
+                          (member.isResponsable || canPromoteMore) && (
                           <Button
                             size="small"
                             variant={
