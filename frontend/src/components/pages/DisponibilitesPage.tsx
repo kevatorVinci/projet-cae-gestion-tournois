@@ -5,7 +5,6 @@ import {
   Box,
   Paper,
   Button,
-  TextField,
   Stack,
   List,
   ListItem,
@@ -18,8 +17,13 @@ import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/fr';
+dayjs.locale('fr');
 
-// On importe notre Facteur
 import {
   getMesIndisponibilites,
   addIndisponibilite,
@@ -29,15 +33,13 @@ import {
 
 const DisponibilitesPage = () => {
   const navigate = useNavigate();
-  const today = new Date().toISOString().split('T')[0];
 
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Au chargement, on demande les dates (SANS LE TOKEN)
   useEffect(() => {
     getMesIndisponibilites()
       .then((data) => {
@@ -50,34 +52,38 @@ const DisponibilitesPage = () => {
       });
   }, []);
 
-  // Quand on clique sur "Ajouter"
   const handleAddPeriod = async () => {
     if (!startDate || !endDate) {
       setError('Veuillez sélectionner une date de début et une date de fin.');
       return;
     }
-    if (new Date(startDate) > new Date(endDate)) {
+    if (startDate.isAfter(endDate)) {
       setError('La date de fin ne peut pas être avant la date de début.');
       return;
     }
 
     try {
-      // On envoie JUSTE les dates (SANS LE TOKEN)
-      const newPeriod = await addIndisponibilite(startDate, endDate);
-
+      const newPeriod = await addIndisponibilite(
+        startDate.format('YYYY-MM-DD'),
+        endDate.format('YYYY-MM-DD'),
+      );
       setPeriods([...periods, newPeriod]);
-      setStartDate('');
-      setEndDate('');
+      setStartDate(null);
+      setEndDate(null);
       setError('');
-    } catch (err) {
-      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setError(
+        `Erreur: ${error?.response?.data?.message || error?.message || 'inconnue'}`,
+      );
     }
   };
 
-  // Quand on clique sur la poubelle
   const handleDeletePeriod = async (idToRemove: number) => {
     try {
-      // On supprime juste avec l'ID (SANS LE TOKEN)
       await deleteIndisponibilite(idToRemove);
       setPeriods(periods.filter((period) => period.id !== idToRemove));
     } catch (err) {
@@ -128,52 +134,51 @@ const DisponibilitesPage = () => {
             </Alert>
           )}
 
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={3}
-            alignItems="center"
-          >
-            <TextField
-              fullWidth
-              type="date"
-              label="Date de début"
-              InputLabelProps={{ shrink: true }}
-              inputProps={{
-                min: today,
-                style: { colorScheme: 'dark' },
-              }}
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              sx={{ input: { color: 'white' }, label: { color: '#e8822a' } }}
-            />
-
-            <TextField
-              fullWidth
-              type="date"
-              label="Date de fin"
-              InputLabelProps={{ shrink: true }}
-              inputProps={{
-                min: startDate || today,
-                style: { colorScheme: 'dark' },
-              }}
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              sx={{ input: { color: 'white' }, label: { color: '#e8822a' } }}
-            />
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleAddPeriod}
-              sx={{
-                py: 1.5,
-                px: 4,
-                backgroundColor: '#e8822a',
-                '&:hover': { backgroundColor: '#c86e20' },
-              }}
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={3}
+              alignItems="center"
             >
-              Ajouter
-            </Button>
-          </Stack>
+              <DatePicker
+                label="Date de début"
+                value={startDate}
+                onChange={(val) => setStartDate(val)}
+                disablePast
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    sx: { input: { color: 'white' }, label: { color: '#e8822a' } },
+                  },
+                }}
+              />
+              <DatePicker
+                label="Date de fin"
+                value={endDate}
+                onChange={(val) => setEndDate(val)}
+                disablePast
+                minDate={startDate || dayjs()}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    sx: { input: { color: 'white' }, label: { color: '#e8822a' } },
+                  },
+                }}
+              />
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddPeriod}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  backgroundColor: '#e8822a',
+                  '&:hover': { backgroundColor: '#c86e20' },
+                }}
+              >
+                Ajouter
+              </Button>
+            </Stack>
+          </LocalizationProvider>
         </Paper>
 
         <Paper
@@ -197,8 +202,7 @@ const DisponibilitesPage = () => {
               color="text.secondary"
               sx={{ mt: 2, fontStyle: 'italic' }}
             >
-              Tu n'as aucune indisponibilité de prévue. Tu es prêt à combattre !
-              ⚔️
+              Tu n'as aucune indisponibilité de prévue. Tu es prêt à combattre ! ⚔️
             </Typography>
           ) : (
             <List>

@@ -10,8 +10,11 @@ const API_BASE = '/api';
 
 // On utilise LA MÊME méthode que teams.ts pour le token !
 function getAuthHeaders(): HeadersInit {
-  const token = getAuthenticatedUser()?.token;
-  return token ? { Authorization: token } : {};
+  const user = getAuthenticatedUser();
+  console.log('user:', user);
+  const token = user?.token;
+  console.log('token:', token);
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 // 1. Lire mes indisponibilités
@@ -40,7 +43,10 @@ export const addIndisponibilite = async (
     },
     body: JSON.stringify({ dateDebut, dateFin }),
   });
-  if (!response.ok) throw new Error("Erreur lors de l'ajout");
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`${response.status}: ${body}`);
+  }
   return response.json();
 };
 
