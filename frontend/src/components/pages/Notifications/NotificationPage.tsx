@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../../components/BoutonRetour';
 import {
   Box,
   Typography,
@@ -155,6 +156,7 @@ export default function Notifications() {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <NotificationsNoneIcon sx={{ color: '#e8822a', fontSize: 28 }} />
+            <BackButton />
             <Typography
               variant="h5"
               color="white"

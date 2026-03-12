@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../components/BoutonRetour';
 import {
   Box,
   Button,
@@ -132,6 +133,7 @@ export default function RegisterPage() {
           maxWidth: 600,
         }}
       >
+        <BackButton />
         <Typography variant="h5" color="white" textAlign="center" mb={3}>
           Inscription
         </Typography>

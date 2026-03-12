@@ -1,4 +1,5 @@
 import { useContext, useState, useEffect, useMemo } from 'react';
+import BackButton from '../../../components/BoutonRetour';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -94,6 +95,7 @@ export function RejoindreEquipe() {
     >
       <Container maxWidth="lg" sx={{ mb: 1 }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <BackButton />
           <Typography variant="h3" fontWeight={700} color="white">
             Vinci Arena
           </Typography>
