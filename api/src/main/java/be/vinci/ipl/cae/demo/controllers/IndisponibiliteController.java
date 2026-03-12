@@ -27,10 +27,9 @@ public class IndisponibiliteController {
      * Constructeur du contrôleur.
      *
      * @param indisponibiliteRepository le dépôt des indisponibilités
-     * @param userService le service des utilisateurs
+     * @param userService               le service des utilisateurs
      */
-    public IndisponibiliteController(IndisponibiliteRepository indisponibiliteRepository,
-                                     UserService userService) {
+    public IndisponibiliteController(IndisponibiliteRepository indisponibiliteRepository, UserService userService) {
         this.indisponibiliteRepository = indisponibiliteRepository;
         this.userService = userService;
     }
@@ -50,7 +49,7 @@ public class IndisponibiliteController {
     /**
      * Enregistre une nouvelle période d'indisponibilité.
      *
-     * @param auth les informations de connexion
+     * @param auth            les informations de connexion
      * @param indisponibilite la nouvelle période envoyée par React
      * @return la période sauvegardée
      */
@@ -65,8 +64,7 @@ public class IndisponibiliteController {
         User user = userService.readOneFromEmail(email);
 
         if (user == null) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
         }
 
         // 3. On lie l'indisponibilité au joueur
