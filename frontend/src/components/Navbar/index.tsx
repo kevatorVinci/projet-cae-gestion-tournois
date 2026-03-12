@@ -78,6 +78,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     clearUser();
+    setIsAdminView(false);
     navigate('/');
   };
 

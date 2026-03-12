@@ -31,10 +31,10 @@ public class AuthController {
 
   private boolean isInvalidCredentials(Credentials credentials) {
     return credentials == null
-        || credentials.getEmail() == null
-        || credentials.getEmail().isBlank()
-        || credentials.getPassword() == null
-        || credentials.getPassword().isBlank();
+            || credentials.getEmail() == null
+            || credentials.getEmail().isBlank()
+            || credentials.getPassword() == null
+            || credentials.getPassword().isBlank();
   }
 
   /**
@@ -78,27 +78,29 @@ public class AuthController {
    * Porte d'entrée pour modifier le profil.
    *
    * @param credentials le colis envoyé par React
+   * @return l'utilisateur mis à jour
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
     AuthenticatedUser user =
-        userService.updateProfile(
-            credentials.getEmail(),
-            credentials.getSpecialty(),
-            credentials.getProfileImage(),
-            credentials.getOldPassword(),
-            credentials.getNewPassword());
+            userService.updateProfile(
+                    credentials.getEmail(),
+                    credentials.getSpecialty(),
+                    credentials.getProfileImage(),
+                    credentials.getOldPassword(),
+                    credentials.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+              HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
 
   /**
    * La route (URL) que React va appeler pour obtenir la liste des joueurs.
+   * * @return la liste complète des utilisateurs avec leurs informations
    */
   @GetMapping("/users")
   @PreAuthorize("isAuthenticated()")
@@ -106,12 +108,20 @@ public class AuthController {
     return userService.getAllUsersForAdmin();
   }
 
+  /**
+   * Route pour donner les droits d'administration à un utilisateur.
+   * * @param email l'adresse email de l'utilisateur à promouvoir
+   */
   @PutMapping("/addAdmin")
   @PreAuthorize("isAuthenticated()")
   public void addAdmin(@RequestBody String email) {
     userService.addAdmin(email);
   }
 
+  /**
+   * Route pour retirer les droits d'administration d'un utilisateur.
+   * * @param email l'adresse email de l'utilisateur à rétrograder
+   */
   @PutMapping("/removeAdmin")
   @PreAuthorize("isAuthenticated()")
   public void removeAdmin(@RequestBody String email) {

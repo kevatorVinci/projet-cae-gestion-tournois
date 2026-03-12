@@ -29,6 +29,13 @@ public class SecurityConfiguration {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
   }
 
+  /**
+   * Configure les règles de sécurité du serveur (qui a le droit d'accéder à quoi).
+   *
+   * @param http l'objet de Spring Security qui permet de configurer le pare-feu
+   * @return SecurityFilterChain la chaîne de filtres prête à sécuriser l'application
+   * @throws Exception si une erreur survient pendant la configuration
+   */
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 

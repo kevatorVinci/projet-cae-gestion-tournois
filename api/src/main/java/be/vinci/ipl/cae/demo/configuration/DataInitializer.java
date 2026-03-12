@@ -10,9 +10,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Classe de configuration pour initialiser les données de la base de données.
+ * Elle sert à créer nos utilisateurs de démo (Lea, Tom, Ines, Tibo) au démarrage.
+ */
 @Configuration
 public class DataInitializer {
 
+  /**
+   * Méthode qui s'exécute automatiquement au lancement du serveur.
+   *
+   * @param equipeRepository l'outil pour interagir avec la table des équipes dans la base de données
+   * @param userRepository l'outil pour interagir avec la table des utilisateurs
+   * @param passwordEncoder l'outil qui sert à hacher (sécuriser) les mots de passe
+   * @return un CommandLineRunner contenant les instructions à exécuter
+   */
   @Bean
   public CommandLineRunner initDatabase(EquipeRepository equipeRepository,
                                         UserRepository userRepository,
@@ -23,6 +35,7 @@ public class DataInitializer {
         return;
       }
 
+      // La suite de ton code reste exactement pareille ici...
       String defaultPassword = passwordEncoder.encode("123");
 
       // 1. Lea (Lynx) - Responsable TEAM_ALPHA
