@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.configuration;
 
+import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -11,34 +12,32 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Classe de configuration pour initialiser les données de la base de données.
- * Elle sert à créer nos utilisateurs de démo (Lea, Tom, Ines, Tibo) au démarrage.
+ * Classe de configuration pour initialiser les données de démo au démarrage.
  */
 @Configuration
 public class DataInitializer {
 
   /**
-   * Méthode qui s'exécute automatiquement au lancement du serveur.
+   * Initialise les utilisateurs et équipes de démo si la DB est vide.
    *
-   * @param equipeRepository l'outil pour la table des équipes
-   * @param userRepository l'outil pour interagir avec la table des utilisateurs
-   * @param passwordEncoder l'outil qui sert à hacher (sécuriser) les mots de passe
-   * @return un CommandLineRunner contenant les instructions à exécuter
+   * @param equipeRepository le repository des équipes
+   * @param userRepository   le repository des utilisateurs
+   * @param passwordEncoder  l'encodeur de mots de passe
+   * @return un CommandLineRunner exécuté au démarrage
    */
   @Bean
-  public CommandLineRunner initDatabase(EquipeRepository equipeRepository,
-                                        UserRepository userRepository,
-                                        PasswordEncoder passwordEncoder) {
+  public CommandLineRunner initDatabase(
+      EquipeRepository equipeRepository,
+      UserRepository userRepository,
+      PasswordEncoder passwordEncoder) {
     return args -> {
-      // Si on a déjà des utilisateurs, on ne fait rien pour ne pas créer de doublons
-      if (userRepository.count() > 0) {
+      if (userRepository.count() > 0 || equipeRepository.count() > 0) {
         return;
       }
 
-      // La suite de ton code reste exactement pareille ici...
       String defaultPassword = passwordEncoder.encode("123");
 
-      // 1. Lea (Lynx) - Responsable TEAM_ALPHA
+      // ── Utilisateurs (sans équipe pour l'instant) ─────────────────────────
       User lea = new User();
       lea.setEmail("lea@mail.com");
       lea.setTag("Lynx");
@@ -48,7 +47,6 @@ public class DataInitializer {
       lea.setPassword(defaultPassword);
       lea.setProfileImageUrl("flash.jpg");
 
-      // 2. Tom (Rogue)
       User tom = new User();
       tom.setEmail("tom@mail.com");
       tom.setTag("Rogue");
@@ -58,7 +56,6 @@ public class DataInitializer {
       tom.setPassword(defaultPassword);
       tom.setProfileImageUrl("miles.jpg");
 
-      // 3. Ines (Pulse) - Admin
       User ines = new User();
       ines.setEmail("ines@mail.com");
       ines.setTag("Pulse");
@@ -68,7 +65,6 @@ public class DataInitializer {
       ines.setPassword(defaultPassword);
       ines.setProfileImageUrl("Pessi.jpg");
 
-      // 4. Tibo (Iron) - Admin & Responsable TEAM_OMEGA
       User tibo = new User();
       tibo.setEmail("tibo@mail.com");
       tibo.setTag("Iron");
@@ -78,8 +74,36 @@ public class DataInitializer {
       tibo.setPassword(defaultPassword);
       tibo.setProfileImageUrl("luffy.png");
 
+      // On sauvegarde d'abord sans équipe (les FK equipe sont nullable)
       userRepository.saveAll(List.of(lea, tom, ines, tibo));
-      System.out.println("✅ Comptes de démo créés : lea, tom, ines, tibo !");
+
+      // ── Équipes ───────────────────────────────────────────────────────────
+      // TEAM_ALPHA : responsable principal = Lea
+      Equipe teamAlpha = new Equipe();
+      teamAlpha.setName("TEAM_ALPHA");
+      teamAlpha.setResponsablePrincipal(lea);
+      equipeRepository.save(teamAlpha);
+
+      // TEAM_OMEGA : responsable principal = Tibo
+      Equipe teamOmega = new Equipe();
+      teamOmega.setName("TEAM_OMEGA");
+      teamOmega.setResponsablePrincipal(tibo);
+      equipeRepository.save(teamOmega);
+
+      // ── Rattachement des membres à leur équipe ────────────────────────────
+      // TEAM_ALPHA : Lea + Tom + Ines
+      lea.setEquipe(teamAlpha);
+      tom.setEquipe(teamAlpha);
+      ines.setEquipe(teamAlpha);
+
+      // TEAM_OMEGA : Tibo
+      tibo.setEquipe(teamOmega);
+
+      userRepository.saveAll(List.of(lea, tom, ines, tibo));
+
+      System.out.println("✅ DB initialisée :");
+      System.out.println("   TEAM_ALPHA → Lea (resp. principal), Tom, Ines");
+      System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
     };
   }
 }
