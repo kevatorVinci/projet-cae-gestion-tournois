@@ -58,25 +58,25 @@ public class IndisponibiliteController {
    */
   @PostMapping
   public Indisponibilite addIndisponibilite(
-          Authentication auth, @RequestBody Indisponibilite indisponibilite) {
+      Authentication auth, @RequestBody Indisponibilite indisponibilite) {
 
-        System.out.println(">>> Requête reçue pour : " + auth.getName());
-        System.out.println(
-                        ">>> Dates : "
-                                        + indisponibilite.getDateDebut()
-                                        + " au "
-                                        + indisponibilite.getDateFin());
-        String email = auth.getName();
+    System.out.println(">>> Requête reçue pour : " + auth.getName());
+    System.out.println(
+        ">>> Dates : "
+            + indisponibilite.getDateDebut()
+            + " au "
+            + indisponibilite.getDateFin());
+    String email = auth.getName();
 
-        User user = userService.readOneFromEmail(email);
+    User user = userService.readOneFromEmail(email);
 
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
-        }
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
+    }
 
-        indisponibilite.setUser(user);
+    indisponibilite.setUser(user);
 
-        return indisponibiliteRepository.save(indisponibilite);
+    return indisponibiliteRepository.save(indisponibilite);
   }
 
   /**
@@ -86,6 +86,6 @@ public class IndisponibiliteController {
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(@PathVariable Long id) {
-        indisponibiliteRepository.deleteById(id);
+    indisponibiliteRepository.deleteById(id);
   }
 }
