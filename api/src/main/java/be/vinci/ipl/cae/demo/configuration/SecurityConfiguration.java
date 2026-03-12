@@ -28,43 +28,33 @@ public class SecurityConfiguration {
   public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
   }
-
-  /**
-   * FilterChain for the security configuration.
-   *
-   * @param http the HttpSecurity.
-   * @param userService the UserService for JWT authentication.
-   * @return the SecurityFilterChain.
-   * @throws Exception the exception.
-   */
+  
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, UserService userService)
-      throws Exception {
-    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(userService);
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
     return http.csrf(AbstractHttpConfigurer::disable)
-        .cors(AbstractHttpConfigurer::disable)
-        .httpBasic(AbstractHttpConfigurer::disable)
-        .formLogin(AbstractHttpConfigurer::disable)
-        .sessionManagement(
-            sessionManagement ->
-                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(
-            authorize ->
-                authorize
-                    .requestMatchers("/auths/**")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/equipes", "/equipes/", "/equipes/**")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .exceptionHandling(
-            exception ->
-                exception.authenticationEntryPoint(
-                    (request, response, authException) -> {
-                      response.sendError(401, "Unauthorized");
-                    }))
-        .build();
+            .cors(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .sessionManagement(
+                    sessionManagement ->
+                            sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(
+                    authorize ->
+                            authorize
+                                    .requestMatchers("/auths/**").permitAll() // Laisser passer la connexion
+                                    .requestMatchers(HttpMethod.GET, "/equipes/**").permitAll() // Voir les équipes
+                                    // 2. On accepte les requêtes vers nos indisponibilités
+                                    .requestMatchers("/indisponibilites", "/indisponibilites/**").authenticated()
+                                    .anyRequest().authenticated())
+            // 3. IMPORTANT : Utiliser "this.jwtAuthenticationFilter"
+            .addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(
+                    exception ->
+                            exception.authenticationEntryPoint(
+                                    (request, response, authException) -> {
+                                      response.sendError(401, "Unauthorized");
+                                    }))
+            .build();
   }
 }

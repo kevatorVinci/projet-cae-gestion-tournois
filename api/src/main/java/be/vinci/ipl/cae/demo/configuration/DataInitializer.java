@@ -10,32 +10,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/**
- * Initialise la base de données avec des utilisateurs de test.
- */
 @Configuration
 public class DataInitializer {
 
-  /**
-   * Crée des utilisateurs par défaut au démarrage.
-   *
-   * @param equipeRepository le dépôt des équipes
-   * @param userRepository le dépôt des utilisateurs
-   * @param passwordEncoder l'outil de cryptage
-   * @return une instance de CommandLineRunner
-   */
   @Bean
   public CommandLineRunner initDatabase(EquipeRepository equipeRepository,
-      UserRepository userRepository,
-      PasswordEncoder passwordEncoder) {
+                                        UserRepository userRepository,
+                                        PasswordEncoder passwordEncoder) {
     return args -> {
-      if (equipeRepository.count() > 0 || userRepository.count() > 0) {
+      // Si on a déjà des utilisateurs, on ne fait rien pour ne pas créer de doublons
+      if (userRepository.count() > 0) {
         return;
       }
 
       String defaultPassword = passwordEncoder.encode("123");
 
-      // 1. Lea
+      // 1. Lea (Lynx) - Responsable TEAM_ALPHA
       User lea = new User();
       lea.setEmail("lea@mail.com");
       lea.setTag("Lynx");
@@ -45,7 +35,7 @@ public class DataInitializer {
       lea.setPassword(defaultPassword);
       lea.setProfileImageUrl("flash.jpg");
 
-      // 2. Tom
+      // 2. Tom (Rogue)
       User tom = new User();
       tom.setEmail("tom@mail.com");
       tom.setTag("Rogue");
@@ -55,7 +45,7 @@ public class DataInitializer {
       tom.setPassword(defaultPassword);
       tom.setProfileImageUrl("miles.jpg");
 
-      // 3. Ines
+      // 3. Ines (Pulse) - Admin
       User ines = new User();
       ines.setEmail("ines@mail.com");
       ines.setTag("Pulse");
@@ -65,7 +55,7 @@ public class DataInitializer {
       ines.setPassword(defaultPassword);
       ines.setProfileImageUrl("Pessi.jpg");
 
-      // 4. Tibo
+      // 4. Tibo (Iron) - Admin & Responsable TEAM_OMEGA
       User tibo = new User();
       tibo.setEmail("tibo@mail.com");
       tibo.setTag("Iron");
@@ -75,10 +65,8 @@ public class DataInitializer {
       tibo.setPassword(defaultPassword);
       tibo.setProfileImageUrl("luffy.png");
 
-      // Sauvegarde des données
       userRepository.saveAll(List.of(lea, tom, ines, tibo));
-
-      System.out.println("✅ Base de données initialisée !");
+      System.out.println("✅ Comptes de démo créés : lea, tom, ines, tibo !");
     };
   }
 }
