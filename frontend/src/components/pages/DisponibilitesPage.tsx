@@ -134,7 +134,9 @@ const DisponibilitesPage = () => {
             </Alert>
           )}
 
-          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">            <Stack
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+            {' '}
+            <Stack
               direction={{ xs: 'column', sm: 'row' }}
               spacing={3}
               alignItems="center"
@@ -147,7 +149,10 @@ const DisponibilitesPage = () => {
                 slotProps={{
                   textField: {
                     fullWidth: true,
-                    sx: { input: { color: 'white' }, label: { color: '#e8822a' } },
+                    sx: {
+                      input: { color: 'white' },
+                      label: { color: '#e8822a' },
+                    },
                   },
                 }}
               />
@@ -160,7 +165,10 @@ const DisponibilitesPage = () => {
                 slotProps={{
                   textField: {
                     fullWidth: true,
-                    sx: { input: { color: 'white' }, label: { color: '#e8822a' } },
+                    sx: {
+                      input: { color: 'white' },
+                      label: { color: '#e8822a' },
+                    },
                   },
                 }}
               />
@@ -202,7 +210,8 @@ const DisponibilitesPage = () => {
               color="text.secondary"
               sx={{ mt: 2, fontStyle: 'italic' }}
             >
-              Tu n'as aucune indisponibilité de prévue. Tu es prêt à combattre ! ⚔️
+              Tu n'as aucune indisponibilité de prévue. Tu es prêt à combattre !
+              ⚔️
             </Typography>
           ) : (
             <List>
