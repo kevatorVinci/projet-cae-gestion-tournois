@@ -45,6 +45,11 @@ const normalizeAvatarUrl = (avatar?: string): string | undefined => {
 
 export function DemandesAdhesion() {
   const [demandes, setDemandes] = useState<PendingDemandeView[]>([]);
+  const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
+  const [demandeAcceptee, setDemandeAcceptee] = useState<{
+    id: number;
+    tag: string;
+  } | null>(null);
 
   // 2️⃣ États pour gérer la modale de refus
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,7 +62,7 @@ export function DemandesAdhesion() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
-  const [teamName, setTeamName] = useState('Votre equipe');
+  const [teamName, setTeamName] = useState('Votre équipe');
 
   useEffect(() => {
     const loadDemandes = async () => {
@@ -91,26 +96,33 @@ export function DemandesAdhesion() {
   }, []);
 
   // 🟢 Action : Accepter un joueur
-  const handleAccept = async (id: number, tag: string) => {
-    if (
-      window.confirm(`Voulez-vous vraiment accepter ${tag} dans l'équipe ?`)
-    ) {
-      try {
-        setErrorMessage(null);
-        setFeedback(null);
-        setActionLoading(id);
-        await accepterDemande(id);
-        setDemandes((prev) => prev.filter((d) => d.id !== id));
-        setFeedback(`La candidature de ${tag} a ete acceptee.`);
-      } catch (err: unknown) {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : "Impossible d'accepter la demande.";
-        setErrorMessage(msg);
-      } finally {
-        setActionLoading(null);
-      }
+  const handleOpenAcceptModal = (id: number, tag: string) => {
+    setDemandeAcceptee({ id, tag });
+    setIsAcceptModalOpen(true);
+  };
+
+  const handleConfirmAccept = async () => {
+    if (!demandeAcceptee) {
+      return;
+    }
+
+    try {
+      setErrorMessage(null);
+      setFeedback(null);
+      setActionLoading(demandeAcceptee.id);
+      await accepterDemande(demandeAcceptee.id);
+      setDemandes((prev) => prev.filter((d) => d.id !== demandeAcceptee.id));
+      setFeedback(`La candidature de ${demandeAcceptee.tag} a été acceptée.`);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Impossible d'accepter la demande.";
+      setErrorMessage(msg);
+    } finally {
+      setActionLoading(null);
+      setIsAcceptModalOpen(false);
+      setDemandeAcceptee(null);
     }
   };
 
@@ -137,10 +149,7 @@ export function DemandesAdhesion() {
       setActionLoading(demandeRefusee.id);
       await refuserDemande(demandeRefusee.id, motifRefus.trim());
       setDemandes((prev) => prev.filter((d) => d.id !== demandeRefusee.id));
-      setFeedback(`La candidature de ${demandeRefusee.tag} a ete refusee.`);
-      setIsModalOpen(false);
-      setMotifRefus('');
-      setDemandeRefusee(null);
+      setFeedback(`La candidature de ${demandeRefusee.tag} a été refusée.`);
     } catch (err: unknown) {
       const msg =
         err instanceof Error
@@ -149,6 +158,9 @@ export function DemandesAdhesion() {
       setErrorMessage(msg);
     } finally {
       setActionLoading(null);
+      setIsModalOpen(false);
+      setMotifRefus('');
+      setDemandeRefusee(null);
     }
   };
 
@@ -272,7 +284,9 @@ export function DemandesAdhesion() {
                     color="success"
                     startIcon={<AcceptIcon />}
                     disabled={actionLoading === demande.id}
-                    onClick={() => handleAccept(demande.id, demande.tag)}
+                    onClick={() =>
+                      handleOpenAcceptModal(demande.id, demande.tag)
+                    }
                   >
                     Accepter
                   </Button>
@@ -293,6 +307,41 @@ export function DemandesAdhesion() {
           </Stack>
         )}
       </Container>
+
+      <Dialog
+        open={isAcceptModalOpen}
+        onClose={() => setIsAcceptModalOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{ fontWeight: 700, bgcolor: '#1a2540', color: 'white' }}
+        >
+          Accepter la candidature
+        </DialogTitle>
+        <DialogContent sx={{ bgcolor: '#1a2540', color: 'white', pt: 2 }}>
+          <DialogContentText sx={{ color: 'rgba(255,255,255,0.7)' }}>
+            Voulez-vous vraiment accepter{' '}
+            <strong>{demandeAcceptee?.tag}</strong> dans l&apos;équipe ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ bgcolor: '#1a2540', p: 2 }}>
+          <Button
+            onClick={() => setIsAcceptModalOpen(false)}
+            sx={{ color: 'rgba(255,255,255,0.7)' }}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleConfirmAccept}
+            variant="contained"
+            color="success"
+            disabled={!demandeAcceptee}
+          >
+            Confirmer
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* --- MODALE DE REFUS --- */}
       <Dialog

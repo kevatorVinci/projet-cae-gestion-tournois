@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -22,16 +22,36 @@ import {
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { authenticatedUser, clearUser }: UserContextType =
     useContext(UserContext);
   const [hasTeam, setHasTeam] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (authenticatedUser) {
+    const refreshTeamStatus = () => {
+      if (!authenticatedUser) {
+        setHasTeam(false);
+        return;
+      }
+
       getUserTeam()
         .then((team) => setHasTeam(!!team))
         .catch(() => setHasTeam(false));
+    };
+
+    refreshTeamStatus();
+
+    const handleTeamMembershipChanged = () => {
+      refreshTeamStatus();
+    };
+
+    window.addEventListener(
+      'team-membership-changed',
+      handleTeamMembershipChanged,
+    );
+
+    if (authenticatedUser) {
       try {
         const userId = getCurrentUserIdFromToken();
         getUnreadNotificationsByUser(userId)
@@ -41,10 +61,16 @@ const Navbar = () => {
         setUnreadCount(0);
       }
     } else {
-      setHasTeam(false);
       setUnreadCount(0);
     }
-  }, [authenticatedUser]);
+
+    return () => {
+      window.removeEventListener(
+        'team-membership-changed',
+        handleTeamMembershipChanged,
+      );
+    };
+  }, [authenticatedUser, location.pathname]);
 
   const handleLogout = () => {
     clearUser();

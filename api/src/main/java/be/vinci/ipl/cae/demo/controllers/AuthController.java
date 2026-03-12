@@ -106,12 +106,22 @@ public class AuthController {
     return userService.getAllUsersForAdmin();
   }
 
+  /**
+   * Promotes a user to admin role.
+   *
+   * @param email the email of the user to promote.
+   */
   @PutMapping("/addAdmin")
   @PreAuthorize("isAuthenticated()")
   public void addAdmin(@RequestBody String email) {
     userService.addAdmin(email);
   }
 
+  /**
+   * Removes admin role from a user.
+   *
+   * @param email the email of the user to demote.
+   */
   @PutMapping("/removeAdmin")
   @PreAuthorize("isAuthenticated()")
   public void removeAdmin(@RequestBody String email) {

@@ -40,7 +40,7 @@ export function CreateEquipe() {
       setError(
         err instanceof Error
           ? err.message
-          : "Erreur lors de la creation de l'equipe.",
+          : "Erreur lors de la création de l'équipe.",
       );
     } finally {
       setLoading(false);

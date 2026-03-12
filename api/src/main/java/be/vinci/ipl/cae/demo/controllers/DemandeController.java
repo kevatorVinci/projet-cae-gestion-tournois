@@ -78,9 +78,10 @@ public class DemandeController {
 
   /** Accept a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/accepter")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @ResponseStatus(HttpStatus.NO_CONTENT)  // ✅ plus de sérialisation User
   @PreAuthorize("isAuthenticated()")
-  public void accepterDemande(@PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
+  public void accepterDemande(
+      @PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
     try {
       demandeService.accepterDemande(demandeId, currentUser);
     } catch (RuntimeException e) {
