@@ -24,19 +24,19 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Indisponibilite {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(name = "date_debut", nullable = false)
-    private LocalDate dateDebut;
+  @Column(name = "date_debut", nullable = false)
+  private LocalDate dateDebut;
 
-    @Column(name = "date_fin", nullable = false)
-    private LocalDate dateFin;
+  @Column(name = "date_fin", nullable = false)
+  private LocalDate dateFin;
 
-    // Lien avec le joueur (Un joueur peut avoir plusieurs indisponibilités)
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
-    private User user;
+  // Lien avec le joueur (Un joueur peut avoir plusieurs indisponibilités)
+  @ManyToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  @JsonIgnore
+  private User user;
 }

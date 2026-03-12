@@ -144,7 +144,7 @@ const DisponibilitesPage = () => {
               <DatePicker
                 label="Date de début"
                 value={startDate}
-                onChange={(val) => setStartDate(val)}
+                onChange={(val: Dayjs | null) => setStartDate(val)}
                 disablePast
                 slotProps={{
                   textField: {
@@ -159,7 +159,7 @@ const DisponibilitesPage = () => {
               <DatePicker
                 label="Date de fin"
                 value={endDate}
-                onChange={(val) => setEndDate(val)}
+                onChange={(val: Dayjs | null) => setEndDate(val)}
                 disablePast
                 minDate={startDate || dayjs()}
                 slotProps={{
