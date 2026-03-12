@@ -38,7 +38,6 @@ public class EquipeController {
    * Constructor for EquipeController.
    *
    * @param equipeService the injected service.
-   * @param userService the injected user service.
    */
   public EquipeController(EquipeService equipeService) {
     this.equipeService = equipeService;
@@ -111,7 +110,8 @@ public class EquipeController {
       @AuthenticationPrincipal User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
+          HttpStatus.FORBIDDEN,
+          "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
     }
 
     try {

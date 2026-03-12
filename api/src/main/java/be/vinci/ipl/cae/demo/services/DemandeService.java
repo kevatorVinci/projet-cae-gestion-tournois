@@ -176,7 +176,7 @@ public class DemandeService {
 
     notificationService.notifierDemandeAcceptee(user, equipe.getName());
     return savedDemande;
-}
+  }
 
   /**
    * Refuse la candidature d'un joueur en y attachant un motif de refus. Met à jour l'historique de

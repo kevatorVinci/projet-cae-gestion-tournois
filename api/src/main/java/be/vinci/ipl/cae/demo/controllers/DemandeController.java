@@ -81,13 +81,13 @@ public class DemandeController {
   @ResponseStatus(HttpStatus.NO_CONTENT)  // ✅ plus de sérialisation User
   @PreAuthorize("isAuthenticated()")
   public void accepterDemande(
-    @PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
-  try {
-    demandeService.accepterDemande(demandeId, currentUser);
-  } catch (RuntimeException e) {
-    handleDemandeException(e);
+      @PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
+    try {
+      demandeService.accepterDemande(demandeId, currentUser);
+    } catch (RuntimeException e) {
+      handleDemandeException(e);
+    }
   }
-}
 
   /** Reject a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/refuser")
