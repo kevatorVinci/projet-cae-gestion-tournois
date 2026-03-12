@@ -1,10 +1,12 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Container,
   InputAdornment,
   Stack,
@@ -13,13 +15,18 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { getAllEquipes } from '../../../services/teams';
+import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType } from '../../../types';
 
 const TeamsList = () => {
   const [query, setQuery] = useState('');
   const [teamsState, setTeamsState] = useState<Equipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
   const navigate = useNavigate();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
 
@@ -30,6 +37,8 @@ const TeamsList = () => {
         setTeamsState(data);
       } catch (err: unknown) {
         console.error('Erreur API :', err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -38,12 +47,27 @@ const TeamsList = () => {
 
   const normalizedQuery = query.trim().toLowerCase();
 
-  const handleRejoindrClick = () => {
+  const handlePostulerClick = async (teamId: number, teamName: string) => {
     if (!authenticatedUser) {
       navigate('/login');
       return;
     }
-    navigate('/equipes/rejoindre');
+
+    try {
+      await joinEquipe(teamId);
+      setMessage({
+        type: 'success',
+        text: `Demande envoyée pour rejoindre ${teamName} ! 🛡️`,
+      });
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text:
+          err instanceof Error
+            ? err.message
+            : "Erreur lors de l'envoi de la demande.",
+      });
+    }
   };
 
   const filteredTeams = useMemo(
@@ -53,6 +77,22 @@ const TeamsList = () => {
       ),
     [normalizedQuery, teamsState],
   );
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'background.default',
+        }}
+      >
+        <CircularProgress color="secondary" />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -150,6 +190,12 @@ const TeamsList = () => {
           />
         </Box>
 
+        {message && (
+          <Alert severity={message.type} sx={{ mb: 3 }}>
+            {message.text}
+          </Alert>
+        )}
+
         {filteredTeams.length === 0 ? (
           <Box
             sx={{
@@ -221,18 +267,29 @@ const TeamsList = () => {
                     </Typography>
                   </Stack>
 
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={handleRejoindrClick}
-                    sx={{
-                      backgroundColor: '#e8822a',
-                      fontWeight: 700,
-                      '&:hover': { backgroundColor: '#c86e20' },
-                    }}
+                  <Box
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}
                   >
-                    Rejoindre l&apos;équipe
-                  </Button>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={() => navigate(`/equipes/${team.id}`)}
+                    >
+                      Voir les détails
+                    </Button>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => handlePostulerClick(team.id, team.name)}
+                      sx={{
+                        backgroundColor: '#e8822a',
+                        fontWeight: 700,
+                        '&:hover': { backgroundColor: '#c86e20' },
+                      }}
+                    >
+                      Postuler
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             ))}
