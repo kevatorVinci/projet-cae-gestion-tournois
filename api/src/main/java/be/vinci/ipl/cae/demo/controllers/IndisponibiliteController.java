@@ -55,10 +55,24 @@ public class IndisponibiliteController {
      * @return la période sauvegardée
      */
     @PostMapping
-    public Indisponibilite addIndisponibilite(Authentication auth,
-                                              @RequestBody Indisponibilite indisponibilite) {
-        User user = userService.readOneFromEmail(auth.getName());
+    public Indisponibilite addIndisponibilite(Authentication auth, @RequestBody Indisponibilite indisponibilite) {
+
+        System.out.println(">>> Requête reçue pour : " + auth.getName());
+        System.out.println(">>> Dates : " + indisponibilite.getDateDebut() + " au " + indisponibilite.getDateFin());
+        String email = auth.getName();
+
+        // 2. On cherche le vrai utilisateur complet dans la DB
+        User user = userService.readOneFromEmail(email);
+
+        if (user == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
+        }
+
+        // 3. On lie l'indisponibilité au joueur
         indisponibilite.setUser(user);
+
+        // 4. On sauvegarde enfin
         return indisponibiliteRepository.save(indisponibilite);
     }
 

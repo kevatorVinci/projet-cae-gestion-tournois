@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -12,55 +12,77 @@ import {
   ListItemText,
   IconButton,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 
-interface Period {
-  id: string;
-  startDate: string;
-  endDate: string;
-}
+// On importe notre Facteur
+import {
+  getMesIndisponibilites,
+  addIndisponibilite,
+  deleteIndisponibilite,
+  Period,
+} from '../../services/indisponibilites';
 
 const DisponibilitesPage = () => {
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
+
   const [periods, setPeriods] = useState<Period[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Quand on clique sur le bouton "Ajouter"
-  const handleAddPeriod = () => {
+  // Au chargement, on demande les dates (SANS LE TOKEN)
+  useEffect(() => {
+    getMesIndisponibilites()
+      .then((data) => {
+        setPeriods(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Impossible de charger vos données.');
+        setLoading(false);
+      });
+  }, []);
+
+  // Quand on clique sur "Ajouter"
+  const handleAddPeriod = async () => {
     if (!startDate || !endDate) {
       setError('Veuillez sélectionner une date de début et une date de fin.');
       return;
     }
-
-    // 2. On vérifie que la fin n'est pas avant le début
     if (new Date(startDate) > new Date(endDate)) {
       setError('La date de fin ne peut pas être avant la date de début.');
       return;
     }
 
-    const newPeriod: Period = {
-      id: Date.now().toString(),
-      startDate,
-      endDate,
-    };
+    try {
+      // On envoie JUSTE les dates (SANS LE TOKEN)
+      const newPeriod = await addIndisponibilite(startDate, endDate);
 
-    // 4. On l'ajoute à notre liste et on vide le formulaire
-    setPeriods([...periods, newPeriod]);
-    setStartDate('');
-    setEndDate('');
-    setError(''); // On efface les erreurs
+      setPeriods([...periods, newPeriod]);
+      setStartDate('');
+      setEndDate('');
+      setError('');
+    } catch (err) {
+      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+    }
   };
 
-  // Quand on clique sur la poubelle pour supprimer une période
-  const handleDeletePeriod = (idToRemove: string) => {
-    setPeriods(periods.filter((period) => period.id !== idToRemove));
+  // Quand on clique sur la poubelle
+  const handleDeletePeriod = async (idToRemove: number) => {
+    try {
+      // On supprime juste avec l'ID (SANS LE TOKEN)
+      await deleteIndisponibilite(idToRemove);
+      setPeriods(periods.filter((period) => period.id !== idToRemove));
+    } catch (err) {
+      setError('Erreur lors de la suppression.');
+    }
   };
 
   return (
@@ -72,7 +94,6 @@ const DisponibilitesPage = () => {
       }}
     >
       <Container maxWidth="md">
-        {/* Bouton retour */}
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/profil')}
@@ -81,17 +102,13 @@ const DisponibilitesPage = () => {
           Retour au profil
         </Button>
 
-        {/* Titre de la page */}
         <Typography variant="h4" color="white" fontWeight={700} gutterBottom>
           Mes Indisponibilités 📅
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
           Indique ici les périodes où tu ne pourras pas participer aux matchs.
-          En dehors de ces dates, tu seras considéré comme disponible pour ton
-          équipe.
         </Typography>
 
-        {/* Formulaire d'ajout */}
         <Paper
           variant="outlined"
           sx={{
@@ -103,9 +120,8 @@ const DisponibilitesPage = () => {
           }}
         >
           <Typography variant="h6" color="white" gutterBottom>
-            Ajouter une période d'absence
+            Ajouter une période
           </Typography>
-
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
@@ -122,7 +138,10 @@ const DisponibilitesPage = () => {
               type="date"
               label="Date de début"
               InputLabelProps={{ shrink: true }}
-              inputProps={{ min: today }}
+              inputProps={{
+                min: today,
+                style: { colorScheme: 'dark' },
+              }}
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               sx={{ input: { color: 'white' }, label: { color: '#e8822a' } }}
@@ -133,12 +152,14 @@ const DisponibilitesPage = () => {
               type="date"
               label="Date de fin"
               InputLabelProps={{ shrink: true }}
-              inputProps={{ min: startDate || today }}
+              inputProps={{
+                min: startDate || today,
+                style: { colorScheme: 'dark' },
+              }}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               sx={{ input: { color: 'white' }, label: { color: '#e8822a' } }}
             />
-
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -146,7 +167,6 @@ const DisponibilitesPage = () => {
               sx={{
                 py: 1.5,
                 px: 4,
-                whiteSpace: 'nowrap',
                 backgroundColor: '#e8822a',
                 '&:hover': { backgroundColor: '#c86e20' },
               }}
@@ -156,7 +176,6 @@ const DisponibilitesPage = () => {
           </Stack>
         </Paper>
 
-        {/* Liste des indisponibilités enregistrées */}
         <Paper
           variant="outlined"
           sx={{
@@ -167,10 +186,12 @@ const DisponibilitesPage = () => {
           }}
         >
           <Typography variant="h6" color="white" gutterBottom>
-            Mes absences prévues ({periods.length})
+            Mes absences prévues
           </Typography>
 
-          {periods.length === 0 ? (
+          {loading ? (
+            <CircularProgress sx={{ color: '#e8822a', mt: 2 }} />
+          ) : periods.length === 0 ? (
             <Typography
               variant="body2"
               color="text.secondary"
@@ -187,7 +208,6 @@ const DisponibilitesPage = () => {
                   secondaryAction={
                     <IconButton
                       edge="end"
-                      aria-label="delete"
                       onClick={() => handleDeletePeriod(period.id)}
                       sx={{ color: '#d32f2f' }}
                     >
@@ -202,7 +222,7 @@ const DisponibilitesPage = () => {
                   }}
                 >
                   <ListItemText
-                    primary={`Du ${new Date(period.startDate).toLocaleDateString('fr-FR')} au ${new Date(period.endDate).toLocaleDateString('fr-FR')}`}
+                    primary={`Du ${new Date(period.dateDebut).toLocaleDateString('fr-FR')} au ${new Date(period.dateFin).toLocaleDateString('fr-FR')}`}
                     primaryTypographyProps={{ color: 'white', fontWeight: 500 }}
                   />
                 </ListItem>
