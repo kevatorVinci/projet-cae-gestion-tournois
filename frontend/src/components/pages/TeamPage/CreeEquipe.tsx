@@ -1,4 +1,5 @@
 import { useContext, useState } from 'react';
+import BackButton from '../../../components/BoutonRetour/';
 import {
   Container,
   Typography,
@@ -56,6 +57,7 @@ export function CreateEquipe() {
     >
       <Container maxWidth="sm" sx={{ mb: 1 }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <BackButton />
           <Typography variant="h4" fontWeight={700} color="white" gutterBottom>
             Créer une Team ⚔️
           </Typography>

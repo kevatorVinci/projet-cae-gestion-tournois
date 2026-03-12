@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../components/BoutonRetour';
 import {
   Box,
   Button,
@@ -166,6 +167,7 @@ export default function ProfilePage() {
           maxWidth: 600,
         }}
       >
+        <BackButton />
         <Typography variant="h5" color="white" textAlign="center" mb={4}>
           Mon Profil
         </Typography>

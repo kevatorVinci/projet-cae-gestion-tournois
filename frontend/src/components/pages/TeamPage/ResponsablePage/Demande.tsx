@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import BackButton from '../../../../components/BoutonRetour';
 import {
   Container,
   Typography,
@@ -195,6 +196,7 @@ export function DemandesAdhesion() {
           }}
         >
           <Box>
+            <BackButton />
             <Typography
               variant="h3"
               fontWeight={700}
