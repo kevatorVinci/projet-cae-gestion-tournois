@@ -25,9 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * REST controller for public team (Equipe) operations.
  *
- * <p>
- * Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions
- * sont liées aux
+ * <p>Ce controller ne gère PAS la création ou l'adhésion à une équipe. Ces actions sont liées aux
  * membres et sont donc dans MembreController.
  */
 @RestController
@@ -40,14 +38,13 @@ public class EquipeController {
    * Constructor for EquipeController.
    *
    * @param equipeService the injected service.
-   * @param userService   the injected user service.
    */
   public EquipeController(EquipeService equipeService) {
     this.equipeService = equipeService;
   }
 
   /** Récupérer toutes les équipes (version publique). */
-  @GetMapping({ "", "/" })
+  @GetMapping({"", "/"})
   public Iterable<EquipePublicDto> readAllEquipes(@AuthenticationPrincipal User currentUser) {
     List<EquipePublicDto> equipes = new ArrayList<>();
     for (Equipe equipe : equipeService.getAllEquipes()) {
@@ -59,11 +56,10 @@ public class EquipeController {
   /** Récupérer une équipe par son identifiant. */
   @GetMapping("/{id}")
   public EquipePublicDto readOneEquipe(
-      @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
-    Equipe equipe = equipeService
-        .getEquipeById(id)
-        .orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable"));
+          @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+    Equipe equipe = equipeService.getEquipeById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Équipe introuvable"));
     return toPublicDto(equipe, currentUser);
   }
 
@@ -71,19 +67,21 @@ public class EquipeController {
    * Create a team for a given user id.
    *
    * @param userId user id
-   * @param dto    creation payload
+   * @param dto creation payload
    * @return created team
    */
   @PostMapping("/{userId}/equipes")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("isAuthenticated()")
   public Equipe creerEquipe(
-      @PathVariable Long userId,
-      @RequestBody EquipeCreationDto dto,
-      @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId,
+          @RequestBody EquipeCreationDto dto,
+          @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez créer une équipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez créer une équipe que pour votre propre compte.");
     }
 
     try {
@@ -101,19 +99,20 @@ public class EquipeController {
    * Join an existing team for a given user id.
    *
    * @param userId user id
-   * @param dto    join payload
+   * @param dto join payload
    */
   @PostMapping("/{userId}/equipes/rejoindre")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void rejoindreEquipe(
-      @PathVariable Long userId,
-      @RequestBody EquipeJoinDto dto,
-      @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId,
+          @RequestBody EquipeJoinDto dto,
+          @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
     }
 
     try {
@@ -128,19 +127,21 @@ public class EquipeController {
   /**
    * Leave current team for a given user id.
    *
-   * @param userId      user id
+   * @param userId user id
    * @param currentUser authenticated user
    */
   @PostMapping("/{userId}/equipes/quitter")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void quitterEquipe(
-      @PathVariable Long userId,
-      @RequestBody(required = false) Map<String, Long> body,
-      @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId,
+          @RequestBody(required = false) Map<String, Long> body,
+          @AuthenticationPrincipal User currentUser) {
+
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
     }
 
     try {
@@ -154,36 +155,36 @@ public class EquipeController {
   /**
    * Promote a member to responsible role.
    *
-   * @param userId      authenticated user id
-   * @param membreId    member id to promote
+   * @param userId authenticated user id
+   * @param membreId member id to promote
    * @param currentUser authenticated user
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/promouvoir")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void promouvoirResponsable(
-      @PathVariable Long userId,
-      @PathVariable Long membreId,
-      @AuthenticationPrincipal User currentUser) {
-    ensureSelfTeamManagement(currentUser);
+          @PathVariable Long userId,
+          @PathVariable Long membreId,
+          @AuthenticationPrincipal User currentUser) {
+    ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> equipeService.promouvoirResponsable(currentUser, membreId));
   }
 
   /**
    * Demote a responsible to regular member.
    *
-   * @param userId      authenticated user id
-   * @param membreId    responsible member id to demote
+   * @param userId authenticated user id
+   * @param membreId responsible member id to demote
    * @param currentUser authenticated user
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/depromouvoir")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void depromouvoirResponsable(
-      @PathVariable Long userId,
-      @PathVariable Long membreId,
-      @AuthenticationPrincipal User currentUser) {
-    ensureSelfTeamManagement(currentUser);
+          @PathVariable Long userId,
+          @PathVariable Long membreId,
+          @AuthenticationPrincipal User currentUser) {
+    ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> equipeService.depromouvoirResponsable(currentUser, membreId));
   }
 
@@ -194,11 +195,12 @@ public class EquipeController {
     return equipeService.isCurrentUserResponsible(currentUser);
   }
 
-  private void ensureSelfTeamManagement(User currentUser) {
-    if (currentUser == null) {
+  // 👇 Ici, on a bien nos deux paramètres ! (C'est ce qui faisait l'erreur rouge)
+  private void ensureSelfTeamManagement(Long userId, User currentUser) {
+    if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez gerer les responsables que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez gerer les responsables que pour votre propre compte.");
     }
   }
 
@@ -212,14 +214,13 @@ public class EquipeController {
 
   private EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
     List<MembrePublicDto> membres = equipe.getMembres().stream()
-        .map(
-            member -> new MembrePublicDto(
-                member.getId(),
-                member.getTag(),
-                member.getSpecialty(),
-                member.getProfileImageUrl(),
-                equipeService.isUserResponsible(equipe, member)))
-        .toList();
+            .map(m -> new MembrePublicDto(
+                    m.getId(),
+                    m.getTag(),
+                    m.getSpecialty(),
+                    m.getProfileImageUrl(),
+                    equipeService.isUserResponsible(equipe, m)))
+            .toList();
 
     boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
     return new EquipePublicDto(equipe.getId(), equipe.getName(), membres, isResponsable);

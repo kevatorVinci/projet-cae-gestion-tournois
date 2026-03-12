@@ -224,10 +224,11 @@ public class EquipeService {
    */
   @Transactional
   public void quitterEquipe(User user, Long nouveauResponsableId) {
-    User persistedUser = userRepository
-        .findById(user.getId())
-        .orElseThrow(
-            () -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
+    User persistedUser =
+        userRepository
+            .findById(user.getId())
+            .orElseThrow(() -> new IllegalStateException(
+                    "Le membre n'appartient a aucune equipe."));
 
     Equipe equipe = resolveCurrentUserTeam(persistedUser);
 
