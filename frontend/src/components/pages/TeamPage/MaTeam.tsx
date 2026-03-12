@@ -93,7 +93,7 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
-      setMessage('Impossible de charger votre equipe pour le moment.');
+      setMessage('Impossible de charger votre équipe pour le moment.');
     } finally {
       setLoading(false);
     }
@@ -131,7 +131,7 @@ export function MyTeam() {
       setTeam(null);
       setIsResponsable(false);
       setIsSimpleLeaveDialogOpen(false);
-      setMessage('Vous avez quitte votre equipe.');
+      setMessage('Vous avez quitté votre équipe.');
       window.dispatchEvent(new Event('team-membership-changed'));
       navigate('/equipes');
     } catch (err: unknown) {
@@ -142,7 +142,7 @@ export function MyTeam() {
       setMessage(
         err instanceof Error
           ? err.message
-          : "Impossible de quitter l'equipe actuellement.",
+          : "Impossible de quitter l'équipe actuellement.",
       );
     }
   };
@@ -163,7 +163,7 @@ export function MyTeam() {
       setIsResponsable(false);
       setIsLeaveDialogOpen(false);
       setReplacementResponsibleId(null);
-      setMessage('Vous avez quitte votre equipe.');
+      setMessage('Vous avez quitté votre équipe.');
       window.dispatchEvent(new Event('team-membership-changed'));
       navigate('/equipes');
     } catch (err: unknown) {
@@ -174,7 +174,7 @@ export function MyTeam() {
       setMessage(
         err instanceof Error
           ? err.message
-          : "Impossible de quitter l'equipe actuellement.",
+          : "Impossible de quitter l'équipe actuellement.",
       );
     }
   };
@@ -263,7 +263,7 @@ export function MyTeam() {
           p: 3,
         }}
       >
-        <Alert severity="info">Vous n&apos;etes dans aucune equipe.</Alert>
+        <Alert severity="info">Vous n&apos;êtes dans aucune équipe.</Alert>
       </Box>
     );
   }
@@ -323,7 +323,7 @@ export function MyTeam() {
                   '&:hover': { bgcolor: '#c86e20' },
                 }}
               >
-                Demandes d'adhesion
+                Demandes d'adhésion
               </Button>
             )}
             <Button
@@ -336,7 +336,7 @@ export function MyTeam() {
                 '&:hover': { bgcolor: '#c86e20', borderColor: '#c86e20' },
               }}
             >
-              Quitter l'equipe
+              Quitter l'équipe
             </Button>
           </Stack>
         </Paper>

@@ -10,7 +10,6 @@ import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service gérant la logique métier des candidatures (demandes) pour rejoindre une équipe.
@@ -148,7 +147,6 @@ public class DemandeService {
    * @return La demande mise à jour avec le statut ACCEPTEE.
    * @throws RuntimeException Si la demande spécifiée n'existe pas en base de données.
    */
-  @Transactional
   public Demande accepterDemande(Long demandeId, User currentUser) {
     Demande demande = getAndVerifyDemande(demandeId, currentUser);
     Equipe equipe = demande.getEquipe();
@@ -170,13 +168,15 @@ public class DemandeService {
     userRepo.save(user);
     equipeRepo.save(equipe);
 
-    // Toutes les autres demandes en attente de ce user deviennent obsoletes.
+    // ✅ On sauvegarde D'ABORD la demande acceptée
+    Demande savedDemande = demandeRepo.save(demande);
+
+    // ✅ ENSUITE on supprime les autres demandes en attente de ce user
     demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
 
-    Demande savedDemande = demandeRepo.save(demande);
     notificationService.notifierDemandeAcceptee(user, equipe.getName());
     return savedDemande;
-  }
+}
 
   /**
    * Refuse la candidature d'un joueur en y attachant un motif de refus. Met à jour l'historique de
@@ -188,7 +188,6 @@ public class DemandeService {
    * @return La demande mise à jour avec le statut REFUSEE et son motif.
    * @throws RuntimeException Si la demande spécifiée n'existe pas en base de données.
    */
-  @Transactional
   public Demande refuserDemande(Long demandeId, String raison, User currentUser) {
     Demande demande = getAndVerifyDemande(demandeId, currentUser);
     String raisonNormalisee =

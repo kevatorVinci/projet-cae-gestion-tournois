@@ -61,7 +61,7 @@ export function DemandesAdhesion() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
-  const [teamName, setTeamName] = useState('Votre equipe');
+  const [teamName, setTeamName] = useState('Votre équipe');
 
   useEffect(() => {
     const loadDemandes = async () => {
@@ -111,7 +111,7 @@ export function DemandesAdhesion() {
       setActionLoading(demandeAcceptee.id);
       await accepterDemande(demandeAcceptee.id);
       setDemandes((prev) => prev.filter((d) => d.id !== demandeAcceptee.id));
-      setFeedback(`La candidature de ${demandeAcceptee.tag} a ete acceptee.`);
+      setFeedback(`La candidature de ${demandeAcceptee.tag} a été acceptée.`);
     } catch (err: unknown) {
       const msg =
         err instanceof Error
@@ -148,7 +148,7 @@ export function DemandesAdhesion() {
       setActionLoading(demandeRefusee.id);
       await refuserDemande(demandeRefusee.id, motifRefus.trim());
       setDemandes((prev) => prev.filter((d) => d.id !== demandeRefusee.id));
-      setFeedback(`La candidature de ${demandeRefusee.tag} a ete refusee.`);
+      setFeedback(`La candidature de ${demandeRefusee.tag} a été refusée.`);
     } catch (err: unknown) {
       const msg =
         err instanceof Error

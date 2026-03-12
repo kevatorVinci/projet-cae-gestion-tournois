@@ -101,7 +101,7 @@ const TeamsList = () => {
     if (selectedTeam && isCurrentUsersTeam(selectedTeam)) {
       setMessage({
         type: 'error',
-        text: 'Vous faites deja partie de cette equipe.',
+        text: 'Vous faites déjà partie de cette équipe.',
       });
       return;
     }
