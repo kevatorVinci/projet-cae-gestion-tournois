@@ -9,3 +9,7 @@ lost+found
 
 coverage/
 **/coverage/
+
+### IDE / Python venv
+.idea/
+.venv/
