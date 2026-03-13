@@ -16,7 +16,12 @@ import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
 import DisponibilitesPage from '../pages/DisponibilitesPage';
 
 const App = () => (
-  <Router>
+  <Router
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    }}
+  >
     <Box sx={{ minHeight: '100vh', backgroundColor: '#080b14' }}>
       <Navbar />
       <Routes>
