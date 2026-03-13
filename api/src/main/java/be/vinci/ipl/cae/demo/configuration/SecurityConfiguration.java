@@ -49,13 +49,16 @@ public class SecurityConfiguration {
                     auth -> auth
                             .requestMatchers("/auths/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/equipes/**").permitAll()
-                            .requestMatchers("/indisponibilites", "/indisponibilites/**").authenticated()
+                            .requestMatchers(
+                                    "/indisponibilites", "/indisponibilites/**")
+                            .authenticated()
                             .anyRequest().authenticated())
             .addFilterBefore(this.jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(
                     ex -> ex.authenticationEntryPoint(
-                            (request, response, authException) -> response.sendError(401, "Unauthorized")))
+                            (request, response, authException) ->
+                                    response.sendError(401, "Unauthorized")))
             .build();
   }
 }

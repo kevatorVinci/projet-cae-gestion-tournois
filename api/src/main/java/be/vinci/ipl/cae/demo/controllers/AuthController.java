@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,7 +49,6 @@ public class AuthController {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
-    // ✨ On lui donne l'objet "credentials" en entier, et plus juste l'email et le mot de passe !
     AuthenticatedUser user = userService.register(credentials);
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -78,7 +78,7 @@ public class AuthController {
    * Porte d'entrée pour modifier le profil.
    *
    * @param credentials le colis envoyé par React
-   * @return l'utilisateur mis à jour
+   * @return le profil mis à jour avec un nouveau token
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
@@ -99,18 +99,20 @@ public class AuthController {
   }
 
   /**
-   * La route (URL) que React va appeler pour obtenir la liste des joueurs.
-   * * @return la liste complète des utilisateurs avec leurs informations
+   * Retourne la liste de tous les utilisateurs pour l'administration.
+   *
+   * @return la liste des utilisateurs authentifiés
    */
   @GetMapping("/users")
   @PreAuthorize("isAuthenticated()")
-  public java.util.List<AuthenticatedUser> getAllUsers() {
+  public List<AuthenticatedUser> getAllUsers() {
     return userService.getAllUsersForAdmin();
   }
 
   /**
-   * Route pour donner les droits d'administration à un utilisateur.
-   * * @param email l'adresse email de l'utilisateur à promouvoir
+   * Ajoute le rôle administrateur à un utilisateur.
+   *
+   * @param email l'adresse email de l'utilisateur à promouvoir
    */
   @PutMapping("/addAdmin")
   @PreAuthorize("isAuthenticated()")
@@ -119,8 +121,9 @@ public class AuthController {
   }
 
   /**
-   * Route pour retirer les droits d'administration d'un utilisateur.
-   * * @param email l'adresse email de l'utilisateur à rétrograder
+   * Retire le rôle administrateur à un utilisateur.
+   *
+   * @param email l'adresse email de l'utilisateur à rétrograder
    */
   @PutMapping("/removeAdmin")
   @PreAuthorize("isAuthenticated()")

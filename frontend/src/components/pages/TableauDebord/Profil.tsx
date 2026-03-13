@@ -12,6 +12,7 @@ import {
   AddCircleOutline as CreateIcon,
   GroupAdd as JoinIcon,
   Edit as EditIcon,
+  CalendarMonth as CalendarIcon,
 } from '@mui/icons-material';
 import { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -134,6 +135,8 @@ const Profile = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
           }}
         >
           <Stack direction="row" spacing={3} alignItems="center">
@@ -153,22 +156,41 @@ const Profile = () => {
               </Typography>
             </Box>
           </Stack>
-          <Button
-            variant="outlined"
-            startIcon={<EditIcon />}
-            onClick={() => navigate('/profile')}
-            sx={{
-              borderColor: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              '&:hover': {
-                borderColor: '#e8822a',
-                color: '#e8822a',
-                backgroundColor: 'rgba(232,130,42,0.08)',
-              },
-            }}
-          >
-            Modifier le profil
-          </Button>
+
+          {/* Les boutons d'action du profil ajoutés ici 👇 */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Button
+              variant="contained"
+              startIcon={<CalendarIcon />}
+              onClick={() => navigate('/disponibilites')}
+              sx={{
+                backgroundColor: '#e8822a',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#c86e20',
+                },
+              }}
+            >
+              Mes disponibilités
+            </Button>
+
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={() => navigate('/profile')}
+              sx={{
+                borderColor: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                '&:hover': {
+                  borderColor: '#e8822a',
+                  color: '#e8822a',
+                  backgroundColor: 'rgba(232,130,42,0.08)',
+                },
+              }}
+            >
+              Modifier le profil
+            </Button>
+          </Stack>
         </Paper>
 
         {/* 3. GRILLE DES ACTIONS (Créer / Rejoindre) */}

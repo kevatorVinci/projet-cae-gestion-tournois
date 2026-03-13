@@ -108,7 +108,6 @@ public class EquipeController {
           @PathVariable Long userId,
           @RequestBody EquipeJoinDto dto,
           @AuthenticationPrincipal User currentUser) {
-
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
