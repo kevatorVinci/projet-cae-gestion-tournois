@@ -291,7 +291,7 @@ export function MyTeam() {
       <Container maxWidth="lg" sx={{ mb: 1 }}>
         {message && <Alert sx={{ mb: 2 }}>{message}</Alert>}
 
-        {/* 1. BANNIÈRE HEADER */}
+        {/* 1. BANNIÈRE HEAD */}
         <Paper
           elevation={0}
           sx={{
