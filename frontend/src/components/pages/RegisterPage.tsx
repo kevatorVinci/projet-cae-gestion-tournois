@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../../components/BoutonRetour';
 import {
@@ -14,9 +14,16 @@ import {
   InputLabel,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { AuthenticatedUser, Equipe } from '../../types';
+import { getAllEquipes, joinEquipe } from '../../services/teams';
+import {
+  clearAuthenticatedUser,
+  storeAuthenticatedUser,
+} from '../../utils/session';
 
 import backgroundImage from '../../assets/images/background.png';
 
@@ -29,8 +36,18 @@ export default function RegisterPage() {
   const [tag, setTag] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [profileImage, setProfileImage] = useState('');
+  const [teams, setTeams] = useState<Equipe[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState('');
+  const [loadingTeams, setLoadingTeams] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    getAllEquipes()
+      .then((data) => setTeams(data))
+      .catch(() => setTeams([]))
+      .finally(() => setLoadingTeams(false));
+  }, []);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -95,6 +112,18 @@ export default function RegisterPage() {
       });
 
       if (response.ok) {
+        const authenticatedUser =
+          (await response.json()) as AuthenticatedUser;
+
+        if (selectedTeamId) {
+          try {
+            storeAuthenticatedUser(authenticatedUser, false);
+            await joinEquipe(Number(selectedTeamId));
+          } finally {
+            clearAuthenticatedUser();
+          }
+        }
+
         navigate('/login');
       } else if (response.status === 401) {
         setErrorMessage('Cette adresse email est déjà utilisée.');
@@ -219,6 +248,41 @@ export default function RegisterPage() {
                 ))}
               </Select>
             </FormControl>
+          </Box>
+
+          <Box sx={{ marginBottom: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                Équipe à rejoindre (optionnel)
+              </InputLabel>
+              <Select
+                value={selectedTeamId}
+                label="Équipe à rejoindre (optionnel)"
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                disabled={loadingTeams}
+                sx={{
+                  color: 'white',
+                  backgroundColor: '#2a3b55',
+                  '.MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.23)',
+                  },
+                }}
+              >
+                <MenuItem value="">
+                  <em>Aucune équipe</em>
+                </MenuItem>
+                {teams.map((team) => (
+                  <MenuItem key={team.id} value={String(team.id)}>
+                    {team.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {loadingTeams && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                <CircularProgress size={18} sx={{ color: '#e8822a' }} />
+              </Box>
+            )}
           </Box>
 
           <Box sx={{ marginBottom: 3 }}>
