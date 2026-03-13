@@ -3,13 +3,15 @@ package be.vinci.ipl.cae.demo.models.dtos;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO representing an authenticated user with a JWT token.
- */
+/** AuthenticatedUser DTO. */
 @Data
 @NoArgsConstructor
 public class AuthenticatedUser {
 
-  private String username;
+  private String email;
   private String token;
+  private String tag;
+  private String specialty;
+  private String profileImage;
+  private boolean admin;
 }

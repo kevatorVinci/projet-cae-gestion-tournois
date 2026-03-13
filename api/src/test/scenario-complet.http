@@ -1,0 +1,124 @@
+@baseUrl = http://localhost:3000
+
+### Scenario complet Vinci Arena
+### Preconditions:
+### 1. The API is running on port 3000.
+### 2. The database is fresh after app startup (`create-drop`).
+### 3. With the current seed data, these ids should be:
+###    - admin seed: user 1
+###    - first registered user below: user 2
+###    - second registered user below: user 3
+###    - first created team below: team 1
+###    - first join demand below: demand 1
+### If your database is not fresh, update the ids manually.
+
+@managerEmail = manager.scenario@vinci.be
+@managerPassword = password123
+@candidateEmail = candidate.scenario@vinci.be
+@candidatePassword = password123
+@managerUserId = 2
+@candidateUserId = 3
+@teamId = 1
+@demandeId = 1
+
+### 1. Register the future team manager
+# @name registerManager
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "{{managerEmail}}",
+  "password": "{{managerPassword}}",
+  "tag": "managerTag",
+  "specialty": "captain",
+  "profileImage": "manager.png"
+}
+
+### 2. Register the future candidate
+# @name registerCandidate
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "{{candidateEmail}}",
+  "password": "{{candidatePassword}}",
+  "tag": "candidateTag",
+  "specialty": "support",
+  "profileImage": "candidate.png"
+}
+
+### 3. Login manager and capture JWT
+# @name loginManager
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "{{managerEmail}}",
+  "password": "{{managerPassword}}"
+}
+
+@managerToken = {{loginManager.response.body.$.token}}
+
+### 4. Login candidate and capture JWT
+# @name loginCandidate
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "{{candidateEmail}}",
+  "password": "{{candidatePassword}}"
+}
+
+@candidateToken = {{loginCandidate.response.body.$.token}}
+
+### 5. Manager creates a team
+# Expected: 201 Created
+POST {{baseUrl}}/equipes/{{managerUserId}}/equipes
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "name": "Scenario Team"
+}
+
+### 6. Candidate asks to join the team
+# Expected: 204 No Content
+POST {{baseUrl}}/equipes/{{candidateUserId}}/equipes/rejoindre
+Content-Type: application/json
+Authorization: Bearer {{candidateToken}}
+
+{
+  "equipeId": {{teamId}}
+}
+
+### 7. Manager accepts the pending demand
+# Expected: 200 OK
+POST {{baseUrl}}/demands/{{demandeId}}/accepter
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+### 8. Candidate reads all notifications
+# Expected: 200 OK with account/team/join/accepted notifications
+GET {{baseUrl}}/api/notifications/users/{{candidateUserId}}
+Authorization: Bearer {{candidateToken}}
+
+### 9. Candidate reads unread notifications only
+GET {{baseUrl}}/api/notifications/users/{{candidateUserId}}/non-lues
+Authorization: Bearer {{candidateToken}}
+
+### 10. Manager reads notifications
+# Expected: one notification about a new join demand
+GET {{baseUrl}}/api/notifications/users/{{managerUserId}}
+Authorization: Bearer {{managerToken}}
+
+### Optional alternative branch: refusal instead of acceptance
+### Restart the API first to reset the database, then replay steps 1 to 6,
+### and run the request below instead of step 7.
+
+### POST {{baseUrl}}/demands/{{demandeId}}/refuser
+### Content-Type: application/json
+### Authorization: Bearer {{managerToken}}
+###
+### {
+###   "raisonRefus": "Profil non adapte pour le moment"
+### }

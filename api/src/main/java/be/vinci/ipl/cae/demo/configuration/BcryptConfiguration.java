@@ -4,9 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-/**
- * Configuration class for BCrypt password encoder.
- */
+/** Configuration class for BCrypt password encoder. */
 @Configuration
 public class BcryptConfiguration {
 
@@ -19,5 +17,4 @@ public class BcryptConfiguration {
   public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
-
 }

@@ -1,156 +1,108 @@
-import { useEffect, useState, useCallback, useContext } from 'react';
-import { Outlet } from 'react-router-dom';
-import Footer from '../Footer';
-import Header from '../Header';
-import {
-  Drink,
-  NewPizza,
-  Pizza,
-  PizzeriaContext,
-  UserContextType,
-} from '../../types';
-import NavBar from '../Navbar';
-
-import { UserContext } from '../../contexts/UserContext';
 import Box from '@mui/material/Box';
-import pizza from '../../assets/images/pizza.jpg';
-import { Container } from '@mui/material';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Navbar from '../Navbar';
+import HomePage from '../pages/HomePage/HomePage';
+import Notifications from '../pages/Notifications/NotificationPage';
+import TeamsList from '../pages/TeamPage/TeamsList';
+import TeamDetails from '../pages/TeamPage/TeamDetail';
+import Profile from '../pages/TableauDebord/Profil';
+import { CreateEquipe } from '../pages/TeamPage/CreeEquipe';
+import { MyTeam } from '../pages/TeamPage/MaTeam';
+import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage';
+import ProfilePage from '../pages/ProfilePage';
+import AdminPage from '../pages/AdminPage';
+import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
+import DisponibilitesPage from '../pages/DisponibilitesPage';
+import ProtectedRoute from '../routes/ProtectedRoute';
+import AdminRoute from '../routes/AdminRoute';
+import NonConnectePage from '../pages/PasAcces/NonConnectePage';
+import InterditPage from '../pages/PasAcces/InterditPage';
 
-const drinks: Drink[] = [
-  {
-    title: 'Coca-Cola',
-    image:
-      'https://media.istockphoto.com/id/1289738725/fr/photo/bouteille-en-plastique-de-coke-avec-la-conception-et-le-chapeau-rouges-d%C3%A9tiquette.jpg?s=1024x1024&w=is&k=20&c=HBWfROrGDTIgD6fuvTlUq6SrwWqIC35-gceDSJ8TTP8=',
-    volume: 'Volume: 33cl',
-    price: '2,50 €',
-  },
-  {
-    title: 'Pepsi',
-    image:
-      'https://media.istockphoto.com/id/185268840/fr/photo/bouteille-de-cola-sur-un-fond-blanc.jpg?s=1024x1024&w=is&k=20&c=xdsxwb4bLjzuQbkT_XvVLyBZyW36GD97T1PCW0MZ4vg=',
-    volume: 'Volume: 33cl',
-    price: '2,50 €',
-  },
-  {
-    title: 'Eau Minérale',
-    image:
-      'https://media.istockphoto.com/id/1397515626/fr/photo/verre-deau-gazeuse-%C3%A0-boire-isol%C3%A9.jpg?s=1024x1024&w=is&k=20&c=iEjq6OL86Li4eDG5YGO59d1O3Ga1iMVc_Kj5oeIfAqk=',
-    volume: 'Volume: 50cl',
-    price: '1,50 €',
-  },
-];
-
-const App = () => {
-  const [actionToBePerformed, setActionToBePerformed] = useState(false);
-  const [pizzas, setPizzas] = useState<Pizza[]>([]);
-  const { authenticatedUser } = useContext<UserContextType>(UserContext);
-
-  const fetchPizzas = useCallback(async () => {
-    try {
-      const pizzas = await getAllPizzas();
-      setPizzas(pizzas);
-    } catch (err) {
-      console.error('HomePage::error: ', err);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPizzas();
-  }, [fetchPizzas]);
-
-  async function getAllPizzas() {
-    try {
-      const response = await fetch('/api/pizzas');
-
-      if (!response.ok)
-        throw new Error(
-          `fetch error : ${response.status} : ${response.statusText}`,
-        );
-
-      const pizzas = await response.json();
-
-      return pizzas;
-    } catch (err) {
-      console.error('getAllPizzas::error: ', err);
-      throw err;
-    }
-  }
-
-  const addPizza = async (newPizza: NewPizza) => {
-    try {
-      if (!authenticatedUser) {
-        throw new Error('You must be authenticated to add a pizza');
-      }
-      const options = {
-        method: 'POST',
-        body: JSON.stringify(newPizza),
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authenticatedUser.token,
-        },
-      };
-
-      const response = await fetch('/api/pizzas', options); // fetch retourne une "promise" => on attend la réponse
-
-      if (!response.ok)
-        throw new Error(
-          `fetch error : ${response.status} : ${response.statusText}`,
-        );
-
-      const createdPizza = await response.json(); // json() retourne une "promise" => on attend les données
-
-      setPizzas([...pizzas, createdPizza]);
-    } catch (err) {
-      console.error('AddPizza::error: ', err);
-    }
-  };
-
-  const handleHeaderClick = () => {
-    setActionToBePerformed(true);
-  };
-
-  const clearActionToBePerformed = () => {
-    setActionToBePerformed(false);
-  };
-
-  const fullPizzaContext: PizzeriaContext = {
-    addPizza,
-    pizzas,
-    setPizzas,
-    actionToBePerformed,
-    setActionToBePerformed,
-    clearActionToBePerformed,
-    drinks,
-  };
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        backgroundImage: `url(${pizza})`,
-        backgroundSize: 'cover',
-      }}
-    >
-      <Header
-        title="We love Pizza"
-        version={0 + 1}
-        handleHeaderClick={handleHeaderClick}
-      />
-      <Container
-        component="main"
-        sx={{
-          flex: '1',
-        }}
-      >
-        <NavBar />
-        <Outlet context={fullPizzaContext} />
-      </Container>
-
-      <Footer />
+const App = () => (
+  <Router
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    }}
+  >
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#080b14' }}>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/equipes" element={<TeamsList />} />
+        <Route
+          path="/equipes/creer"
+          element={
+            <ProtectedRoute>
+              <CreateEquipe />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/equipes/demande"
+          element={
+            <ProtectedRoute>
+              <DemandesAdhesion />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/equipes/:id" element={<TeamDetails />} />
+        <Route
+          path="/profil"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/maTeam"
+          element={
+            <ProtectedRoute>
+              <MyTeam />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/disponibilites"
+          element={
+            <ProtectedRoute>
+              <DisponibilitesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/pas-acces/non-connecte" element={<NonConnectePage />} />
+        <Route path="/pas-acces/interdit" element={<InterditPage />} />
+      </Routes>
     </Box>
-  );
-};
+  </Router>
+);
 
 export default App;

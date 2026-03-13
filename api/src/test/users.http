@@ -1,0 +1,52 @@
+@baseUrl = http://localhost:3000
+@email = http-user@example.com
+@password = password123
+@tag = httptest
+@specialty = support
+
+### 1. Register a user
+# @name registerUser
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "tag": "{{tag}}",
+  "specialty": "{{specialty}}",
+  "profileImage": "avatar-1.png"
+}
+
+### 2. Login the same user
+# @name loginUser
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Copy the token from loginUser response body before testing protected endpoints.
+
+### 3. Update profile
+PUT {{baseUrl}}/auths/update
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "specialty": "captain",
+  "profileImage": "avatar-2.png",
+  "oldPassword": "{{password}}",
+  "newPassword": "password1234"
+}
+
+### 4. Wrong password should return 401
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "wrong-password"
+}
+

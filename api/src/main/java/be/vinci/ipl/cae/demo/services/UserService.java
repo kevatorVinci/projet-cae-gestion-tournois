@@ -1,138 +1,257 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
+import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import java.time.LocalDateTime;
 import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
- * Service for user operations and JWT management.
+ * Service for user authentication and profile management.
  */
 @Service
 public class UserService {
 
-  private static final String jwtSecret = "ilovemypizza!";
-  private static final long lifetimeJwt = 24 * 60 * 60 * 1000; // 24 hours
-
-  private static final Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
+  private static final String JWT_SECRET = "ilovemypizza!";
+  private static final long LIFETIME_JWT = 24 * 60 * 60 * 1000;
+  private static final Algorithm ALGORITHM = Algorithm.HMAC256(JWT_SECRET);
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
   /**
-   * Constructor for UserService.
+   * Builds the user service.
    *
-   * @param passwordEncoder the BCrypt password encoder.
-   * @param userRepository  the user repository.
+   * @param passwordEncoder encoder used for password hashing
+   * @param userRepository user repository
+   * @param notificationService notification service
    */
-  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+  public UserService(
+      BCryptPasswordEncoder passwordEncoder,
+      UserRepository userRepository,
+      NotificationService notificationService) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.notificationService = notificationService;
   }
 
   /**
-   * Creates a signed JWT token for the given username.
+   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site.
    *
-   * @param username the username.
-   * @return the authenticated user with a JWT token.
+   * @param email l'email de l'utilisateur
+   * @return les infos de l'utilisateur authentifié
    */
-  public AuthenticatedUser createJwtToken(String username) {
-    String token = JWT.create()
-        .withIssuer("auth0")
-        .withClaim("username", username)
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
-        .sign(algorithm);
+  public AuthenticatedUser createJwtToken(String email) {
+    User user = userRepository.findByEmail(email);
+
+    var tokenBuilder =
+        JWT.create()
+            .withIssuer("auth0")
+            .withClaim("email", email)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
+
+    if (user != null && user.getId() != null) {
+      tokenBuilder =
+          tokenBuilder.withSubject(String.valueOf(user.getId())).withClaim("id", user.getId());
+    }
+
+    String token = tokenBuilder.sign(ALGORITHM);
 
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
-    authenticatedUser.setUsername(username);
+    authenticatedUser.setEmail(email);
     authenticatedUser.setToken(token);
+
+    if (user != null) {
+      authenticatedUser.setTag(user.getTag());
+      authenticatedUser.setSpecialty(user.getSpecialty());
+      authenticatedUser.setProfileImage(user.getProfileImageUrl());
+      authenticatedUser.setAdmin(user.isAdmin());
+    }
 
     return authenticatedUser;
   }
 
   /**
-   * Verifies a JWT token and returns the username if valid.
+   * Verify and decode a JWT token.
    *
-   * @param token the JWT token to verify.
-   * @return the username or null if token is invalid.
+   * @param token JWT token
+   * @return user email when token is valid, otherwise null
    */
   public String verifyJwtToken(String token) {
     try {
-      return JWT.require(algorithm).build().verify(token).getClaim("username").asString();
+      return JWT.require(ALGORITHM).build().verify(token).getClaim("email").asString();
     } catch (Exception e) {
       return null;
     }
   }
 
   /**
-   * Logs in a user with the given credentials.
+   * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
    *
-   * @param username the username.
-   * @param password the plain text password.
-   * @return the authenticated user or null if credentials are invalid.
+   * @param email l'email
+   * @param password le mot de passe
+   * @return l'utilisateur authentifié ou null
    */
-  public AuthenticatedUser login(String username, String password) {
-    User user = userRepository.findByUsername(username);
+  public AuthenticatedUser login(String email, String password) {
+    User user = userRepository.findByEmail(email);
     if (user == null) {
       return null;
     }
-
     if (!passwordEncoder.matches(password, user.getPassword())) {
       return null;
     }
-
-    System.out.println(createJwtToken(username));
-
-    return createJwtToken(username);
+    return createJwtToken(email);
   }
 
   /**
-   * Registers a new user.
+   * Inscrit un tout nouveau joueur dans la base de données.
    *
-   * @param username the username.
-   * @param password the plain text password.
-   * @return the authenticated user or null if username already exists.
+   * @param credentials les identifiants fournis
+   * @return l'utilisateur authentifié ou null
    */
-  public AuthenticatedUser register(String username, String password) {
-    User user = userRepository.findByUsername(username);
+  public AuthenticatedUser register(Credentials credentials) {
+    User user = userRepository.findByEmail(credentials.getEmail());
     if (user != null) {
       return null;
     }
-
-    createOne(username, password);
-
-    return createJwtToken(username);
+    User newUser = createOne(credentials);
+    return createJwtToken(newUser.getEmail());
   }
 
   /**
-   * Returns a user by username.
+   * Read a user by email.
    *
-   * @param username the username.
-   * @return the user or null if not found.
+   * @param email user email
+   * @return user or null
    */
-  public User readOneFromUsername(String username) {
-    return userRepository.findByUsername(username);
+  public User readOneFromEmail(String email) {
+    return userRepository.findByEmail(email);
   }
 
   /**
-   * Creates and saves a new user with a hashed password.
+   * Crée une entité utilisateur à partir des credentials.
    *
-   * @param username the username.
-   * @param password the plain text password.
+   * @param credentials les données
+   * @return l'utilisateur sauvegardé
    */
-  public void createOne(String username, String password) {
-    String hashedPassword = passwordEncoder.encode(password);
-
+  public User createOne(Credentials credentials) {
     User user = new User();
-    user.setUsername(username);
-    user.setPassword(hashedPassword);
+    user.setEmail(credentials.getEmail());
+    user.setPassword(passwordEncoder.encode(credentials.getPassword()));
 
-    userRepository.save(user);
+    user.setTag(credentials.getTag());
+    user.setSpecialty(credentials.getSpecialty());
+    user.setProfileImageUrl(credentials.getProfileImage());
+
+    // On note la date/heure actuelle comme date d'inscription
+    user.setCreationDate(java.time.LocalDate.now());
+    user.setDateCreationProfil(LocalDateTime.now());
+
+    // On sauvegarde définitivement !
+    User savedUser = userRepository.save(user);
+    notificationService.notifierCreationCompte(savedUser);
+    return savedUser;
   }
 
+  /**
+   * Met à jour les informations visuelles du joueur.
+   *
+   * @param email email du joueur
+   * @param specialty nouvelle spécialité
+   * @param profileImage nouvelle image
+   * @param oldPassword ancien mdp
+   * @param newPassword nouveau mdp
+   * @return l'utilisateur mis à jour ou null
+   */
+  public AuthenticatedUser updateProfile(
+          String email, String specialty, String profileImage,
+          String oldPassword, String newPassword) {
+    User user = userRepository.findByEmail(email);
+
+    if (user != null) {
+      user.setSpecialty(specialty);
+      user.setProfileImageUrl(profileImage);
+
+      if (oldPassword != null
+              && !oldPassword.isBlank()
+              && newPassword != null
+              && !newPassword.isBlank()) {
+        if (passwordEncoder.matches(oldPassword, user.getPassword())) {
+          user.setPassword(passwordEncoder.encode(newPassword));
+        } else {
+          return null;
+        }
+      }
+
+      userRepository.save(user);
+      return createJwtToken(email);
+    }
+    return null;
+  }
+
+  /**
+   * Récupère tous les utilisateurs pour le panneau admin.
+   *
+   * @return la liste des utilisateurs
+   */
+  public java.util.List<AuthenticatedUser> getAllUsersForAdmin() {
+    java.util.List<AuthenticatedUser> usersList = new java.util.ArrayList<>();
+
+    Iterable<User> users = userRepository.findAll();
+
+    for (User user : users) {
+      AuthenticatedUser dto = new AuthenticatedUser();
+      dto.setEmail(user.getEmail());
+      dto.setTag(user.getTag());
+      dto.setSpecialty(user.getSpecialty());
+      dto.setProfileImage(user.getProfileImageUrl());
+      dto.setAdmin(user.isAdmin());
+
+      usersList.add(dto);
+    }
+    return usersList;
+  }
+
+  /**
+   * Ajoute un administrateur.
+   *
+   * @param email email de l'utilisateur
+   */
+  public void addAdmin(String email) {
+    User user = userRepository.findByEmail(email);
+    if (user != null) {
+      user.setAdmin(true);
+      userRepository.save(user);
+    }
+  }
+
+  /**
+   * Retire un administrateur.
+   *
+   * @param email email de l'utilisateur
+   */
+  public void removeAdmin(String email) {
+    User user = userRepository.findByEmail(email);
+    if (user != null) {
+      user.setAdmin(false);
+      userRepository.save(user);
+    }
+  }
+
+  /**
+   * Récupère un utilisateur par son ID.
+   *
+   * @param id identifiant unique
+   * @return un Optional contenant l'utilisateur
+   */
+  public java.util.Optional<User> getById(Long id) {
+    return userRepository.findById(id);
+  }
 }

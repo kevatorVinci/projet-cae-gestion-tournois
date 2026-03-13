@@ -1,116 +1,93 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
-import LoginPage from '../../components/pages/LoginPage';
-import { UserContext } from '../../contexts/UserContext';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import LoginPage from './LoginPage';
+import { createMockUserContext, renderWithProviders } from '../../test-utils';
+
+const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
+
   return {
     ...actual,
-    useNavigate: vi.fn(),
+    useNavigate: () => mockNavigate,
   };
 });
 
 describe('LoginPage', () => {
-  test('renders a form with username and password inputs', () => {
-    render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
-    );
-    const usernameInput = screen.getByLabelText(/username/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-
-    expect(usernameInput).toBeTruthy();
-    expect(passwordInput).toBeTruthy();
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  test('calls loginUser and navigates to HomePage when the form is submitted', async () => {
-    const loginUserMock = vi.fn();
-    const navigateMock = vi.fn();
-    const mockContextValue = {
-      authenticatedUser: undefined,
-      registerUser: vi.fn(),
-      loginUser: loginUserMock,
-      clearUser: vi.fn(),
-    };
+  it('permet de basculer l’affichage du mot de passe', () => {
+    renderWithProviders(<LoginPage />);
 
-    vi.mocked(useNavigate).mockReturnValue(navigateMock);
+    const passwordField = screen.getByLabelText(/password/i);
+    expect(passwordField).toHaveAttribute('type', 'password');
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider value={mockContextValue}>
-          <LoginPage />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    const toggleButton = screen
+      .getAllByRole('button')
+      .find((button) => button.textContent === '');
 
-    const usernameInput = screen.getByLabelText(/username/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', {
-      name: /s'authentifier/i,
-    });
+    expect(toggleButton).toBeDefined();
+    fireEvent.click(toggleButton!);
 
-    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
-    fireEvent.change(passwordInput, { target: { value: 'password' } });
-    fireEvent.click(submitButton);
-
-    expect(loginUserMock).toHaveBeenCalledWith({
-      username: 'testuser',
-      password: 'password',
-    });
-
-    await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith('/');
-    });
+    expect(passwordField).toHaveAttribute('type', 'text');
   });
 
-  test('calls console.error when loginUser throws an error', async () => {
-    const loginUserMock = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('Login failed'));
-    const consoleErrorMock = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    const mockContextValue = {
-      authenticatedUser: undefined,
-      registerUser: vi.fn(),
-      loginUser: loginUserMock,
-      clearUser: vi.fn(),
-    };
+  it('soumet les identifiants et redirige vers l’accueil', async () => {
+    const loginUser = vi.fn(async () => {});
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider value={mockContextValue}>
-          <LoginPage />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
-
-    const usernameInput = screen.getByLabelText(/username/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', {
-      name: /s'authentifier/i,
+    renderWithProviders(<LoginPage />, {
+      userContext: createMockUserContext({ loginUser }),
     });
 
-    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
-    fireEvent.change(passwordInput, { target: { value: 'password' } });
-    fireEvent.click(submitButton);
-
-    expect(loginUserMock).toHaveBeenCalledWith({
-      username: 'testuser',
-      password: 'password',
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'joueur@vinci.be' },
     });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'Secret123!' },
+    });
+    fireEvent.click(screen.getByLabelText(/se souvenir de moi/i));
+    fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
-    // Verify that console.error was called
     await waitFor(() => {
-      expect(consoleErrorMock).toHaveBeenCalledWith(
-        'LoginPage::error: ',
-        expect.any(Error),
+      expect(loginUser).toHaveBeenCalledWith(
+        { email: 'joueur@vinci.be', password: 'Secret123!' },
+        true,
       );
     });
 
-    consoleErrorMock.mockRestore();
+    expect(mockNavigate).toHaveBeenCalledWith('/');
+  });
+
+  it('affiche un message d’erreur si la connexion échoue', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const loginUser = vi.fn(async () => {
+      throw new Error('invalid');
+    });
+
+    renderWithProviders(<LoginPage />, {
+      userContext: createMockUserContext({ loginUser }),
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'joueur@vinci.be' },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: 'bad-password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
+
+    expect(
+      await screen.findByText(
+        /identifiants incorrects\. veuillez réessayer\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

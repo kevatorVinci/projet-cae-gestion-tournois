@@ -1,0 +1,116 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  getCurrentUserIdFromToken,
+  getNotificationsByUser,
+  getUnreadNotificationsByUser,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from './notifications';
+
+const mockGetAuthenticatedUser = vi.fn();
+const mockDecodeJwtPayload = vi.fn();
+
+vi.mock('../utils/session', () => ({
+  getAuthenticatedUser: () => mockGetAuthenticatedUser(),
+  decodeJwtPayload: (token: string) => mockDecodeJwtPayload(token),
+}));
+
+describe('notifications service', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.stubGlobal('fetch', vi.fn());
+    mockGetAuthenticatedUser.mockReset();
+    mockDecodeJwtPayload.mockReset();
+  });
+
+  it('getCurrentUserIdFromToken retourne l id du payload', () => {
+    mockGetAuthenticatedUser.mockReturnValue({ token: 'tkn' });
+    mockDecodeJwtPayload.mockReturnValue({ id: 42 });
+
+    expect(getCurrentUserIdFromToken()).toBe(42);
+  });
+
+  it('getCurrentUserIdFromToken throw si session absente', () => {
+    mockGetAuthenticatedUser.mockReturnValue(undefined);
+
+    expect(() => getCurrentUserIdFromToken()).toThrow(/session expiree/i);
+  });
+
+  it('getCurrentUserIdFromToken throw si payload sans id', () => {
+    mockGetAuthenticatedUser.mockReturnValue({ token: 'tkn' });
+    mockDecodeJwtPayload.mockReturnValue({});
+
+    expect(() => getCurrentUserIdFromToken()).toThrow(
+      /impossible de recuperer l utilisateur connecte/i,
+    );
+  });
+
+  it('getNotificationsByUser retourne les notifications', async () => {
+    mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify([{ idNotification: 1, message: 'ok', estLue: false }]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    const result = await getNotificationsByUser(10);
+
+    expect(fetch).toHaveBeenCalledWith('/api/notifications/users/10', {
+      headers: { Authorization: 'secure' },
+    });
+    expect(result).toHaveLength(1);
+  });
+
+  it('getUnreadNotificationsByUser retourne les notifications non lues', async () => {
+    mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify([{ idNotification: 2, message: 'new', estLue: false }]),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    const result = await getUnreadNotificationsByUser(3);
+
+    expect(fetch).toHaveBeenCalledWith('/api/notifications/users/3/non-lues', {
+      headers: { Authorization: 'secure' },
+    });
+    expect(result[0].idNotification).toBe(2);
+  });
+
+  it('getNotificationsByUser remonte le message d erreur backend', async () => {
+    mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ message: 'backend failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(getNotificationsByUser(1)).rejects.toThrow(/backend failed/i);
+  });
+
+  it('markNotificationAsRead envoie un PATCH auth', async () => {
+    mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 204 }));
+
+    await markNotificationAsRead(99);
+
+    expect(fetch).toHaveBeenCalledWith('/api/notifications/99/lue', {
+      method: 'PATCH',
+      headers: { Authorization: 'secure' },
+    });
+  });
+
+  it('markAllNotificationsAsRead utilise le message fallback si body non json', async () => {
+    mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('server error', { status: 500 }),
+    );
+
+    await expect(markAllNotificationsAsRead(4)).rejects.toThrow(
+      /impossible de marquer toutes les notifications comme lues/i,
+    );
+  });
+});

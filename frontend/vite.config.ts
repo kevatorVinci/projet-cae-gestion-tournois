@@ -2,7 +2,7 @@
 /// <reference types="vitest/config" />
 
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import checker from 'vite-plugin-checker';
 
 // https://vitejs.dev/config/
@@ -11,6 +11,15 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/setupTests.ts',
+    coverage: {
+      reporter: ['text', 'html'],
+      thresholds: {
+        statements: 20,
+        branches: 30,
+        functions: 10,
+        lines: 20,
+      },
+    },
   },
 
   plugins: [
