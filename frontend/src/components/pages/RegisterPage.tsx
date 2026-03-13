@@ -112,8 +112,7 @@ export default function RegisterPage() {
       });
 
       if (response.ok) {
-        const authenticatedUser =
-          (await response.json()) as AuthenticatedUser;
+        const authenticatedUser = (await response.json()) as AuthenticatedUser;
 
         if (selectedTeamId) {
           try {

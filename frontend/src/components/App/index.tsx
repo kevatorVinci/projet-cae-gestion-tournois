@@ -14,6 +14,10 @@ import ProfilePage from '../pages/ProfilePage';
 import AdminPage from '../pages/AdminPage';
 import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
 import DisponibilitesPage from '../pages/DisponibilitesPage';
+import ProtectedRoute from '../routes/ProtectedRoute';
+import AdminRoute from '../routes/AdminRoute';
+import NonConnectePage from '../pages/PasAcces/NonConnectePage';
+import InterditPage from '../pages/PasAcces/InterditPage';
 
 const App = () => (
   <Router
@@ -26,18 +30,76 @@ const App = () => (
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/notifications" element={<Notifications />} />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/equipes" element={<TeamsList />} />
-        <Route path="/equipes/creer" element={<CreateEquipe />} />
-        <Route path="/equipes/demande" element={<DemandesAdhesion />} />
+        <Route
+          path="/equipes/creer"
+          element={
+            <ProtectedRoute>
+              <CreateEquipe />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/equipes/demande"
+          element={
+            <ProtectedRoute>
+              <DemandesAdhesion />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/equipes/:id" element={<TeamDetails />} />
-        <Route path="/profil" element={<Profile />} />
-        <Route path="/maTeam" element={<MyTeam />} />
+        <Route
+          path="/profil"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/maTeam"
+          element={
+            <ProtectedRoute>
+              <MyTeam />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/disponibilites" element={<DisponibilitesPage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/disponibilites"
+          element={
+            <ProtectedRoute>
+              <DisponibilitesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/pas-acces/non-connecte" element={<NonConnectePage />} />
+        <Route path="/pas-acces/interdit" element={<InterditPage />} />
       </Routes>
     </Box>
   </Router>
