@@ -77,9 +77,11 @@ const Navbar = () => {
   }, [authenticatedUser, location.pathname]);
 
   const handleLogout = () => {
-    clearUser();
     setIsAdminView(false);
-    navigate('/');
+    navigate('/', { replace: true });
+    setTimeout(() => {
+      clearUser();
+    }, 0);
   };
 
   const toggleAdminView = () => {
