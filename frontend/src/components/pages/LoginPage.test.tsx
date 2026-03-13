@@ -28,7 +28,12 @@ describe('LoginPage', () => {
     const passwordField = screen.getByLabelText(/password/i);
     expect(passwordField).toHaveAttribute('type', 'password');
 
-    fireEvent.click(screen.getByRole('button', { name: '' }));
+    const toggleButton = screen
+      .getAllByRole('button')
+      .find((button) => button.textContent === '');
+
+    expect(toggleButton).toBeDefined();
+    fireEvent.click(toggleButton!);
 
     expect(passwordField).toHaveAttribute('type', 'text');
   });
@@ -60,6 +65,8 @@ describe('LoginPage', () => {
   });
 
   it('affiche un message d’erreur si la connexion échoue', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
     const loginUser = vi.fn(async () => {
       throw new Error('invalid');
     });

@@ -78,7 +78,7 @@ describe('AdminPage', () => {
     });
 
     expect(screen.queryByText('AdminSelf')).not.toBeInTheDocument();
-    expect(screen.getByText('Joueur')).toBeInTheDocument();
+    expect(screen.getByText('joueur@vinci.be')).toBeInTheDocument();
   });
 
   it('met a jour le role admin puis recharge les utilisateurs', async () => {
@@ -149,7 +149,10 @@ describe('AdminPage', () => {
         body: 'joueur@vinci.be',
       }),
     );
-    expect(await screen.findByText('Administrateur')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Administrateur')).toHaveLength(2);
+    });
   });
 
   it('affiche une erreur si le chargement initial echoue', async () => {
