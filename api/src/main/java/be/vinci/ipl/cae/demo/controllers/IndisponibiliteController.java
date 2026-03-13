@@ -3,9 +3,8 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.entities.Indisponibilite;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.IndisponibiliteRepository;
-import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,58 +22,41 @@ import org.springframework.web.server.ResponseStatusException;
 public class IndisponibiliteController {
 
   private final IndisponibiliteRepository indisponibiliteRepository;
-  private final UserService userService;
 
   /**
    * Constructeur du contrôleur.
    *
    * @param indisponibiliteRepository le dépôt des indisponibilités
-   * @param userService le service des utilisateurs
    */
-  public IndisponibiliteController(
-          IndisponibiliteRepository indisponibiliteRepository, UserService userService) {
+  public IndisponibiliteController(IndisponibiliteRepository indisponibiliteRepository) {
     this.indisponibiliteRepository = indisponibiliteRepository;
-    this.userService = userService;
   }
 
   /**
    * Récupère la liste des indisponibilités du joueur connecté.
    *
-   * @param auth les informations de connexion du joueur
+   * @param currentUser le joueur connecté
    * @return la liste des périodes
    */
   @GetMapping
-  public Iterable<Indisponibilite> getMesIndisponibilites(Authentication auth) {
-    User user = userService.readOneFromEmail(auth.getName());
-    return indisponibiliteRepository.findByUser(user);
+  public Iterable<Indisponibilite> getMesIndisponibilites(
+      @AuthenticationPrincipal User currentUser) {
+    ensureAuthenticated(currentUser);
+    return indisponibiliteRepository.findByUser(currentUser);
   }
 
   /**
    * Enregistre une nouvelle période d'indisponibilité.
    *
-   * @param auth les informations de connexion
+   * @param currentUser le joueur connecté
    * @param indisponibilite la nouvelle période envoyée par React
    * @return la période sauvegardée
    */
   @PostMapping
   public Indisponibilite addIndisponibilite(
-      Authentication auth, @RequestBody Indisponibilite indisponibilite) {
-
-    System.out.println(">>> Requête reçue pour : " + auth.getName());
-    System.out.println(
-        ">>> Dates : "
-            + indisponibilite.getDateDebut()
-            + " au "
-            + indisponibilite.getDateFin());
-    String email = auth.getName();
-
-    User user = userService.readOneFromEmail(email);
-
-    if (user == null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non trouvé");
-    }
-
-    indisponibilite.setUser(user);
+      @AuthenticationPrincipal User currentUser, @RequestBody Indisponibilite indisponibilite) {
+    ensureAuthenticated(currentUser);
+    indisponibilite.setUser(currentUser);
 
     return indisponibiliteRepository.save(indisponibilite);
   }
@@ -83,9 +65,29 @@ public class IndisponibiliteController {
    * Supprime une période d'indisponibilité grâce à son ID.
    *
    * @param id l'identifiant de la période
+   * @param currentUser le joueur connecté
    */
   @DeleteMapping("/{id}")
-  public void deleteIndisponibilite(@PathVariable Long id) {
-    indisponibiliteRepository.deleteById(id);
+  public void deleteIndisponibilite(
+      @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+    ensureAuthenticated(currentUser);
+
+    Indisponibilite indisponibilite = indisponibiliteRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+
+    if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "Vous ne pouvez supprimer que vos propres indisponibilites.");
+    }
+
+    indisponibiliteRepository.delete(indisponibilite);
+  }
+
+  private void ensureAuthenticated(User currentUser) {
+    if (currentUser == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifie");
+    }
   }
 }
