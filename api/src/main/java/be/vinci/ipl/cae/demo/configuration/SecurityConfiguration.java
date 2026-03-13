@@ -1,6 +1,5 @@
 package be.vinci.ipl.cae.demo.configuration;
 
-import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -30,41 +29,36 @@ public class SecurityConfiguration {
   }
 
   /**
-   * FilterChain for the security configuration.
+   * Configure les règles de sécurité du serveur (qui a le droit d'accéder à quoi).
    *
-   * @param http the HttpSecurity.
-   * @param userService the UserService for JWT authentication.
-   * @return the SecurityFilterChain.
-   * @throws Exception the exception.
+   * @param http l'objet de Spring Security qui permet de configurer le pare-feu
+   * @return SecurityFilterChain la chaîne de filtres prête à sécuriser l'application
+   * @throws Exception si une erreur survient pendant la configuration
    */
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, UserService userService)
-      throws Exception {
-    JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(userService);
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
     return http.csrf(AbstractHttpConfigurer::disable)
-        .cors(AbstractHttpConfigurer::disable)
-        .httpBasic(AbstractHttpConfigurer::disable)
-        .formLogin(AbstractHttpConfigurer::disable)
-        .sessionManagement(
-            sessionManagement ->
-                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(
-            authorize ->
-                authorize
-                    .requestMatchers("/auths/**")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/equipes", "/equipes/", "/equipes/**")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .exceptionHandling(
-            exception ->
-                exception.authenticationEntryPoint(
-                    (request, response, authException) -> {
-                      response.sendError(401, "Unauthorized");
-                    }))
-        .build();
+            .cors(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .sessionManagement(
+                    session ->
+                            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(
+                    auth -> auth
+                            .requestMatchers("/auths/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/equipes/**").permitAll()
+                            .requestMatchers(
+                                    "/indisponibilites", "/indisponibilites/**")
+                            .authenticated()
+                            .anyRequest().authenticated())
+            .addFilterBefore(this.jwtAuthenticationFilter,
+                    UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(
+                    ex -> ex.authenticationEntryPoint(
+                            (request, response, authException) ->
+                                    response.sendError(401, "Unauthorized")))
+            .build();
   }
 }

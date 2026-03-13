@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType } from '../../../types';
 import { getUserTeam } from '../../../services/teams';
+import BackButton from '../../../components/BoutonRetour';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -111,6 +112,7 @@ const Profile = () => {
             overflow: 'hidden',
           }}
         >
+          <BackButton />
           <Typography variant="h4" fontWeight={700} gutterBottom>
             Bonjour {userTag} 👋
           </Typography>

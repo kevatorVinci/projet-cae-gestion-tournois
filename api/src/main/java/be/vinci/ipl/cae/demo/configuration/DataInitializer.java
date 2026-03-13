@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.configuration;
 
+import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -11,31 +12,32 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Initialise la base de données avec des utilisateurs de test.
+ * Classe de configuration pour initialiser les données de démo au démarrage.
  */
 @Configuration
 public class DataInitializer {
 
   /**
-   * Crée des utilisateurs par défaut au démarrage.
+   * Initialise les utilisateurs et équipes de démo si la DB est vide.
    *
-   * @param equipeRepository le dépôt des équipes
-   * @param userRepository le dépôt des utilisateurs
-   * @param passwordEncoder l'outil de cryptage
-   * @return une instance de CommandLineRunner
+   * @param equipeRepository le repository des équipes
+   * @param userRepository   le repository des utilisateurs
+   * @param passwordEncoder  l'encodeur de mots de passe
+   * @return un CommandLineRunner exécuté au démarrage
    */
   @Bean
-  public CommandLineRunner initDatabase(EquipeRepository equipeRepository,
+  public CommandLineRunner initDatabase(
+      EquipeRepository equipeRepository,
       UserRepository userRepository,
       PasswordEncoder passwordEncoder) {
     return args -> {
-      if (equipeRepository.count() > 0 || userRepository.count() > 0) {
+      if (userRepository.count() > 0 || equipeRepository.count() > 0) {
         return;
       }
 
       String defaultPassword = passwordEncoder.encode("123");
 
-      // 1. Lea
+      // ── Utilisateurs (sans équipe pour l'instant) ─────────────────────────
       User lea = new User();
       lea.setEmail("lea@mail.com");
       lea.setTag("Lynx");
@@ -45,7 +47,6 @@ public class DataInitializer {
       lea.setPassword(defaultPassword);
       lea.setProfileImageUrl("flash.jpg");
 
-      // 2. Tom
       User tom = new User();
       tom.setEmail("tom@mail.com");
       tom.setTag("Rogue");
@@ -55,7 +56,6 @@ public class DataInitializer {
       tom.setPassword(defaultPassword);
       tom.setProfileImageUrl("miles.jpg");
 
-      // 3. Ines
       User ines = new User();
       ines.setEmail("ines@mail.com");
       ines.setTag("Pulse");
@@ -63,9 +63,8 @@ public class DataInitializer {
       ines.setCreationDate(LocalDate.parse("2026-01-18"));
       ines.setAdmin(true);
       ines.setPassword(defaultPassword);
-      ines.setProfileImageUrl("Pessi.jpg");
+      ines.setProfileImageUrl("erza.jpg");
 
-      // 4. Tibo
       User tibo = new User();
       tibo.setEmail("tibo@mail.com");
       tibo.setTag("Iron");
@@ -75,10 +74,36 @@ public class DataInitializer {
       tibo.setPassword(defaultPassword);
       tibo.setProfileImageUrl("luffy.png");
 
-      // Sauvegarde des données
+      // On sauvegarde d'abord sans équipe (les FK equipe sont nullable)
       userRepository.saveAll(List.of(lea, tom, ines, tibo));
 
-      System.out.println("✅ Base de données initialisée !");
+      // ── Équipes ───────────────────────────────────────────────────────────
+      // TEAM_ALPHA : responsable principal = Lea
+      Equipe teamAlpha = new Equipe();
+      teamAlpha.setName("TEAM_ALPHA");
+      teamAlpha.setResponsablePrincipal(lea);
+      equipeRepository.save(teamAlpha);
+
+      // TEAM_OMEGA : responsable principal = Tibo
+      Equipe teamOmega = new Equipe();
+      teamOmega.setName("TEAM_OMEGA");
+      teamOmega.setResponsablePrincipal(tibo);
+      equipeRepository.save(teamOmega);
+
+      // ── Rattachement des membres à leur équipe ────────────────────────────
+      // TEAM_ALPHA : Lea + Tom + Ines
+      lea.setEquipe(teamAlpha);
+      tom.setEquipe(teamAlpha);
+      ines.setEquipe(teamAlpha);
+
+      // TEAM_OMEGA : Tibo
+      tibo.setEquipe(teamOmega);
+
+      userRepository.saveAll(List.of(lea, tom, ines, tibo));
+
+      System.out.println("✅ DB initialisée :");
+      System.out.println("   TEAM_ALPHA → Lea (resp. principal), Tom, Ines");
+      System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
     };
   }
 }

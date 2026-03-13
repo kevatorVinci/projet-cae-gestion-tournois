@@ -7,7 +7,6 @@ import TeamsList from '../pages/TeamPage/TeamsList';
 import TeamDetails from '../pages/TeamPage/TeamDetail';
 import Profile from '../pages/TableauDebord/Profil';
 import { CreateEquipe } from '../pages/TeamPage/CreeEquipe';
-import { RejoindreEquipe } from '../pages/TeamPage/RejoidreEquipe';
 import { MyTeam } from '../pages/TeamPage/MaTeam';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
@@ -25,7 +24,6 @@ const App = () => (
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/equipes" element={<TeamsList />} />
         <Route path="/equipes/creer" element={<CreateEquipe />} />
-        <Route path="/equipes/rejoindre" element={<RejoindreEquipe />} />
         <Route path="/equipes/demande" element={<DemandesAdhesion />} />
         <Route path="/equipes/:id" element={<TeamDetails />} />
         <Route path="/profil" element={<Profile />} />

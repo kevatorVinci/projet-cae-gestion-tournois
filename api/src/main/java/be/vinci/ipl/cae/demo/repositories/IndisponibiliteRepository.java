@@ -11,11 +11,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IndisponibiliteRepository extends CrudRepository<Indisponibilite, Long> {
 
-    /**
-     * Trouve toutes les indisponibilités d'un joueur précis.
-     *
-     * @param user le joueur concerné
-     * @return la liste de ses indisponibilités
-     */
-    Iterable<Indisponibilite> findByUser(User user);
+  /**
+   * Trouve toutes les indisponibilités d'un joueur précis.
+   *
+   * @param user le joueur concerné
+   * @return la liste de ses indisponibilités
+   */
+  Iterable<Indisponibilite> findByUser(User user);
 }
