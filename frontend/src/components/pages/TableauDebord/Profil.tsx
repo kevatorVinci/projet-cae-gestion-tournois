@@ -17,7 +17,7 @@ import {
 import { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../contexts/UserContext';
-import { UserContextType } from '../../../types';
+import { Equipe, UserContextType } from '../../../types';
 import { getUserTeam } from '../../../services/teams';
 import BackButton from '../../../components/BoutonRetour';
 
@@ -25,13 +25,21 @@ const Profile = () => {
   const navigate = useNavigate();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
   const [hasTeam, setHasTeam] = useState(false);
+  const [team, setTeam] = useState<Equipe | null>(null);
 
   useEffect(() => {
     if (authenticatedUser) {
       getUserTeam()
-        .then((team) => setHasTeam(!!team))
-        .catch(() => setHasTeam(false));
+        .then((currentTeam) => {
+          setTeam(currentTeam);
+          setHasTeam(!!currentTeam);
+        })
+        .catch(() => {
+          setTeam(null);
+          setHasTeam(false);
+        });
     } else {
+      setTeam(null);
       setHasTeam(false);
     }
   }, [authenticatedUser]);
@@ -153,6 +161,9 @@ const Profile = () => {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {userEmail}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Équipe : {team?.name || "Pas d'équipe"}
               </Typography>
             </Box>
           </Stack>
