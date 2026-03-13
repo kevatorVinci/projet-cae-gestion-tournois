@@ -449,7 +449,7 @@ export function MyTeam() {
                               }}
                             >
                               {member.isResponsable
-                                ? 'Deheriter'
+                                ? 'Retirer le rôle de responsable'
                                 : 'Nommer responsable'}
                             </Button>
                           )}
