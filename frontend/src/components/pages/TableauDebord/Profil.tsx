@@ -182,7 +182,7 @@ const Profile = () => {
                 },
               }}
             >
-              Mes disponibilités
+              Mes indisponibilités
             </Button>
 
             <Button
