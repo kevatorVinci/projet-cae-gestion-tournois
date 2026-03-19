@@ -209,7 +209,9 @@ export default function AdminPage() {
                     <Button
                       variant={user.admin ? 'outlined' : 'contained'}
                       color={user.admin ? 'error' : 'primary'}
-                      onClick={() => handleToggleAdmin(user.email, user.admin)}
+                      onClick={() =>
+                        handleToggleAdmin(user.email, user.admin ?? false)
+                      }
                       sx={{
                         backgroundColor: !user.admin
                           ? '#e8822a'

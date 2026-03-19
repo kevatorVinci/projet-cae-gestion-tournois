@@ -59,7 +59,7 @@ interface AuthenticatedUser {
   tag?: string;
   specialty?: string;
   profileImage?: string;
-  admin: boolean;
+  admin?: boolean;
 }
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;

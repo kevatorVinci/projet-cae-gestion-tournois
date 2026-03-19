@@ -14,6 +14,7 @@ vi.mock('../../../services/teams', () => ({
 }));
 
 import { createEquipe } from '../../../services/teams';
+import { Equipe } from '../../../types';
 
 const mockAuthenticatedUser = {
   email: 'test@vinci.be',
@@ -105,7 +106,9 @@ describe('CreateEquipe', () => {
   test('calls createEquipe and navigates to /maTeam on success', async () => {
     const navigateMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
-    vi.mocked(createEquipe).mockResolvedValueOnce(undefined);
+    vi.mocked(createEquipe).mockResolvedValueOnce(
+      undefined as unknown as Equipe,
+    );
 
     render(
       <MemoryRouter>

@@ -55,7 +55,11 @@ const equipeSimulee = {
 
 describe('MyTeam', () => {
   test("affiche le nom de l'équipe et les membres", async () => {
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockResolvedValueOnce(equipeSimulee);
     vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(true);
@@ -74,7 +78,11 @@ describe('MyTeam', () => {
   });
 
   test("affiche un message si l'utilisateur n'a pas d'équipe", async () => {
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
     vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(false);
@@ -91,7 +99,11 @@ describe('MyTeam', () => {
   });
 
   test('affiche une erreur si le chargement échoue', async () => {
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockRejectedValueOnce(new Error('Erreur serveur'));
     vi.mocked(isCurrentUserResponsable).mockRejectedValueOnce(
@@ -114,7 +126,11 @@ describe('MyTeam', () => {
   test('redirige vers /login si la session est expirée', async () => {
     const naviguerMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(naviguerMock);
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockRejectedValueOnce(new Error('Session expiree'));
     vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(false);
@@ -131,7 +147,11 @@ describe('MyTeam', () => {
   });
 
   test("ouvre le dialogue de confirmation pour quitter l'équipe", async () => {
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockResolvedValueOnce(equipeSimulee);
     vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(false);
@@ -156,7 +176,11 @@ describe('MyTeam', () => {
   test('appelle leaveEquipe et navigue vers /equipes après confirmation', async () => {
     const naviguerMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(naviguerMock);
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockResolvedValueOnce(equipeSimulee);
     vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(false);
@@ -189,7 +213,11 @@ describe('MyTeam', () => {
   });
 
   test('appelle promoteResponsable au clic sur nommer responsable', async () => {
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockResolvedValue(equipeSimulee);
     vi.mocked(isCurrentUserResponsable).mockResolvedValue(true);
@@ -231,7 +259,11 @@ describe('MyTeam', () => {
       ],
     };
 
-    vi.mocked(getAuthenticatedUser).mockReturnValue({ token: 'faux-token' });
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockResolvedValue(equipeAvecDeuxResponsables);
     vi.mocked(isCurrentUserResponsable).mockResolvedValue(true);

@@ -14,6 +14,7 @@ import {
   accepterDemande,
   refuserDemande,
 } from '../../../../services/demande';
+import { DemandeDecisionResult } from '../../../../types';
 
 const mockDemandes = [
   {
@@ -113,7 +114,9 @@ describe('DemandesAdhesion', () => {
     vi.mocked(getDemandesEnAttenteResponsable).mockResolvedValueOnce(
       mockDemandes,
     );
-    vi.mocked(accepterDemande).mockResolvedValueOnce(undefined);
+    vi.mocked(accepterDemande).mockResolvedValueOnce(
+      undefined as unknown as DemandeDecisionResult,
+    );
 
     render(
       <MemoryRouter>

@@ -17,7 +17,6 @@ vi.mock('../../services/indisponibilites', () => ({
 
 import {
   getMesIndisponibilites,
-  addIndisponibilite,
   deleteIndisponibilite,
 } from '../../services/indisponibilites';
 
