@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
@@ -104,7 +105,7 @@ public class AuthController {
    * @return la liste des utilisateurs authentifiés
    */
   @GetMapping("/users")
-  @PreAuthorize("isAuthenticated()")
+  @IsAdmin
   public List<AuthenticatedUser> getAllUsers() {
     return userService.getAllUsersForAdmin();
   }
@@ -115,7 +116,7 @@ public class AuthController {
    * @param email l'adresse email de l'utilisateur à promouvoir
    */
   @PutMapping("/addAdmin")
-  @PreAuthorize("isAuthenticated()")
+  @IsAdmin
   public void addAdmin(@RequestBody String email) {
     userService.addAdmin(email);
   }
@@ -126,7 +127,7 @@ public class AuthController {
    * @param email l'adresse email de l'utilisateur à rétrograder
    */
   @PutMapping("/removeAdmin")
-  @PreAuthorize("isAuthenticated()")
+  @IsAdmin
   public void removeAdmin(@RequestBody String email) {
     userService.removeAdmin(email);
   }

@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.annotations.IsResponsable;
 import be.vinci.ipl.cae.demo.models.dtos.demande.DemandeDto;
 import be.vinci.ipl.cae.demo.models.entities.Demande;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -8,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +37,7 @@ public class DemandeController {
 
   /** List pending demands for the current responsible user's team. */
   @GetMapping("/me/en-attente")
-  @PreAuthorize("isAuthenticated()")
+  @IsResponsable
   public Iterable<DemandeDto> readDemandesEnAttente(@AuthenticationPrincipal User currentUser) {
     try {
       List<DemandeDto> demandes = new ArrayList<>();
@@ -79,7 +79,7 @@ public class DemandeController {
   /** Accept a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/accepter")
   @ResponseStatus(HttpStatus.NO_CONTENT) // ✅ plus de sérialisation User
-  @PreAuthorize("isAuthenticated()")
+  @IsResponsable
   public void accepterDemande(
       @PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {
     try {
@@ -92,7 +92,7 @@ public class DemandeController {
   /** Reject a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/refuser")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("isAuthenticated()")
+  @IsResponsable
   public void refuserDemande(
       @PathVariable Long demandeId,
       @RequestBody(required = false) Map<String, String> body,
