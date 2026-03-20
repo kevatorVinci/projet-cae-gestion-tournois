@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.models.entities;
 
 import java.io.Serializable;
 import java.util.Objects;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

@@ -5,6 +5,7 @@ import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,9 @@ public interface InscriptionEquipeTournoiRepository extends CrudRepository<Inscr
 
     // Toutes les inscriptions d'une équipe donnée
     List<InscriptionEquipeTournoi> findByEquipe(Equipe equipe);
+
+    // Récupérer les inscriptions d'un tournoi par état
+    List<InscriptionEquipeTournoi> findByTournoiAndEtat(Tournoi tournoi, String etat);
 
     // Vérifie si une équipe est déjà inscrite à un tournoi
     // (remplace la contrainte de clé composite — on gère le doublon au niveau service)

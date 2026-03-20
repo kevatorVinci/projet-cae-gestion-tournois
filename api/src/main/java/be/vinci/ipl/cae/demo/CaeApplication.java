@@ -10,12 +10,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SuppressWarnings("PMD.UseUtilityClass")
 public class CaeApplication {
 
-  /**
-   * Application bootstrap.
-   *
-   * @param args startup args
-   */
-  public static void main(String[] args) {
-    SpringApplication.run(CaeApplication.class, args);
-  }
+    /**
+     * Application bootstrap.
+     *
+     * @param args startup args
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(CaeApplication.class, args);
+    }
 }
