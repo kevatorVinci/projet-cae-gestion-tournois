@@ -3,17 +3,18 @@ import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
 import Profile from './Profil';
 import { UserContext } from '../../../contexts/UserContext';
+import { getUserTeam } from '../../../services/teams';
 
+// Mock de react-router-dom
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: vi.fn() };
 });
 
+// Mock du service teams
 vi.mock('../../../services/teams', () => ({
   getUserTeam: vi.fn(),
 }));
-
-import { getUserTeam } from '../../../services/teams';
 
 const mockAuthenticatedUser = {
   email: 'test@vinci.be',
@@ -30,27 +31,36 @@ const mockTeam = {
   members: [],
 };
 
+// Helper pour wrapper le composant avec les providers nécessaires
+const renderProfile = (user = mockAuthenticatedUser) => {
+  return render(
+    <MemoryRouter>
+      <UserContext.Provider
+        value={{
+          authenticatedUser: user,
+          loginUser: vi.fn(),
+          registerUser: vi.fn(),
+          clearUser: vi.fn(),
+          updateUser: vi.fn(),
+        }}
+      >
+        <Profile />
+      </UserContext.Provider>
+    </MemoryRouter>,
+  );
+};
+
 describe('Profile', () => {
   test('displays the user tag, role and email', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider
-          value={{
-            authenticatedUser: mockAuthenticatedUser,
-            loginUser: vi.fn(),
-            registerUser: vi.fn(),
-            clearUser: vi.fn(),
-            updateUser: vi.fn(),
-          }}
-        >
-          <Profile />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderProfile();
 
-    expect(screen.getByText(/pedrinho08/i)).toBeDefined();
+    // Correction : Utilisation de getByRole pour cibler spécifiquement le nom dans la carte
+    // Cela évite le conflit avec le titre "Bonjour Pedrinho08"
+    expect(
+      screen.getByRole('heading', { name: /^pedrinho08$/i, level: 5 }),
+    ).toBeDefined();
     expect(screen.getByText(/tacticien/i)).toBeDefined();
     expect(screen.getByText(/test@vinci.be/i)).toBeDefined();
   });
@@ -58,21 +68,7 @@ describe('Profile', () => {
   test('shows "Pas d\'équipe" when user has no team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider
-          value={{
-            authenticatedUser: mockAuthenticatedUser,
-            loginUser: vi.fn(),
-            registerUser: vi.fn(),
-            clearUser: vi.fn(),
-            updateUser: vi.fn(),
-          }}
-        >
-          <Profile />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderProfile();
 
     await waitFor(() => {
       expect(screen.getByText(/pas d'équipe/i)).toBeDefined();
@@ -82,21 +78,7 @@ describe('Profile', () => {
   test('displays team name when user has a team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(mockTeam);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider
-          value={{
-            authenticatedUser: mockAuthenticatedUser,
-            loginUser: vi.fn(),
-            registerUser: vi.fn(),
-            clearUser: vi.fn(),
-            updateUser: vi.fn(),
-          }}
-        >
-          <Profile />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderProfile();
 
     await waitFor(() => {
       expect(screen.getByText(/les tacticiens/i)).toBeDefined();
@@ -106,21 +88,7 @@ describe('Profile', () => {
   test('shows create and join cards when user has no team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider
-          value={{
-            authenticatedUser: mockAuthenticatedUser,
-            loginUser: vi.fn(),
-            registerUser: vi.fn(),
-            clearUser: vi.fn(),
-            updateUser: vi.fn(),
-          }}
-        >
-          <Profile />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderProfile();
 
     await waitFor(() => {
       expect(screen.getByText(/créer une équipe/i)).toBeDefined();
@@ -131,23 +99,10 @@ describe('Profile', () => {
   test('hides create and join cards when user has a team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(mockTeam);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider
-          value={{
-            authenticatedUser: mockAuthenticatedUser,
-            loginUser: vi.fn(),
-            registerUser: vi.fn(),
-            clearUser: vi.fn(),
-            updateUser: vi.fn(),
-          }}
-        >
-          <Profile />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderProfile();
 
     await waitFor(() => {
+      // Utilisation de queryByText car on s'attend à ce que l'élément soit ABSENT
       expect(screen.queryByText(/créer mon équipe/i)).toBeNull();
       expect(screen.queryByText(/chercher une équipe/i)).toBeNull();
     });
@@ -158,21 +113,7 @@ describe('Profile', () => {
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider
-          value={{
-            authenticatedUser: mockAuthenticatedUser,
-            loginUser: vi.fn(),
-            registerUser: vi.fn(),
-            clearUser: vi.fn(),
-            updateUser: vi.fn(),
-          }}
-        >
-          <Profile />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderProfile();
 
     screen.getByRole('button', { name: /mes indisponibilités/i }).click();
 
@@ -184,21 +125,7 @@ describe('Profile', () => {
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider
-          value={{
-            authenticatedUser: mockAuthenticatedUser,
-            loginUser: vi.fn(),
-            registerUser: vi.fn(),
-            clearUser: vi.fn(),
-            updateUser: vi.fn(),
-          }}
-        >
-          <Profile />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderProfile();
 
     screen.getByRole('button', { name: /modifier le profil/i }).click();
 

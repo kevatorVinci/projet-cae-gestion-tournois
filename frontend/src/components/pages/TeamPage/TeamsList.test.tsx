@@ -1,12 +1,18 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import TeamsList from './TeamsList';
 import { UserContext } from '../../../contexts/UserContext';
+import { getAllEquipes, joinEquipe } from '../../../services/teams';
+import { decodeJwtPayload } from '../../../utils/session';
 
+// 1. Better mock for react-router-dom
 vi.mock('react-router-dom', async () => {
-  const actuel = await vi.importActual('react-router-dom');
-  return { ...actuel, useNavigate: vi.fn() };
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: vi.fn(),
+  };
 });
 
 vi.mock('../../../services/teams', () => ({
@@ -17,9 +23,6 @@ vi.mock('../../../services/teams', () => ({
 vi.mock('../../../utils/session', () => ({
   decodeJwtPayload: vi.fn(),
 }));
-
-import { getAllEquipes, joinEquipe } from '../../../services/teams';
-import { decodeJwtPayload } from '../../../utils/session';
 
 const utilisateurAuthentifie = {
   email: 'test@vinci.be',
@@ -65,6 +68,10 @@ const equipeSimulee = [
 ];
 
 describe('TeamsList', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('affiche la liste des équipes chargées', async () => {
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
@@ -85,10 +92,8 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/les tacticiens/i)).toBeDefined();
-      expect(screen.getByText(/les gardiens/i)).toBeDefined();
-    });
+    expect(await screen.findByText(/les tacticiens/i)).toBeInTheDocument();
+    expect(screen.getByText(/les gardiens/i)).toBeInTheDocument();
   });
 
   test('filtre les équipes selon la recherche', async () => {
@@ -111,18 +116,14 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/les tacticiens/i)).toBeDefined();
-    });
+    await screen.findByText(/les tacticiens/i);
 
     fireEvent.change(screen.getByPlaceholderText(/rechercher par nom/i), {
       target: { value: 'Tacticiens' },
     });
 
-    await waitFor(() => {
-      expect(screen.getByText(/les tacticiens/i)).toBeDefined();
-      expect(screen.queryByText(/les gardiens/i)).toBeNull();
-    });
+    expect(screen.getByText(/les tacticiens/i)).toBeInTheDocument();
+    expect(screen.queryByText(/les gardiens/i)).not.toBeInTheDocument();
   });
 
   test('affiche un message si aucune équipe trouvée', async () => {
@@ -145,9 +146,9 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/aucune équipe trouvée/i)).toBeDefined();
-    });
+    expect(
+      await screen.findByText(/aucune équipe trouvée/i),
+    ).toBeInTheDocument();
   });
 
   test('affiche "Votre équipe" pour l\'équipe de l\'utilisateur connecté', async () => {
@@ -170,9 +171,7 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/votre équipe/i)).toBeDefined();
-    });
+    expect(await screen.findByText(/votre équipe/i)).toBeInTheDocument();
   });
 
   test('affiche "Équipe indisponible" pour une équipe sans membres', async () => {
@@ -195,17 +194,17 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/équipe indisponible/i)).toBeDefined();
-    });
+    expect(await screen.findByText(/équipe indisponible/i)).toBeInTheDocument();
   });
 
   test('appelle joinEquipe et navigue vers /notifications après postulation', async () => {
-    const naviguerMock = vi.fn();
-    vi.mocked(useNavigate).mockReturnValue(naviguerMock);
-    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 99 });
+    const mockNavigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+
+    // id: 500 ensures this user is NOT in any of the simulated teams (1, 2, or 3)
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 500 });
     vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
-    vi.mocked(joinEquipe).mockResolvedValueOnce(undefined);
+    vi.mocked(joinEquipe).mockResolvedValueOnce(undefined as void);
 
     render(
       <MemoryRouter>
@@ -213,8 +212,8 @@ describe('TeamsList', () => {
           value={{
             authenticatedUser: {
               ...utilisateurAuthentifie,
-              tag: 'AutreJoueur2',
-              email: 'autre2@vinci.be',
+              tag: 'NewPlayer',
+              email: 'new@vinci.be',
             },
             loginUser: vi.fn(),
             registerUser: vi.fn(),
@@ -227,24 +226,23 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/les tacticiens/i)).toBeDefined();
-    });
+    // Wait for the team to appear
+    await screen.findByText(/les tacticiens/i);
 
-    // On clique sur le premier bouton "Postuler" disponible
+    // Find and click "Postuler"
     const boutonsPostuler = screen.getAllByRole('button', {
       name: /postuler/i,
     });
     fireEvent.click(boutonsPostuler[0]);
 
     await waitFor(() => {
-      expect(joinEquipe).toHaveBeenCalled();
-      expect(naviguerMock).toHaveBeenCalledWith('/notifications');
+      expect(joinEquipe).toHaveBeenCalledWith(1); // Should call with ID of "Les Tacticiens"
+      expect(mockNavigate).toHaveBeenCalledWith('/notifications');
     });
   });
 
   test("affiche une erreur si l'utilisateur est déjà dans une équipe", async () => {
-    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 }); // User is in team ID 2
     vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
 
     render(
@@ -263,18 +261,15 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/les tacticiens/i)).toBeDefined();
-    });
+    await screen.findByText(/les tacticiens/i);
 
-    // On clique sur "Postuler" d'une autre équipe alors qu'on est déjà dans une équipe
     const boutonsPostuler = screen.getAllByRole('button', {
       name: /postuler/i,
     });
     fireEvent.click(boutonsPostuler[0]);
 
-    await waitFor(() => {
-      expect(screen.getByText(/vous êtes déjà dans une équipe/i)).toBeDefined();
-    });
+    expect(
+      await screen.findByText(/vous êtes déjà dans une équipe/i),
+    ).toBeInTheDocument();
   });
 });

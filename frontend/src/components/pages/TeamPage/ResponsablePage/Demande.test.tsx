@@ -2,19 +2,19 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
 import { DemandesAdhesion } from './Demande';
-
-vi.mock('../../../../services/demande', () => ({
-  getDemandesEnAttenteResponsable: vi.fn(),
-  accepterDemande: vi.fn(),
-  refuserDemande: vi.fn(),
-}));
-
 import {
   getDemandesEnAttenteResponsable,
   accepterDemande,
   refuserDemande,
 } from '../../../../services/demande';
 import { DemandeDecisionResult } from '../../../../types';
+
+// Mock the service module
+vi.mock('../../../../services/demande', () => ({
+  getDemandesEnAttenteResponsable: vi.fn(),
+  accepterDemande: vi.fn(),
+  refuserDemande: vi.fn(),
+}));
 
 const mockDemandes = [
   {
@@ -51,10 +51,8 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/joueur1/i)).toBeDefined();
-      expect(screen.getByText(/joueur2/i)).toBeDefined();
-    });
+    expect(await screen.findByText(/joueur1/i)).toBeDefined();
+    expect(screen.getByText(/joueur2/i)).toBeDefined();
   });
 
   test('shows message when there are no pending requests', async () => {
@@ -66,9 +64,9 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/aucune candidature en attente/i)).toBeDefined();
-    });
+    expect(
+      await screen.findByText(/aucune candidature en attente/i),
+    ).toBeDefined();
   });
 
   test('shows error message when loading fails', async () => {
@@ -82,9 +80,7 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/erreur serveur/i)).toBeDefined();
-    });
+    expect(await screen.findByText(/erreur serveur/i)).toBeDefined();
   });
 
   test('opens accept dialog when clicking "Accepter"', async () => {
@@ -98,16 +94,12 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/joueur1/i)).toBeDefined();
+    const acceptButtons = await screen.findAllByRole('button', {
+      name: /accepter/i,
     });
-
-    const acceptButtons = screen.getAllByRole('button', { name: /accepter/i });
     fireEvent.click(acceptButtons[0]);
 
-    await waitFor(() => {
-      expect(screen.getByText(/accepter la candidature/i)).toBeDefined();
-    });
+    expect(await screen.findByText(/accepter la candidature/i)).toBeDefined();
   });
 
   test('calls accepterDemande and removes the request after confirmation', async () => {
@@ -124,18 +116,15 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/joueur1/i)).toBeDefined();
+    const acceptButtons = await screen.findAllByRole('button', {
+      name: /accepter/i,
     });
-
-    const acceptButtons = screen.getAllByRole('button', { name: /accepter/i });
     fireEvent.click(acceptButtons[0]);
 
-    // Confirm in the dialog
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /confirmer/i })).toBeDefined();
+    const confirmBtn = await screen.findByRole('button', {
+      name: /confirmer/i,
     });
-    fireEvent.click(screen.getByRole('button', { name: /confirmer/i }));
+    fireEvent.click(confirmBtn);
 
     await waitFor(() => {
       expect(accepterDemande).toHaveBeenCalledWith(1);
@@ -156,16 +145,12 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/joueur1/i)).toBeDefined();
+    const refuseButtons = await screen.findAllByRole('button', {
+      name: /refuser/i,
     });
-
-    const refuseButtons = screen.getAllByRole('button', { name: /refuser/i });
     fireEvent.click(refuseButtons[0]);
 
-    await waitFor(() => {
-      expect(screen.getByText(/refuser la candidature/i)).toBeDefined();
-    });
+    expect(await screen.findByText(/refuser la candidature/i)).toBeDefined();
   });
 
   test('calls refuserDemande with reason and removes the request', async () => {
@@ -180,25 +165,24 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/joueur1/i)).toBeDefined();
+    // Wait for players to load and find the "Refuser" button
+    const refuseButtons = await screen.findAllByRole('button', {
+      name: /refuser/i,
     });
-
-    const refuseButtons = screen.getAllByRole('button', { name: /refuser/i });
     fireEvent.click(refuseButtons[0]);
 
-    // Fill in the refusal reason
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText(/motif/i)).toBeDefined();
-    });
+    // Finding by role is more reliable for MUI TextFields inside Dialogs
+    const reasonInput = await screen.findByRole('textbox');
 
-    fireEvent.change(screen.getByPlaceholderText(/motif/i), {
+    fireEvent.change(reasonInput, {
       target: { value: 'Notre équipe est complète.' },
     });
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /confirmer le refus/i }),
-    );
+    // Ensure the button name matches exactly (case sensitive in some MUI versions)
+    const confirmBtn = screen.getByRole('button', {
+      name: /confirmer le refus/i,
+    });
+    fireEvent.click(confirmBtn);
 
     await waitFor(() => {
       expect(refuserDemande).toHaveBeenCalledWith(
