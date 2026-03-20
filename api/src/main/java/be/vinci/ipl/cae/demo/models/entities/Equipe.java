@@ -57,4 +57,12 @@ public class Equipe {
   @JoinColumn(name = "secondary_responsible_id", unique = true)
   @JsonIgnore
   private User responsableSecondaire;
+
+    /**
+     * La liste des inscriptions de cette équipe à des tournois. OneToMany car 1 équipe peut s'inscrire
+     * à plusieurs tournois. mappedBy = "equipe" → la FK est dans InscriptionEquipeTournoi.
+     */
+  @OneToMany(mappedBy = "equipe", fetch = FetchType.LAZY)
+  @JsonManagedReference("equipe-inscriptions")
+  private List<InscriptionEquipeTournoi> inscriptions = new ArrayList<>();
 }
