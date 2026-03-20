@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import TeamsList from './TeamsList';
-import { UserContext } from '../../../contexts/UserContext';
-import { getAllEquipes, joinEquipe } from '../../../services/teams';
-import { decodeJwtPayload } from '../../../utils/session';
+import TeamsList from '../../components/pages/TeamPage/TeamsList';
+import { UserContext } from '../../contexts/UserContext';
+import { getAllEquipes, joinEquipe } from '../../services/teams';
+import { decodeJwtPayload } from '../../utils/session';
 
 // 1. Better mock for react-router-dom
 vi.mock('react-router-dom', async () => {
@@ -15,12 +15,14 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('../../../services/teams', () => ({
+// FIXED PATHS: From src/Tests/Team/ to src/services/
+vi.mock('../../services/teams', () => ({
   getAllEquipes: vi.fn(),
   joinEquipe: vi.fn(),
 }));
 
-vi.mock('../../../utils/session', () => ({
+// FIXED PATHS: From src/Tests/Team/ to src/utils/
+vi.mock('../../utils/session', () => ({
   decodeJwtPayload: vi.fn(),
 }));
 
@@ -201,7 +203,6 @@ describe('TeamsList', () => {
     const mockNavigate = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
 
-    // id: 500 ensures this user is NOT in any of the simulated teams (1, 2, or 3)
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 500 });
     vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
     vi.mocked(joinEquipe).mockResolvedValueOnce(undefined as void);
@@ -226,23 +227,21 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    // Wait for the team to appear
     await screen.findByText(/les tacticiens/i);
 
-    // Find and click "Postuler"
     const boutonsPostuler = screen.getAllByRole('button', {
       name: /postuler/i,
     });
     fireEvent.click(boutonsPostuler[0]);
 
     await waitFor(() => {
-      expect(joinEquipe).toHaveBeenCalledWith(1); // Should call with ID of "Les Tacticiens"
+      expect(joinEquipe).toHaveBeenCalledWith(1);
       expect(mockNavigate).toHaveBeenCalledWith('/notifications');
     });
   });
 
   test("affiche une erreur si l'utilisateur est déjà dans une équipe", async () => {
-    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 }); // User is in team ID 2
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
 
     render(

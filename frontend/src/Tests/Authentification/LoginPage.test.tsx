@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import LoginPage from './LoginPage';
+import LoginPage from '../../components/pages/LoginPage';
 import { createMockUserContext, renderWithProviders } from '../../test-utils';
 
 const mockNavigate = vi.fn();

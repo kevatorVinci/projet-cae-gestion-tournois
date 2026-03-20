@@ -1,7 +1,8 @@
+/* eslint-disable no-irregular-whitespace */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import RegisterPage from './RegisterPage';
+import RegisterPage from '../../components/pages/RegisterPage';
 
 // 1. Mock de react-router-dom
 const mockNavigate = vi.fn();
@@ -52,7 +53,7 @@ describe.skip('RegisterPage', () => {
   test('renders all form fields and submit button', () => {
     render(
       <MemoryRouter>
-        <RegisterPage />
+                <RegisterPage />     {' '}
       </MemoryRouter>,
     );
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
@@ -64,7 +65,7 @@ describe.skip('RegisterPage', () => {
   test('shows error when no avatar is selected', async () => {
     render(
       <MemoryRouter>
-        <RegisterPage />
+                <RegisterPage />     {' '}
       </MemoryRouter>,
     );
 
@@ -82,7 +83,7 @@ describe.skip('RegisterPage', () => {
 
     render(
       <MemoryRouter>
-        <RegisterPage />
+                <RegisterPage />     {' '}
       </MemoryRouter>,
     );
 
@@ -112,7 +113,7 @@ describe.skip('RegisterPage', () => {
 
     render(
       <MemoryRouter>
-        <RegisterPage />
+                <RegisterPage />     {' '}
       </MemoryRouter>,
     );
 

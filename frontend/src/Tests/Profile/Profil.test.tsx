@@ -1,18 +1,21 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import Profile from './Profil';
-import { UserContext } from '../../../contexts/UserContext';
-import { getUserTeam } from '../../../services/teams';
+import Profile from '../../components/pages/TableauDebord/Profil';
+import { UserContext } from '../../contexts/UserContext';
+import { getUserTeam } from '../../services/teams';
 
-// Mock de react-router-dom
+// 1. Mock de react-router-dom
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return { ...actual, useNavigate: vi.fn() };
 });
 
-// Mock du service teams
-vi.mock('../../../services/teams', () => ({
+// FIXED PATH: From src/Tests/Team/ to src/services/ is only 2 levels up (../../)
+vi.mock('../../services/teams', () => ({
   getUserTeam: vi.fn(),
 }));
 
@@ -57,12 +60,11 @@ describe('Profile', () => {
     renderProfile();
 
     // Correction : Utilisation de getByRole pour cibler spécifiquement le nom dans la carte
-    // Cela évite le conflit avec le titre "Bonjour Pedrinho08"
     expect(
       screen.getByRole('heading', { name: /^pedrinho08$/i, level: 5 }),
-    ).toBeDefined();
-    expect(screen.getByText(/tacticien/i)).toBeDefined();
-    expect(screen.getByText(/test@vinci.be/i)).toBeDefined();
+    ).toBeInTheDocument();
+    expect(screen.getByText(/tacticien/i)).toBeInTheDocument();
+    expect(screen.getByText(/test@vinci.be/i)).toBeInTheDocument();
   });
 
   test('shows "Pas d\'équipe" when user has no team', async () => {
@@ -71,7 +73,7 @@ describe('Profile', () => {
     renderProfile();
 
     await waitFor(() => {
-      expect(screen.getByText(/pas d'équipe/i)).toBeDefined();
+      expect(screen.getByText(/pas d'équipe/i)).toBeInTheDocument();
     });
   });
 
@@ -81,7 +83,7 @@ describe('Profile', () => {
     renderProfile();
 
     await waitFor(() => {
-      expect(screen.getByText(/les tacticiens/i)).toBeDefined();
+      expect(screen.getByText(/les tacticiens/i)).toBeInTheDocument();
     });
   });
 
@@ -91,8 +93,8 @@ describe('Profile', () => {
     renderProfile();
 
     await waitFor(() => {
-      expect(screen.getByText(/créer une équipe/i)).toBeDefined();
-      expect(screen.getByText(/rejoindre une équipe/i)).toBeDefined();
+      expect(screen.getByText(/créer une équipe/i)).toBeInTheDocument();
+      expect(screen.getByText(/rejoindre une équipe/i)).toBeInTheDocument();
     });
   });
 

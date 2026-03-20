@@ -1,16 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import { DemandesAdhesion } from './Demande';
+import { DemandesAdhesion } from '../../components/pages/TeamPage/ResponsablePage/Demande';
 import {
   getDemandesEnAttenteResponsable,
   accepterDemande,
   refuserDemande,
-} from '../../../../services/demande';
-import { DemandeDecisionResult } from '../../../../types';
+} from '../../services/demande';
+import { DemandeDecisionResult } from '../../types';
 
-// Mock the service module
-vi.mock('../../../../services/demande', () => ({
+// FIXED PATH: From src/Tests/Team/ to src/services/ is only 2 levels up
+vi.mock('../../services/demande', () => ({
   getDemandesEnAttenteResponsable: vi.fn(),
   accepterDemande: vi.fn(),
   refuserDemande: vi.fn(),
@@ -165,20 +165,17 @@ describe('DemandesAdhesion', () => {
       </MemoryRouter>,
     );
 
-    // Wait for players to load and find the "Refuser" button
     const refuseButtons = await screen.findAllByRole('button', {
       name: /refuser/i,
     });
     fireEvent.click(refuseButtons[0]);
 
-    // Finding by role is more reliable for MUI TextFields inside Dialogs
     const reasonInput = await screen.findByRole('textbox');
 
     fireEvent.change(reasonInput, {
       target: { value: 'Notre équipe est complète.' },
     });
 
-    // Ensure the button name matches exactly (case sensitive in some MUI versions)
     const confirmBtn = screen.getByRole('button', {
       name: /confirmer le refus/i,
     });

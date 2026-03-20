@@ -7,28 +7,30 @@ import {
 } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import Notifications from './NotificationPage';
-
-// Mock react-router-dom
-vi.mock('react-router-dom', async () => {
-  const actuel = await vi.importActual('react-router-dom');
-  return { ...actuel, useNavigate: vi.fn() };
-});
-
-// Mock notification services
-vi.mock('../../../services/notifications', () => ({
-  getCurrentUserIdFromToken: vi.fn(),
-  getNotificationsByUser: vi.fn(),
-  markAllNotificationsAsRead: vi.fn(),
-  markNotificationAsRead: vi.fn(),
-}));
-
+import Notifications from '../../components/pages/Notifications/NotificationPage';
 import {
   getCurrentUserIdFromToken,
   getNotificationsByUser,
   markAllNotificationsAsRead,
   markNotificationAsRead,
-} from '../../../services/notifications';
+} from '../../services/notifications';
+
+// 1. Mock react-router-dom
+vi.mock('react-router-dom', async () => {
+  const actuel =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
+  return { ...actuel, useNavigate: vi.fn() };
+});
+
+// 2. FIXED PATH: Mock notification services using the correct relative path (../../)
+vi.mock('../../services/notifications', () => ({
+  getCurrentUserIdFromToken: vi.fn(),
+  getNotificationsByUser: vi.fn(),
+  markAllNotificationsAsRead: vi.fn(),
+  markNotificationAsRead: vi.fn(),
+}));
 
 const notificationsSimulees = [
   {
@@ -172,7 +174,7 @@ describe('Notifications', () => {
       notificationsSimulees,
     );
     vi.mocked(markAllNotificationsAsRead).mockResolvedValueOnce(
-      undefined as any,
+      undefined as void,
     );
 
     render(
@@ -181,7 +183,6 @@ describe('Notifications', () => {
       </MemoryRouter>,
     );
 
-    // Using findByText since the output shows "Tout marquer comme lu" is likely not a button role either
     const btnAll = await screen.findByText(/tout marquer comme lu/i);
     fireEvent.click(btnAll);
 
@@ -195,7 +196,7 @@ describe('Notifications', () => {
     vi.mocked(getNotificationsByUser).mockResolvedValueOnce(
       notificationsSimulees,
     );
-    vi.mocked(markNotificationAsRead).mockResolvedValue(undefined as any);
+    vi.mocked(markNotificationAsRead).mockResolvedValue(undefined as void);
 
     render(
       <MemoryRouter>
@@ -203,21 +204,18 @@ describe('Notifications', () => {
       </MemoryRouter>,
     );
 
-    // 1. Find the text of the notification
     const message = await screen.findByText(/bienvenue sur vinci arena/i);
 
-    // 2. Locate the container
-    const container =
-      message.closest('.MuiCardContent-root') || message.parentElement;
+    // Casting to HTMLElement for Type safety with within()
+    const container = (message.closest('.MuiCardContent-root') ||
+      message.parentElement) as HTMLElement;
+
     if (!container) throw new Error('Notification container not found');
 
-    // 3. Find the text "Marquer comme lu" inside that container and click it
-    // We use getByText because it's a <span>, not a button
     const readAction = within(container).getByText(/marquer comme lu/i);
 
     fireEvent.click(readAction);
 
-    // 4. Verify call with ID 1
     await waitFor(() => {
       expect(markNotificationAsRead).toHaveBeenCalledWith(1);
     });

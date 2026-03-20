@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import AdminPage from './AdminPage';
+import AdminPage from '../../components/pages/AdminPage';
 import {
   createAuthenticatedUser,
   createMockUserContext,

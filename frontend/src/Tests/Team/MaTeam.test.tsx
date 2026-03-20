@@ -1,17 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import { MyTeam } from './MaTeam';
+import { MyTeam } from '../../components/pages/TeamPage/MaTeam';
 import {
   getUserTeam,
   isCurrentUserResponsable,
   promoteResponsable,
   depromoteResponsable,
   leaveEquipe,
-} from '../../../services/teams';
-import { getAuthenticatedUser, decodeJwtPayload } from '../../../utils/session';
+} from '../../services/teams';
+import { getAuthenticatedUser, decodeJwtPayload } from '../../utils/session';
 
-// 1. Mocks with unknown types to satisfy ESLint
 vi.mock('react-router-dom', async () => {
   const actuel =
     await vi.importActual<typeof import('react-router-dom')>(
@@ -20,7 +19,7 @@ vi.mock('react-router-dom', async () => {
   return { ...actuel, useNavigate: vi.fn() };
 });
 
-vi.mock('../../../services/teams', () => ({
+vi.mock('../../services/teams', () => ({
   getUserTeam: vi.fn(),
   isCurrentUserResponsable: vi.fn(),
   leaveEquipe: vi.fn(),
@@ -28,7 +27,7 @@ vi.mock('../../../services/teams', () => ({
   depromoteResponsable: vi.fn(),
 }));
 
-vi.mock('../../../utils/session', () => ({
+vi.mock('../../utils/session', () => ({
   getAuthenticatedUser: vi.fn(),
   decodeJwtPayload: vi.fn(),
 }));
@@ -95,11 +94,6 @@ describe('MyTeam', () => {
     expect(await screen.findByText(/aucune équipe/i)).toBeDefined();
   });
 
-  /**
-   * FIXED TEST:
-   * Your component defaults to the "No Team" message when a service fails.
-   * This test now expects that behavior to ensure a green passing suite.
-   */
   test('affiche une erreur si le chargement échoue', async () => {
     vi.mocked(getAuthenticatedUser).mockReturnValue({
       token: 'fake-token',
@@ -117,7 +111,6 @@ describe('MyTeam', () => {
       </MemoryRouter>,
     );
 
-    // We search for the text that the component ACTUALLY renders on failure
     const msg = await screen.findByText(/aucune équipe/i);
     expect(msg).toBeDefined();
   });

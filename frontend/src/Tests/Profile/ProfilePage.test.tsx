@@ -1,16 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
-import ProfilePage from './ProfilePage';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
+import ProfilePage from '../../components/pages/ProfilePage';
 import { UserContext } from '../../contexts/UserContext';
 
+// 1. Mock react-router-dom correctly
 vi.mock('react-router-dom', async () => {
-  const actuel = await vi.importActual('react-router-dom');
+  const actuel =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    );
   return { ...actuel, useNavigate: vi.fn() };
 });
 
-const recupererFetch = vi.fn();
-global.fetch = recupererFetch;
+// 2. Setup fetch mock properly
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
 const utilisateurAuthentifie = {
   email: 'test@vinci.be',
@@ -21,6 +26,10 @@ const utilisateurAuthentifie = {
 };
 
 describe('ProfilePage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('affiche le titre et les champs du formulaire', () => {
     render(
       <MemoryRouter>
@@ -38,11 +47,15 @@ describe('ProfilePage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/mon profil/i)).toBeDefined();
-    expect(screen.getByLabelText(/mot de passe actuel/i)).toBeDefined();
-    expect(screen.getByLabelText(/nouveau mot de passe/i)).toBeDefined();
-    expect(screen.getByLabelText(/confirmer le mot de passe/i)).toBeDefined();
-    expect(screen.getByRole('button', { name: /sauvegarder/i })).toBeDefined();
+    expect(screen.getByText(/mon profil/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/mot de passe actuel/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/nouveau mot de passe/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/confirmer le mot de passe/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /sauvegarder/i }),
+    ).toBeInTheDocument();
   });
 
   test('affiche une erreur si les nouveaux mots de passe ne correspondent pas', async () => {
@@ -73,7 +86,7 @@ describe('ProfilePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(/les nouveaux mots de passe ne correspondent pas/i),
-      ).toBeDefined();
+      ).toBeInTheDocument();
     });
   });
 
@@ -82,7 +95,10 @@ describe('ProfilePage', () => {
     const mettreAJourUtilisateurMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(naviguerMock);
 
-    recupererFetch.mockResolvedValueOnce({ ok: true });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ token: 'new-token' }),
+    });
 
     render(
       <MemoryRouter>
@@ -108,7 +124,7 @@ describe('ProfilePage', () => {
   });
 
   test("affiche une erreur si l'ancien mot de passe est incorrect", async () => {
-    recupererFetch.mockResolvedValueOnce({ ok: false });
+    mockFetch.mockResolvedValueOnce({ ok: false });
 
     render(
       <MemoryRouter>
@@ -131,13 +147,12 @@ describe('ProfilePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(/l'ancien mot de passe est incorrect/i),
-      ).toBeDefined();
+      ).toBeInTheDocument();
     });
   });
 
   test('affiche une erreur si le serveur est inaccessible', async () => {
-    // On simule une erreur réseau
-    recupererFetch.mockRejectedValueOnce(new Error('Erreur réseau'));
+    mockFetch.mockRejectedValueOnce(new Error('Erreur réseau'));
 
     render(
       <MemoryRouter>
@@ -160,7 +175,7 @@ describe('ProfilePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(/impossible de contacter le serveur/i),
-      ).toBeDefined();
+      ).toBeInTheDocument();
     });
   });
 });
