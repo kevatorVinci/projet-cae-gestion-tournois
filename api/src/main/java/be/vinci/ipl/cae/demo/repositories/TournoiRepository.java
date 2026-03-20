@@ -1,14 +1,19 @@
 package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
+/** Repository for tournament persistence operations. */
 @Repository
 public interface TournoiRepository extends CrudRepository<Tournoi, Long> {
 
-    // Vérifie si un tournoi avec ce nom existe déjà (nom UNIQUE dans le DSD)
-    Optional<Tournoi> findByNom(String nom);
+  /**
+   * Finds a tournament by its unique name.
+   *
+   * @param nom tournament name
+   * @return optional tournament if found
+   */
+  Optional<Tournoi> findByNom(String nom);
 }

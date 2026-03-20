@@ -7,10 +7,8 @@ import static org.mockito.Mockito.*;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
-
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,279 +20,277 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
 
-    @Mock
-    private NotificationRepository notificationRepository;
+  @Mock private NotificationRepository notificationRepository;
 
-    @InjectMocks
-    private NotificationService notificationService;
-
-    private User user;
-    private Notification notification;
+  @InjectMocks private NotificationService notificationService;
 
-    @BeforeEach
-    void setUp() {
-        user = new User();
-        user.setId(1L);
-        user.setTag("AliceTag");
+  private User user;
+  private Notification notification;
 
-        notification = new Notification();
-        notification.setIdNotification(100L);
-        notification.setUser(user);
-        notification.setMessage("Test message");
-        notification.setEstLue(false);
-    }
+  @BeforeEach
+  void setUp() {
+    user = new User();
+    user.setId(1L);
+    user.setTag("AliceTag");
 
-    // ═══════════════════════════════════════════════════════════════════
-    // getByUser
-    // ═══════════════════════════════════════════════════════════════════
+    notification = new Notification();
+    notification.setIdNotification(100L);
+    notification.setUser(user);
+    notification.setMessage("Test message");
+    notification.setEstLue(false);
+  }
 
-    @Test
-    void getByUser_retourneListeTrieeParDate() {
-        when(notificationRepository.findByUserIdOrderByDateEnvoiDesc(1L))
-                .thenReturn(List.of(notification));
+  // ═══════════════════════════════════════════════════════════════════
+  // getByUser
+  // ═══════════════════════════════════════════════════════════════════
 
-        List<Notification> result = notificationService.getByUser(1L);
+  @Test
+  void getByUser_retourneListeTrieeParDate() {
+    when(notificationRepository.findByUserIdOrderByDateEnvoiDesc(1L))
+        .thenReturn(List.of(notification));
 
-        assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
-        verify(notificationRepository).findByUserIdOrderByDateEnvoiDesc(1L);
-    }
+    List<Notification> result = notificationService.getByUser(1L);
 
-    @Test
-    void getByUser_aucuneNotification_retourneListeVide() {
-        when(notificationRepository.findByUserIdOrderByDateEnvoiDesc(1L)).thenReturn(List.of());
+    assertFalse(result.isEmpty());
+    assertEquals(1, result.size());
+    verify(notificationRepository).findByUserIdOrderByDateEnvoiDesc(1L);
+  }
 
-        List<Notification> result = notificationService.getByUser(1L);
+  @Test
+  void getByUser_aucuneNotification_retourneListeVide() {
+    when(notificationRepository.findByUserIdOrderByDateEnvoiDesc(1L)).thenReturn(List.of());
 
-        assertTrue(result.isEmpty());
-    }
+    List<Notification> result = notificationService.getByUser(1L);
 
-    // ═══════════════════════════════════════════════════════════════════
-    // getUnread
-    // ═══════════════════════════════════════════════════════════════════
+    assertTrue(result.isEmpty());
+  }
 
-    @Test
-    void getUnread_retourneSeulementNonLues() {
-        when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
-                .thenReturn(List.of(notification));
+  // ═══════════════════════════════════════════════════════════════════
+  // getUnread
+  // ═══════════════════════════════════════════════════════════════════
 
-        List<Notification> result = notificationService.getUnread(1L);
+  @Test
+  void getUnread_retourneSeulementNonLues() {
+    when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
+        .thenReturn(List.of(notification));
 
-        assertFalse(result.isEmpty());
-        assertFalse(result.get(0).getEstLue());
-    }
+    List<Notification> result = notificationService.getUnread(1L);
 
-    @Test
-    void getUnread_toutesLues_retourneListeVide() {
-        when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
-                .thenReturn(List.of());
+    assertFalse(result.isEmpty());
+    assertFalse(result.get(0).getEstLue());
+  }
 
-        List<Notification> result = notificationService.getUnread(1L);
+  @Test
+  void getUnread_toutesLues_retourneListeVide() {
+    when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
+        .thenReturn(List.of());
 
-        assertTrue(result.isEmpty());
-    }
+    List<Notification> result = notificationService.getUnread(1L);
 
-    // ═══════════════════════════════════════════════════════════════════
-    // markAsRead
-    // ═══════════════════════════════════════════════════════════════════
+    assertTrue(result.isEmpty());
+  }
 
-    @Test
-    void markAsRead_notificationPasseALue() {
-        when(notificationRepository.findById(100L)).thenReturn(Optional.of(notification));
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // markAsRead
+  // ═══════════════════════════════════════════════════════════════════
 
-        Notification result = notificationService.markAsRead(100L);
+  @Test
+  void markAsRead_notificationPasseALue() {
+    when(notificationRepository.findById(100L)).thenReturn(Optional.of(notification));
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        assertTrue(result.getEstLue());
-        verify(notificationRepository).save(notification);
-    }
+    Notification result = notificationService.markAsRead(100L);
 
-    @Test
-    void markAsRead_notificationInexistante_throwsRuntime() {
-        when(notificationRepository.findById(999L)).thenReturn(Optional.empty());
+    assertTrue(result.getEstLue());
+    verify(notificationRepository).save(notification);
+  }
 
-        assertThrows(RuntimeException.class, () -> notificationService.markAsRead(999L));
-        verify(notificationRepository, never()).save(any());
-    }
+  @Test
+  void markAsRead_notificationInexistante_throwsRuntime() {
+    when(notificationRepository.findById(999L)).thenReturn(Optional.empty());
 
-    // ═══════════════════════════════════════════════════════════════════
-    // markAllAsRead
-    // ═══════════════════════════════════════════════════════════════════
+    assertThrows(RuntimeException.class, () -> notificationService.markAsRead(999L));
+    verify(notificationRepository, never()).save(any());
+  }
 
-    @Test
-    void markAllAsRead_toutesLesNotifsPassentALues() {
-        Notification n2 = new Notification();
-        n2.setIdNotification(101L);
-        n2.setUser(user);
-        n2.setEstLue(false);
+  // ═══════════════════════════════════════════════════════════════════
+  // markAllAsRead
+  // ═══════════════════════════════════════════════════════════════════
 
-        when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
-                .thenReturn(List.of(notification, n2));
+  @Test
+  void markAllAsRead_toutesLesNotifsPassentALues() {
+    Notification n2 = new Notification();
+    n2.setIdNotification(101L);
+    n2.setUser(user);
+    n2.setEstLue(false);
 
-        notificationService.markAllAsRead(1L);
+    when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
+        .thenReturn(List.of(notification, n2));
 
-        assertTrue(notification.getEstLue());
-        assertTrue(n2.getEstLue());
-        verify(notificationRepository).saveAll(List.of(notification, n2));
-    }
+    notificationService.markAllAsRead(1L);
 
-    @Test
-    void markAllAsRead_aucuneNonLue_neFaitRien() {
-        when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
-                .thenReturn(List.of());
+    assertTrue(notification.getEstLue());
+    assertTrue(n2.getEstLue());
+    verify(notificationRepository).saveAll(List.of(notification, n2));
+  }
 
-        notificationService.markAllAsRead(1L);
+  @Test
+  void markAllAsRead_aucuneNonLue_neFaitRien() {
+    when(notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(1L, false))
+        .thenReturn(List.of());
 
-        verify(notificationRepository).saveAll(List.of());
-    }
+    notificationService.markAllAsRead(1L);
 
-    // ═══════════════════════════════════════════════════════════════════
-    // deleteByUser
-    // ═══════════════════════════════════════════════════════════════════
+    verify(notificationRepository).saveAll(List.of());
+  }
 
-    @Test
-    void deleteByUser_supprimeToutesLesNotifs() {
-        notificationService.deleteByUser(1L);
+  // ═══════════════════════════════════════════════════════════════════
+  // deleteByUser
+  // ═══════════════════════════════════════════════════════════════════
 
-        verify(notificationRepository).deleteByUserId(1L);
-    }
+  @Test
+  void deleteByUser_supprimeToutesLesNotifs() {
+    notificationService.deleteByUser(1L);
 
-    // ═══════════════════════════════════════════════════════════════════
-    // createNotification
-    // ═══════════════════════════════════════════════════════════════════
+    verify(notificationRepository).deleteByUserId(1L);
+  }
 
-    @Test
-    void createNotification_sauvegardeAvecBonnesValeurs() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // createNotification
+  // ═══════════════════════════════════════════════════════════════════
 
-        Notification result = notificationService.createNotification(user, "Mon message");
+  @Test
+  void createNotification_sauvegardeAvecBonnesValeurs() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
+    Notification result = notificationService.createNotification(user, "Mon message");
 
-        Notification saved = captor.getValue();
-        assertEquals(user, saved.getUser());
-        assertEquals("Mon message", saved.getMessage());
-        assertFalse(saved.getEstLue()); // non lue par défaut
-        assertNotNull(saved.getDateEnvoi());
-    }
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
 
-    // ═══════════════════════════════════════════════════════════════════
-    // notifierCreationCompte
-    // ═══════════════════════════════════════════════════════════════════
+    Notification saved = captor.getValue();
+    assertEquals(user, saved.getUser());
+    assertEquals("Mon message", saved.getMessage());
+    assertFalse(saved.getEstLue()); // non lue par défaut
+    assertNotNull(saved.getDateEnvoi());
+  }
 
-    @Test
-    void notifierCreationCompte_messageCommenceParBienvenue() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // notifierCreationCompte
+  // ═══════════════════════════════════════════════════════════════════
 
-        notificationService.notifierCreationCompte(user);
+  @Test
+  void notifierCreationCompte_messageCommenceParBienvenue() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        assertTrue(captor.getValue().getMessage().startsWith("Bienvenue"));
-    }
+    notificationService.notifierCreationCompte(user);
 
-    // ═══════════════════════════════════════════════════════════════════
-    // notifierCreationEquipe
-    // ═══════════════════════════════════════════════════════════════════
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    assertTrue(captor.getValue().getMessage().startsWith("Bienvenue"));
+  }
 
-    @Test
-    void notifierCreationEquipe_messageContientNomEquipe() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // notifierCreationEquipe
+  // ═══════════════════════════════════════════════════════════════════
 
-        notificationService.notifierCreationEquipe(user, "Les Invincibles");
+  @Test
+  void notifierCreationEquipe_messageContientNomEquipe() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        assertTrue(captor.getValue().getMessage().contains("Les Invincibles"));
-    }
+    notificationService.notifierCreationEquipe(user, "Les Invincibles");
 
-    // ═══════════════════════════════════════════════════════════════════
-    // notifierDemandEnvoyee
-    // ═══════════════════════════════════════════════════════════════════
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    assertTrue(captor.getValue().getMessage().contains("Les Invincibles"));
+  }
 
-    @Test
-    void notifierDemandEnvoyee_messageCommenceParDemande() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // notifierDemandEnvoyee
+  // ═══════════════════════════════════════════════════════════════════
 
-        notificationService.notifierDemandEnvoyee(user, "Les Invincibles");
+  @Test
+  void notifierDemandEnvoyee_messageCommenceParDemande() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        assertTrue(captor.getValue().getMessage().startsWith("Demande envoyée"));
-        assertTrue(captor.getValue().getMessage().contains("Les Invincibles"));
-    }
+    notificationService.notifierDemandEnvoyee(user, "Les Invincibles");
 
-    // ═══════════════════════════════════════════════════════════════════
-    // notifierNouvelleDemandeResponsable
-    // ═══════════════════════════════════════════════════════════════════
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    assertTrue(captor.getValue().getMessage().startsWith("Demande envoyée"));
+    assertTrue(captor.getValue().getMessage().contains("Les Invincibles"));
+  }
 
-    @Test
-    void notifierNouvelleDemandeResponsable_messageContientTagCandidat() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // notifierNouvelleDemandeResponsable
+  // ═══════════════════════════════════════════════════════════════════
 
-        notificationService.notifierNouvelleDemandeResponsable(user, "BobTag", "Les Invincibles");
+  @Test
+  void notifierNouvelleDemandeResponsable_messageContientTagCandidat() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        String msg = captor.getValue().getMessage();
-        assertTrue(msg.contains("BobTag"));
-        assertTrue(msg.contains("Les Invincibles"));
-    }
+    notificationService.notifierNouvelleDemandeResponsable(user, "BobTag", "Les Invincibles");
 
-    // ═══════════════════════════════════════════════════════════════════
-    // notifierDemandeAcceptee
-    // ═══════════════════════════════════════════════════════════════════
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    String msg = captor.getValue().getMessage();
+    assertTrue(msg.contains("BobTag"));
+    assertTrue(msg.contains("Les Invincibles"));
+  }
 
-    @Test
-    void notifierDemandeAcceptee_messageCommenceParAccepte() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // notifierDemandeAcceptee
+  // ═══════════════════════════════════════════════════════════════════
 
-        notificationService.notifierDemandeAcceptee(user, "Les Invincibles");
+  @Test
+  void notifierDemandeAcceptee_messageCommenceParAccepte() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        assertTrue(captor.getValue().getMessage().startsWith("Accepté"));
-        assertTrue(captor.getValue().getMessage().contains("Les Invincibles"));
-    }
+    notificationService.notifierDemandeAcceptee(user, "Les Invincibles");
 
-    // ═══════════════════════════════════════════════════════════════════
-    // notifierDemandeRefusee
-    // ═══════════════════════════════════════════════════════════════════
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    assertTrue(captor.getValue().getMessage().startsWith("Accepté"));
+    assertTrue(captor.getValue().getMessage().contains("Les Invincibles"));
+  }
 
-    @Test
-    void notifierDemandeRefusee_messageCommenceParRefus() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+  // ═══════════════════════════════════════════════════════════════════
+  // notifierDemandeRefusee
+  // ═══════════════════════════════════════════════════════════════════
 
-        notificationService.notifierDemandeRefusee(user, "Les Invincibles", "Niveau insuffisant");
+  @Test
+  void notifierDemandeRefusee_messageCommenceParRefus() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        String msg = captor.getValue().getMessage();
-        assertTrue(msg.startsWith("Refus"));
-        assertTrue(msg.contains("Niveau insuffisant"));
-    }
+    notificationService.notifierDemandeRefusee(user, "Les Invincibles", "Niveau insuffisant");
 
-    @Test
-    void notifierDemandeRefusee_sansRaison_afficheMsgDefaut() {
-        // Règle : si pas de raison → message par défaut affiché
-        when(notificationRepository.save(any())).thenReturn(notification);
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    String msg = captor.getValue().getMessage();
+    assertTrue(msg.startsWith("Refus"));
+    assertTrue(msg.contains("Niveau insuffisant"));
+  }
 
-        notificationService.notifierDemandeRefusee(user, "Les Invincibles", null);
+  @Test
+  void notifierDemandeRefusee_sansRaison_afficheMsgDefaut() {
+    // Règle : si pas de raison → message par défaut affiché
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        assertTrue(captor.getValue().getMessage().contains("Aucune raison précisée"));
-    }
+    notificationService.notifierDemandeRefusee(user, "Les Invincibles", null);
 
-    @Test
-    void notifierDemandeRefusee_raisonVide_afficheMsgDefaut() {
-        when(notificationRepository.save(any())).thenReturn(notification);
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    assertTrue(captor.getValue().getMessage().contains("Aucune raison précisée"));
+  }
 
-        notificationService.notifierDemandeRefusee(user, "Les Invincibles", "   ");
+  @Test
+  void notifierDemandeRefusee_raisonVide_afficheMsgDefaut() {
+    when(notificationRepository.save(any())).thenReturn(notification);
 
-        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(captor.capture());
-        assertTrue(captor.getValue().getMessage().contains("Aucune raison précisée"));
-    }
+    notificationService.notifierDemandeRefusee(user, "Les Invincibles", "   ");
+
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+    assertTrue(captor.getValue().getMessage().contains("Aucune raison précisée"));
+  }
 }

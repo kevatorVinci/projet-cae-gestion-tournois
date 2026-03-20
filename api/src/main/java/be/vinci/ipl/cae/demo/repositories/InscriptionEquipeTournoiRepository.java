@@ -1,27 +1,49 @@
 package be.vinci.ipl.cae.demo.repositories;
 
-import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-
+/** Repository for tournament-team registration persistence operations. */
 @Repository
-public interface InscriptionEquipeTournoiRepository extends CrudRepository<InscriptionEquipeTournoi, Long> {
+public interface InscriptionEquipeTournoiRepository
+    extends CrudRepository<InscriptionEquipeTournoi, Long> {
 
-    // Toutes les inscriptions d'un tournoi donné
-    List<InscriptionEquipeTournoi> findByTournoi(Tournoi tournoi);
+  /**
+   * Finds all registrations for a given tournament.
+   *
+   * @param tournoi tournament entity
+   * @return list of tournament registrations
+   */
+  List<InscriptionEquipeTournoi> findByTournoi(Tournoi tournoi);
 
-    // Toutes les inscriptions d'une équipe donnée
-    List<InscriptionEquipeTournoi> findByEquipe(Equipe equipe);
+  /**
+   * Finds all registrations for a given team.
+   *
+   * @param equipe team entity
+   * @return list of team registrations
+   */
+  List<InscriptionEquipeTournoi> findByEquipe(Equipe equipe);
 
-    // Récupérer les inscriptions d'un tournoi par état
-    List<InscriptionEquipeTournoi> findByTournoiAndEtat(Tournoi tournoi, String etat);
+  /**
+   * Finds registrations for a tournament filtered by state.
+   *
+   * @param tournoi tournament entity
+   * @param etat registration state
+   * @return list of matching registrations
+   */
+  List<InscriptionEquipeTournoi> findByTournoiAndEtat(Tournoi tournoi, String etat);
 
-    // Vérifie si une équipe est déjà inscrite à un tournoi
-    // (remplace la contrainte de clé composite — on gère le doublon au niveau service)
-    Optional<InscriptionEquipeTournoi> findByTournoiAndEquipe(Tournoi tournoi, Equipe equipe);
+  /**
+   * Finds an existing registration for a team in a tournament.
+   *
+   * @param tournoi tournament entity
+   * @param equipe team entity
+   * @return optional registration if found
+   */
+  Optional<InscriptionEquipeTournoi> findByTournoiAndEquipe(Tournoi tournoi, Equipe equipe);
 }

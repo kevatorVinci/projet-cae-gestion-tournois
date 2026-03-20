@@ -3,9 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
-
 import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,122 +14,120 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * AuthController to handle user authentication.
- */
+/** AuthController to handle user authentication. */
 @RestController
 @RequestMapping("/auths")
 public class AuthController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    /**
-     * Constructor for AuthController.
-     *
-     * @param userService the injected UserService.
-     */
-    public AuthController(UserService userService) {
-        this.userService = userService;
+  /**
+   * Constructor for AuthController.
+   *
+   * @param userService the injected UserService.
+   */
+  public AuthController(UserService userService) {
+    this.userService = userService;
+  }
+
+  private boolean isInvalidCredentials(Credentials credentials) {
+    return credentials == null
+        || credentials.getEmail() == null
+        || credentials.getEmail().isBlank()
+        || credentials.getPassword() == null
+        || credentials.getPassword().isBlank();
+  }
+
+  /**
+   * Register a new user.
+   *
+   * @param credentials register payload
+   * @return authenticated user with token
+   */
+  @PostMapping("/register")
+  public AuthenticatedUser register(@RequestBody Credentials credentials) {
+    if (isInvalidCredentials(credentials)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
-
-    private boolean isInvalidCredentials(Credentials credentials) {
-        return credentials == null
-                || credentials.getEmail() == null
-                || credentials.getEmail().isBlank()
-                || credentials.getPassword() == null
-                || credentials.getPassword().isBlank();
+    AuthenticatedUser user = userService.register(credentials);
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
+    return user;
+  }
 
-    /**
-     * Register a new user.
-     *
-     * @param credentials register payload
-     * @return authenticated user with token
-     */
-    @PostMapping("/register")
-    public AuthenticatedUser register(@RequestBody Credentials credentials) {
-        if (isInvalidCredentials(credentials)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
-        AuthenticatedUser user = userService.register(credentials);
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
-        }
-        return user;
+  /**
+   * Authenticate an existing user.
+   *
+   * @param credentials login payload
+   * @return authenticated user with token
+   */
+  @PostMapping("/login")
+  public AuthenticatedUser login(@RequestBody Credentials credentials) {
+    if (isInvalidCredentials(credentials)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
-
-    /**
-     * Authenticate an existing user.
-     *
-     * @param credentials login payload
-     * @return authenticated user with token
-     */
-    @PostMapping("/login")
-    public AuthenticatedUser login(@RequestBody Credentials credentials) {
-        if (isInvalidCredentials(credentials)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
-        AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-        }
-        return user;
+    AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }
+    return user;
+  }
 
-    /**
-     * Porte d'entrée pour modifier le profil.
-     *
-     * @param credentials le colis envoyé par React
-     * @return le profil mis à jour avec un nouveau token
-     */
-    @PutMapping("/update")
-    @PreAuthorize("isAuthenticated()")
-    public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
-        AuthenticatedUser user =
-                userService.updateProfile(
-                        credentials.getEmail(),
-                        credentials.getSpecialty(),
-                        credentials.getProfileImage(),
-                        credentials.getOldPassword(),
-                        credentials.getNewPassword());
+  /**
+   * Porte d'entrée pour modifier le profil.
+   *
+   * @param credentials le colis envoyé par React
+   * @return le profil mis à jour avec un nouveau token
+   */
+  @PutMapping("/update")
+  @PreAuthorize("isAuthenticated()")
+  public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
+    AuthenticatedUser user =
+        userService.updateProfile(
+            credentials.getEmail(),
+            credentials.getSpecialty(),
+            credentials.getProfileImage(),
+            credentials.getOldPassword(),
+            credentials.getNewPassword());
 
-        if (user == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
-        }
-        return user;
+    if (user == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
+    return user;
+  }
 
-    /**
-     * Retourne la liste de tous les utilisateurs pour l'administration.
-     *
-     * @return la liste des utilisateurs authentifiés
-     */
-    @GetMapping("/users")
-    @PreAuthorize("isAuthenticated()")
-    public List<AuthenticatedUser> getAllUsers() {
-        return userService.getAllUsersForAdmin();
-    }
+  /**
+   * Retourne la liste de tous les utilisateurs pour l'administration.
+   *
+   * @return la liste des utilisateurs authentifiés
+   */
+  @GetMapping("/users")
+  @PreAuthorize("isAuthenticated()")
+  public List<AuthenticatedUser> getAllUsers() {
+    return userService.getAllUsersForAdmin();
+  }
 
-    /**
-     * Ajoute le rôle administrateur à un utilisateur.
-     *
-     * @param email l'adresse email de l'utilisateur à promouvoir
-     */
-    @PutMapping("/addAdmin")
-    @PreAuthorize("isAuthenticated()")
-    public void addAdmin(@RequestBody String email) {
-        userService.addAdmin(email);
-    }
+  /**
+   * Ajoute le rôle administrateur à un utilisateur.
+   *
+   * @param email l'adresse email de l'utilisateur à promouvoir
+   */
+  @PutMapping("/addAdmin")
+  @PreAuthorize("isAuthenticated()")
+  public void addAdmin(@RequestBody String email) {
+    userService.addAdmin(email);
+  }
 
-    /**
-     * Retire le rôle administrateur à un utilisateur.
-     *
-     * @param email l'adresse email de l'utilisateur à rétrograder
-     */
-    @PutMapping("/removeAdmin")
-    @PreAuthorize("isAuthenticated()")
-    public void removeAdmin(@RequestBody String email) {
-        userService.removeAdmin(email);
-    }
+  /**
+   * Retire le rôle administrateur à un utilisateur.
+   *
+   * @param email l'adresse email de l'utilisateur à rétrograder
+   */
+  @PutMapping("/removeAdmin")
+  @PreAuthorize("isAuthenticated()")
+  public void removeAdmin(@RequestBody String email) {
+    userService.removeAdmin(email);
+  }
 }

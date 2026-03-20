@@ -8,36 +8,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Notification entity linked to a user account.
- */
+/** Notification entity linked to a user account. */
 @Entity
 @Table(name = "notification")
 @Data
 @NoArgsConstructor
 public class Notification {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_notification")
-    private Long idNotification;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id_notification")
+  private Long idNotification;
 
-    @Column(name = "message", nullable = false)
-    private String message;
+  @Column(name = "message", nullable = false)
+  private String message;
 
-    @Column(name = "date_envoi", nullable = false)
-    private LocalDateTime dateEnvoi = LocalDateTime.now();
+  @Column(name = "date_envoi", nullable = false)
+  private LocalDateTime dateEnvoi = LocalDateTime.now();
 
-    @Column(name = "est_lue", nullable = false)
-    private Boolean estLue = false;
+  @Column(name = "est_lue", nullable = false)
+  private Boolean estLue = false;
 
-    @ManyToOne
-    @JoinColumn(name = "id_membre", nullable = false)
-    private User user;
+  @ManyToOne
+  @JoinColumn(name = "id_membre", nullable = false)
+  private User user;
 }
