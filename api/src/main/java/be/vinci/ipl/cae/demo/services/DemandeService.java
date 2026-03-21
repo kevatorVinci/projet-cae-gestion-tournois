@@ -132,8 +132,7 @@ public class DemandeService {
         equipeRepo
             .findByResponsablePrincipalIdOrResponsableSecondaireId(
                 currentUser.getId(), currentUser.getId())
-            .orElseThrow(
-                () -> new SecurityException("Vous n'etes responsable d'aucune equipe."));
+            .orElseThrow(() -> new SecurityException("Vous n'etes responsable d'aucune equipe."));
 
     return getDemandesEnAttentePourEquipe(equipe.getId());
   }

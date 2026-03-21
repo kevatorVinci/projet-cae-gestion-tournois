@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Contrôleur pour gérer les appels liés aux indisponibilités.
- */
+/** Contrôleur pour gérer les appels liés aux indisponibilités. */
 @RestController
 @RequestMapping("/indisponibilites")
 public class IndisponibiliteController {
@@ -72,14 +70,17 @@ public class IndisponibiliteController {
       @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
 
-    Indisponibilite indisponibilite = indisponibiliteRepository.findById(id)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+    Indisponibilite indisponibilite =
+        indisponibiliteRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
 
     if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez supprimer que vos propres indisponibilites.");
+          HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
     }
 
     indisponibiliteRepository.delete(indisponibilite);

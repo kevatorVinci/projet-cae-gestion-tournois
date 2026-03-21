@@ -11,9 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/**
- * Classe de configuration pour initialiser les données de démo au démarrage.
- */
+/** Classe de configuration pour initialiser les données de démo au démarrage. */
 @Configuration
 public class DataInitializer {
 
@@ -21,8 +19,8 @@ public class DataInitializer {
    * Initialise les utilisateurs et équipes de démo si la DB est vide.
    *
    * @param equipeRepository le repository des équipes
-   * @param userRepository   le repository des utilisateurs
-   * @param passwordEncoder  l'encodeur de mots de passe
+   * @param userRepository le repository des utilisateurs
+   * @param passwordEncoder l'encodeur de mots de passe
    * @return un CommandLineRunner exécuté au démarrage
    */
   @Bean

@@ -14,9 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Entité représentant une période d'indisponibilité d'un joueur.
- */
+/** Entité représentant une période d'indisponibilité d'un joueur. */
 @Entity
 @Table(name = "indisponibilites")
 @Getter

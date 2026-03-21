@@ -11,9 +11,7 @@ import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-/**
- * Service for user authentication and profile management.
- */
+/** Service for user authentication and profile management. */
 @Service
 public class UserService {
 
@@ -171,8 +169,7 @@ public class UserService {
    * @return l'utilisateur mis à jour ou null
    */
   public AuthenticatedUser updateProfile(
-          String email, String specialty, String profileImage,
-          String oldPassword, String newPassword) {
+      String email, String specialty, String profileImage, String oldPassword, String newPassword) {
     User user = userRepository.findByEmail(email);
 
     if (user != null) {
@@ -180,9 +177,9 @@ public class UserService {
       user.setProfileImageUrl(profileImage);
 
       if (oldPassword != null
-              && !oldPassword.isBlank()
-              && newPassword != null
-              && !newPassword.isBlank()) {
+          && !oldPassword.isBlank()
+          && newPassword != null
+          && !newPassword.isBlank()) {
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
           user.setPassword(passwordEncoder.encode(newPassword));
         } else {
