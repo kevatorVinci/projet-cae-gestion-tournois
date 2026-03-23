@@ -19,9 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Tournoi } from '../../types';
 import BackButton from '../BoutonRetour';
 
-const fetchFilteredTournaments = async (
-  nom?: string,
-): Promise<Tournoi[]> => {
+const fetchFilteredTournaments = async (nom?: string): Promise<Tournoi[]> => {
   const params = new URLSearchParams();
   if (nom) params.append('nom', nom);
   const query = params.toString() ? `?${params.toString()}` : '';
