@@ -83,7 +83,7 @@ export async function markNotificationAsRead(
   const response = await fetch(`${API_BASE}/${notificationId}/lue`, {
     method: 'PATCH',
     headers: {
-      Authorization: token,
+      Authorization: `Bearer ${token}`,
     },
   });
 

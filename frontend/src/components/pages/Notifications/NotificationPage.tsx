@@ -366,7 +366,12 @@ export default function Notifications() {
 
                         <Typography
                           variant="caption"
-                          onClick={() => markOneRead(n.idNotification)}
+                          onClick={() =>
+                            markOneRead(
+                              n.idNotification ??
+                                (n as unknown as { id: number }).id,
+                            )
+                          }
                           sx={{
                             color: 'rgba(255,255,255,0.75)',
                             cursor: 'pointer',
