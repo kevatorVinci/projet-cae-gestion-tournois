@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 import org.springframework.context.annotation.Lazy;
@@ -202,5 +203,34 @@ public class TournoiService {
     }
     tournoi.setEtat("ANNULE");
     return tournoiRepository.save(tournoi);
+  }
+
+  /**
+   * Retrieves public tournaments filtered by optional state and/or name search.
+   * BROUILLON tournaments are never included (US 4, 5, 6, 8).
+   *
+   * @param etat optional state filter (OUVERT, EN_COURS, TERMINE, CLOTURE)
+   * @param nom optional name fragment for case-insensitive search
+   * @return matching public tournaments
+   */
+  public Iterable<Tournoi> getFiltered(String etat, String nom) {
+    boolean hasEtat = etat != null && !etat.isBlank();
+    boolean hasNom = nom != null && !nom.isBlank();
+
+    List<Tournoi> results;
+
+    if (hasEtat && hasNom) {
+      results = tournoiRepository.findByEtatAndNomContainingIgnoreCase(etat, nom);
+    } else if (hasEtat) {
+      results = tournoiRepository.findByEtat(etat);
+    } else if (hasNom) {
+      results = tournoiRepository.findByNomContainingIgnoreCase(nom);
+    } else {
+      results =
+          StreamSupport.stream(tournoiRepository.findAll().spliterator(), false)
+              .toList();
+    }
+
+    return results.stream().filter(t -> !"BROUILLON".equals(t.getEtat())).toList();
   }
 }
