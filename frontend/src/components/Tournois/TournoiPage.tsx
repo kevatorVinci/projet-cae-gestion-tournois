@@ -21,23 +21,21 @@ import BackButton from '../BoutonRetour';
 
 const fetchFilteredTournaments = async (
   nom?: string,
-  etat?: Tournoi['etat'] | 'TOUS',
 ): Promise<Tournoi[]> => {
   const params = new URLSearchParams();
   if (nom) params.append('nom', nom);
-  if (etat && etat !== 'TOUS') params.append('etat', etat);
   const query = params.toString() ? `?${params.toString()}` : '';
   const response = await fetch(`/api/tournois/${query}`);
   if (!response.ok) throw new Error('Failed to fetch tournaments');
   return response.json();
 };
 
+type CategoryFilter = 'TOUS' | 'EN_COURS' | 'A_VENIR' | 'PASSES';
+
 const TournoiPage = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [etatFilter, setEtatFilter] = useState<Tournoi['etat'] | 'TOUS'>(
-    'TOUS',
-  );
+  const [etatFilter, setEtatFilter] = useState<CategoryFilter>('TOUS');
   const [allTournaments, setAllTournaments] = useState<Tournoi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,10 +53,7 @@ const TournoiPage = () => {
       setLoading(true);
       try {
         setError(null);
-        const data = await fetchFilteredTournaments(
-          search || undefined,
-          etatFilter,
-        );
+        const data = await fetchFilteredTournaments(search || undefined);
         setAllTournaments(data);
       } catch {
         setAllTournaments([]);
@@ -70,11 +65,20 @@ const TournoiPage = () => {
     load();
   }, [search, etatFilter]);
 
-  const enCours = allTournaments.filter((t) => t.etat === 'EN_COURS');
-  const aVenir = allTournaments.filter(
+  const tournamentsByFilter = allTournaments.filter((t) => {
+    if (etatFilter === 'EN_COURS') return t.etat === 'EN_COURS';
+    if (etatFilter === 'A_VENIR') {
+      return t.etat === 'OUVERT' || t.etat === 'CLOTURE';
+    }
+    if (etatFilter === 'PASSES') return t.etat === 'TERMINE';
+    return true;
+  });
+
+  const enCours = tournamentsByFilter.filter((t) => t.etat === 'EN_COURS');
+  const aVenir = tournamentsByFilter.filter(
     (t) => t.etat === 'OUVERT' || t.etat === 'CLOTURE',
   );
-  const passes = allTournaments.filter((t) => t.etat === 'TERMINE');
+  const passes = tournamentsByFilter.filter((t) => t.etat === 'TERMINE');
 
   return (
     <Box
@@ -160,7 +164,7 @@ const TournoiPage = () => {
               value={etatFilter}
               label="État"
               onChange={(event) =>
-                setEtatFilter(event.target.value as Tournoi['etat'] | 'TOUS')
+                setEtatFilter(event.target.value as CategoryFilter)
               }
               sx={{
                 backgroundColor: '#111827',
@@ -168,11 +172,9 @@ const TournoiPage = () => {
               }}
             >
               <MenuItem value="TOUS">Tous</MenuItem>
-              <MenuItem value="OUVERT">Ouvert</MenuItem>
-              <MenuItem value="CLOTURE">Clôturé</MenuItem>
               <MenuItem value="EN_COURS">En cours</MenuItem>
-              <MenuItem value="TERMINE">Terminé</MenuItem>
-              <MenuItem value="ANNULE">Annulé</MenuItem>
+              <MenuItem value="A_VENIR">À venir</MenuItem>
+              <MenuItem value="PASSES">Passés</MenuItem>
             </Select>
           </FormControl>
         </Box>

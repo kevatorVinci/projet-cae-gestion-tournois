@@ -1,8 +1,10 @@
 package be.vinci.ipl.cae.demo.configuration;
 
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -26,10 +28,11 @@ public class DataInitializer {
   @Bean
   public CommandLineRunner initDatabase(
       EquipeRepository equipeRepository,
+      TournoiRepository tournoiRepository,
       UserRepository userRepository,
       PasswordEncoder passwordEncoder) {
     return args -> {
-      if (userRepository.count() > 0 || equipeRepository.count() > 0) {
+      if (userRepository.count() > 0 || equipeRepository.count() > 0 || tournoiRepository.count() > 0) {
         return;
       }
 
@@ -75,6 +78,36 @@ public class DataInitializer {
       // On sauvegarde d'abord sans équipe (les FK equipe sont nullable)
       userRepository.saveAll(List.of(lea, tom, ines, tibo));
 
+      // ── Tournois de démo ────────────────────────────────────────────────
+      Tournoi springCup = new Tournoi();
+      springCup.setNom("Vinci Spring Cup");
+      springCup.setDescription("Tournoi printanier ouvert aux nouvelles équipes.");
+      springCup.setDateDebut(LocalDate.parse("2026-04-05"));
+      springCup.setDateFin(LocalDate.parse("2026-04-07"));
+      springCup.setDateLimiteInscription(LocalDate.parse("2026-04-02"));
+      springCup.setEtat("OUVERT");
+      springCup.setNombresParticipantsMax(16);
+
+      Tournoi nightMasters = new Tournoi();
+      nightMasters.setNom("Night Masters");
+      nightMasters.setDescription("Compétition nocturne en BO3.");
+      nightMasters.setDateDebut(LocalDate.parse("2026-05-10"));
+      nightMasters.setDateFin(LocalDate.parse("2026-05-12"));
+      nightMasters.setDateLimiteInscription(LocalDate.parse("2026-05-06"));
+      nightMasters.setEtat("CLOTURE");
+      nightMasters.setNombresParticipantsMax(8);
+
+      Tournoi arenaFinals = new Tournoi();
+      arenaFinals.setNom("Arena Finals");
+      arenaFinals.setDescription("Finales annuelles de la Vinci Arena.");
+      arenaFinals.setDateDebut(LocalDate.parse("2026-03-01"));
+      arenaFinals.setDateFin(LocalDate.parse("2026-03-02"));
+      arenaFinals.setDateLimiteInscription(LocalDate.parse("2026-02-20"));
+      arenaFinals.setEtat("TERMINE");
+      arenaFinals.setNombresParticipantsMax(4);
+
+      tournoiRepository.saveAll(List.of(springCup, nightMasters, arenaFinals));
+
       // ── Équipes ───────────────────────────────────────────────────────────
       // TEAM_ALPHA : responsable principal = Lea
       Equipe teamAlpha = new Equipe();
@@ -102,6 +135,7 @@ public class DataInitializer {
       System.out.println("✅ DB initialisée :");
       System.out.println("   TEAM_ALPHA → Lea (resp. principal), Tom, Ines");
       System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
+      System.out.println("   Tournois → Vinci Spring Cup, Night Masters, Arena Finals");
     };
   }
 }
