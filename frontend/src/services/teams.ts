@@ -279,29 +279,3 @@ export async function getUserTeam(): Promise<Equipe | null> {
     return null;
   }
 }
-
-export async function register(credentials: {
-  email: string;
-  [key: string]: unknown;
-}) {
-  const response = await fetch('/api/auth/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials),
-  });
-  if (!response.ok) throw new Error('Registration failed');
-  return response.json();
-}
-
-export async function login(credentials: {
-  email: string;
-  [key: string]: unknown;
-}) {
-  const response = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials),
-  });
-  if (!response.ok) throw new Error('Login failed');
-  return response.json();
-}

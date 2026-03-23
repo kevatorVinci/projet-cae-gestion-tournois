@@ -39,7 +39,8 @@ describe('AdminPage', () => {
   });
 
   it('charge les joueurs et filtre la liste de recherche', async () => {
-    vi.mocked(fetch).mockImplementation(() =>
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockImplementation(() =>
       jsonResponse([
         {
           email: 'admin@vinci.be',

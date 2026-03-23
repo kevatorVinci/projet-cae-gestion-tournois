@@ -1,19 +1,35 @@
 /**
- * Service d'authentification (Inscriptions)
- * @param {Object} userData - Les données d'inscription de l'utilisateur
+ * Service d'authentification - Registration
+ * @param {Object} credentials - Les données d'inscription de l'utilisateur
  * @return {Promise<Object>} Un objet contenant l'utilisateur et son token
  */
-export const register = async (userData: unknown): Promise<unknown> => {
-  // On transtype pour accéder aux propriétés sans erreur ESLint 'any'
-  const data = userData as Record<string, unknown>;
+export async function register(credentials: {
+  email: string;
+  [key: string]: unknown;
+}) {
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
+  if (!response.ok) throw new Error('Registration failed');
+  return response.json();
+}
 
-  // Simulation d'une réponse réussie basée sur ce que vos tests attendent
-  return {
-    user: {
-      id: Math.floor(Math.random() * 1000),
-      email: data.email || 'test@vinci.be',
-      tag: data.tag || 'Player1',
-    },
-    token: 'fake-jwt-token-session-2026',
-  };
-};
+/**
+ * Service d'authentification - Login
+ * @param {Object} credentials - Les identifiants de connexion
+ * @return {Promise<Object>} Un objet contenant l'utilisateur et son token
+ */
+export async function login(credentials: {
+  email: string;
+  [key: string]: unknown;
+}) {
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
+  if (!response.ok) throw new Error('Login failed');
+  return response.json();
+}
