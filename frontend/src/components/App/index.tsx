@@ -18,6 +18,8 @@ import ProtectedRoute from '../routes/ProtectedRoute';
 import AdminRoute from '../routes/AdminRoute';
 import NonConnectePage from '../pages/PasAcces/NonConnectePage';
 import InterditPage from '../pages/PasAcces/InterditPage';
+import TournoiPage from '../Tournois/TournoiPage';
+import TournoiDetailPage from '../Tournois/TournoiDetailPage';
 
 const App = () => (
   <Router
@@ -39,6 +41,8 @@ const App = () => (
           }
         />
         <Route path="/equipes" element={<TeamsList />} />
+        <Route path="/tournois" element={<TournoiPage />} />
+        <Route path="/tournois/:id" element={<TournoiDetailPage />} />
         <Route
           path="/equipes/creer"
           element={

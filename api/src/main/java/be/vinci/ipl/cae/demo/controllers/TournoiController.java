@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,12 +34,18 @@ public class TournoiController {
   }
 
   /**
-   * Returns all public tournaments (not BROUILLON). Accessible by everyone including visitors (US 2
-   * & 3).
+   * Returns public tournaments filtered by optional state and/or name search.
+   * BROUILLON is never returned. Accessible by everyone (US 2, 3, 4, 5, 6, 8).
+   *
+   * @param etat optional state filter (OUVERT, EN_COURS, TERMINE, CLOTURE)
+   * @param nom  optional name fragment for case-insensitive search
+   * @return filtered list of public tournaments
    */
   @GetMapping("/")
-  public Iterable<Tournoi> getAllPublic() {
-    return tournoiService.getAllPublic();
+  public Iterable<Tournoi> getAllPublic(
+      @RequestParam(required = false) String etat,
+      @RequestParam(required = false) String nom) {
+    return tournoiService.getFiltered(etat, nom);
   }
 
   /** Returns all tournaments including BROUILLON. Reserved for admins. */
