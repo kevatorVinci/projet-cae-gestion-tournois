@@ -1,50 +1,40 @@
-/* eslint-disable no-irregular-whitespace */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import RegisterPage from '../../components/pages/RegisterPage';
 
-// 1. Mock de react-router-dom
+// 1. Mock react-router-dom
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual =
     await vi.importActual<typeof import('react-router-dom')>(
       'react-router-dom',
     );
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
+  return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// 2. Mock du service d'authentification
-const authServiceMock = {
-  register: vi.fn(),
-};
-
-vi.mock('../../../services/auth', () => ({
-  // Changed any[] to unknown[] to satisfy ESLint
-  register: (...args: unknown[]) => authServiceMock.register(...args),
+// 2. Mock teams service (called on mount)
+vi.mock('../../services/teams', () => ({
+  getAllEquipes: vi.fn().mockResolvedValue([]),
+  joinEquipe: vi.fn(),
 }));
 
-describe.skip('RegisterPage', () => {
+// 3. Mock global fetch (the component uses fetch directly)
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
+
+describe('RegisterPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const fillForm = () => {
+  const fillForm = async () => {
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'test@vinci.be' },
     });
     fireEvent.change(screen.getByLabelText(/mot de passe/i), {
       target: { value: 'password123' },
     });
-
-    const confirmInput = screen.queryByLabelText(/confirmer/i);
-    if (confirmInput) {
-      fireEvent.change(confirmInput, { target: { value: 'password123' } });
-    }
-
     fireEvent.change(screen.getByLabelText(/tag/i), {
       target: { value: 'Player1' },
     });
@@ -53,7 +43,7 @@ describe.skip('RegisterPage', () => {
   test('renders all form fields and submit button', () => {
     render(
       <MemoryRouter>
-                <RegisterPage />     {' '}
+        <RegisterPage />
       </MemoryRouter>,
     );
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
@@ -65,33 +55,47 @@ describe.skip('RegisterPage', () => {
   test('shows error when no avatar is selected', async () => {
     render(
       <MemoryRouter>
-                <RegisterPage />     {' '}
+        <RegisterPage />
       </MemoryRouter>,
     );
 
-    fillForm();
-    fireEvent.click(screen.getByRole('button', { name: /s'inscrire/i }));
+    await fillForm();
+
+    // Submit the form directly to bypass native HTML validation
+    const form = screen
+      .getByRole('button', { name: /s'inscrire/i })
+      .closest('form')!;
+    fireEvent.submit(form);
 
     expect(await screen.findByText(/choisir un avatar/i)).toBeInTheDocument();
   });
 
   test('navigates to /login on successful registration', async () => {
-    authServiceMock.register.mockResolvedValueOnce({
-      user: { id: 1, email: 'test@vinci.be' },
-      token: 'fake-token',
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        user: { id: 1, email: 'test@vinci.be' },
+        token: 'fake-token',
+      }),
     });
 
     render(
       <MemoryRouter>
-                <RegisterPage />     {' '}
+        <RegisterPage />
       </MemoryRouter>,
     );
 
-    fillForm();
+    await fillForm();
+
+    // Select an avatar
     const avatars = screen.getAllByRole('img');
     fireEvent.click(avatars[0]);
 
-    fireEvent.click(screen.getByRole('button', { name: /s'inscrire/i }));
+    const form = screen
+      .getByRole('button', { name: /s'inscrire/i })
+      .closest('form')!;
+    fireEvent.submit(form);
 
     await waitFor(
       () => {
@@ -102,33 +106,32 @@ describe.skip('RegisterPage', () => {
   });
 
   test('shows error when email already used (401)', async () => {
-    const errorResponse = {
-      response: {
-        status: 401,
-        data: "L'adresse email est déjà utilisée",
-      },
-    };
-
-    authServiceMock.register.mockRejectedValueOnce(errorResponse);
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+    });
 
     render(
       <MemoryRouter>
-                <RegisterPage />     {' '}
+        <RegisterPage />
       </MemoryRouter>,
     );
 
-    fillForm();
+    await fillForm();
 
     const avatars = screen.getAllByRole('img');
     fireEvent.click(avatars[0]);
 
-    const submitBtn = screen.getByRole('button', { name: /s'inscrire/i });
-    fireEvent.click(submitBtn);
+    const form = screen
+      .getByRole('button', { name: /s'inscrire/i })
+      .closest('form')!;
+    fireEvent.submit(form);
 
     await waitFor(
       () => {
-        const error = screen.queryByText(/déjà utilisé|déjà utilisée/i);
-        expect(error).toBeInTheDocument();
+        expect(
+          screen.getByText(/cette adresse email est déjà utilisée/i),
+        ).toBeInTheDocument();
       },
       { timeout: 3000 },
     );
