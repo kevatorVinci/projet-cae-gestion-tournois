@@ -1,15 +1,22 @@
-import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import {
-  Box,
   Container,
   Typography,
-  TextField,
-  Button,
+  Box,
   Paper,
-  Grid,
+  Button,
+  Stack,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
   Alert,
+  CircularProgress,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -17,304 +24,228 @@ import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 dayjs.locale('fr');
 
-import BackButton from '../BoutonRetour';
 import {
-  createTournament,
-  NewTournamentPayload,
-} from '../../services/tournois';
+  getMesIndisponibilites,
+  addIndisponibilite,
+  deleteIndisponibilite,
+  Period,
+} from '../../services/indisponibilites';
 
-/**
- * Page dedicated to the creation of a new tournament.
- * Uses Material UI DatePickers to select dates, styled like the Availability page.
- *
- * @return {JSX.Element} the tournament creation page
- */
-const CreateTournamentPage = () => {
+const DisponibilitesPage = () => {
   const navigate = useNavigate();
 
-  // Memory variables for text fields
-  const [nom, setNom] = useState('');
-  const [description, setDescription] = useState('');
-  const [nombresParticipantsMax, setNombresParticipantsMax] = useState<
-    number | ''
-  >('');
-
-  // ✨ NEW: Memory variables for dates using Dayjs (like in your profile)
-  const [dateDebut, setDateDebut] = useState<Dayjs | null>(null);
-  const [dateFin, setDateFin] = useState<Dayjs | null>(null);
-  const [dateLimiteInscription, setDateLimiteInscription] =
-    useState<Dayjs | null>(null);
-
+  const [periods, setPeriods] = useState<Period[]>([]);
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // ✨ NEW: Calculate tomorrow's date to block today and the past in the calendar
-  const tomorrow = dayjs().add(1, 'day');
+  useEffect(() => {
+    getMesIndisponibilites()
+      .then((data) => {
+        setPeriods(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Impossible de charger vos données.');
+        setLoading(false);
+      });
+  }, []);
 
-  /**
-   * Function called when the admin clicks the submit button.
-   *
-   * @param {FormEvent} e - the form submission event
-   */
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    // Verification: ensure all dates are selected
-    if (!dateDebut || !dateFin || !dateLimiteInscription) {
-      setError('Veuillez remplir toutes les dates du calendrier.');
+  const handleAddPeriod = async () => {
+    if (!startDate || !endDate) {
+      setError('Veuillez sélectionner une date de début et une date de fin.');
       return;
     }
-
-    // Verification: start date must be before end date
-    if (dateDebut.isAfter(dateFin)) {
+    if (startDate.isAfter(endDate)) {
       setError('La date de fin ne peut pas être avant la date de début.');
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError("Vous devez être connecté en tant qu'administrateur.");
-      return;
-    }
-
-    // We transform the Dayjs dates back into simple text ("YYYY-MM-DD") for the database
-    const payload: NewTournamentPayload = {
-      nom,
-      description,
-      dateDebut: dateDebut.format('YYYY-MM-DD'),
-      dateFin: dateFin.format('YYYY-MM-DD'),
-      dateLimiteInscription: dateLimiteInscription.format('YYYY-MM-DD'),
-      nombresParticipantsMax: Number(nombresParticipantsMax),
-    };
-
     try {
-      await createTournament(payload, token);
-      setSuccess('Le tournoi a été créé avec succès !');
-      // Redirect to the tournaments list after success
-      setTimeout(() => navigate('/admin/tournaments'), 2000);
-    } catch (err) {
-      setError('Erreur lors de la création du tournoi.');
+      const newPeriod = await addIndisponibilite(
+        startDate.format('YYYY-MM-DD'),
+        endDate.format('YYYY-MM-DD'),
+      );
+      setPeriods([...periods, newPeriod]);
+      setStartDate(null);
+      setEndDate(null);
+      setError('');
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setError(
+        `Erreur: ${error?.response?.data?.message || error?.message || 'inconnue'}`,
+      );
     }
   };
 
-  // Custom style for the normal dark text inputs
-  const darkInputStyle = {
-    backgroundColor: '#111827',
-    borderRadius: 1,
-    '& .MuiOutlinedInput-root': {
-      color: 'white',
-      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-      '&:hover fieldset': { borderColor: '#e8822a' },
-      '&.Mui-focused fieldset': { borderColor: '#e8822a' },
-    },
-    '& .MuiInputBase-input::placeholder': {
-      color: 'rgba(255,255,255,0.4)',
-      opacity: 1,
-    },
-  };
-
-  // ✨ NEW: Custom style for the DatePickers (inspired by your DisponibilitesPage)
-  const datePickerSlotProps = {
-    textField: {
-      fullWidth: true,
-      required: true,
-      sx: {
-        backgroundColor: '#111827',
-        borderRadius: 1,
-        input: { color: 'white' },
-        label: { color: '#e8822a' }, // Orange label
-        '& .MuiOutlinedInput-root': {
-          '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-          '&:hover fieldset': { borderColor: '#e8822a' },
-          '&.Mui-focused fieldset': { borderColor: '#e8822a' },
-        },
-        // Makes the little calendar icon white instead of grey/black
-        svg: { color: 'white' },
-      },
-    },
+  const handleDeletePeriod = async (idToRemove: number) => {
+    try {
+      await deleteIndisponibilite(idToRemove);
+      setPeriods(periods.filter((period) => period.id !== idToRemove));
+    } catch (err) {
+      setError('Erreur lors de la suppression.');
+    }
   };
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 64px)',
         py: 5,
-        backgroundColor: '#080b14',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        backgroundColor: 'background.default',
       }}
     >
-      {/* Background radial gradient */}
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'radial-gradient(ellipse 70% 40% at 50% -5%, rgba(30,58,95,0.4), transparent)',
-          pointerEvents: 'none',
-        }}
-      />
+      <Container maxWidth="md">
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/profil')}
+          sx={{ mb: 3, color: '#e8822a' }}
+        >
+          Retour au profil
+        </Button>
 
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
-        <Box sx={{ mb: 4, width: '100%' }}>
-          <BackButton />
-        </Box>
+        <Typography variant="h4" color="white" fontWeight={700} gutterBottom>
+          Mes Indisponibilités 📅
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          Indique ici les périodes où tu ne pourras pas participer aux matchs.
+        </Typography>
 
-        {/* The Dark Centered Form Box */}
         <Paper
+          variant="outlined"
           sx={{
-            p: { xs: 3, md: 5 },
-            borderRadius: 3,
-            backgroundColor: '#1a2540',
-            border: '1px solid rgba(255,255,255,0.05)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-            maxWidth: 700,
-            margin: '0 auto',
+            p: 4,
+            mb: 4,
+            borderRadius: 2,
+            backgroundColor: '#111827',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
-          <Typography
-            variant="h4"
-            fontWeight={800}
-            mb={4}
-            color="white"
-            textAlign="center"
-          >
-            Créer un tournoi
+          <Typography variant="h6" color="white" gutterBottom>
+            Ajouter une période
           </Typography>
-
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
-          {success && (
-            <Alert severity="success" sx={{ mb: 3 }}>
-              {success}
-            </Alert>
-          )}
 
-          <form onSubmit={handleSubmit}>
-            <Box mb={3}>
-              <Typography variant="body2" mb={1} color="rgba(255,255,255,0.7)">
-                Nom du tournoi *
-              </Typography>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Ex: Vinci Winter Cup 2026"
-                value={nom}
-                onChange={(e) => setNom(e.target.value)}
-                required
-                size="small"
-                sx={darkInputStyle}
-              />
-            </Box>
-
-            <Box mb={4}>
-              <Typography variant="body2" mb={1} color="rgba(255,255,255,0.7)">
-                Description *
-              </Typography>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Règles spécifiques, récompenses, format..."
-                multiline
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-                sx={darkInputStyle}
-              />
-            </Box>
-
-            {/* ✨ NEW: We wrap the calendar part in LocalizationProvider */}
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-              <Grid container spacing={3} mb={4} alignItems="center">
-                {/* Max Teams Input */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Nombre max d'équipes *"
-                    fullWidth
-                    variant="outlined"
-                    type="number"
-                    placeholder="Ex: 16"
-                    value={nombresParticipantsMax}
-                    onChange={(e) =>
-                      setNombresParticipantsMax(Number(e.target.value))
-                    }
-                    required
-                    sx={{
-                      ...darkInputStyle,
-                      label: { color: 'rgba(255,255,255,0.7)' },
-                      '& label.Mui-focused': { color: '#e8822a' },
-                    }}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{ min: 1 }}
-                  />
-                </Grid>
-
-                {/* Registration Deadline Picker */}
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    label="Date limite d'inscription *"
-                    value={dateLimiteInscription}
-                    onChange={(val: Dayjs | null) =>
-                      setDateLimiteInscription(val)
-                    }
-                    minDate={tomorrow}
-                    slotProps={datePickerSlotProps}
-                  />
-                </Grid>
-
-                {/* Start Date Picker */}
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    label="Date de début *"
-                    value={dateDebut}
-                    onChange={(val: Dayjs | null) => setDateDebut(val)}
-                    minDate={tomorrow} // Blocks past & today
-                    slotProps={datePickerSlotProps}
-                  />
-                </Grid>
-
-                {/* End Date Picker */}
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    label="Date de fin *"
-                    value={dateFin}
-                    onChange={(val: Dayjs | null) => setDateFin(val)}
-                    minDate={dateDebut || tomorrow} // End date cannot be before start date
-                    slotProps={datePickerSlotProps}
-                  />
-                </Grid>
-              </Grid>
-            </LocalizationProvider>
-
-            {/* Orange Submit Button */}
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{
-                backgroundColor: '#e8822a',
-                color: 'white',
-                py: 1.5,
-                fontWeight: 'bold',
-                fontSize: '1rem',
-                '&:hover': { backgroundColor: '#c86e20' },
-              }}
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+            {' '}
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={3}
+              alignItems="center"
             >
-              CRÉER LE TOURNOI
-            </Button>
-          </form>
+              <DatePicker
+                label="Date de début"
+                value={startDate}
+                onChange={(val: Dayjs | null) => setStartDate(val)}
+                disablePast
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    sx: {
+                      input: { color: 'white' },
+                      label: { color: '#e8822a' },
+                    },
+                  },
+                }}
+              />
+              <DatePicker
+                label="Date de fin"
+                value={endDate}
+                onChange={(val: Dayjs | null) => setEndDate(val)}
+                disablePast
+                minDate={startDate || dayjs()}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    sx: {
+                      input: { color: 'white' },
+                      label: { color: '#e8822a' },
+                    },
+                  },
+                }}
+              />
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddPeriod}
+                sx={{
+                  py: 1.5,
+                  px: 4,
+                  backgroundColor: '#e8822a',
+                  '&:hover': { backgroundColor: '#c86e20' },
+                }}
+              >
+                Ajouter
+              </Button>
+            </Stack>
+          </LocalizationProvider>
+        </Paper>
+
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 4,
+            borderRadius: 2,
+            backgroundColor: '#111827',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <Typography variant="h6" color="white" gutterBottom>
+            Mes absences prévues
+          </Typography>
+
+          {loading ? (
+            <CircularProgress sx={{ color: '#e8822a', mt: 2 }} />
+          ) : periods.length === 0 ? (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 2, fontStyle: 'italic' }}
+            >
+              Tu n'as aucune indisponibilité de prévue. Tu es prêt à combattre !
+              ⚔️
+            </Typography>
+          ) : (
+            <List>
+              {periods.map((period) => (
+                <ListItem
+                  key={period.id}
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleDeletePeriod(period.id)}
+                      sx={{ color: '#d32f2f' }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  }
+                  sx={{
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: 1,
+                    mb: 1,
+                    backgroundColor: 'rgba(255,255,255,0.02)',
+                  }}
+                >
+                  <ListItemText
+                    primary={`Du ${new Date(period.dateDebut).toLocaleDateString('fr-FR')} au ${new Date(period.dateFin).toLocaleDateString('fr-FR')}`}
+                    primaryTypographyProps={{ color: 'white', fontWeight: 500 }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
         </Paper>
       </Container>
     </Box>
   );
 };
 
-export default CreateTournamentPage;
+export default DisponibilitesPage;

@@ -10,21 +10,17 @@ import {
   Grid,
   Alert,
 } from '@mui/material';
-
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 dayjs.locale('fr');
-
 import BackButton from '../BoutonRetour';
 import {
   createTournament,
   NewTournamentPayload,
 } from '../../services/tournois';
-
-// ✨ NEW: We import the UserContext to get the real admin token
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType } from '../../types';
 
