@@ -75,17 +75,18 @@ describe('ProfilePage', () => {
       </MemoryRouter>,
     );
 
+    fireEvent.change(screen.getByLabelText(/mot de passe actuel/i), {
+      target: { value: 'AncienPass!123' },
+    });
     fireEvent.change(screen.getByLabelText(/nouveau mot de passe/i), {
-      target: { value: 'nouveauMotDePasse123' },
+      target: { value: 'NouveauPass!123' },
     });
     fireEvent.change(screen.getByLabelText(/confirmer le mot de passe/i), {
-      target: { value: 'motDePasseDifferent' },
+      target: { value: 'DifferentPass!123' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /sauvegarder/i }));
-
     await waitFor(() => {
       expect(
-        screen.getByText(/les nouveaux mots de passe ne correspondent pas !/i),
+        screen.getByText(/les mots de passe ne correspondent pas/i),
       ).toBeInTheDocument();
     });
   });
