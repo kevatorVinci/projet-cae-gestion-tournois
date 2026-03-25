@@ -85,7 +85,7 @@ describe('ProfilePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/les nouveaux mots de passe ne correspondent pas/i),
+        screen.getByText(/les nouveaux mots de passe ne correspondent pas !/i),
       ).toBeInTheDocument();
     });
   });
