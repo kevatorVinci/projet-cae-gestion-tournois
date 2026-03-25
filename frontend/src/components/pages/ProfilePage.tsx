@@ -81,6 +81,51 @@ export default function ProfilePage() {
     'crockmou.jpg',
   ];
 
+  // 🧠 1. Calcul de la force du nouveau mot de passe
+  const calculateStrength = (pwd: string) => {
+    let score = 0;
+    if (!pwd) return score;
+    if (pwd.length >= 8) score += 1;
+    if (/[a-z]/.test(pwd)) score += 1;
+    if (/[A-Z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 1;
+    return score;
+  };
+
+  const strengthScore = calculateStrength(newPassword);
+
+  // 🎨 2. Détermination des couleurs de la jauge
+  let barColor = 'transparent';
+  let strengthLabel = '';
+  let barWidth = '0%';
+
+  if (newPassword.length > 0) {
+    if (strengthScore <= 2) {
+      barColor = '#ef4444';
+      strengthLabel = 'Mot de passe faible ❌';
+      barWidth = '33%';
+    } else if (strengthScore === 3 || strengthScore === 4) {
+      barColor = '#f97316';
+      strengthLabel = 'Mot de passe moyen ⚠️';
+      barWidth = '66%';
+    } else if (strengthScore === 5) {
+      barColor = '#22c55e';
+      strengthLabel = 'Mot de passe fort ✅';
+      barWidth = '100%';
+    }
+  }
+
+  // 🛡️ 3. Logique de blocage du bouton
+  const isChangingPassword = newPassword.length > 0;
+  // Si on veut changer de mot de passe, il faut que le score soit à 5 ET que la confirmation corresponde
+  const isPasswordValid =
+    strengthScore === 5 && newPassword === confirmPassword;
+  // On peut sauvegarder SI : on ne change PAS de mot de passe OU ALORS on le change correctement (avec l'ancien tapé)
+  const canSubmit =
+    !isChangingPassword ||
+    (isChangingPassword && isPasswordValid && oldPassword.length > 0);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -150,7 +195,6 @@ export default function ProfilePage() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
-        // Dégradé sombre à la place du background image
         background:
           'radial-gradient(ellipse 70% 45% at 50% 0%, rgba(17,43,79,0.6), transparent), #080b14',
       }}
@@ -308,7 +352,7 @@ export default function ProfilePage() {
             />
           </Box>
 
-          <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid container spacing={2} sx={{ mb: 1 }}>
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Nouveau mot de passe"
@@ -357,15 +401,109 @@ export default function ProfilePage() {
             </Grid>
           </Grid>
 
+          {/* 📊 4. La Jauge (affichée uniquement si l'utilisateur commence à taper un nouveau mot de passe) */}
+          {newPassword.length > 0 && (
+            <Box sx={{ mb: 4, mt: 1 }}>
+              <Box
+                sx={{
+                  height: '6px',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  sx={{
+                    height: '100%',
+                    width: barWidth,
+                    backgroundColor: barColor,
+                    transition: 'all 0.3s ease-in-out',
+                  }}
+                />
+              </Box>
+
+              <Typography
+                variant="caption"
+                sx={{ color: barColor, mt: 0.5, display: 'block' }}
+              >
+                {strengthLabel}
+                {strengthScore === 5 &&
+                  newPassword !== confirmPassword &&
+                  ' (Les mots de passe ne correspondent pas)'}
+              </Typography>
+
+              {strengthScore < 5 && (
+                <Box
+                  component="ul"
+                  sx={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    mt: 1,
+                    pl: 2.5,
+                    m: 0,
+                  }}
+                >
+                  <li
+                    style={{
+                      color: newPassword.length >= 8 ? '#22c55e' : 'inherit',
+                    }}
+                  >
+                    8 caractères minimum
+                  </li>
+                  <li
+                    style={{
+                      color: /[A-Z]/.test(newPassword) ? '#22c55e' : 'inherit',
+                    }}
+                  >
+                    Une majuscule
+                  </li>
+                  <li
+                    style={{
+                      color: /[a-z]/.test(newPassword) ? '#22c55e' : 'inherit',
+                    }}
+                  >
+                    Une minuscule
+                  </li>
+                  <li
+                    style={{
+                      color: /[0-9]/.test(newPassword) ? '#22c55e' : 'inherit',
+                    }}
+                  >
+                    Un chiffre
+                  </li>
+                  <li
+                    style={{
+                      color: /[^a-zA-Z0-9]/.test(newPassword)
+                        ? '#22c55e'
+                        : 'inherit',
+                    }}
+                  >
+                    Un caractère spécial
+                  </li>
+                </Box>
+              )}
+            </Box>
+          )}
+
           <Button
             type="submit"
             variant="contained"
             fullWidth
+            disabled={!canSubmit} // 🛑 Bloque intelligemment le bouton
             sx={{
-              backgroundColor: '#e8822a',
-              '&:hover': { backgroundColor: '#c86e20' },
+              backgroundColor: canSubmit
+                ? '#e8822a'
+                : 'rgba(255, 255, 255, 0.12)',
+              color: canSubmit ? 'white' : 'rgba(255, 255, 255, 0.3)',
+              '&:hover': {
+                backgroundColor: canSubmit
+                  ? '#c86e20'
+                  : 'rgba(255, 255, 255, 0.12)',
+              },
               padding: 1.5,
               fontSize: '1.1rem',
+              mt: newPassword.length > 0 ? 0 : 3, // Ajuste la marge si la jauge n'est pas affichée
             }}
           >
             Sauvegarder les modifications

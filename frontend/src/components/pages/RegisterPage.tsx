@@ -53,6 +53,41 @@ export default function RegisterPage() {
     setShowPassword(!showPassword);
   };
 
+  // 🧠 1. Calcul de la force du mot de passe
+  const calculateStrength = (pwd: string) => {
+    let score = 0;
+    if (!pwd) return score;
+    if (pwd.length >= 8) score += 1;
+    if (/[a-z]/.test(pwd)) score += 1;
+    if (/[A-Z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 1;
+    return score;
+  };
+
+  const strengthScore = calculateStrength(password);
+
+  // 🎨 2. Détermination du style de la jauge
+  let barColor = 'transparent';
+  let strengthLabel = '';
+  let barWidth = '0%';
+
+  if (password.length > 0) {
+    if (strengthScore <= 2) {
+      barColor = '#ef4444'; // Rouge
+      strengthLabel = 'Mot de passe faible ❌';
+      barWidth = '33%';
+    } else if (strengthScore === 3 || strengthScore === 4) {
+      barColor = '#f97316'; // Orange
+      strengthLabel = 'Mot de passe moyen ⚠️';
+      barWidth = '66%';
+    } else if (strengthScore === 5) {
+      barColor = '#22c55e'; // Vert
+      strengthLabel = 'Mot de passe fort ✅';
+      barWidth = '100%';
+    }
+  }
+
   const specialties = [
     { name: 'Architecte', icon: '📐' },
     { name: 'Exécuteur', icon: '🔨' },
@@ -211,6 +246,91 @@ export default function RegisterPage() {
             />
           </Box>
 
+          {/* 📊 3. L'affichage visuel de la barre de progression (Inséré sous le mot de passe) */}
+          <Box sx={{ marginBottom: 3 }}>
+            <Box
+              sx={{
+                height: '6px',
+                width: '100%',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{
+                  height: '100%',
+                  width: barWidth,
+                  backgroundColor: barColor,
+                  transition: 'all 0.3s ease-in-out',
+                }}
+              />
+            </Box>
+
+            <Typography
+              variant="caption"
+              sx={{
+                color: barColor,
+                mt: 0.5,
+                display: 'block',
+                minHeight: '20px',
+              }}
+            >
+              {strengthLabel}
+            </Typography>
+
+            {password.length > 0 && strengthScore < 5 && (
+              <Box
+                component="ul"
+                sx={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  mt: 1,
+                  pl: 2.5,
+                  m: 0,
+                }}
+              >
+                <li
+                  style={{
+                    color: password.length >= 8 ? '#22c55e' : 'inherit',
+                  }}
+                >
+                  8 caractères minimum
+                </li>
+                <li
+                  style={{
+                    color: /[A-Z]/.test(password) ? '#22c55e' : 'inherit',
+                  }}
+                >
+                  Une majuscule
+                </li>
+                <li
+                  style={{
+                    color: /[a-z]/.test(password) ? '#22c55e' : 'inherit',
+                  }}
+                >
+                  Une minuscule
+                </li>
+                <li
+                  style={{
+                    color: /[0-9]/.test(password) ? '#22c55e' : 'inherit',
+                  }}
+                >
+                  Un chiffre
+                </li>
+                <li
+                  style={{
+                    color: /[^a-zA-Z0-9]/.test(password)
+                      ? '#22c55e'
+                      : 'inherit',
+                  }}
+                >
+                  Un caractère spécial
+                </li>
+              </Box>
+            )}
+          </Box>
+
           <Box sx={{ marginBottom: 2 }}>
             <TextField
               label="Tag (Pseudo)"
@@ -330,9 +450,15 @@ export default function RegisterPage() {
             type="submit"
             variant="contained"
             fullWidth
+            disabled={strengthScore !== 5} // 🛑 Bloque le bouton si le mot de passe est faible
             sx={{
-              backgroundColor: '#e8822a',
-              '&:hover': { backgroundColor: '#c86e20' },
+              backgroundColor:
+                strengthScore === 5 ? '#e8822a' : 'rgba(255, 255, 255, 0.12)',
+              color: strengthScore === 5 ? 'white' : 'rgba(255, 255, 255, 0.3)',
+              '&:hover': {
+                backgroundColor:
+                  strengthScore === 5 ? '#c86e20' : 'rgba(255, 255, 255, 0.12)',
+              },
               padding: 1.5,
               fontSize: '1.1rem',
             }}

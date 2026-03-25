@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
+import jakarta.validation.Valid; // ← 1. NOUVEL IMPORT OBLIGATOIRE
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,7 +47,8 @@ public class AuthController {
    * @return authenticated user with token
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@RequestBody Credentials credentials) {
+  // ← 2. AJOUT DE @Valid ICI
+  public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) { 
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
@@ -64,6 +66,8 @@ public class AuthController {
    * @return authenticated user with token
    */
   @PostMapping("/login")
+  // ⚠️ ATTENTION : Pas de @Valid ici ! 
+  // (Sinon les anciens utilisateurs avec des mots de passe faibles ne pourraient plus se connecter)
   public AuthenticatedUser login(@RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -83,7 +87,8 @@ public class AuthController {
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
-  public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
+  // ← 3. AJOUT DE @Valid ICI
+  public AuthenticatedUser updateProfile(@RequestBody @Valid Credentials credentials) {
     AuthenticatedUser user =
         userService.updateProfile(
             credentials.getEmail(),
