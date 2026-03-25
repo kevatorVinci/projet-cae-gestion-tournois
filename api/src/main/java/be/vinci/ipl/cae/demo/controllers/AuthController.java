@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -65,19 +66,19 @@ public class AuthController {
   /**
    * Porte d'entrée pour modifier le profil.
    *
-   * @param credentials le colis envoyé par React
+   * @param dto le colis envoyé par React
    * @return le profil mis à jour avec un nouveau token
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
-  public AuthenticatedUser updateProfile(@RequestBody @Valid Credentials credentials) {
+  public AuthenticatedUser updateProfile(@RequestBody @Valid UpdateProfileDto dto) {
     AuthenticatedUser user =
         userService.updateProfile(
-            credentials.getEmail(),
-            credentials.getSpecialty(),
-            credentials.getProfileImage(),
-            credentials.getOldPassword(),
-            credentials.getNewPassword());
+            dto.getEmail(),
+            dto.getSpecialty(),
+            dto.getProfileImage(),
+            dto.getOldPassword(),
+            dto.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
