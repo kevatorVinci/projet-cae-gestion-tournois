@@ -47,3 +47,34 @@ export const createTournament = async (
   const data = await response.json();
   return data;
 };
+
+/**
+ * Function to fetch all tournaments from the backend, including the secret drafts.
+ * This is strictly reserved for administrators.
+ *
+ * @param {string} token - the security badge (JWT token) of the logged-in admin to prove their identity
+ * @return {Promise<any>} a list containing every tournament from the database
+ */
+export const fetchAllTournaments = async (token: string) => {
+  // 1. We prepare the request settings with the security badge
+  const requestOptions = {
+    method: 'GET',
+    headers: {
+      Authorization: token, // We prove we are an admin
+    },
+  };
+
+  // 2. We send the request to the specific admin URL "/api/tournois/all"
+  const response = await fetch('/api/tournois/all', requestOptions);
+
+  // 3. We check if the server refused (e.g., if the user is not a real admin)
+  if (!response.ok) {
+    throw new Error(
+      'Failed to fetch all tournaments. You might not have admin rights.',
+    );
+  }
+
+  // 4. We read the data (the list of tournaments) and return it
+  const data = await response.json();
+  return data;
+};

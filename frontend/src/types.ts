@@ -79,7 +79,7 @@ interface Tournoi {
   dateDebut: string;
   dateFin: string;
   dateLimiteInscription: string;
-  etat: 'OUVERT' | 'CLOTURE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
+  etat: 'BROUILLON' | 'OUVERT' | 'CLOTURE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
   nombresParticipantsMax?: number;
 }
 
