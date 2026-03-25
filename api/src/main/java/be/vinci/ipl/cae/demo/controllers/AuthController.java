@@ -4,7 +4,7 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
-import jakarta.validation.Valid; // ← 1. NOUVEL IMPORT OBLIGATOIRE
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,14 +32,6 @@ public class AuthController {
     this.userService = userService;
   }
 
-  private boolean isInvalidCredentials(Credentials credentials) {
-    return credentials == null
-        || credentials.getEmail() == null
-        || credentials.getEmail().isBlank()
-        || credentials.getPassword() == null
-        || credentials.getPassword().isBlank();
-  }
-
   /**
    * Register a new user.
    *
@@ -47,11 +39,7 @@ public class AuthController {
    * @return authenticated user with token
    */
   @PostMapping("/register")
-  // ← 2. AJOUT DE @Valid ICI
   public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) { 
-    if (isInvalidCredentials(credentials)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-    }
     AuthenticatedUser user = userService.register(credentials);
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -66,12 +54,7 @@ public class AuthController {
    * @return authenticated user with token
    */
   @PostMapping("/login")
-  // ⚠️ ATTENTION : Pas de @Valid ici ! 
-  // (Sinon les anciens utilisateurs avec des mots de passe faibles ne pourraient plus se connecter)
-  public AuthenticatedUser login(@RequestBody Credentials credentials) {
-    if (isInvalidCredentials(credentials)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-    }
+  public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
@@ -87,7 +70,6 @@ public class AuthController {
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
-  // ← 3. AJOUT DE @Valid ICI
   public AuthenticatedUser updateProfile(@RequestBody @Valid Credentials credentials) {
     AuthenticatedUser user =
         userService.updateProfile(

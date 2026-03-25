@@ -79,7 +79,7 @@ public class TournoiController {
   /** Updates a tournament. Only allowed in BROUILLON state. Reserved for admins (Could US 15). */
   @PutMapping("/{id}")
   @IsAdmin
-  public Tournoi update(@PathVariable Long id, @RequestBody Tournoi payload) {
+  public Tournoi update(@PathVariable Long id, @Valid @RequestBody Tournoi payload) {
     Tournoi updated = tournoiService.update(id, payload);
     if (updated == null) {
       throw new ResponseStatusException(
