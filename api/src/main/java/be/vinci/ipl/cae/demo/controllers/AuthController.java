@@ -58,7 +58,11 @@ public class AuthController {
   public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+      boolean emailExists = userService.readOneFromEmail(credentials.getEmail()) != null;
+      String errorMessage = emailExists 
+          ? "Le mot de passe est incorrect." 
+          : "Cet email n'existe pas.";
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
   }
