@@ -7,7 +7,7 @@ import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Collection;
 import org.springframework.stereotype.Service;
 
 /** Service managing all business logic related to team registrations for tournaments. */
@@ -17,21 +17,13 @@ public class InscriptionEquipeTournoiService {
   private final InscriptionEquipeTournoiRepository inscriptionRepository;
   private final TournoiRepository tournoiRepository;
   private final EquipeRepository equipeRepository;
-  private final TournoiService tournoiService; // ← ajout pour réutiliser closeRegistrations
+  private final TournoiService tournoiService;
 
-  /**
-   * Constructs an InscriptionEquipeTournoiService with the required repositories.
-   *
-   * @param inscriptionRepository the inscription repository
-   * @param tournoiRepository the tournament repository
-   * @param equipeRepository the team repository
-   * @param tournoiService the tournament service
-   */
   public InscriptionEquipeTournoiService(
-      InscriptionEquipeTournoiRepository inscriptionRepository,
-      TournoiRepository tournoiRepository,
-      EquipeRepository equipeRepository,
-      TournoiService tournoiService) {
+          InscriptionEquipeTournoiRepository inscriptionRepository,
+          TournoiRepository tournoiRepository,
+          EquipeRepository equipeRepository,
+          TournoiService tournoiService) {
     this.inscriptionRepository = inscriptionRepository;
     this.tournoiRepository = tournoiRepository;
     this.equipeRepository = equipeRepository;
@@ -39,10 +31,7 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Retrieves all registrations for a given tournament.
-   *
-   * @param tournoiId the tournament id
-   * @return all registrations for that tournament, or null if tournament not found
+   * Récupère toutes les inscriptions pour un tournoi donné.
    */
   public Iterable<InscriptionEquipeTournoi> getAllByTournoi(Long tournoiId) {
     Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
@@ -53,24 +42,7 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Retrieves only validated (accepted) registrations for a given tournament.
-   *
-   * @param tournoiId the tournament id
-   * @return validated registrations, or null if tournament not found
-   */
-  public Iterable<InscriptionEquipeTournoi> getAcceptedByTournoi(Long tournoiId) {
-    Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
-    if (tournoi == null) {
-      return null;
-    }
-    return inscriptionRepository.findByTournoiAndEtat(tournoi, "VALIDEE");
-  }
-
-  /**
-   * Retrieves all registrations for a given team.
-   *
-   * @param equipeId the team id
-   * @return all registrations for that team, or null if team not found
+   * Récupère toutes les inscriptions d'une équipe spécifique.
    */
   public Iterable<InscriptionEquipeTournoi> getAllByEquipe(Long equipeId) {
     Equipe equipe = equipeRepository.findById(equipeId).orElse(null);
@@ -81,58 +53,17 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Retrieves one registration by id.
+   * Inscrit une équipe à un tournoi.
+   * L'inscription est directe et définitive si le tournoi est OUVERT.
    *
-   * @param inscriptionId the registration id
-   * @return the registration, or null if not found
-   */
-  public InscriptionEquipeTournoi getById(Long inscriptionId) {
-    return inscriptionRepository.findById(inscriptionId).orElse(null);
-  }
-
-  /**
-   * Retrieves only pending registrations (EN_ATTENTE) for a given tournament.
-   *
-   * @param tournoiId the tournament id
-   * @return pending registrations, or null if tournament not found
-   */
-  public Iterable<InscriptionEquipeTournoi> getPendingByTournoi(Long tournoiId) {
-    Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
-    if (tournoi == null) {
-      return null;
-    }
-    return inscriptionRepository.findByTournoiAndEtat(tournoi, "EN_ATTENTE");
-  }
-
-  /**
-   * Retrieves only refused registrations (REFUSEE) for a given tournament.
-   *
-   * @param tournoiId the tournament id
-   * @return refused registrations, or null if tournament not found
-   */
-  public Iterable<InscriptionEquipeTournoi> getRefusedByTournoi(Long tournoiId) {
-    Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
-    if (tournoi == null) {
-      return null;
-    }
-    return inscriptionRepository.findByTournoiAndEtat(tournoi, "REFUSEE");
-  }
-
-  /**
-   * Registers a team for a tournament (state → EN_ATTENTE). Only allowed if the tournament is in
-   * OUVERT state and the team is not already registered.
-   *
-   * @param tournoiId the tournament id
-   * @param equipeId the team id
-   * @return the created registration, or null if not allowed
+   * @param tournoiId l'ID du tournoi
+   * @param equipeId l'ID de l'équipe
+   * @return l'inscription créée, ou null si l'action est interdite
    */
   public InscriptionEquipeTournoi register(Long tournoiId, Long equipeId) {
     Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
-    if (tournoi == null) {
-      return null;
-    }
-    if (!"OUVERT".equals(tournoi.getEtat())) {
-      return null;
+    if (tournoi == null || !"OUVERT".equals(tournoi.getEtat())) {
+      return null; // Le tournoi n'existe pas ou n'est plus ouvert aux inscriptions
     }
 
     Equipe equipe = equipeRepository.findById(equipeId).orElse(null);
@@ -140,139 +71,90 @@ public class InscriptionEquipeTournoiService {
       return null;
     }
 
+    // On bloque si l'équipe est déjà inscrite
     if (inscriptionRepository.findByTournoiAndEquipe(tournoi, equipe).isPresent()) {
       return null;
     }
 
+    // On crée l'inscription
     InscriptionEquipeTournoi inscription = new InscriptionEquipeTournoi();
     inscription.setTournoi(tournoi);
     inscription.setEquipe(equipe);
     inscription.setDateInscription(LocalDate.now());
-    inscription.setEtat("EN_ATTENTE");
-    return inscriptionRepository.save(inscription);
-  }
 
-  /**
-   * Validates a registration (EN_ATTENTE → VALIDEE). If the max number of participants is reached
-   * after validation, registrations are automatically closed using TournoiService.
-   *
-   * @param inscriptionId the registration id
-   * @return the updated registration, or null if not found or not in EN_ATTENTE state
-   */
-  public InscriptionEquipeTournoi validate(Long inscriptionId) {
-    InscriptionEquipeTournoi inscription = getInscriptionInState(inscriptionId, "EN_ATTENTE");
-    if (inscription == null) {
-      return null;
-    }
+    // (Note: Si ton entité InscriptionEquipeTournoi possède encore le champ 'etat',
+    // tu devrais le supprimer du fichier InscriptionEquipeTournoi.java)
 
-    inscription.setEtat("VALIDEE");
     InscriptionEquipeTournoi saved = inscriptionRepository.save(inscription);
 
-    // ── Clôture automatique si le max d'équipes VALIDEES est atteint ──
-    Tournoi tournoi = inscription.getTournoi();
+    // ── Clôture automatique si le tournoi est plein ──
     if (tournoi.getNombresParticipantsMax() != null) {
-      long nbValidees = inscriptionRepository.findByTournoiAndEtat(tournoi, "VALIDEE").size();
-      if (nbValidees >= tournoi.getNombresParticipantsMax()) {
-        tournoiService.closeRegistrations(tournoi.getId()); // ← réutilise la méthode existante
+      Collection<?> inscrits = (Collection<?>) inscriptionRepository.findByTournoi(tournoi);
+      if (inscrits.size() >= tournoi.getNombresParticipantsMax()) {
+        tournoiService.closeRegistrations(tournoi.getId()); // Le tournoi passe en CLOTURE
       }
     }
-    // ──────────────────────────────────────────────────────────────────
 
     return saved;
   }
 
   /**
-   * Refuses a registration (EN_ATTENTE → REFUSEE).
+   * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
+   * Possible uniquement si le tournoi n'a pas encore commencé.
    *
-   * @param inscriptionId the registration id
-   * @return the updated registration, or null if not found or not in EN_ATTENTE state
+   * @param inscriptionId l'ID de l'inscription à supprimer
+   * @return true si la désinscription a réussi, false sinon
    */
-  public InscriptionEquipeTournoi refuse(Long inscriptionId) {
-    InscriptionEquipeTournoi inscription = getInscriptionInState(inscriptionId, "EN_ATTENTE");
+  /**
+   * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
+   * Rouvre automatiquement le tournoi si une place se libère et que la date n'est pas dépassée.
+   */
+  /**
+   * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
+   * Interdit si le tournoi a commencé OU si la date limite d'inscription est dépassée.
+   * Rouvre automatiquement le tournoi si une place se libère.
+   */
+  public boolean unregister(Long inscriptionId) {
+    InscriptionEquipeTournoi inscription = inscriptionRepository.findById(inscriptionId).orElse(null);
     if (inscription == null) {
-      return null;
+      return false;
     }
 
-    inscription.setEtat("REFUSEE");
-    return inscriptionRepository.save(inscription);
+    Tournoi tournoi = inscription.getTournoi();
+    String etatTournoi = tournoi.getEtat();
+
+    // 1. On interdit si le tournoi est en train de se jouer ou est terminé
+    if ("EN_COURS".equals(etatTournoi) || "TERMINE".equals(etatTournoi) || "ANNULE".equals(etatTournoi)) {
+      return false;
+    }
+
+    // 2. 🚨 NOUVELLE SÉCURITÉ : On interdit si la date limite est dépassée
+    if (tournoi.getDateLimiteInscription() != null &&
+            tournoi.getDateLimiteInscription().isBefore(LocalDate.now())) {
+      System.out.println("❌ Désinscription refusée : La date limite du tournoi est dépassée.");
+      return false; // Trop tard pour fuir !
+    }
+
+    // 3. Désinscription propre : on supprime physiquement la ligne
+    inscriptionRepository.delete(inscription);
+
+    // 4. Logique de réouverture automatique
+    // Si on arrive ici, on sait avec certitude que la date n'est PAS dépassée
+    // (sinon le code se serait arrêté juste au-dessus).
+    // Donc si le tournoi était CLOTURE, c'était forcément parce qu'il était plein !
+    if ("CLOTURE".equals(etatTournoi)) {
+      tournoi.setEtat("OUVERT");
+      tournoiRepository.save(tournoi);
+      System.out.println("🔓 Une place s'est libérée, le tournoi " + tournoi.getNom() + " est de nouveau OUVERT !");
+    }
+
+    return true;
   }
 
   /**
-   * Cancels a validated registration (VALIDEE → ANNULEE). Only allowed if the tournament is not yet
-   * started (not EN_COURS or TERMINE).
-   *
-   * @param inscriptionId the registration id
-   * @return the updated registration, or null if not found or cancellation not allowed
+   * Récupère une inscription par son ID.
    */
-  public InscriptionEquipeTournoi cancel(Long inscriptionId) {
-    InscriptionEquipeTournoi inscription = getInscriptionInState(inscriptionId, "VALIDEE");
-    if (inscription == null) {
-      return null;
-    }
-
-    if (hasTournamentState(inscription, "EN_COURS", "TERMINE")) {
-      return null;
-    }
-
-    inscription.setEtat("ANNULEE");
-    return inscriptionRepository.save(inscription);
-  }
-
-  /**
-   * Refuses all registrations still in EN_ATTENTE for a given tournament. Called automatically when
-   * a tournament starts.
-   *
-   * @param tournoi the tournament
-   */
-  public void refuseAllPending(Tournoi tournoi) {
-    List<InscriptionEquipeTournoi> enAttente =
-        inscriptionRepository.findByTournoiAndEtat(tournoi, "EN_ATTENTE");
-    for (InscriptionEquipeTournoi inscription : enAttente) {
-      inscription.setEtat("REFUSEE");
-    }
-    inscriptionRepository.saveAll(enAttente);
-  }
-
-  /**
-   * Reopens a refused registration back to EN_ATTENTE (REFUSEE → EN_ATTENTE). Only allowed if the
-   * tournament is still OUVERT or CLOTURE.
-   *
-   * @param inscriptionId the registration id
-   * @return the updated registration, or null if not allowed
-   */
-  public InscriptionEquipeTournoi reopen(Long inscriptionId) {
-    InscriptionEquipeTournoi inscription = getInscriptionInState(inscriptionId, "REFUSEE");
-    if (inscription == null) {
-      return null;
-    }
-
-    if (hasTournamentState(inscription, "EN_COURS", "TERMINE", "ANNULE")) {
-      return null;
-    }
-
-    inscription.setEtat("EN_ATTENTE");
-    return inscriptionRepository.save(inscription);
-  }
-
-  private InscriptionEquipeTournoi getInscriptionInState(Long inscriptionId, String expectedState) {
-    InscriptionEquipeTournoi inscription =
-        inscriptionRepository.findById(inscriptionId).orElse(null);
-    if (inscription == null) {
-      return null;
-    }
-    if (!expectedState.equals(inscription.getEtat())) {
-      return null;
-    }
-    return inscription;
-  }
-
-  private boolean hasTournamentState(InscriptionEquipeTournoi inscription, String... states) {
-    String tournamentState = inscription.getTournoi().getEtat();
-    for (String state : states) {
-      if (state.equals(tournamentState)) {
-        return true;
-      }
-    }
-    return false;
+  public InscriptionEquipeTournoi getById(Long inscriptionId) {
+    return inscriptionRepository.findById(inscriptionId).orElse(null);
   }
 }
