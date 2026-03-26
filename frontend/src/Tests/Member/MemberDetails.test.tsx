@@ -1,8 +1,9 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
+import { UserContextType, AuthenticatedUser } from '../../types';
 import MemberDetails from '../../components/pages/Member/MemberDetails';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 
 // Mocking the session utility
 vi.mock('../../utils/session', () => ({
@@ -12,11 +13,14 @@ vi.mock('../../utils/session', () => ({
   isTokenExpired: vi.fn(() => false),
 }));
 
-const mockUser = {
+// Adjusted to fit your provided AuthenticatedUser interface
+const mockAuthUser: AuthenticatedUser = {
   tag: 'Luffy',
   email: 'luffy@strawhat.com',
   password: 'gear5password',
-  token: 'valid-token'
+  token: 'valid-token',
+  specialty: 'Captain',
+  admin: false,
 };
 
 const mockTeamsResponse = [
@@ -37,35 +41,39 @@ const mockTeamsResponse = [
 describe('MemberDetails Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
+    global.fetch = vi.fn() as Mock;
   });
 
-  const renderComponent = (authenticatedUser: any) => {
+  const renderComponent = (
+    authenticatedUser: AuthenticatedUser | undefined,
+  ) => {
+    const contextValue: UserContextType = {
+      authenticatedUser,
+      registerUser: vi.fn(),
+      loginUser: vi.fn(),
+      clearUser: vi.fn(),
+      updateUser: vi.fn(),
+    };
+
     return render(
-      <UserContext.Provider value={{ 
-        authenticatedUser, 
-        registerUser: vi.fn(),
-        loginUser: vi.fn(),
-        clearUser: vi.fn(),
-        updateUser: vi.fn(),
-      }}>
+      <UserContext.Provider value={contextValue}>
         <MemoryRouter initialEntries={['/member/1']}>
           <Routes>
             <Route path="/member/:id" element={<MemberDetails />} />
           </Routes>
         </MemoryRouter>
-      </UserContext.Provider>
+      </UserContext.Provider>,
     );
   };
 
   it('renders loading state initially', () => {
-    (global.fetch as any).mockReturnValue(new Promise(() => {})); 
+    (global.fetch as Mock).mockReturnValue(new Promise(() => {}));
     renderComponent(undefined);
     expect(screen.getByText(/Chargement.../i)).toBeInTheDocument();
   });
 
   it('fetches and displays user data correctly from the teams API', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       ok: true,
       json: async () => mockTeamsResponse,
     });
@@ -78,55 +86,55 @@ describe('MemberDetails Component', () => {
     });
   });
 
-  it('shows private email and masked password when viewing own profile', async () => {
-    (global.fetch as any).mockResolvedValue({
+  it('shows private email and masked password when tags match (own profile)', async () => {
+    (global.fetch as Mock).mockResolvedValue({
       ok: true,
       json: async () => mockTeamsResponse,
     });
 
-    renderComponent(mockUser);
+    // Components matches "Luffy" from AuthContext with "Luffy" from API
+    renderComponent(mockAuthUser);
 
     await waitFor(() => {
       expect(screen.getByText('luffy@strawhat.com')).toBeInTheDocument();
     });
 
-    // Check password is masked
     expect(screen.getByText('********')).toBeInTheDocument();
 
-    // Option 2: Find the VisibilityIcon by its data-testid and click its parent button
+    // Use Option 2: Find icon by test ID
     const visibilityIcon = screen.getByTestId('VisibilityIcon');
     const toggleBtn = visibilityIcon.closest('button');
-    
-    if (!toggleBtn) throw new Error('Could not find the password toggle button');
-    
+
+    if (!toggleBtn)
+      throw new Error('Could not find the password toggle button');
+
     fireEvent.click(toggleBtn);
 
-    // Should now reveal the actual password
     expect(screen.getByText('gear5password')).toBeInTheDocument();
-    
-    // The icon should have changed to VisibilityOffIcon
     expect(screen.getByTestId('VisibilityOffIcon')).toBeInTheDocument();
   });
 
-  it('hides sensitive information when viewing another member', async () => {
-    (global.fetch as any).mockResolvedValue({
+  it('hides sensitive information when tags do not match', async () => {
+    (global.fetch as Mock).mockResolvedValue({
       ok: true,
       json: async () => mockTeamsResponse,
     });
 
-    renderComponent({ tag: 'Zoro', token: 'zoro-token' });
+    // Logged in as Zoro, but viewing Luffy's page
+    renderComponent({ ...mockAuthUser, tag: 'Zoro' });
 
     await waitFor(() => {
       expect(screen.getByText('Luffy')).toBeInTheDocument();
     });
 
+    // Sensitive fields should be hidden
     expect(screen.queryByText('Mail')).not.toBeInTheDocument();
     expect(screen.queryByText('Mot de Passe')).not.toBeInTheDocument();
   });
 
   it('handles API errors gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       ok: false,
       status: 500,
     });
@@ -136,7 +144,7 @@ describe('MemberDetails Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/Chargement.../i)).toBeInTheDocument();
     });
-    
+
     consoleSpy.mockRestore();
   });
 });

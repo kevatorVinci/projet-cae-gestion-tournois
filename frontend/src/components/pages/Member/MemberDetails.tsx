@@ -17,8 +17,22 @@ import { UserContext } from '../../../contexts/UserContext';
 import { User } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 
+// Define the shape of the API response to avoid 'any'
+interface TeamMember {
+  id: number;
+  tag: string;
+  specialty?: string;
+  profileImageUrl?: string;
+  isResponsable?: boolean;
+}
+
+interface Equipe {
+  name: string;
+  membres: TeamMember[];
+}
+
 export default function MemberDetails() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>(); // Typed params
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const { authenticatedUser } = useContext(UserContext);
@@ -42,15 +56,13 @@ export default function MemberDetails() {
             throw new Error('Failed to fetch teams');
           }
 
-          const equipes: any[] = await response.json();
+          const equipes: Equipe[] = await response.json(); // Replaced any[] with Equipe[]
 
-          let foundUser = null;
+          let foundUser: TeamMember | null = null;
           let userTeamName = '';
 
           for (const equipe of equipes) {
-            const member = equipe.membres?.find(
-              (m: { id: number }) => m.id === Number(id),
-            );
+            const member = equipe.membres?.find((m) => m.id === Number(id));
             if (member) {
               foundUser = member;
               userTeamName = equipe.name;
@@ -59,7 +71,7 @@ export default function MemberDetails() {
           }
 
           if (foundUser) {
-            const user: User = {
+            const userData: User = {
               id: foundUser.id,
               tag: foundUser.tag,
               email: '',
@@ -69,7 +81,7 @@ export default function MemberDetails() {
               isResponsable: foundUser.isResponsable || false,
               admin: false,
             };
-            setUser(user);
+            setUser(userData);
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -114,7 +126,6 @@ export default function MemberDetails() {
     >
       <Container maxWidth="lg">
         <Stack spacing={4}>
-          {/* Tag Box - Full Width */}
           <Box
             sx={{
               mb: 4,
@@ -191,9 +202,7 @@ export default function MemberDetails() {
             </Stack>
           </Box>
 
-          {/* Main Content Section */}
           <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3}>
-            {/* Left Side - Info Boxes */}
             <Stack direction="column" spacing={2} sx={{ flex: 1 }}>
               <Box
                 sx={{
@@ -238,7 +247,6 @@ export default function MemberDetails() {
               </Box>
             </Stack>
 
-            {/* Right Side - Tournaments & Results */}
             <Box sx={{ flex: 1 }}>
               <Box
                 sx={{
@@ -262,7 +270,6 @@ export default function MemberDetails() {
                     Tournois & Résultats
                   </Typography>
                 </Box>
-
                 <Typography
                   variant="body2"
                   color="text.secondary"
