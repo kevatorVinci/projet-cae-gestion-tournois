@@ -29,14 +29,7 @@ public interface InscriptionEquipeTournoiRepository
    */
   List<InscriptionEquipeTournoi> findByEquipe(Equipe equipe);
 
-  /**
-   * Finds registrations for a tournament filtered by state.
-   *
-   * @param tournoi tournament entity
-   * @param etat registration state
-   * @return list of matching registrations
-   */
-  List<InscriptionEquipeTournoi> findByTournoiAndEtat(Tournoi tournoi, String etat);
+
 
   /**
    * Finds an existing registration for a team in a tournament.

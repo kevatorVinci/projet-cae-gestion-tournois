@@ -3,155 +3,195 @@
  * This defines the shape of the "package" we send to the backend.
  */
 export interface NewTournamentPayload {
-  nom: string; // The unique name of the tournament
-  description: string; // A short description
-  dateDebut: string; // The start date (format YYYY-MM-DD)
-  dateFin: string; // The end date (format YYYY-MM-DD)
-  dateLimiteInscription: string; // The deadline for registrations
-  nombresParticipantsMax: number; // The maximum number of teams allowed
+  nom: string;
+  description: string;
+  dateDebut: string;
+  dateFin: string;
+  dateLimiteInscription: string;
+  nombresParticipantsMax: number;
 }
 
-/**
- * Function to send the new tournament data to the backend API.
- *
- * @param {NewTournamentPayload} payload - the data of the new tournament typed by the admin
- * @param {string} token - the security badge (JWT token) of the logged-in admin
- * @return {Promise<any>} the created tournament data from the server
- */
+// ═══════════════════════════════════════════════════════════════════
+// 1. GESTION DES TOURNOIS (PUBLIC ET ADMIN)
+// ═══════════════════════════════════════════════════════════════════
+
+export const fetchPublicTournaments = async (etat?: string, nom?: string) => {
+  const params = new URLSearchParams();
+  if (etat && etat !== 'TOUS') params.append('etat', etat);
+  if (nom) params.append('nom', nom);
+
+  const queryString = params.toString() ? `?${params.toString()}` : '';
+  const response = await fetch(`/api/tournois/${queryString}`);
+
+  if (!response.ok) {
+    throw new Error('Impossible de charger la liste des tournois.');
+  }
+  return await response.json();
+};
+
+export const fetchAllTournaments = async (token: string) => {
+  const requestOptions = {
+    method: 'GET',
+    headers: { Authorization: token },
+  };
+  const response = await fetch('/api/tournois/all', requestOptions);
+  if (!response.ok) {
+    throw new Error('Accès refusé. Vous devez être administrateur.');
+  }
+  return await response.json();
+};
+
+export const fetchTournamentById = async (id: string | number) => {
+  const response = await fetch(`/api/tournois/${id}`);
+  if (!response.ok) {
+    throw new Error('Tournoi introuvable.');
+  }
+  return await response.json();
+};
+
 export const createTournament = async (
   payload: NewTournamentPayload,
   token: string,
 ) => {
-  // 1. We prepare the settings for the request (POST method, JSON data, and security token)
   const requestOptions = {
     method: 'POST',
     body: JSON.stringify(payload),
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: token, // We prove we are an admin
-    },
+    headers: { 'Content-Type': 'application/json', Authorization: token },
   };
-
-  // 2. We send the request to the backend URL "/api/tournois/"
-  // (Note: adjust the URL if your proxy is different, e.g., simply "/tournois/")
   const response = await fetch('/api/tournois/', requestOptions);
-
-  // 3. We check if the server refused the request (e.g., if the name already exists)
   if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      'Failed to create tournament. Maybe the name is already taken.',
+      errorData.message || 'Erreur lors de la création (nom déjà pris ?).',
     );
   }
-
-  // 4. We read the successful response from the server and return it
-  const data = await response.json();
-  return data;
+  return await response.json();
 };
 
-/**
- * Function to fetch all tournaments from the backend, including the secret drafts.
- * This is strictly reserved for administrators.
- *
- * @param {string} token - the security badge (JWT token) of the logged-in admin to prove their identity
- * @return {Promise<any>} a list containing every tournament from the database
- */
-export const fetchAllTournaments = async (token: string) => {
-  // 1. We prepare the request settings with the security badge
-  const requestOptions = {
-    method: 'GET',
-    headers: {
-      Authorization: token, // We prove we are an admin
-    },
-  };
-
-  // 2. We send the request to the specific admin URL "/api/tournois/all"
-  const response = await fetch('/api/tournois/all', requestOptions);
-
-  // 3. We check if the server refused (e.g., if the user is not a real admin)
-  if (!response.ok) {
-    throw new Error(
-      'Failed to fetch all tournaments. You might not have admin rights.',
-    );
-  }
-
-  // 4. We read the data (the list of tournaments) and return it
-  const data = await response.json();
-  return data;
-};
-/**
- * Function to fetch a specific tournament by its ID.
- * This is used to pre-fill the form when we want to edit a tournament.
- *
- * @param {string} id - the unique identifier of the tournament
- * @return {Promise<Tournoi>} the data of the requested tournament
- */
-export const fetchTournamentById = async (id: string) => {
-  const response = await fetch(`/api/tournois/${id}`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch the tournament details.');
-  }
-
-  const data = await response.json();
-  return data;
-};
-
-/**
- * Function to update an existing tournament in the database.
- * Strictly reserved for administrators.
- *
- * @param {string | number} id - the unique identifier of the tournament to update
- * @param {NewTournamentPayload} payload - the modified tournament data
- * @param {string} token - the admin security badge (JWT token)
- * @return {Promise<any>} the server's response after updating
- */
 export const updateTournament = async (
   id: string | number,
   payload: NewTournamentPayload,
   token: string,
 ) => {
   const requestOptions = {
-    method: 'PUT', // PUT is used to update existing data
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: token, // We prove we are an admin
-    },
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: token },
     body: JSON.stringify(payload),
   };
-
   const response = await fetch(`/api/tournois/${id}`, requestOptions);
-
   if (!response.ok) {
-    throw new Error('Failed to update the tournament.');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Impossible de modifier ce tournoi.');
   }
-
-  const data = await response.json();
-  return data;
+  return await response.json();
 };
 
-/**
- * Function to publish a tournament and open registrations.
- * This changes the tournament state to 'OUVERT'.
- *
- * @param {string | number} id - the unique identifier of the tournament
- * @param {string} token - the admin security badge (JWT token)
- * @return {Promise<any>} the server's response
- */
-export const publishTournament = async (id: string | number, token: string) => {
-  // We send a request to the backend to publish this specific tournament
+// ═══════════════════════════════════════════════════════════════════
+// 2. CYCLE DE VIE DU TOURNOI (ADMIN SEULEMENT)
+// ═══════════════════════════════════════════════════════════════════
+
+// Une fonction générique pour toutes les actions de statut (PATCH)
+const changeTournamentState = async (
+  id: string | number,
+  action: string,
+  token: string,
+) => {
   const requestOptions = {
-    method: 'PATCH', // We use PATCH to partially update the tournament (just the status)
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: token, // We prove we are an admin
-    },
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: token },
   };
-
-  const response = await fetch(`/api/tournois/${id}/publish`, requestOptions);
-
+  const response = await fetch(`/api/tournois/${id}/${action}`, requestOptions);
   if (!response.ok) {
-    throw new Error('Failed to publish the tournament.');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || `Action "${action}" refusée par le serveur.`,
+    );
   }
-
   return await response.json();
+};
+
+export const publishTournament = (id: string | number, token: string) =>
+  changeTournamentState(id, 'publish', token);
+export const closeRegistrations = (id: string | number, token: string) =>
+  changeTournamentState(id, 'close-registrations', token);
+export const startTournament = (id: string | number, token: string) =>
+  changeTournamentState(id, 'start', token);
+export const finishTournament = (id: string | number, token: string) =>
+  changeTournamentState(id, 'finish', token);
+export const cancelTournament = (id: string | number, token: string) =>
+  changeTournamentState(id, 'cancel', token);
+
+// ═══════════════════════════════════════════════════════════════════
+// 3. INSCRIPTIONS (ÉQUIPES ET RESPONSABLES)
+// ═══════════════════════════════════════════════════════════════════
+
+// /**
+//  * Récupère les inscriptions d'un tournoi (Admin)
+//  */
+export const fetchTournamentRegistrations = async (
+  tournoiId: string | number,
+  token: string,
+) => {
+  const response = await fetch(`/api/tournois/${tournoiId}/inscriptions`, {
+    headers: { Authorization: token },
+  });
+  if (!response.ok) throw new Error('Impossible de charger les inscriptions.');
+  return await response.json();
+};
+
+export const fetchTeamRegistrations = async (
+  equipeId: string | number,
+  token: string,
+) => {
+  const response = await fetch(
+    `/api/tournois/equipes/${equipeId}/inscriptions`,
+    {
+      headers: { Authorization: token },
+    },
+  );
+  if (!response.ok)
+    throw new Error("Impossible de charger l'historique de l'équipe.");
+  return await response.json();
+};
+
+export const registerTeamToTournament = async (
+  tournoiId: string | number,
+  equipeId: string | number,
+  token: string,
+) => {
+  const requestOptions = {
+    method: 'POST',
+    headers: { Authorization: token },
+  };
+  const response = await fetch(
+    `/api/tournois/${tournoiId}/inscriptions/equipes/${equipeId}`,
+    requestOptions,
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || 'Inscription refusée (Tournoi plein ou fermé ?).',
+    );
+  }
+  return await response.json();
+};
+
+export const unregisterTeam = async (
+  inscriptionId: string | number,
+  token: string,
+) => {
+  const requestOptions = {
+    method: 'DELETE',
+    headers: { Authorization: token },
+  };
+  const response = await fetch(
+    `/api/tournois/inscriptions/${inscriptionId}`,
+    requestOptions,
+  );
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || "Impossible d'annuler cette inscription.",
+    );
+  }
 };
