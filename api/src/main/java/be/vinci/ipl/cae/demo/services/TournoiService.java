@@ -155,7 +155,11 @@ public class TournoiService {
     if (tournoi == null || "TERMINE".equals(tournoi.getEtat()) || "ANNULE".equals(tournoi.getEtat())) {
       return null;
     }
+
     tournoi.setEtat("ANNULE");
+
+    tournoi.setNom(tournoi.getNom() + " (Annulé - " + tournoi.getId() + ")");
+
     return tournoiRepository.save(tournoi);
   }
 
@@ -192,6 +196,8 @@ public class TournoiService {
           } else {
             System.out.println("❌ Tournoi " + tournoi.getNom() + " annulé automatiquement (Moins de 2 joueurs).");
             tournoi.setEtat("ANNULE");
+
+            tournoi.setNom(tournoi.getNom() + " (Annulé - " + tournoi.getId() + ")");
           }
           
           tournoiRepository.save(tournoi);

@@ -152,6 +152,43 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
+   * Désinscrit une équipe d'un tournoi via la clé logique (tournoiId, equipeId).
+   * Interdit si le tournoi a commencé, est terminé/annulé, ou si la date limite est dépassée.
+   */
+  public boolean unregisterByTournoiAndEquipe(Long tournoiId, Long equipeId) {
+    Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
+    Equipe equipe = equipeRepository.findById(equipeId).orElse(null);
+    if (tournoi == null || equipe == null) {
+      return false;
+    }
+
+    InscriptionEquipeTournoi inscription =
+            inscriptionRepository.findByTournoiAndEquipe(tournoi, equipe).orElse(null);
+    if (inscription == null) {
+      return false;
+    }
+
+    String etatTournoi = tournoi.getEtat();
+    if ("EN_COURS".equals(etatTournoi) || "TERMINE".equals(etatTournoi) || "ANNULE".equals(etatTournoi)) {
+      return false;
+    }
+
+    if (tournoi.getDateLimiteInscription() != null
+            && tournoi.getDateLimiteInscription().isBefore(LocalDate.now())) {
+      return false;
+    }
+
+    inscriptionRepository.delete(inscription);
+
+    if ("CLOTURE".equals(etatTournoi)) {
+      tournoi.setEtat("OUVERT");
+      tournoiRepository.save(tournoi);
+    }
+
+    return true;
+  }
+
+  /**
    * Récupère une inscription par son ID.
    */
   public InscriptionEquipeTournoi getById(Long inscriptionId) {

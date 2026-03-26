@@ -13,9 +13,11 @@ import RegisterPage from '../pages/RegisterPage';
 import ProfilePage from '../pages/ProfilePage';
 import AdminPage from '../pages/AdminPage';
 import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
+import { TournoisResponsable } from '../pages/TeamPage/ResponsablePage/Inscription';
 import DisponibilitesPage from '../pages/DisponibilitesPage';
 import ProtectedRoute from '../routes/ProtectedRoute';
 import AdminRoute from '../routes/AdminRoute';
+import ResponsableRoute from '../routes/ResponsableRoute';
 import NonConnectePage from '../pages/PasAcces/NonConnectePage';
 import InterditPage from '../pages/PasAcces/InterditPage';
 import MemberDetails from '../pages/Member/MemberDetails';
@@ -58,9 +60,17 @@ const App = () => (
         <Route
           path="/equipes/demande"
           element={
-            <ProtectedRoute>
+            <ResponsableRoute>
               <DemandesAdhesion />
-            </ProtectedRoute>
+            </ResponsableRoute>
+          }
+        />
+        <Route
+          path="/tournois/gestion"
+          element={
+            <ResponsableRoute>
+              <TournoisResponsable />
+            </ResponsableRoute>
           }
         />
         <Route path="/equipes/:id" element={<TeamDetails />} />

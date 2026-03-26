@@ -11,6 +11,21 @@ export interface NewTournamentPayload {
   nombresParticipantsMax: number;
 }
 
+export interface TeamRegistrationTournament {
+  id: number;
+  nom: string;
+  etat: string;
+  dateDebut: string;
+  nombresParticipantsMax?: number;
+}
+
+export interface TeamRegistrationItem {
+  tournoiId: number;
+  equipeId: number;
+  dateInscription?: string;
+  tournoi: TeamRegistrationTournament;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // 1. GESTION DES TOURNOIS (PUBLIC ET ADMIN)
 // ═══════════════════════════════════════════════════════════════════
@@ -142,7 +157,7 @@ export const fetchTournamentRegistrations = async (
 export const fetchTeamRegistrations = async (
   equipeId: string | number,
   token: string,
-) => {
+): Promise<TeamRegistrationItem[]> => {
   const response = await fetch(
     `/api/tournois/equipes/${equipeId}/inscriptions`,
     {
@@ -177,7 +192,8 @@ export const registerTeamToTournament = async (
 };
 
 export const unregisterTeam = async (
-  inscriptionId: string | number,
+  tournoiId: string | number,
+  equipeId: string | number,
   token: string,
 ) => {
   const requestOptions = {
@@ -185,7 +201,7 @@ export const unregisterTeam = async (
     headers: { Authorization: token },
   };
   const response = await fetch(
-    `/api/tournois/inscriptions/${inscriptionId}`,
+    `/api/tournois/${tournoiId}/inscriptions/equipes/${equipeId}`,
     requestOptions,
   );
   if (!response.ok) {
