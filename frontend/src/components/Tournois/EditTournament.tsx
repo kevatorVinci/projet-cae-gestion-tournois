@@ -302,7 +302,7 @@ const EditTournamentPage = () => {
                         '& label.Mui-focused': { color: '#e8822a' },
                       }}
                       InputLabelProps={{ shrink: true }}
-                      inputProps={{ min: 1 }}
+                      inputProps={{ min: 2 }}
                     />
                   </Grid>
 

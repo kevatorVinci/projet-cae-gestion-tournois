@@ -128,3 +128,30 @@ export const updateTournament = async (
   const data = await response.json();
   return data;
 };
+
+/**
+ * Function to publish a tournament and open registrations.
+ * This changes the tournament state to 'OUVERT'.
+ *
+ * @param {string | number} id - the unique identifier of the tournament
+ * @param {string} token - the admin security badge (JWT token)
+ * @return {Promise<any>} the server's response
+ */
+export const publishTournament = async (id: string | number, token: string) => {
+  // We send a request to the backend to publish this specific tournament
+  const requestOptions = {
+    method: 'PATCH', // We use PATCH to partially update the tournament (just the status)
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token, // We prove we are an admin
+    },
+  };
+
+  const response = await fetch(`/api/tournois/${id}/publish`, requestOptions);
+
+  if (!response.ok) {
+    throw new Error('Failed to publish the tournament.');
+  }
+
+  return await response.json();
+};
