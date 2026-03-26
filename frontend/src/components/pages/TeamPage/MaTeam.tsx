@@ -388,6 +388,13 @@ export function MyTeam() {
                             component="span"
                             fontWeight={700}
                             color="white"
+                            onClick={() => {
+                              navigate(`/players/${member.id}`);
+                            }}
+                            sx={{
+                              cursor: 'pointer',
+                              '&:hover': { color: '#e8822a' },
+                            }}
                           >
                             {member.tag}{' '}
                             {member.id === currentUserId && '(Vous)'}

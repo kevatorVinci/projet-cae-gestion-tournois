@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -15,6 +15,7 @@ import { Equipe } from '../../../types';
 
 export default function TeamDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [team, setTeam] = useState<Equipe | null>(null);
 
@@ -126,7 +127,18 @@ export default function TeamDetails() {
                   />
 
                   <Box>
-                    <Typography variant="h6" fontWeight={700} color="white">
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="white"
+                      onClick={() => {
+                        navigate(`/players/${member.id}`);
+                      }}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:hover': { color: '#e8822a' },
+                      }}
+                    >
                       {member.tag}
                     </Typography>
 
