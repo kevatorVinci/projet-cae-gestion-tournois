@@ -47,3 +47,84 @@ export const createTournament = async (
   const data = await response.json();
   return data;
 };
+
+/**
+ * Function to fetch all tournaments from the backend, including the secret drafts.
+ * This is strictly reserved for administrators.
+ *
+ * @param {string} token - the security badge (JWT token) of the logged-in admin to prove their identity
+ * @return {Promise<any>} a list containing every tournament from the database
+ */
+export const fetchAllTournaments = async (token: string) => {
+  // 1. We prepare the request settings with the security badge
+  const requestOptions = {
+    method: 'GET',
+    headers: {
+      Authorization: token, // We prove we are an admin
+    },
+  };
+
+  // 2. We send the request to the specific admin URL "/api/tournois/all"
+  const response = await fetch('/api/tournois/all', requestOptions);
+
+  // 3. We check if the server refused (e.g., if the user is not a real admin)
+  if (!response.ok) {
+    throw new Error(
+      'Failed to fetch all tournaments. You might not have admin rights.',
+    );
+  }
+
+  // 4. We read the data (the list of tournaments) and return it
+  const data = await response.json();
+  return data;
+};
+/**
+ * Function to fetch a specific tournament by its ID.
+ * This is used to pre-fill the form when we want to edit a tournament.
+ *
+ * @param {string} id - the unique identifier of the tournament
+ * @return {Promise<Tournoi>} the data of the requested tournament
+ */
+export const fetchTournamentById = async (id: string) => {
+  const response = await fetch(`/api/tournois/${id}`);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch the tournament details.');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+/**
+ * Function to update an existing tournament in the database.
+ * Strictly reserved for administrators.
+ *
+ * @param {string | number} id - the unique identifier of the tournament to update
+ * @param {NewTournamentPayload} payload - the modified tournament data
+ * @param {string} token - the admin security badge (JWT token)
+ * @return {Promise<any>} the server's response after updating
+ */
+export const updateTournament = async (
+  id: string | number,
+  payload: NewTournamentPayload,
+  token: string,
+) => {
+  const requestOptions = {
+    method: 'PUT', // PUT is used to update existing data
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token, // We prove we are an admin
+    },
+    body: JSON.stringify(payload),
+  };
+
+  const response = await fetch(`/api/tournois/${id}`, requestOptions);
+
+  if (!response.ok) {
+    throw new Error('Failed to update the tournament.');
+  }
+
+  const data = await response.json();
+  return data;
+};

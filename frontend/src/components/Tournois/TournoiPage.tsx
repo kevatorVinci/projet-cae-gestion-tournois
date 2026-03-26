@@ -32,6 +32,7 @@ type CategoryFilter = 'TOUS' | 'EN_COURS' | 'A_VENIR' | 'PASSES';
 
 const TournoiPage = () => {
   const navigate = useNavigate();
+
   const [search, setSearch] = useState('');
   const [etatFilter, setEtatFilter] = useState<CategoryFilter>('TOUS');
   const [allTournaments, setAllTournaments] = useState<Tournoi[]>([]);
@@ -99,8 +100,9 @@ const TournoiPage = () => {
       />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <Box sx={{ textAlign: 'center', mb: 5 }}>
+        <Box sx={{ textAlign: 'center', mb: 5, position: 'relative' }}>
           <BackButton />
+
           <Typography
             variant="h3"
             component="h1"

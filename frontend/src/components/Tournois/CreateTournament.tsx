@@ -1,152 +1,316 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Grid,
+  Alert,
+} from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/fr';
+dayjs.locale('fr');
+import BackButton from '../BoutonRetour';
 import {
   createTournament,
   NewTournamentPayload,
 } from '../../services/tournois';
+import { UserContext } from '../../contexts/UserContext';
+import { UserContextType } from '../../types';
 
 /**
- * Component to display and handle the form for creating a new tournament.
+ * Page dedicated to the creation of a new tournament.
+ * Connects to the real backend using the admin token from UserContext.
  *
- * @return {JSX.Element} the form component
+ * @return {JSX.Element} the tournament creation page
  */
-const CreateTournament = () => {
+const CreateTournamentPage = () => {
+  const navigate = useNavigate();
+
+  // ✨ NEW: We get the logged-in user from the context to have the right token
+  const { authenticatedUser }: UserContextType = useContext(UserContext);
+
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
-  const [dateDebut, setDateDebut] = useState('');
-  const [dateFin, setDateFin] = useState('');
-  const [dateLimiteInscription, setDateLimiteInscription] = useState('');
-  const [nombresParticipantsMax, setNombresParticipantsMax] = useState(0);
+  const [nombresParticipantsMax, setNombresParticipantsMax] = useState<
+    number | ''
+  >('');
 
-  // Memory variables to display success or error messages to the user
-  const [message, setMessage] = useState('');
+  const [dateDebut, setDateDebut] = useState<Dayjs | null>(null);
+  const [dateFin, setDateFin] = useState<Dayjs | null>(null);
+  const [dateLimiteInscription, setDateLimiteInscription] =
+    useState<Dayjs | null>(null);
+
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  /**
-   * Function called when the admin clicks the submit button.
-   *
-   * @param {FormEvent} e - the form submission event
-   */
+  // The date of tomorrow to block past dates
+  const tomorrow = dayjs().add(1, 'day');
+
   const handleSubmit = async (e: FormEvent) => {
-    // Prevents the web page from reloading when we click the button
     e.preventDefault();
-
-    // We reset the messages before trying to send
-    setMessage('');
     setError('');
+    setSuccess('');
 
-    // We get the security badge from the browser's storage
-    // Note: Adapt "token" if your app uses a different key name for the JWT
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('You must be logged in as an admin to do this.');
+    // 1. Check if all dates are filled
+    if (!dateDebut || !dateFin || !dateLimiteInscription) {
+      setError('Veuillez remplir toutes les dates du calendrier.');
       return;
     }
 
-    // We prepare the package exactly as our service expects it
+    // 2. SECURITY: Start date must be after or equal to the deadline
+    if (dateDebut.isBefore(dateLimiteInscription, 'day')) {
+      setError(
+        "La date de début du tournoi doit être après la date limite d'inscription.",
+      );
+      return;
+    }
+
+    // 3. SECURITY: End date must be after or equal to start date
+    if (dateFin.isBefore(dateDebut, 'day')) {
+      setError(
+        'La date de fin ne peut pas être avant la date de début du tournoi.',
+      );
+      return;
+    }
+
+    // ✨ CORRECTION: We take the token from authenticatedUser, not from localStorage!
+    const token = authenticatedUser?.token;
+    if (!token) {
+      setError("Vous devez être connecté en tant qu'administrateur.");
+      return;
+    }
+
     const payload: NewTournamentPayload = {
-      nom: nom,
-      description: description,
-      dateDebut: dateDebut,
-      dateFin: dateFin,
-      dateLimiteInscription: dateLimiteInscription,
-      nombresParticipantsMax: nombresParticipantsMax,
+      nom,
+      description,
+      dateDebut: dateDebut.format('YYYY-MM-DD'),
+      dateFin: dateFin.format('YYYY-MM-DD'),
+      dateLimiteInscription: dateLimiteInscription.format('YYYY-MM-DD'),
+      nombresParticipantsMax: Number(nombresParticipantsMax),
     };
 
     try {
-      // We use our "postman" function from tournois.ts to send the package
       await createTournament(payload, token);
-
-      // If it works, we show a green success message
-      setMessage('Tournament successfully created!');
-
-      // We empty all the text boxes to be ready for another creation
-      setNom('');
-      setDescription('');
-      setDateDebut('');
-      setDateFin('');
-      setDateLimiteInscription('');
-      setNombresParticipantsMax(0);
+      setSuccess('Le tournoi a été créé avec succès !');
+      // Redirect after 2 seconds
+      setTimeout(() => navigate('/admin/tournaments'), 2000);
     } catch (err) {
-      // If the server says no, we show a red error message
-      setError(
-        'Failed to create the tournament. The name might already be used.',
-      );
+      setError('Erreur lors de la création du tournoi. Vérifiez la console.');
     }
   };
 
-  // The visual part: what we actually see on the screen (HTML)
+  const darkInputStyle = {
+    backgroundColor: '#111827',
+    borderRadius: 1,
+    '& .MuiOutlinedInput-root': {
+      color: 'white',
+      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+      '&:hover fieldset': { borderColor: '#e8822a' },
+      '&.Mui-focused fieldset': { borderColor: '#e8822a' },
+    },
+    '& .MuiInputBase-input::placeholder': {
+      color: 'rgba(255,255,255,0.4)',
+      opacity: 1,
+    },
+  };
+
+  const datePickerSlotProps = {
+    textField: {
+      fullWidth: true,
+      required: true,
+      sx: {
+        backgroundColor: '#111827',
+        borderRadius: 1,
+        input: { color: 'white' },
+        label: { color: 'rgba(255,255,255,0.7)' },
+        '& label.Mui-focused': { color: '#e8822a' },
+        '& .MuiOutlinedInput-root': {
+          '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+          '&:hover fieldset': { borderColor: '#e8822a' },
+          '&.Mui-focused fieldset': { borderColor: '#e8822a' },
+        },
+        svg: { color: 'white' },
+      },
+    },
+  };
+
   return (
-    <div className="create-tournament-container">
-      <h2>Create a New Tournament</h2>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        py: 5,
+        backgroundColor: '#080b14',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(ellipse 70% 40% at 50% -5%, rgba(30,58,95,0.4), transparent)',
+          pointerEvents: 'none',
+        }}
+      />
 
-      {/* We show the messages only if they are not empty */}
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+        <Box sx={{ mb: 4, width: '100%' }}>
+          <BackButton />
+        </Box>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Name: </label>
-          <input
-            type="text"
-            value={nom}
-            onChange={(e) => setNom(e.target.value)}
-            required
-          />
-        </div>
+        <Paper
+          sx={{
+            p: { xs: 3, md: 5 },
+            borderRadius: 3,
+            backgroundColor: '#1a2540',
+            border: '1px solid rgba(255,255,255,0.05)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            maxWidth: 700,
+            margin: '0 auto',
+          }}
+        >
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            mb={4}
+            color="white"
+            textAlign="center"
+          >
+            Créer un tournoi
+          </Typography>
 
-        <div>
-          <label>Description: </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 3 }}>
+              {success}
+            </Alert>
+          )}
 
-        <div>
-          <label>Start Date: </label>
-          <input
-            type="date"
-            value={dateDebut}
-            onChange={(e) => setDateDebut(e.target.value)}
-            required
-          />
-        </div>
+          <form onSubmit={handleSubmit}>
+            <Box mb={3}>
+              <Typography variant="body2" mb={1} color="rgba(255,255,255,0.7)">
+                Nom du tournoi
+              </Typography>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Ex: Vinci Winter Cup 2026"
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                required
+                size="small"
+                sx={darkInputStyle}
+              />
+            </Box>
 
-        <div>
-          <label>End Date: </label>
-          <input
-            type="date"
-            value={dateFin}
-            onChange={(e) => setDateFin(e.target.value)}
-            required
-          />
-        </div>
+            <Box mb={4}>
+              <Typography variant="body2" mb={1} color="rgba(255,255,255,0.7)">
+                Description
+              </Typography>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Règles spécifiques, récompenses..."
+                multiline
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                sx={darkInputStyle}
+              />
+            </Box>
 
-        <div>
-          <label>Registration Deadline: </label>
-          <input
-            type="date"
-            value={dateLimiteInscription}
-            onChange={(e) => setDateLimiteInscription(e.target.value)}
-            required
-          />
-        </div>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+              <Grid container spacing={3} mb={4} alignItems="center">
+                <Grid item xs={12} sm={6}>
+                  {/* ✨ Removed the extra * in the label since required adds it automatically */}
+                  <TextField
+                    label="Nombre max d'équipes"
+                    fullWidth
+                    variant="outlined"
+                    type="number"
+                    placeholder="Ex: 16"
+                    value={nombresParticipantsMax}
+                    onChange={(e) =>
+                      setNombresParticipantsMax(Number(e.target.value))
+                    }
+                    required
+                    sx={{
+                      ...darkInputStyle,
+                      label: { color: 'rgba(255,255,255,0.7)' },
+                      '& label.Mui-focused': { color: '#e8822a' },
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: 2 }}
+                  />
+                </Grid>
 
-        <div>
-          <label>Max Participants: </label>
-          <input
-            type="number"
-            value={nombresParticipantsMax}
-            onChange={(e) => setNombresParticipantsMax(Number(e.target.value))}
-            required
-            min="2"
-          />
-        </div>
+                <Grid item xs={12} sm={6}>
+                  <DatePicker
+                    label="Date limite d'inscription"
+                    value={dateLimiteInscription}
+                    onChange={(val) => setDateLimiteInscription(val)}
+                    minDate={tomorrow}
+                    slotProps={datePickerSlotProps}
+                  />
+                </Grid>
 
-        <button type="submit">Create Tournament</button>
-      </form>
-    </div>
+                <Grid item xs={12} sm={6}>
+                  <DatePicker
+                    label="Date de début"
+                    value={dateDebut}
+                    onChange={(val) => setDateDebut(val)}
+                    minDate={dateLimiteInscription || tomorrow}
+                    slotProps={datePickerSlotProps}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <DatePicker
+                    label="Date de fin"
+                    value={dateFin}
+                    onChange={(val) => setDateFin(val)}
+                    minDate={dateDebut || dateLimiteInscription || tomorrow}
+                    slotProps={datePickerSlotProps}
+                  />
+                </Grid>
+              </Grid>
+            </LocalizationProvider>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{
+                backgroundColor: '#e8822a',
+                color: 'white',
+                py: 1.5,
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                '&:hover': { backgroundColor: '#c86e20' },
+              }}
+            >
+              CRÉER LE TOURNOI
+            </Button>
+          </form>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
-export default CreateTournament;
+export default CreateTournamentPage;

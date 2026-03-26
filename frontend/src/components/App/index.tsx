@@ -20,6 +20,9 @@ import NonConnectePage from '../pages/PasAcces/NonConnectePage';
 import InterditPage from '../pages/PasAcces/InterditPage';
 import TournoiPage from '../Tournois/TournoiPage';
 import TournoiDetailPage from '../Tournois/TournoiDetailPage';
+import AdminTournamentsPage from '../Tournois/AdminTournamentsPage';
+import CreateTournamentPage from '../Tournois/CreateTournament';
+import EditTournamentPage from '../Tournois/EditTournament';
 
 const App = () => (
   <Router
@@ -86,6 +89,31 @@ const App = () => (
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/tournaments/create"
+          element={
+            <AdminRoute>
+              <CreateTournamentPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tournaments/edit/:id"
+          element={
+            <AdminRoute>
+              <EditTournamentPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tournaments"
+          element={
+            <AdminRoute>
+              <AdminTournamentsPage />
+            </AdminRoute>
+          }
+        />
+
         <Route
           path="/admin"
           element={
