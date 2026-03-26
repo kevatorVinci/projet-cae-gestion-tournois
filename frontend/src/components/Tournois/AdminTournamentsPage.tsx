@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✨ We add useNavigate
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -18,18 +18,22 @@ import { UserContextType, Tournoi } from '../../types';
 
 /**
  * Admin version of the Tournaments page.
- * Lists all tournaments and has a button to go to the creation page.
+ * Lists all tournaments and allows navigation to creation and edition pages.
+ * Displays a nice text for Draft tournaments.
  *
  * @return {JSX.Element} the admin tournament management page
  */
 const AdminTournamentsPage = () => {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
-  const navigate = useNavigate(); // ✨ Used to change pages
+  const navigate = useNavigate();
 
   const [tournaments, setTournaments] = useState<Tournoi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Fetches the tournaments when the component mounts.
+   */
   useEffect(() => {
     const loadTournaments = async () => {
       if (!authenticatedUser?.token) return;
@@ -76,7 +80,6 @@ const AdminTournamentsPage = () => {
         <Box sx={{ textAlign: 'center', mb: 5, position: 'relative' }}>
           <BackButton />
 
-          {/* ✨ The Button redirects to our new dark page! */}
           <Button
             variant="contained"
             onClick={() => navigate('/admin/tournaments/create')}
@@ -106,13 +109,8 @@ const AdminTournamentsPage = () => {
           >
             Gestion des Tournois ⚙️
           </Typography>
-          <Typography variant="h6" color="text.secondary">
-            Espace administrateur : création de tournois et modification des
-            brouillons.
-          </Typography>
         </Box>
 
-        {/* --- LIST OF TOURNAMENTS --- */}
         <Box sx={{ mt: 4 }}>
           {loading && (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -158,8 +156,14 @@ const AdminTournamentsPage = () => {
                       Du {formatDate(tournament.dateDebut)} au{' '}
                       {formatDate(tournament.dateFin)}
                     </Typography>
+
+                    {/* ✨ MAGIC : We show 'En attente de publication' to the user, but the data is still 'BROUILLON' */}
                     <Chip
-                      label={tournament.etat}
+                      label={
+                        tournament.etat === 'BROUILLON'
+                          ? 'En attente de publication'
+                          : tournament.etat
+                      }
                       size="small"
                       sx={{
                         mt: 1,
@@ -177,6 +181,9 @@ const AdminTournamentsPage = () => {
                   {tournament.etat === 'BROUILLON' && (
                     <Button
                       variant="outlined"
+                      onClick={() =>
+                        navigate(`/admin/tournaments/edit/${tournament.id}`)
+                      }
                       sx={{
                         color: '#e8822a',
                         borderColor: '#e8822a',
@@ -185,7 +192,7 @@ const AdminTournamentsPage = () => {
                         },
                       }}
                     >
-                      Modifier (Bientôt)
+                      Modifier
                     </Button>
                   )}
                 </CardContent>

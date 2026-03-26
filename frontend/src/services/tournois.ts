@@ -78,3 +78,53 @@ export const fetchAllTournaments = async (token: string) => {
   const data = await response.json();
   return data;
 };
+/**
+ * Function to fetch a specific tournament by its ID.
+ * This is used to pre-fill the form when we want to edit a tournament.
+ *
+ * @param {string} id - the unique identifier of the tournament
+ * @return {Promise<Tournoi>} the data of the requested tournament
+ */
+export const fetchTournamentById = async (id: string) => {
+  const response = await fetch(`/api/tournois/${id}`);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch the tournament details.');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+/**
+ * Function to update an existing tournament in the database.
+ * Strictly reserved for administrators.
+ *
+ * @param {string | number} id - the unique identifier of the tournament to update
+ * @param {NewTournamentPayload} payload - the modified tournament data
+ * @param {string} token - the admin security badge (JWT token)
+ * @return {Promise<any>} the server's response after updating
+ */
+export const updateTournament = async (
+  id: string | number,
+  payload: NewTournamentPayload,
+  token: string,
+) => {
+  const requestOptions = {
+    method: 'PUT', // PUT is used to update existing data
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token, // We prove we are an admin
+    },
+    body: JSON.stringify(payload),
+  };
+
+  const response = await fetch(`/api/tournois/${id}`, requestOptions);
+
+  if (!response.ok) {
+    throw new Error('Failed to update the tournament.');
+  }
+
+  const data = await response.json();
+  return data;
+};
