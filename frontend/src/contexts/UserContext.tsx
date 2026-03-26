@@ -65,9 +65,16 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       const response = await fetch('/api/auths/login', options);
 
       if (!response.ok) {
-        throw new Error(
-          `fetch error : ${response.status} : ${response.statusText}`,
-        );
+        let errorMessage = 'Identifiants incorrects. Veuillez réessayer.';
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Si la réponse n'est pas JSON, garder le message par défaut
+        }
+        throw new Error(errorMessage);
       }
 
       const authenticatedUser: AuthenticatedUser = await response.json();

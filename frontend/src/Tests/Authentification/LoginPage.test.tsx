@@ -68,7 +68,7 @@ describe('LoginPage', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const loginUser = vi.fn(async () => {
-      throw new Error('invalid');
+      throw new Error('Le mot de passe est incorrect.');
     });
 
     renderWithProviders(<LoginPage />, {
@@ -84,9 +84,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
     expect(
-      await screen.findByText(
-        /identifiants incorrects\. veuillez réessayer\./i,
-      ),
+      await screen.findByText(/le mot de passe est incorrect\./i),
     ).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });

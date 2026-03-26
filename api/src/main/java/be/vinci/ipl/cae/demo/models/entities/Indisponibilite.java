@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,9 +28,11 @@ public class Indisponibilite {
   private Long id;
 
   @Column(name = "date_debut", nullable = false)
+  @NotNull
   private LocalDate dateDebut;
 
   @Column(name = "date_fin", nullable = false)
+  @NotNull
   private LocalDate dateFin;
 
   // Lien avec le joueur (Un joueur peut avoir plusieurs indisponibilités)

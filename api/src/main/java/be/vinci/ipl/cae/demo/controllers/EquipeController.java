@@ -7,6 +7,7 @@ import be.vinci.ipl.cae.demo.models.dtos.membre.MembrePublicDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.EquipeService;
+import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class EquipeController {
   @PreAuthorize("isAuthenticated()")
   public Equipe creerEquipe(
       @PathVariable Long userId,
-      @RequestBody EquipeCreationDto dto,
+      @RequestBody @Valid EquipeCreationDto dto,
       @AuthenticationPrincipal User currentUser) {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
@@ -107,7 +108,7 @@ public class EquipeController {
   @PreAuthorize("isAuthenticated()")
   public void rejoindreEquipe(
       @PathVariable Long userId,
-      @RequestBody EquipeJoinDto dto,
+      @RequestBody @Valid EquipeJoinDto dto,
       @AuthenticationPrincipal User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(

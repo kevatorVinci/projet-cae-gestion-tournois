@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.entities.Indisponibilite;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.IndisponibiliteRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,7 +53,8 @@ public class IndisponibiliteController {
    */
   @PostMapping
   public Indisponibilite addIndisponibilite(
-      @AuthenticationPrincipal User currentUser, @RequestBody Indisponibilite indisponibilite) {
+      @AuthenticationPrincipal User currentUser,
+      @RequestBody @Valid Indisponibilite indisponibilite) {
     ensureAuthenticated(currentUser);
     indisponibilite.setUser(currentUser);
 

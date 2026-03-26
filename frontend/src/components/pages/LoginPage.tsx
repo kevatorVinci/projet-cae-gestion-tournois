@@ -40,7 +40,11 @@ const LoginPage = () => {
       await loginUser({ email, password }, rememberMe);
       navigate('/');
     } catch (err) {
-      setError('Identifiants incorrects. Veuillez réessayer.');
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Identifiants incorrects. Veuillez réessayer.';
+      setError(errorMessage);
       console.error('LoginPage::error: ', err);
     }
   };

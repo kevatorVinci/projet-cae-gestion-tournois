@@ -32,11 +32,21 @@ public class DataInitializer {
       UserRepository userRepository,
       PasswordEncoder passwordEncoder) {
     return args -> {
-      if (userRepository.count() > 0 || equipeRepository.count() > 0 || tournoiRepository.count() > 0) {
+      final String sharedDemoPassword = "Azerty2026!";
+      final String encodedSharedDemoPassword = passwordEncoder.encode(sharedDemoPassword);
+
+      if (userRepository.count() > 0) {
+        Iterable<User> existingUsers = userRepository.findAll();
+        for (User user : existingUsers) {
+          user.setPassword(encodedSharedDemoPassword);
+          userRepository.save(user);
+        }
         return;
       }
 
-      String defaultPassword = passwordEncoder.encode("123");
+      if (equipeRepository.count() > 0 || tournoiRepository.count() > 0) {
+        return;
+      }
 
       // ── Utilisateurs (sans équipe pour l'instant) ─────────────────────────
       User lea = new User();
@@ -45,7 +55,7 @@ public class DataInitializer {
       lea.setSpecialty("tacticien");
       lea.setCreationDate(LocalDate.parse("2025-11-12"));
       lea.setAdmin(false);
-      lea.setPassword(defaultPassword);
+      lea.setPassword(encodedSharedDemoPassword);
       lea.setProfileImageUrl("flash.jpg");
 
       User tom = new User();
@@ -54,7 +64,7 @@ public class DataInitializer {
       tom.setSpecialty("exécuteur");
       tom.setCreationDate(LocalDate.parse("2025-12-03"));
       tom.setAdmin(false);
-      tom.setPassword(defaultPassword);
+      tom.setPassword(encodedSharedDemoPassword);
       tom.setProfileImageUrl("miles.jpg");
 
       User ines = new User();
@@ -63,7 +73,7 @@ public class DataInitializer {
       ines.setSpecialty("guérisseur");
       ines.setCreationDate(LocalDate.parse("2026-01-18"));
       ines.setAdmin(true);
-      ines.setPassword(defaultPassword);
+      ines.setPassword(encodedSharedDemoPassword);
       ines.setProfileImageUrl("erza.jpg");
 
       User tibo = new User();
@@ -72,7 +82,7 @@ public class DataInitializer {
       tibo.setSpecialty("gardien");
       tibo.setCreationDate(LocalDate.parse("2025-10-27"));
       tibo.setAdmin(true);
-      tibo.setPassword(defaultPassword);
+      tibo.setPassword(encodedSharedDemoPassword);
       tibo.setProfileImageUrl("luffy.png");
 
       // On sauvegarde d'abord sans équipe (les FK equipe sont nullable)
