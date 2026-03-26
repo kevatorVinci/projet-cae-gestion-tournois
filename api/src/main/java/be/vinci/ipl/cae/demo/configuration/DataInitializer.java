@@ -116,7 +116,16 @@ public class DataInitializer {
       arenaFinals.setEtat("TERMINE");
       arenaFinals.setNombresParticipantsMax(4);
 
-      tournoiRepository.saveAll(List.of(springCup, nightMasters, arenaFinals));
+      Tournoi winterClash = new Tournoi();
+      winterClash.setNom("Winter Clash");
+      winterClash.setDescription("Tournoi hivernal en cours, phase de groupes.");
+      winterClash.setDateDebut(LocalDate.parse("2026-03-20"));
+      winterClash.setDateFin(LocalDate.parse("2026-03-30"));
+      winterClash.setDateLimiteInscription(LocalDate.parse("2026-03-15"));
+      winterClash.setEtat("EN_COURS");
+      winterClash.setNombresParticipantsMax(8);
+
+      tournoiRepository.saveAll(List.of(springCup, nightMasters, arenaFinals, winterClash));
 
       // ── Équipes ───────────────────────────────────────────────────────────
       // TEAM_ALPHA : responsable principal = Lea
@@ -145,7 +154,7 @@ public class DataInitializer {
       System.out.println("✅ DB initialisée :");
       System.out.println("   TEAM_ALPHA → Lea (resp. principal), Tom, Ines");
       System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
-      System.out.println("   Tournois → Vinci Spring Cup, Night Masters, Arena Finals");
+      System.out.println("   Tournois → Spring Cup, Night Masters, Arena Finals, Winter Clash");
     };
   }
 }

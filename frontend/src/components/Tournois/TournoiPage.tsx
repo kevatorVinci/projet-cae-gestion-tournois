@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
+  CardActionArea,
+  Chip,
   CircularProgress,
   Container,
   Typography,
@@ -29,6 +31,12 @@ const fetchFilteredTournaments = async (nom?: string): Promise<Tournoi[]> => {
 };
 
 type CategoryFilter = 'TOUS' | 'EN_COURS' | 'A_VENIR' | 'PASSES';
+
+const COLORS = {
+  EN_COURS: '#e8822a',
+  A_VENIR: '#3b82f6',
+  PASSES: '#4b5563',
+} as const;
 
 const TournoiPage = () => {
   const navigate = useNavigate();
@@ -183,7 +191,8 @@ const TournoiPage = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress sx={{ color: '#e8822a' }} />
           </Box>
-        ) : (
+        ) : etatFilter === 'TOUS' ? (
+          /* ── Vue 3 colonnes (filtre TOUS) ────────────────────────── */
           <Box
             sx={{
               display: 'grid',
@@ -209,9 +218,9 @@ const TournoiPage = () => {
                   sx={{
                     cursor: 'pointer',
                     mb: 2,
-                    borderLeft: '3px solid #e8822a',
                     backgroundColor: '#111827',
                     border: '1px solid rgba(255,255,255,0.07)',
+                    borderLeft: `3px solid ${COLORS.EN_COURS}`,
                   }}
                   onClick={() => navigate(`/tournois/${tournament.id}`)}
                 >
@@ -249,6 +258,7 @@ const TournoiPage = () => {
                     mb: 2,
                     backgroundColor: '#111827',
                     border: '1px solid rgba(255,255,255,0.07)',
+                    borderLeft: `3px solid ${COLORS.A_VENIR}`,
                   }}
                   onClick={() => navigate(`/tournois/${tournament.id}`)}
                 >
@@ -290,6 +300,7 @@ const TournoiPage = () => {
                     mb: 2,
                     backgroundColor: '#111827',
                     border: '1px solid rgba(255,255,255,0.07)',
+                    borderLeft: `3px solid ${COLORS.PASSES}`,
                   }}
                   onClick={() => navigate(`/tournois/${tournament.id}`)}
                 >
@@ -309,6 +320,158 @@ const TournoiPage = () => {
               ))}
             </Box>
           </Box>
+        ) : (
+          /* ── Vue grille pleine largeur (filtre actif) ────────────── */
+          <>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: 3,
+              }}
+            >
+              <Typography variant="h6" color="white" fontWeight={700}>
+                {tournamentsByFilter.length} tournoi
+                {tournamentsByFilter.length !== 1 ? 's' : ''} trouvé
+                {tournamentsByFilter.length !== 1 ? 's' : ''}
+              </Typography>
+              <Chip
+                label={
+                  etatFilter === 'EN_COURS'
+                    ? 'En cours'
+                    : etatFilter === 'A_VENIR'
+                      ? 'À venir'
+                      : 'Passés'
+                }
+                sx={{
+                  backgroundColor: `${COLORS[etatFilter as keyof typeof COLORS]}22`,
+                  color: COLORS[etatFilter as keyof typeof COLORS],
+                  fontWeight: 700,
+                  border: `1px solid ${COLORS[etatFilter as keyof typeof COLORS]}66`,
+                }}
+              />
+            </Box>
+
+            {tournamentsByFilter.length === 0 ? (
+              <Box
+                sx={{
+                  py: 10,
+                  textAlign: 'center',
+                  border: '1px dashed rgba(255,255,255,0.1)',
+                  borderRadius: 2,
+                }}
+              >
+                <Typography color="text.secondary" variant="h6">
+                  Aucun tournoi pour ce filtre.
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(3, 1fr)',
+                  },
+                }}
+              >
+                {tournamentsByFilter.map((tournament) => (
+                  <Card
+                    key={tournament.id}
+                    sx={{
+                      backgroundColor: '#111827',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderLeft: `4px solid ${COLORS[etatFilter as keyof typeof COLORS]}`,
+                      borderRadius: 2,
+                      transition: 'transform 0.15s, border-color 0.15s',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        borderColor: `${COLORS[etatFilter as keyof typeof COLORS]}88`,
+                      },
+                    }}
+                  >
+                    <CardActionArea
+                      onClick={() => navigate(`/tournois/${tournament.id}`)}
+                      sx={{ p: 0, height: '100%' }}
+                    >
+                      <CardContent sx={{ p: 3 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            mb: 1,
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight={700}
+                            color="white"
+                            sx={{ flex: 1, mr: 1 }}
+                          >
+                            {tournament.nom}
+                          </Typography>
+                          {etatFilter === 'EN_COURS' && (
+                            <Chip
+                              label="LIVE"
+                              size="small"
+                              sx={{
+                                backgroundColor: 'rgba(232,130,42,0.15)',
+                                color: '#e8822a',
+                                fontWeight: 700,
+                                fontSize: '0.65rem',
+                                letterSpacing: '0.1em',
+                                border: '1px solid rgba(232,130,42,0.4)',
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                        </Box>
+                        {etatFilter === 'EN_COURS' && (
+                          <Typography variant="body2" color="text.secondary">
+                            Du {formatDate(tournament.dateDebut)} au{' '}
+                            {formatDate(tournament.dateFin)}
+                          </Typography>
+                        )}
+                        {etatFilter === 'A_VENIR' && (
+                          <>
+                            <Typography variant="body2" color="text.secondary">
+                              Début : {formatDate(tournament.dateDebut)}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ mt: 0.5 }}
+                            >
+                              Inscriptions avant le{' '}
+                              {formatDate(tournament.dateLimiteInscription)}
+                            </Typography>
+                            {tournament.nombresParticipantsMax && (
+                              <Typography
+                                variant="body2"
+                                sx={{ color: '#e8822a', mt: 0.5 }}
+                              >
+                                👥 Max : {tournament.nombresParticipantsMax}{' '}
+                                équipes
+                              </Typography>
+                            )}
+                          </>
+                        )}
+                        {etatFilter === 'PASSES' && (
+                          <Typography variant="body2" color="text.secondary">
+                            Terminé le {formatDate(tournament.dateFin)}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                ))}
+              </Box>
+            )}
+          </>
         )}
       </Container>
     </Box>
