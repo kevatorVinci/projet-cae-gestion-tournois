@@ -73,6 +73,17 @@ interface UserContextType {
   updateUser: (updatedData: Partial<AuthenticatedUser>) => void;
 }
 
+interface Tournoi {
+  id: number;
+  nom: string;
+  description?: string;
+  dateDebut: string;
+  dateFin: string;
+  dateLimiteInscription: string;
+  etat: 'BROUILLON' | 'OUVERT' | 'CLOTURE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
+  nombresParticipantsMax?: number;
+}
+
 export type {
   User,
   AuthenticatedUser,
@@ -81,4 +92,5 @@ export type {
   NotificationItem,
   DemandeDecisionResult,
   DemandePendingItem,
+  Tournoi,
 };
