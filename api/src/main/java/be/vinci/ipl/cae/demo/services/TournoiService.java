@@ -176,7 +176,7 @@ public class TournoiService {
    */
   @Scheduled(cron = "0 0 0 * * *")
   public void verifierEtCloturerTournoisExpires() {
-    System.out.println("🤖 Vérification automatique des dates de tournois...");
+    System.out.println(" Vérification automatique des dates de tournois...");
     LocalDate aujourdHui = LocalDate.now();
 
     Iterable<Tournoi> tousLesTournois = tournoiRepository.findAll();

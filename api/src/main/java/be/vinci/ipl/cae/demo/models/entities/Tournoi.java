@@ -43,7 +43,7 @@ public class Tournoi {
 
   // Pas d'enum → simple String, la validation se fait au niveau service
   private String etat;
-  
+
   @Min(value = 2, message = "Un tournoi doit avoir au moins 2 équipes participantes.")
   private Integer nombresParticipantsMax;
 
