@@ -18,6 +18,7 @@ import ProtectedRoute from '../routes/ProtectedRoute';
 import AdminRoute from '../routes/AdminRoute';
 import NonConnectePage from '../pages/PasAcces/NonConnectePage';
 import InterditPage from '../pages/PasAcces/InterditPage';
+import MemberDetails from '../pages/Member/MemberDetails';
 
 const App = () => (
   <Router
@@ -100,6 +101,7 @@ const App = () => (
         />
         <Route path="/pas-acces/non-connecte" element={<NonConnectePage />} />
         <Route path="/pas-acces/interdit" element={<InterditPage />} />
+        <Route path="/players/:id" element={<MemberDetails />} />
       </Routes>
     </Box>
   </Router>

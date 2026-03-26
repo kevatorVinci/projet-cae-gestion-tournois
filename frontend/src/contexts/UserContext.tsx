@@ -72,8 +72,14 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
       const authenticatedUser: AuthenticatedUser = await response.json();
 
-      setAuthenticatedUser(authenticatedUser);
-      storeAuthenticatedUser(authenticatedUser, rememberMe);
+      // Keep the password in context for own-profile display.
+      const authenticatedUserWithPassword: AuthenticatedUser = {
+        ...authenticatedUser,
+        password: user.password,
+      };
+
+      setAuthenticatedUser(authenticatedUserWithPassword);
+      storeAuthenticatedUser(authenticatedUserWithPassword, rememberMe);
     } catch (err) {
       console.error('loginUser::error: ', err);
       throw err;

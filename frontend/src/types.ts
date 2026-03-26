@@ -56,6 +56,7 @@ interface DemandePendingItem {
 interface AuthenticatedUser {
   email: string;
   token: string;
+  password?: string;
   tag?: string;
   specialty?: string;
   profileImage?: string;
