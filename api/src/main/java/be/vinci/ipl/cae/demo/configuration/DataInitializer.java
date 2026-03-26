@@ -154,7 +154,7 @@ public class DataInitializer {
       System.out.println("✅ DB initialisée :");
       System.out.println("   TEAM_ALPHA → Lea (resp. principal), Tom, Ines");
       System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
-      System.out.println("   Tournois → Vinci Spring Cup, Night Masters, Arena Finals, Winter Clash");
+      System.out.println("   Tournois → Spring Cup, Night Masters, Arena Finals, Winter Clash");
     };
   }
 }
