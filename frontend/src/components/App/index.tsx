@@ -21,11 +21,11 @@ import ResponsableRoute from '../routes/ResponsableRoute';
 import NonConnectePage from '../pages/PasAcces/NonConnectePage';
 import InterditPage from '../pages/PasAcces/InterditPage';
 import MemberDetails from '../pages/Member/MemberDetails';
-import TournoiPage from '../Tournois/TournoiPage';
-import TournoiDetailPage from '../Tournois/TournoiDetailPage';
-import AdminTournamentsPage from '../Tournois/AdminTournamentsPage';
-import CreateTournamentPage from '../Tournois/CreateTournament';
-import EditTournamentPage from '../Tournois/EditTournament';
+import TournoiPage from '../pages/Tournois/TournoiPage';
+import TournoiDetailPage from '../pages/Tournois/TournoiDetailPage';
+import AdminTournamentsPage from '../pages/Tournois/AdminTournamentsPage';
+import CreateTournamentPage from '../pages/Tournois/CreateTournament';
+import EditTournamentPage from '../pages/Tournois/EditTournament';
 
 const App = () => (
   <Router

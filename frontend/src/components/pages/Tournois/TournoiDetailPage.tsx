@@ -4,6 +4,7 @@ import {
   Alert,
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -13,9 +14,14 @@ import {
   Typography,
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
-import BackButton from '../BoutonRetour';
-import { Tournoi } from '../../types';
-import { getAuthenticatedUser } from '../../utils/session';
+import BackButton from '../../BoutonRetour';
+import { Tournoi } from '../../../types';
+import { getAuthenticatedUser } from '../../../utils/session';
+import {
+  fetchTeamRegistrations,
+  registerTeamToTournament,
+} from '../../../services/tournois';
+import { getUserTeam, isCurrentUserResponsable } from '../../../services/teams';
 
 type EquipeLike = {
   id?: number;
@@ -25,6 +31,8 @@ type EquipeLike = {
 
 type InscriptionTournoi = {
   etat?: string;
+  equipeId?: number;
+  equipeName?: string;
   equipe?: EquipeLike;
 };
 
@@ -76,10 +84,20 @@ const getEtatColor = (etat: Tournoi['etat']) => {
 
 const resolveTeamName = (inscription: InscriptionTournoi, index: number) => {
   return (
+    inscription.equipeName ||
     inscription.equipe?.name ||
     inscription.equipe?.nom ||
     `Équipe inscrite #${index + 1}`
   );
+};
+
+const getAvatarColorFromName = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 60%, 40%)`;
 };
 
 const fetchTournoiById = async (id: string): Promise<TournoiDetail> => {
@@ -93,9 +111,8 @@ const fetchTournoiById = async (id: string): Promise<TournoiDetail> => {
 const fetchAcceptedInscriptions = async (
   id: string,
 ): Promise<InscriptionTournoi[]> => {
-  const token = getAuthenticatedUser()?.token;
   const response = await fetch(`/api/tournois/${id}/inscriptions/accepted`, {
-    headers: token ? { Authorization: token } : {},
+    headers: {},
   });
 
   if (!response.ok) {
@@ -111,6 +128,13 @@ const TournoiDetailPage = () => {
   const [acceptedInscriptions, setAcceptedInscriptions] = useState<
     InscriptionTournoi[]
   >([]);
+  const [isResponsable, setIsResponsable] = useState(false);
+  const [responsableTeamId, setResponsableTeamId] = useState<number | null>(
+    null,
+  );
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerFeedback, setRegisterFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -124,12 +148,44 @@ const TournoiDetailPage = () => {
 
       try {
         setError(null);
+        setRegisterFeedback(null);
         const [tournoiDetail, inscriptions] = await Promise.all([
           fetchTournoiById(id),
           fetchAcceptedInscriptions(id),
         ]);
         setTournoi(tournoiDetail);
         setAcceptedInscriptions(inscriptions);
+
+        const token = getAuthenticatedUser()?.token;
+        if (!token) {
+          setIsResponsable(false);
+          setResponsableTeamId(null);
+          setAlreadyRegistered(false);
+          return;
+        }
+
+        const responsable = await isCurrentUserResponsable();
+        setIsResponsable(responsable);
+
+        if (!responsable) {
+          setResponsableTeamId(null);
+          setAlreadyRegistered(false);
+          return;
+        }
+
+        const myTeam = await getUserTeam();
+        if (!myTeam) {
+          setResponsableTeamId(null);
+          setAlreadyRegistered(false);
+          return;
+        }
+
+        setResponsableTeamId(myTeam.id);
+        const myRegistrations = await fetchTeamRegistrations(myTeam.id, token);
+        const isAlreadyRegistered = myRegistrations.some(
+          (registration) => registration.tournoiId === Number(id),
+        );
+        setAlreadyRegistered(isAlreadyRegistered);
       } catch (err: unknown) {
         setError(
           err instanceof Error
@@ -150,6 +206,41 @@ const TournoiDetailPage = () => {
     }
     return tournoi?.inscriptions || [];
   }, [acceptedInscriptions, tournoi]);
+
+  const handleDirectRegister = async () => {
+    if (!id || !responsableTeamId) {
+      return;
+    }
+
+    const token = getAuthenticatedUser()?.token;
+    if (!token) {
+      setRegisterFeedback('Session expiree. Veuillez vous reconnecter.');
+      return;
+    }
+
+    try {
+      setRegisterFeedback(null);
+      setRegisterLoading(true);
+      await registerTeamToTournament(id, responsableTeamId, token);
+      setAlreadyRegistered(true);
+      setRegisterFeedback('Votre equipe est inscrite a ce tournoi.');
+
+      const refreshedAccepted = await fetchAcceptedInscriptions(id);
+      setAcceptedInscriptions(refreshedAccepted);
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 400);
+    } catch (err: unknown) {
+      setRegisterFeedback(
+        err instanceof Error
+          ? err.message
+          : "Impossible d'inscrire votre equipe.",
+      );
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -265,6 +356,41 @@ const TournoiDetailPage = () => {
                 />
               )}
             </Stack>
+
+            {isResponsable && (
+              <Box sx={{ mt: 3 }}>
+                {registerFeedback && (
+                  <Alert
+                    severity={alreadyRegistered ? 'success' : 'info'}
+                    sx={{ mb: 2 }}
+                  >
+                    {registerFeedback}
+                  </Alert>
+                )}
+
+                {alreadyRegistered ? (
+                  <Chip
+                    label="Votre équipe est déjà inscrite"
+                    sx={{ bgcolor: '#16a34a', color: 'white', fontWeight: 700 }}
+                  />
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={handleDirectRegister}
+                    disabled={tournoi.etat !== 'OUVERT' || registerLoading}
+                    sx={{
+                      bgcolor: '#16a34a',
+                      color: 'white',
+                      '&:hover': { bgcolor: '#15803d' },
+                    }}
+                  >
+                    {registerLoading
+                      ? 'Inscription en cours...'
+                      : "S'inscrire au tournoi"}
+                  </Button>
+                )}
+              </Box>
+            )}
           </CardContent>
         </Card>
 
@@ -306,8 +432,16 @@ const TournoiDetailPage = () => {
                       backgroundColor: 'rgba(255,255,255,0.02)',
                     }}
                   >
+                    {/** Team avatar generated from team name when no team image exists. */}
                     <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Avatar sx={{ bgcolor: '#1a2540', color: 'white' }}>
+                      <Avatar
+                        sx={{
+                          bgcolor: getAvatarColorFromName(
+                            resolveTeamName(inscription, index),
+                          ),
+                          color: 'white',
+                        }}
+                      >
                         {resolveTeamName(inscription, index)
                           .charAt(0)
                           .toUpperCase()}
@@ -316,7 +450,7 @@ const TournoiDetailPage = () => {
                         {resolveTeamName(inscription, index)}
                       </Typography>
                     </Stack>
-                    {inscription.etat && (
+                    {inscription.etat && inscription.etat !== 'ACCEPTEE' && (
                       <Chip
                         size="small"
                         label={inscription.etat}

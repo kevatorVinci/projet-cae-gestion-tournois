@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -42,7 +43,8 @@ public class Tournoi {
 
   // Pas d'enum → simple String, la validation se fait au niveau service
   private String etat;
-
+  
+  @Min(value = 2, message = "Un tournoi doit avoir au moins 2 équipes participantes.")
   private Integer nombresParticipantsMax;
 
   @OneToMany(mappedBy = "tournoi", fetch = FetchType.LAZY)

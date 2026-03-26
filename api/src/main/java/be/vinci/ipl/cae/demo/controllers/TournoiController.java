@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import java.util.Map;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -139,8 +140,11 @@ public class TournoiController {
   /** Cancels a tournament from any active state. Reserved for admins. */
   @PatchMapping("/{id}/cancel")
   @IsAdmin
-  public Tournoi cancel(@PathVariable Long id) {
-    Tournoi tournoi = tournoiService.cancel(id);
+  public Tournoi cancel(
+      @PathVariable Long id,
+      @RequestBody(required = false) Map<String, String> payload) {
+    String reason = payload == null ? null : payload.get("reason");
+    Tournoi tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");

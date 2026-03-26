@@ -111,8 +111,7 @@ public class InscriptionEquipeTournoiService {
    */
   /**
    * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
-   * Interdit si le tournoi a commencé OU si la date limite d'inscription est dépassée.
-   * Rouvre automatiquement le tournoi si une place se libère.
+   * Autorisé uniquement quand le tournoi est encore OUVERT et avant la date limite.
    */
   public boolean unregister(Long inscriptionId) {
     InscriptionEquipeTournoi inscription = inscriptionRepository.findById(inscriptionId).orElse(null);
@@ -123,8 +122,8 @@ public class InscriptionEquipeTournoiService {
     Tournoi tournoi = inscription.getTournoi();
     String etatTournoi = tournoi.getEtat();
 
-    // 1. On interdit si le tournoi est en train de se jouer ou est terminé
-    if ("EN_COURS".equals(etatTournoi) || "TERMINE".equals(etatTournoi) || "ANNULE".equals(etatTournoi)) {
+    // 1. Désinscription autorisée uniquement en OUVERT (pas en CLOTURE, EN_COURS, TERMINE, ANNULE)
+    if (!"OUVERT".equals(etatTournoi)) {
       return false;
     }
 
@@ -138,22 +137,12 @@ public class InscriptionEquipeTournoiService {
     // 3. Désinscription propre : on supprime physiquement la ligne
     inscriptionRepository.delete(inscription);
 
-    // 4. Logique de réouverture automatique
-    // Si on arrive ici, on sait avec certitude que la date n'est PAS dépassée
-    // (sinon le code se serait arrêté juste au-dessus).
-    // Donc si le tournoi était CLOTURE, c'était forcément parce qu'il était plein !
-    if ("CLOTURE".equals(etatTournoi)) {
-      tournoi.setEtat("OUVERT");
-      tournoiRepository.save(tournoi);
-      System.out.println("🔓 Une place s'est libérée, le tournoi " + tournoi.getNom() + " est de nouveau OUVERT !");
-    }
-
     return true;
   }
 
   /**
    * Désinscrit une équipe d'un tournoi via la clé logique (tournoiId, equipeId).
-   * Interdit si le tournoi a commencé, est terminé/annulé, ou si la date limite est dépassée.
+   * Autorisé uniquement quand le tournoi est encore OUVERT et avant la date limite.
    */
   public boolean unregisterByTournoiAndEquipe(Long tournoiId, Long equipeId) {
     Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
@@ -169,7 +158,7 @@ public class InscriptionEquipeTournoiService {
     }
 
     String etatTournoi = tournoi.getEtat();
-    if ("EN_COURS".equals(etatTournoi) || "TERMINE".equals(etatTournoi) || "ANNULE".equals(etatTournoi)) {
+    if (!"OUVERT".equals(etatTournoi)) {
       return false;
     }
 
@@ -179,11 +168,6 @@ public class InscriptionEquipeTournoiService {
     }
 
     inscriptionRepository.delete(inscription);
-
-    if ("CLOTURE".equals(etatTournoi)) {
-      tournoi.setEtat("OUVERT");
-      tournoiRepository.save(tournoi);
-    }
 
     return true;
   }

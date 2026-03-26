@@ -150,7 +150,7 @@ public class TournoiService {
     return tournoiRepository.save(tournoi);
   }
 
-  public Tournoi cancel(Long id) {
+  public Tournoi cancel(Long id, String reason) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
     if (tournoi == null || "TERMINE".equals(tournoi.getEtat()) || "ANNULE".equals(tournoi.getEtat())) {
       return null;
@@ -158,7 +158,10 @@ public class TournoiService {
 
     tournoi.setEtat("ANNULE");
 
-    tournoi.setNom(tournoi.getNom() + " (Annulé - " + tournoi.getId() + ")");
+    String sanitizedReason = (reason == null || reason.isBlank())
+        ? "raison non specifiee"
+        : reason.trim();
+    tournoi.setNom(tournoi.getNom() + " (Annulé : " + sanitizedReason + ")");
 
     return tournoiRepository.save(tournoi);
   }
@@ -197,7 +200,7 @@ public class TournoiService {
             System.out.println("❌ Tournoi " + tournoi.getNom() + " annulé automatiquement (Moins de 2 joueurs).");
             tournoi.setEtat("ANNULE");
 
-            tournoi.setNom(tournoi.getNom() + " (Annulé - " + tournoi.getId() + ")");
+            tournoi.setNom(tournoi.getNom() + " (Annulé : moins de 2 equipes inscrites)");
           }
           
           tournoiRepository.save(tournoi);

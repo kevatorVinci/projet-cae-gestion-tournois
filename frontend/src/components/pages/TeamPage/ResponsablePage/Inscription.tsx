@@ -1,4 +1,5 @@
 import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BackButton from '../../../BoutonRetour';
 import {
   Container,
@@ -68,6 +69,7 @@ const toInscriptions = (
 };
 
 export function TournoisResponsable() {
+  const navigate = useNavigate();
   const token = getAuthenticatedUser()?.token;
 
   const [equipeId, setEquipeId] = useState<number | null>(null);
@@ -205,6 +207,7 @@ export function TournoisResponsable() {
   const renderTournoiCard = (tournoi: Tournoi, actionButton: ReactNode) => (
     <Paper
       key={tournoi.id}
+      onClick={() => navigate(`/tournois/${tournoi.id}`)}
       sx={{
         p: 3,
         borderRadius: 2,
@@ -215,6 +218,10 @@ export function TournoisResponsable() {
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: 2,
+        cursor: 'pointer',
+        '&:hover': {
+          borderColor: '#e8822a',
+        },
       }}
     >
       <Box>
@@ -238,7 +245,7 @@ export function TournoisResponsable() {
           />
         </Stack>
       </Box>
-      <Box>{actionButton}</Box>
+      <Box onClick={(event) => event.stopPropagation()}>{actionButton}</Box>
     </Paper>
   );
 
@@ -330,7 +337,10 @@ export function TournoisResponsable() {
                         variant="outlined"
                         color="error"
                         startIcon={<CancelOutlined />}
-                        disabled={actionLoading === inscription.tournoiId}
+                        disabled={
+                          actionLoading === inscription.tournoiId ||
+                          inscription.tournoi.etat !== 'OUVERT'
+                        }
                         onClick={() => {
                           setInscriptionCible(inscription);
                           setIsUnregisterModalOpen(true);

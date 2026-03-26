@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.annotations.IsAdminOrResponsable;
 import be.vinci.ipl.cae.demo.annotations.IsResponsable;
 import be.vinci.ipl.cae.demo.models.dtos.tournoi.EquipeTournamentRegistrationDto;
+import be.vinci.ipl.cae.demo.models.dtos.tournoi.TournoiEquipeInscriptionDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournoi.TournoiResumeDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
@@ -44,6 +45,24 @@ public class InscriptionEquipeTournoiController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
     return inscriptions;
+  }
+
+  /** Retourne les inscriptions visibles publiquement pour la page détail tournoi. */
+  @GetMapping("/{tournoiId}/inscriptions/accepted")
+  public Iterable<TournoiEquipeInscriptionDto> getAcceptedByTournoi(@PathVariable Long tournoiId) {
+    Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
+    if (inscriptions == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
+    }
+
+    List<TournoiEquipeInscriptionDto> result = new ArrayList<>();
+    for (InscriptionEquipeTournoi inscription : inscriptions) {
+      result.add(new TournoiEquipeInscriptionDto(
+          inscription.getEquipe().getId(),
+          inscription.getEquipe().getName(),
+          inscription.getDateInscription()));
+    }
+    return result;
   }
 
   /** Retourne toutes les inscriptions d'une équipe. Accessible au responsable ou à un admin. */
@@ -101,7 +120,7 @@ public class InscriptionEquipeTournoiController {
     if (!success) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament already started, or registration deadline passed");
+              "Registration not found, tournament is not OUVERT, or registration deadline passed");
     }
   }
 
@@ -124,7 +143,7 @@ public class InscriptionEquipeTournoiController {
     if (!success) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament already started, or registration deadline passed");
+              "Registration not found, tournament is not OUVERT, or registration deadline passed");
     }
   }
 

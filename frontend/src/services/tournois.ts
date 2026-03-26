@@ -110,10 +110,12 @@ const changeTournamentState = async (
   id: string | number,
   action: string,
   token: string,
+  body?: unknown,
 ) => {
   const requestOptions = {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Authorization: token },
+    body: body ? JSON.stringify(body) : undefined,
   };
   const response = await fetch(`/api/tournois/${id}/${action}`, requestOptions);
   if (!response.ok) {
@@ -135,6 +137,12 @@ export const finishTournament = (id: string | number, token: string) =>
   changeTournamentState(id, 'finish', token);
 export const cancelTournament = (id: string | number, token: string) =>
   changeTournamentState(id, 'cancel', token);
+
+export const cancelTournamentWithReason = (
+  id: string | number,
+  token: string,
+  reason: string,
+) => changeTournamentState(id, 'cancel', token, { reason });
 
 // ═══════════════════════════════════════════════════════════════════
 // 3. INSCRIPTIONS (ÉQUIPES ET RESPONSABLES)

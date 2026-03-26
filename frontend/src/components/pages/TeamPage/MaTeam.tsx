@@ -23,10 +23,7 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
-import {
-  ExitToApp as LeaveIcon,
-  EmojiEvents,
-} from '@mui/icons-material';
+import { ExitToApp as LeaveIcon, EmojiEvents } from '@mui/icons-material';
 import {
   depromoteResponsable,
   getUserTeam,

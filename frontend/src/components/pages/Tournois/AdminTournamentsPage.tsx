@@ -17,13 +17,15 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 
-import BackButton from '../BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
+  cancelTournamentWithReason,
+  closeRegistrations,
   fetchAllTournaments,
   publishTournament,
-} from '../../services/tournois';
-import { UserContext } from '../../contexts/UserContext';
-import { UserContextType, Tournoi } from '../../types';
+} from '../../../services/tournois';
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType, Tournoi } from '../../../types';
 
 /**
  * Admin version of the Tournaments page.
@@ -87,6 +89,64 @@ const AdminTournamentsPage = () => {
       setActionMessage({
         type: 'error',
         text: 'Erreur lors de la publication du tournoi. Vérifiez votre connexion.',
+      });
+    }
+  };
+
+  const handleCloseRegistrations = async (id: number) => {
+    if (!authenticatedUser?.token) return;
+    setActionMessage(null);
+
+    try {
+      await closeRegistrations(id, authenticatedUser.token);
+      setActionMessage({
+        type: 'success',
+        text: 'Les inscriptions du tournoi sont maintenant clôturées.',
+      });
+      await loadTournaments();
+    } catch (err) {
+      setActionMessage({
+        type: 'error',
+        text: 'Impossible de clôturer ce tournoi (minimum 2 équipes requises).',
+      });
+    }
+  };
+
+  const handleCancelTournament = async (id: number) => {
+    if (!authenticatedUser?.token) return;
+
+    const reason = window.prompt(
+      "Raison d'annulation du tournoi (obligatoire):",
+    );
+    if (reason === null) {
+      return;
+    }
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) {
+      setActionMessage({
+        type: 'error',
+        text: "Veuillez saisir une raison d'annulation.",
+      });
+      return;
+    }
+
+    setActionMessage(null);
+
+    try {
+      await cancelTournamentWithReason(
+        id,
+        authenticatedUser.token,
+        trimmedReason,
+      );
+      setActionMessage({
+        type: 'success',
+        text: 'Le tournoi a été annulé.',
+      });
+      await loadTournaments();
+    } catch (err) {
+      setActionMessage({
+        type: 'error',
+        text: "Impossible d'annuler ce tournoi.",
       });
     }
   };
@@ -269,6 +329,7 @@ const AdminTournamentsPage = () => {
             filteredTournaments.map((tournament) => (
               <Card
                 key={tournament.id}
+                onClick={() => navigate(`/tournois/${tournament.id}`)}
                 sx={{
                   mb: 2,
                   backgroundColor: '#111827',
@@ -277,6 +338,10 @@ const AdminTournamentsPage = () => {
                     tournament.etat === 'BROUILLON'
                       ? '4px solid #6b7280'
                       : '4px solid #e8822a',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    borderColor: '#e8822a',
+                  },
                 }}
               >
                 <CardContent
@@ -318,7 +383,10 @@ const AdminTournamentsPage = () => {
                   </Box>
 
                   {tournament.etat === 'BROUILLON' && (
-                    <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box
+                      sx={{ display: 'flex', gap: 2 }}
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <Button
                         variant="outlined"
                         onClick={() =>
@@ -345,6 +413,47 @@ const AdminTournamentsPage = () => {
                         }}
                       >
                         Publier
+                      </Button>
+                    </Box>
+                  )}
+
+                  {tournament.etat === 'OUVERT' && (
+                    <Box
+                      sx={{ display: 'flex', gap: 2 }}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <Button
+                        variant="contained"
+                        color="warning"
+                        onClick={() => handleCloseRegistrations(tournament.id)}
+                        sx={{ color: 'white', fontWeight: 'bold' }}
+                      >
+                        Clôturer
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleCancelTournament(tournament.id)}
+                        sx={{ fontWeight: 'bold' }}
+                      >
+                        Annuler
+                      </Button>
+                    </Box>
+                  )}
+
+                  {(tournament.etat === 'CLOTURE' ||
+                    tournament.etat === 'EN_COURS') && (
+                    <Box
+                      sx={{ display: 'flex', gap: 2 }}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleCancelTournament(tournament.id)}
+                        sx={{ fontWeight: 'bold' }}
+                      >
+                        Annuler
                       </Button>
                     </Box>
                   )}
