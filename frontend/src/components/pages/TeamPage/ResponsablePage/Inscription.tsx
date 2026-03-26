@@ -23,6 +23,7 @@ import {
   CancelOutlined,
 } from '@mui/icons-material';
 import {
+  fetchAcceptedTournamentRegistrations,
   fetchPublicTournaments,
   fetchTeamRegistrations,
   registerTeamToTournament,
@@ -90,6 +91,9 @@ export function TournoisResponsable() {
   const [inscriptionCible, setInscriptionCible] = useState<Inscription | null>(
     null,
   );
+  const [registerWarningMessage, setRegisterWarningMessage] = useState<
+    string | null
+  >(null);
 
   const loadData = useCallback(async () => {
     if (!token) {
@@ -383,6 +387,36 @@ export function TournoisResponsable() {
                         disabled={actionLoading === tournoi.id}
                         onClick={() => {
                           setTournoiCible(tournoi);
+                          setRegisterWarningMessage(null);
+
+                          if (tournoi.nombresParticipantsMax) {
+                            fetchAcceptedTournamentRegistrations(tournoi.id)
+                              .then((accepted) => {
+                                const remainingSlots =
+                                  tournoi.nombresParticipantsMax! -
+                                  accepted.length;
+
+                                if (remainingSlots <= 1) {
+                                  setRegisterWarningMessage(
+                                    "Attention: c'est la derniere place. Cette inscription va cloturer le tournoi automatiquement.",
+                                  );
+                                } else {
+                                  setRegisterWarningMessage(
+                                    `Attention: il reste ${remainingSlots} place(s). Si le tournoi devient plein, il sera cloture automatiquement.`,
+                                  );
+                                }
+                              })
+                              .catch(() => {
+                                setRegisterWarningMessage(
+                                  'Attention: si le tournoi devient plein, il sera cloture automatiquement.',
+                                );
+                              });
+                          } else {
+                            setRegisterWarningMessage(
+                              'Attention: cette inscription peut impacter le statut du tournoi.',
+                            );
+                          }
+
                           setIsRegisterModalOpen(true);
                         }}
                       >
@@ -441,6 +475,11 @@ export function TournoisResponsable() {
             Voulez-vous inscrire votre equipe au tournoi{' '}
             <strong>{tournoiCible?.nom}</strong> ?
           </DialogContentText>
+          {registerWarningMessage && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              {registerWarningMessage}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions sx={{ bgcolor: '#1a2540', p: 2 }}>
           <Button

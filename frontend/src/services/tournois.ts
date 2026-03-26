@@ -26,6 +26,12 @@ export interface TeamRegistrationItem {
   tournoi: TeamRegistrationTournament;
 }
 
+export interface AcceptedTournamentRegistration {
+  equipeId: number;
+  equipeName: string;
+  dateInscription?: string;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // 1. GESTION DES TOURNOIS (PUBLIC ET ADMIN)
 // ═══════════════════════════════════════════════════════════════════
@@ -159,6 +165,18 @@ export const fetchTournamentRegistrations = async (
     headers: { Authorization: token },
   });
   if (!response.ok) throw new Error('Impossible de charger les inscriptions.');
+  return await response.json();
+};
+
+export const fetchAcceptedTournamentRegistrations = async (
+  tournoiId: string | number,
+): Promise<AcceptedTournamentRegistration[]> => {
+  const response = await fetch(
+    `/api/tournois/${tournoiId}/inscriptions/accepted`,
+  );
+  if (!response.ok) {
+    return [];
+  }
   return await response.json();
 };
 

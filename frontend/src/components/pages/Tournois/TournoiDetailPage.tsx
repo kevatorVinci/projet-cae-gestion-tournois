@@ -212,6 +212,19 @@ const TournoiDetailPage = () => {
       return;
     }
 
+    const maxParticipants = tournoi?.nombresParticipantsMax;
+    const currentParticipants = teams.length;
+    const isLastSlot =
+      !!maxParticipants && currentParticipants + 1 >= maxParticipants;
+
+    const confirmationMessage = isLastSlot
+      ? "Attention: c'est la derniere place. Cette inscription va cloturer le tournoi automatiquement. Continuer ?"
+      : "Confirmez-vous l'inscription de votre equipe a ce tournoi ?";
+
+    if (!window.confirm(confirmationMessage)) {
+      return;
+    }
+
     const token = getAuthenticatedUser()?.token;
     if (!token) {
       setRegisterFeedback('Session expiree. Veuillez vous reconnecter.');
