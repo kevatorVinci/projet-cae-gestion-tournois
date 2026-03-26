@@ -401,9 +401,7 @@ export function TournoisResponsable() {
                                     "Attention: c'est la derniere place. Cette inscription va cloturer le tournoi automatiquement.",
                                   );
                                 } else {
-                                  setRegisterWarningMessage(
-                                    `Attention: il reste ${remainingSlots} place(s). Si le tournoi devient plein, il sera cloture automatiquement.`,
-                                  );
+                                  setRegisterWarningMessage(null);
                                 }
                               })
                               .catch(() => {
