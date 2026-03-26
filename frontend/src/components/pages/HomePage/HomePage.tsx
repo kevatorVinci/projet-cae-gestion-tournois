@@ -10,7 +10,6 @@ import {
   Box,
   Alert,
   CircularProgress,
-  Chip,
 } from '@mui/material';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
@@ -366,20 +365,6 @@ const HomePage = () => {
                             >
                               {tournament.nom}
                             </Typography>
-                            <Chip
-                              label="LIVE"
-                              size="small"
-                              sx={{
-                                backgroundColor: 'rgba(232,130,42,0.15)',
-                                color: '#e8822a',
-                                fontWeight: 700,
-                                fontSize: '0.65rem',
-                                letterSpacing: '0.1em',
-                                border: '1px solid rgba(232,130,42,0.4)',
-                                ml: 1,
-                                flexShrink: 0,
-                              }}
-                            />
                           </Box>
                           <Typography variant="body2" color="text.secondary">
                             Du {formatDate(tournament.dateDebut)} au{' '}
@@ -460,11 +445,12 @@ const HomePage = () => {
                       sx={{
                         backgroundColor: '#111827',
                         border: '1px solid rgba(255,255,255,0.07)',
+                        borderLeft: '3px solid #3b82f6',
                         borderRadius: 2,
                         transition: 'transform 0.15s, border-color 0.15s',
                         '&:hover': {
                           transform: 'translateY(-2px)',
-                          borderColor: 'rgba(232,130,42,0.3)',
+                          borderColor: 'rgba(59,130,246,0.4)',
                         },
                       }}
                     >
