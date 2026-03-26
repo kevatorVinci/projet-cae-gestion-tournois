@@ -19,6 +19,7 @@ public class InscriptionEquipeTournoiService {
   private final EquipeRepository equipeRepository;
   private final TournoiService tournoiService;
 
+  /** Creates the service with its repositories and tournament service dependency. */
   public InscriptionEquipeTournoiService(
           InscriptionEquipeTournoiRepository inscriptionRepository,
           TournoiRepository tournoiRepository,
@@ -100,38 +101,21 @@ public class InscriptionEquipeTournoiService {
 
   /**
    * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
-   * Possible uniquement si le tournoi n'a pas encore commencé.
+   * Autorisé uniquement quand le tournoi est encore OUVERT et avant la date limite.
    *
    * @param inscriptionId l'ID de l'inscription à supprimer
    * @return true si la désinscription a réussi, false sinon
    */
-  /**
-   * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
-   * Rouvre automatiquement le tournoi si une place se libère et que la date n'est pas dépassée.
-   */
-  /**
-   * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
-   * Autorisé uniquement quand le tournoi est encore OUVERT et avant la date limite.
-   */
   public boolean unregister(Long inscriptionId) {
-    InscriptionEquipeTournoi inscription = inscriptionRepository.findById(inscriptionId).orElse(null);
+    InscriptionEquipeTournoi inscription =
+            inscriptionRepository.findById(inscriptionId).orElse(null);
     if (inscription == null) {
       return false;
     }
 
     Tournoi tournoi = inscription.getTournoi();
-    String etatTournoi = tournoi.getEtat();
-
-    // 1. Désinscription autorisée uniquement en OUVERT (pas en CLOTURE, EN_COURS, TERMINE, ANNULE)
-    if (!"OUVERT".equals(etatTournoi)) {
+    if (!isUnregisterAllowed(tournoi, true)) {
       return false;
-    }
-
-    // 2. 🚨 NOUVELLE SÉCURITÉ : On interdit si la date limite est dépassée
-    if (tournoi.getDateLimiteInscription() != null &&
-            tournoi.getDateLimiteInscription().isBefore(LocalDate.now())) {
-      System.out.println("❌ Désinscription refusée : La date limite du tournoi est dépassée.");
-      return false; // Trop tard pour fuir !
     }
 
     // 3. Désinscription propre : on supprime physiquement la ligne
@@ -157,13 +141,7 @@ public class InscriptionEquipeTournoiService {
       return false;
     }
 
-    String etatTournoi = tournoi.getEtat();
-    if (!"OUVERT".equals(etatTournoi)) {
-      return false;
-    }
-
-    if (tournoi.getDateLimiteInscription() != null
-            && tournoi.getDateLimiteInscription().isBefore(LocalDate.now())) {
+    if (!isUnregisterAllowed(tournoi, false)) {
       return false;
     }
 
@@ -177,5 +155,28 @@ public class InscriptionEquipeTournoiService {
    */
   public InscriptionEquipeTournoi getById(Long inscriptionId) {
     return inscriptionRepository.findById(inscriptionId).orElse(null);
+  }
+
+  /**
+   * Validates whether a tournament still allows unregister operations.
+   *
+   * @param tournoi tournament to validate
+   * @param logIfDeadlinePassed true to log a message when deadline is passed
+   * @return true if unregister is allowed, false otherwise
+   */
+  private boolean isUnregisterAllowed(Tournoi tournoi, boolean logIfDeadlinePassed) {
+    if (!"OUVERT".equals(tournoi.getEtat())) {
+      return false;
+    }
+
+    if (tournoi.getDateLimiteInscription() != null
+        && tournoi.getDateLimiteInscription().isBefore(LocalDate.now())) {
+      if (logIfDeadlinePassed) {
+        System.out.println("❌ Désinscription refusée : La date limite du tournoi est dépassée.");
+      }
+      return false;
+    }
+
+    return true;
   }
 }

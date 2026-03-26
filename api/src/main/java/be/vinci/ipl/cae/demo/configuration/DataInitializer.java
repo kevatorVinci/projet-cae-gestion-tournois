@@ -187,7 +187,8 @@ public class DataInitializer {
       System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
       System.out.println("   Tournois → Spring Cup, Night Masters, Arena Finals, Winter Clash");
       System.out.println(
-          "   Inscriptions → TEAM_ALPHA(Spring Cup, Night Masters), TEAM_OMEGA(Night Masters, Winter Clash)");
+          "   Inscriptions → TEAM_ALPHA(Spring Cup, Night Masters), "
+              + "TEAM_OMEGA(Night Masters, Winter Clash)");
     };
   }
 }

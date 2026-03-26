@@ -50,13 +50,12 @@ class InscriptionEquipeTournoiServiceTest {
     private Equipe makeEquipe(Long id) {
         Equipe e = new Equipe();
         e.setId(id);
-        e.setNom("Equipe " + id);
+        e.setName("Equipe " + id);
         return e;
     }
 
     private InscriptionEquipeTournoi makeInscription(Tournoi tournoi, Equipe equipe) {
         InscriptionEquipeTournoi i = new InscriptionEquipeTournoi();
-        i.setId(1L);
         i.setTournoi(tournoi);
         i.setEquipe(equipe);
         i.setDateInscription(LocalDate.now());
@@ -131,7 +130,6 @@ class InscriptionEquipeTournoiServiceTest {
         @DisplayName("retourne l'inscription si elle existe")
         void retourneInscription() {
             InscriptionEquipeTournoi i = new InscriptionEquipeTournoi();
-            i.setId(1L);
             when(inscriptionRepository.findById(1L)).thenReturn(Optional.of(i));
 
             InscriptionEquipeTournoi result = service.getById(1L);
@@ -167,7 +165,6 @@ class InscriptionEquipeTournoiServiceTest {
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.empty());
             when(inscriptionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-            when(inscriptionRepository.findByTournoi(t)).thenReturn(List.of());
 
             InscriptionEquipeTournoi result = service.register(1L, 1L);
 

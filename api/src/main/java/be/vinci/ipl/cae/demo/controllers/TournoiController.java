@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import be.vinci.ipl.cae.demo.services.TournoiService;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import java.util.Map;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +25,7 @@ public class TournoiController {
 
   private final TournoiService tournoiService;
 
+  /** Creates the controller with its service dependency. */
   public TournoiController(TournoiService tournoiService) {
     this.tournoiService = tournoiService;
   }
@@ -106,7 +107,8 @@ public class TournoiController {
     Tournoi tournoi = tournoiService.closeRegistrations(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Tournament not found, not OUVERT, or not enough teams (minimum 2)");
+              HttpStatus.BAD_REQUEST,
+              "Tournament not found, not OUVERT, or not enough teams (minimum 2)");
     }
     return tournoi;
   }

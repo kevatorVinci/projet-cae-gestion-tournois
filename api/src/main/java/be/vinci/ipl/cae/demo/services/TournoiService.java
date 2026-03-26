@@ -5,6 +5,7 @@ import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 import org.springframework.context.annotation.Lazy;
@@ -18,6 +19,7 @@ public class TournoiService {
   private final TournoiRepository tournoiRepository;
   private final InscriptionEquipeTournoiService inscriptionService;
 
+  /** Creates the service with repositories and registration service. */
   public TournoiService(
       TournoiRepository tournoiRepository,
       @Lazy InscriptionEquipeTournoiService inscriptionService) {
@@ -29,20 +31,24 @@ public class TournoiService {
   // REQUÊTES DE LECTURE
   // ═══════════════════════════════════════════════════════════════════
 
+  /** Returns all public tournaments excluding BROUILLON. */
   public Iterable<Tournoi> getAllPublic() {
     return StreamSupport.stream(tournoiRepository.findAll().spliterator(), false)
         .filter(t -> !"BROUILLON".equals(t.getEtat()))
         .toList();
   }
 
+  /** Returns all tournaments including BROUILLON. */
   public Iterable<Tournoi> getAll() {
     return tournoiRepository.findAll();
   }
 
+  /** Returns one tournament by id if present. */
   public Optional<Tournoi> getOne(Long id) {
     return tournoiRepository.findById(id);
   }
 
+  /** Returns public tournaments filtered by optional state and/or name. */
   public Iterable<Tournoi> getFiltered(String etat, String nom) {
     boolean hasEtat = etat != null && !etat.isBlank();
     boolean hasNom = nom != null && !nom.isBlank();
@@ -56,7 +62,8 @@ public class TournoiService {
     } else if (hasNom) {
       results = tournoiRepository.findByNomContainingIgnoreCase(nom);
     } else {
-      results = StreamSupport.stream(tournoiRepository.findAll().spliterator(), false).toList();
+      results = StreamSupport.stream(
+          tournoiRepository.findAll().spliterator(), false).toList();
     }
 
     return results.stream().filter(t -> !"BROUILLON".equals(t.getEtat())).toList();
@@ -66,6 +73,7 @@ public class TournoiService {
   // CRÉATION ET MODIFICATION (BROUILLON)
   // ═══════════════════════════════════════════════════════════════════
 
+  /** Creates a tournament in BROUILLON state if the name is unique. */
   public Tournoi create(Tournoi tournoi) {
     if (tournoiRepository.findByNom(tournoi.getNom()).isPresent()) {
       return null;
@@ -74,18 +82,31 @@ public class TournoiService {
     return tournoiRepository.save(tournoi);
   }
 
+  /** Updates a tournament only when it is still in BROUILLON state. */
   public Tournoi update(Long id, Tournoi payload) {
     Tournoi existing = tournoiRepository.findById(id).orElse(null);
     if (existing == null || !"BROUILLON".equals(existing.getEtat())) {
       return null;
     }
-    if (payload.getNom() != null) existing.setNom(payload.getNom());
-    if (payload.getDescription() != null) existing.setDescription(payload.getDescription());
-    if (payload.getDateDebut() != null) existing.setDateDebut(payload.getDateDebut());
-    if (payload.getDateFin() != null) existing.setDateFin(payload.getDateFin());
-    if (payload.getDateLimiteInscription() != null) existing.setDateLimiteInscription(payload.getDateLimiteInscription());
-    if (payload.getNombresParticipantsMax() != null) existing.setNombresParticipantsMax(payload.getNombresParticipantsMax());
-    
+    if (payload.getNom() != null) {
+      existing.setNom(payload.getNom());
+    }
+    if (payload.getDescription() != null) {
+      existing.setDescription(payload.getDescription());
+    }
+    if (payload.getDateDebut() != null) {
+      existing.setDateDebut(payload.getDateDebut());
+    }
+    if (payload.getDateFin() != null) {
+      existing.setDateFin(payload.getDateFin());
+    }
+    if (payload.getDateLimiteInscription() != null) {
+      existing.setDateLimiteInscription(payload.getDateLimiteInscription());
+    }
+    if (payload.getNombresParticipantsMax() != null) {
+      existing.setNombresParticipantsMax(payload.getNombresParticipantsMax());
+    }
+
     return tournoiRepository.save(existing);
   }
 
@@ -93,6 +114,7 @@ public class TournoiService {
   // CYCLE DE VIE DU TOURNOI
   // ═══════════════════════════════════════════════════════════════════
 
+  /** Publishes a tournament (BROUILLON -> OUVERT). */
   public Tournoi publish(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
     if (tournoi == null || !"BROUILLON".equals(tournoi.getEtat())) {
@@ -114,14 +136,11 @@ public class TournoiService {
 
     // On compte le nombre d'inscrits
     Iterable<InscriptionEquipeTournoi> inscrits = inscriptionService.getAllByTournoi(id);
-    long count = 0;
-    if (inscrits != null) {
-      for (InscriptionEquipeTournoi i : inscrits) { count++; }
-    }
+    long count = countInscriptions(inscrits);
 
     // Règle métier : 2 équipes minimum pour clôturer manuellement
     if (count < 2) {
-      return null; 
+      return null;
     }
 
     tournoi.setEtat("CLOTURE");
@@ -141,6 +160,7 @@ public class TournoiService {
     return tournoiRepository.save(tournoi);
   }
 
+  /** Marks a tournament as finished (EN_COURS -> TERMINE). */
   public Tournoi finish(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
     if (tournoi == null || !"EN_COURS".equals(tournoi.getEtat())) {
@@ -150,9 +170,12 @@ public class TournoiService {
     return tournoiRepository.save(tournoi);
   }
 
+  /** Cancels a tournament and optionally appends a reason to its display name. */
   public Tournoi cancel(Long id, String reason) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
-    if (tournoi == null || "TERMINE".equals(tournoi.getEtat()) || "ANNULE".equals(tournoi.getEtat())) {
+    if (tournoi == null
+        || "TERMINE".equals(tournoi.getEtat())
+        || "ANNULE".equals(tournoi.getEtat())) {
       return null;
     }
 
@@ -183,29 +206,40 @@ public class TournoiService {
 
     for (Tournoi tournoi : tousLesTournois) {
       if ("OUVERT".equals(tournoi.getEtat()) && tournoi.getDateLimiteInscription() != null) {
-        
+
         // Si la date limite est strictement dépassée
         if (tournoi.getDateLimiteInscription().isBefore(aujourdHui)) {
-          
-          Iterable<InscriptionEquipeTournoi> inscrits = inscriptionService.getAllByTournoi(tournoi.getId());
-          long nbEquipes = 0;
-          if (inscrits != null) {
-            for (InscriptionEquipeTournoi i : inscrits) { nbEquipes++; }
-          }
+
+          Iterable<InscriptionEquipeTournoi> inscrits =
+              inscriptionService.getAllByTournoi(tournoi.getId());
+          long nbEquipes = countInscriptions(inscrits);
 
           if (nbEquipes >= 2) {
-            System.out.println("✅ Tournoi " + tournoi.getNom() + " clôturé automatiquement (Date dépassée).");
+            System.out.println(
+                "✅ Tournoi " + tournoi.getNom()
+                    + " clôturé automatiquement (Date dépassée).");
             tournoi.setEtat("CLOTURE");
           } else {
-            System.out.println("❌ Tournoi " + tournoi.getNom() + " annulé automatiquement (Moins de 2 joueurs).");
+            System.out.println(
+                "❌ Tournoi " + tournoi.getNom()
+                    + " annulé automatiquement (Moins de 2 joueurs).");
             tournoi.setEtat("ANNULE");
 
             tournoi.setNom(tournoi.getNom() + " (Annulé : moins de 2 equipes inscrites)");
           }
-          
+
           tournoiRepository.save(tournoi);
         }
       }
     }
+  }
+
+  private long countInscriptions(Iterable<InscriptionEquipeTournoi> inscriptions) {
+    if (inscriptions == null) {
+      return 0;
+    }
+    return StreamSupport.stream(inscriptions.spliterator(), false)
+        .filter(Objects::nonNull)
+        .count();
   }
 }

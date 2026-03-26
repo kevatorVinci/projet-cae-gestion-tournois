@@ -14,13 +14,17 @@ import be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiService;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-
+/** Controller handling team registrations to tournaments. */
 @RestController
 @RequestMapping("/tournois")
 public class InscriptionEquipeTournoiController {
@@ -28,6 +32,7 @@ public class InscriptionEquipeTournoiController {
   private final InscriptionEquipeTournoiService inscriptionService;
   private final EquipeService equipeService;
 
+  /** Creates the controller with required services. */
   public InscriptionEquipeTournoiController(
           InscriptionEquipeTournoiService inscriptionService,
           EquipeService equipeService) {
@@ -149,7 +154,9 @@ public class InscriptionEquipeTournoiController {
 
   private void ensureCurrentUserResponsibleForTeam(
           Long equipeId, User currentUser, String forbiddenMessage) {
-    if (currentUser.isAdmin()) return;
+    if (currentUser.isAdmin()) {
+      return;
+    }
     Equipe equipe = equipeService.getEquipeById(equipeId).orElse(null);
     if (equipe == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
@@ -159,7 +166,8 @@ public class InscriptionEquipeTournoiController {
     }
   }
 
-  private EquipeTournamentRegistrationDto toEquipeRegistrationDto(InscriptionEquipeTournoi inscription) {
+  private EquipeTournamentRegistrationDto toEquipeRegistrationDto(
+      InscriptionEquipeTournoi inscription) {
     TournoiResumeDto tournoi = new TournoiResumeDto(
             inscription.getTournoi().getId(),
             inscription.getTournoi().getNom(),
