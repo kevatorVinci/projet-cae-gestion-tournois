@@ -19,7 +19,8 @@ public class UpdateProfileDto {
   // son avatar SANS changer son mot de passe (donc ça peut être null).
   @Pattern(
       regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$",
-      message = "Le nouveau mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial."
+      message = "Le nouveau mot de passe doit contenir au moins 8 caractères, "
+        + "une majuscule, une minuscule, un chiffre et un caractère spécial."
   )
   private String newPassword;
 }

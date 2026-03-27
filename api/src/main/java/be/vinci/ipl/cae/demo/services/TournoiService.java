@@ -1,11 +1,15 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /** Service managing all business logic related to tournaments. */
@@ -13,13 +17,9 @@ import org.springframework.stereotype.Service;
 public class TournoiService {
 
   private final TournoiRepository tournoiRepository;
-  private final InscriptionEquipeTournoiService inscriptionService; // ← ajout
+  private final InscriptionEquipeTournoiService inscriptionService;
 
-  /**
-   * Constructs a TournoiService with the given repository.
-   *
-   * @param tournoiRepository the tournament repository
-   */
+  /** Creates the service with repositories and registration service. */
   public TournoiService(
       TournoiRepository tournoiRepository,
       @Lazy InscriptionEquipeTournoiService inscriptionService) {
@@ -27,44 +27,53 @@ public class TournoiService {
     this.inscriptionService = inscriptionService;
   }
 
-  /**
-   * Retrieves all publicly visible tournaments (all states except BROUILLON). Used for the visitor
-   * and member home pages (US 2 & 3).
-   *
-   * @return all tournaments visible to the public
-   */
+  // ═══════════════════════════════════════════════════════════════════
+  // REQUÊTES DE LECTURE
+  // ═══════════════════════════════════════════════════════════════════
+
+  /** Returns all public tournaments excluding BROUILLON. */
   public Iterable<Tournoi> getAllPublic() {
     return StreamSupport.stream(tournoiRepository.findAll().spliterator(), false)
         .filter(t -> !"BROUILLON".equals(t.getEtat()))
         .toList();
   }
 
-  /**
-   * Retrieves all tournaments regardless of state. Reserved for administrators.
-   *
-   * @return all tournaments
-   */
+  /** Returns all tournaments including BROUILLON. */
   public Iterable<Tournoi> getAll() {
     return tournoiRepository.findAll();
   }
 
-  /**
-   * Retrieves a single tournament by its id.
-   *
-   * @param id the tournament id
-   * @return the tournament if found, empty otherwise
-   */
+  /** Returns one tournament by id if present. */
   public Optional<Tournoi> getOne(Long id) {
     return tournoiRepository.findById(id);
   }
 
-  /**
-   * Creates a new tournament in BROUILLON state. The name must be unique across all tournaments (US
-   * 7).
-   *
-   * @param tournoi the tournament to create
-   * @return the saved tournament, or null if the name is already taken
-   */
+  /** Returns public tournaments filtered by optional state and/or name. */
+  public Iterable<Tournoi> getFiltered(String etat, String nom) {
+    boolean hasEtat = etat != null && !etat.isBlank();
+    boolean hasNom = nom != null && !nom.isBlank();
+
+    List<Tournoi> results;
+
+    if (hasEtat && hasNom) {
+      results = tournoiRepository.findByEtatAndNomContainingIgnoreCase(etat, nom);
+    } else if (hasEtat) {
+      results = tournoiRepository.findByEtat(etat);
+    } else if (hasNom) {
+      results = tournoiRepository.findByNomContainingIgnoreCase(nom);
+    } else {
+      results = StreamSupport.stream(
+          tournoiRepository.findAll().spliterator(), false).toList();
+    }
+
+    return results.stream().filter(t -> !"BROUILLON".equals(t.getEtat())).toList();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CRÉATION ET MODIFICATION (BROUILLON)
+  // ═══════════════════════════════════════════════════════════════════
+
+  /** Creates a tournament in BROUILLON state if the name is unique. */
   public Tournoi create(Tournoi tournoi) {
     if (tournoiRepository.findByNom(tournoi.getNom()).isPresent()) {
       return null;
@@ -73,19 +82,10 @@ public class TournoiService {
     return tournoiRepository.save(tournoi);
   }
 
-  /**
-   * Updates a tournament. Only allowed when the tournament is in BROUILLON state (Could US 15).
-   *
-   * @param id the tournament id
-   * @param payload the fields to update
-   * @return the updated tournament, or null if not found or not in BROUILLON state
-   */
+  /** Updates a tournament only when it is still in BROUILLON state. */
   public Tournoi update(Long id, Tournoi payload) {
     Tournoi existing = tournoiRepository.findById(id).orElse(null);
-    if (existing == null) {
-      return null;
-    }
-    if (!"BROUILLON".equals(existing.getEtat())) {
+    if (existing == null || !"BROUILLON".equals(existing.getEtat())) {
       return null;
     }
     if (payload.getNom() != null) {
@@ -106,21 +106,18 @@ public class TournoiService {
     if (payload.getNombresParticipantsMax() != null) {
       existing.setNombresParticipantsMax(payload.getNombresParticipantsMax());
     }
+
     return tournoiRepository.save(existing);
   }
 
-  /**
-   * Publishes a tournament, making it visible to the public (BROUILLON → OUVERT). Should US 9.
-   *
-   * @param id the tournament id
-   * @return the updated tournament, or null if not found or not in BROUILLON state
-   */
+  // ═══════════════════════════════════════════════════════════════════
+  // CYCLE DE VIE DU TOURNOI
+  // ═══════════════════════════════════════════════════════════════════
+
+  /** Publishes a tournament (BROUILLON -> OUVERT). */
   public Tournoi publish(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
-    if (tournoi == null) {
-      return null;
-    }
-    if (!"BROUILLON".equals(tournoi.getEtat())) {
+    if (tournoi == null || !"BROUILLON".equals(tournoi.getEtat())) {
       return null;
     }
     tournoi.setEtat("OUVERT");
@@ -128,109 +125,121 @@ public class TournoiService {
   }
 
   /**
-   * Closes registrations for a tournament (OUVERT → CLOTURE). No new teams can register after this
-   * point. Should US 10.
-   *
-   * @param id the tournament id
-   * @return the updated tournament, or null if not found or not in OUVERT state
+   * Clôture manuelle par un Admin (OUVERT → CLOTURE).
+   * Nécessite un minimum de 2 équipes inscrites.
    */
   public Tournoi closeRegistrations(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
-    if (tournoi == null) {
+    if (tournoi == null || !"OUVERT".equals(tournoi.getEtat())) {
       return null;
     }
-    if (!"OUVERT".equals(tournoi.getEtat())) {
+
+    // On compte le nombre d'inscrits
+    Iterable<InscriptionEquipeTournoi> inscrits = inscriptionService.getAllByTournoi(id);
+    long count = countInscriptions(inscrits);
+
+    // Règle métier : 2 équipes minimum pour clôturer manuellement
+    if (count < 2) {
       return null;
     }
+
     tournoi.setEtat("CLOTURE");
     return tournoiRepository.save(tournoi);
   }
 
   /**
-   * Starts a tournament (CLOTURE → EN_COURS). All registrations still in EN_ATTENTE are
-   * automatically refused.
-   *
-   * @param id the tournament id
-   * @return the updated tournament, or null if not found or not in CLOTURE state
+   * Démarre le tournoi (CLOTURE → EN_COURS).
    */
   public Tournoi start(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
-    if (tournoi == null) {
+    if (tournoi == null || !"CLOTURE".equals(tournoi.getEtat())) {
       return null;
     }
-    if (!"CLOTURE".equals(tournoi.getEtat())) {
-      return null;
-    }
-
-    inscriptionService.refuseAllPending(tournoi); // ← utilise la méthode
-
+    // Plus besoin de gérer les "EN_ATTENTE", on passe juste en cours !
     tournoi.setEtat("EN_COURS");
     return tournoiRepository.save(tournoi);
   }
 
-  /**
-   * Marks a tournament as finished (EN_COURS → TERMINE).
-   *
-   * @param id the tournament id
-   * @return the updated tournament, or null if not found or not in EN_COURS state
-   */
+  /** Marks a tournament as finished (EN_COURS -> TERMINE). */
   public Tournoi finish(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
-    if (tournoi == null) {
-      return null;
-    }
-    if (!"EN_COURS".equals(tournoi.getEtat())) {
+    if (tournoi == null || !"EN_COURS".equals(tournoi.getEtat())) {
       return null;
     }
     tournoi.setEtat("TERMINE");
     return tournoiRepository.save(tournoi);
   }
 
-  /**
-   * Cancels a tournament from any active state (→ ANNULE). A tournament can be cancelled unless it
-   * is already TERMINE or ANNULE.
-   *
-   * @param id the tournament id
-   * @return the updated tournament, or null if not found or already TERMINE/ANNULE
-   */
-  public Tournoi cancel(Long id) {
+  /** Cancels a tournament and optionally appends a reason to its display name. */
+  public Tournoi cancel(Long id, String reason) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
-    if (tournoi == null) {
+    if (tournoi == null
+        || "TERMINE".equals(tournoi.getEtat())
+        || "ANNULE".equals(tournoi.getEtat())) {
       return null;
     }
-    if ("TERMINE".equals(tournoi.getEtat()) || "ANNULE".equals(tournoi.getEtat())) {
-      return null;
-    }
+
     tournoi.setEtat("ANNULE");
+
+    String sanitizedReason = (reason == null || reason.isBlank())
+        ? "raison non specifiee"
+        : reason.trim();
+    tournoi.setNom(tournoi.getNom() + " (Annulé : " + sanitizedReason + ")");
+
     return tournoiRepository.save(tournoi);
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // TÂCHES AUTOMATIQUES (CRON)
+  // ═══════════════════════════════════════════════════════════════════
+
   /**
-   * Retrieves public tournaments filtered by optional state and/or name search.
-   * BROUILLON tournaments are never included (US 4, 5, 6, 8).
-   *
-   * @param etat optional state filter (OUVERT, EN_COURS, TERMINE, CLOTURE)
-   * @param nom optional name fragment for case-insensitive search
-   * @return matching public tournaments
+   * S'exécute automatiquement tous les jours à minuit.
+   * Vérifie les dates limites d'inscription des tournois ouverts.
    */
-  public Iterable<Tournoi> getFiltered(String etat, String nom) {
-    boolean hasEtat = etat != null && !etat.isBlank();
-    boolean hasNom = nom != null && !nom.isBlank();
+  @Scheduled(cron = "0 0 0 * * *")
+  public void verifierEtCloturerTournoisExpires() {
+    System.out.println(" Vérification automatique des dates de tournois...");
+    LocalDate aujourdHui = LocalDate.now();
 
-    List<Tournoi> results;
+    Iterable<Tournoi> tousLesTournois = tournoiRepository.findAll();
 
-    if (hasEtat && hasNom) {
-      results = tournoiRepository.findByEtatAndNomContainingIgnoreCase(etat, nom);
-    } else if (hasEtat) {
-      results = tournoiRepository.findByEtat(etat);
-    } else if (hasNom) {
-      results = tournoiRepository.findByNomContainingIgnoreCase(nom);
-    } else {
-      results =
-          StreamSupport.stream(tournoiRepository.findAll().spliterator(), false)
-              .toList();
+    for (Tournoi tournoi : tousLesTournois) {
+      if ("OUVERT".equals(tournoi.getEtat()) && tournoi.getDateLimiteInscription() != null) {
+
+        // Si la date limite est strictement dépassée
+        if (tournoi.getDateLimiteInscription().isBefore(aujourdHui)) {
+
+          Iterable<InscriptionEquipeTournoi> inscrits =
+              inscriptionService.getAllByTournoi(tournoi.getId());
+          long nbEquipes = countInscriptions(inscrits);
+
+          if (nbEquipes >= 2) {
+            System.out.println(
+                "✅ Tournoi " + tournoi.getNom()
+                    + " clôturé automatiquement (Date dépassée).");
+            tournoi.setEtat("CLOTURE");
+          } else {
+            System.out.println(
+                "❌ Tournoi " + tournoi.getNom()
+                    + " annulé automatiquement (Moins de 2 joueurs).");
+            tournoi.setEtat("ANNULE");
+
+            tournoi.setNom(tournoi.getNom() + " (Annulé : moins de 2 equipes inscrites)");
+          }
+
+          tournoiRepository.save(tournoi);
+        }
+      }
     }
+  }
 
-    return results.stream().filter(t -> !"BROUILLON".equals(t.getEtat())).toList();
+  private long countInscriptions(Iterable<InscriptionEquipeTournoi> inscriptions) {
+    if (inscriptions == null) {
+      return 0;
+    }
+    return StreamSupport.stream(inscriptions.spliterator(), false)
+        .filter(Objects::nonNull)
+        .count();
   }
 }

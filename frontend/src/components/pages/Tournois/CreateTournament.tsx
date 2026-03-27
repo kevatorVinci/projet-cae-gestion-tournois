@@ -16,13 +16,13 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 dayjs.locale('fr');
-import BackButton from '../BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   createTournament,
   NewTournamentPayload,
-} from '../../services/tournois';
-import { UserContext } from '../../contexts/UserContext';
-import { UserContextType } from '../../types';
+} from '../../../services/tournois';
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType } from '../../../types';
 
 /**
  * Page dedicated to the creation of a new tournament.

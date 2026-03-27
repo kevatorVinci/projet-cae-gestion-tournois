@@ -13,17 +13,19 @@ import RegisterPage from '../pages/RegisterPage';
 import ProfilePage from '../pages/ProfilePage';
 import AdminPage from '../pages/AdminPage';
 import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
+import { TournoisResponsable } from '../pages/TeamPage/ResponsablePage/Inscription';
 import DisponibilitesPage from '../pages/DisponibilitesPage';
 import ProtectedRoute from '../routes/ProtectedRoute';
 import AdminRoute from '../routes/AdminRoute';
+import ResponsableRoute from '../routes/ResponsableRoute';
 import NonConnectePage from '../pages/PasAcces/NonConnectePage';
 import InterditPage from '../pages/PasAcces/InterditPage';
 import MemberDetails from '../pages/Member/MemberDetails';
-import TournoiPage from '../Tournois/TournoiPage';
-import TournoiDetailPage from '../Tournois/TournoiDetailPage';
-import AdminTournamentsPage from '../Tournois/AdminTournamentsPage';
-import CreateTournamentPage from '../Tournois/CreateTournament';
-import EditTournamentPage from '../Tournois/EditTournament';
+import TournoiPage from '../pages/Tournois/TournoiPage';
+import TournoiDetailPage from '../pages/Tournois/TournoiDetailPage';
+import AdminTournamentsPage from '../pages/Tournois/AdminTournamentsPage';
+import CreateTournamentPage from '../pages/Tournois/CreateTournament';
+import EditTournamentPage from '../pages/Tournois/EditTournament';
 
 const App = () => (
   <Router
@@ -58,9 +60,17 @@ const App = () => (
         <Route
           path="/equipes/demande"
           element={
-            <ProtectedRoute>
+            <ResponsableRoute>
               <DemandesAdhesion />
-            </ProtectedRoute>
+            </ResponsableRoute>
+          }
+        />
+        <Route
+          path="/tournois/gestion"
+          element={
+            <ResponsableRoute>
+              <TournoisResponsable />
+            </ResponsableRoute>
           }
         />
         <Route path="/equipes/:id" element={<TeamDetails />} />

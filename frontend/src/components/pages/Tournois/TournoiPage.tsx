@@ -18,8 +18,8 @@ import {
   MenuItem,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { Tournoi } from '../../types';
-import BackButton from '../BoutonRetour';
+import { Tournoi } from '../../../types';
+import BackButton from '../../BoutonRetour';
 
 const fetchFilteredTournaments = async (nom?: string): Promise<Tournoi[]> => {
   const params = new URLSearchParams();
@@ -77,7 +77,9 @@ const TournoiPage = () => {
     if (etatFilter === 'A_VENIR') {
       return t.etat === 'OUVERT' || t.etat === 'CLOTURE';
     }
-    if (etatFilter === 'PASSES') return t.etat === 'TERMINE';
+    if (etatFilter === 'PASSES') {
+      return t.etat === 'TERMINE' || t.etat === 'ANNULE';
+    }
     return true;
   });
 
@@ -85,7 +87,9 @@ const TournoiPage = () => {
   const aVenir = tournamentsByFilter.filter(
     (t) => t.etat === 'OUVERT' || t.etat === 'CLOTURE',
   );
-  const passes = tournamentsByFilter.filter((t) => t.etat === 'TERMINE');
+  const passes = tournamentsByFilter.filter(
+    (t) => t.etat === 'TERMINE' || t.etat === 'ANNULE',
+  );
 
   return (
     <Box
@@ -285,7 +289,7 @@ const TournoiPage = () => {
 
             <Box>
               <Typography variant="h6" gutterBottom color="white">
-                Tournois passés
+                Tournois passés et annulés
               </Typography>
               {passes.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
@@ -313,7 +317,9 @@ const TournoiPage = () => {
                       {tournament.nom}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Terminé le {formatDate(tournament.dateFin)}
+                      {tournament.etat === 'ANNULE'
+                        ? `Annulé le ${formatDate(tournament.dateFin)}`
+                        : `Terminé le ${formatDate(tournament.dateFin)}`}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -462,7 +468,9 @@ const TournoiPage = () => {
                         )}
                         {etatFilter === 'PASSES' && (
                           <Typography variant="body2" color="text.secondary">
-                            Terminé le {formatDate(tournament.dateFin)}
+                            {tournament.etat === 'ANNULE'
+                              ? `Annulé le ${formatDate(tournament.dateFin)}`
+                              : `Terminé le ${formatDate(tournament.dateFin)}`}
                           </Typography>
                         )}
                       </CardContent>

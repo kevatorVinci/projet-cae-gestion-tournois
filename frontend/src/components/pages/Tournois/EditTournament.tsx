@@ -19,14 +19,14 @@ import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 dayjs.locale('fr');
 
-import BackButton from '../BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   fetchTournamentById,
   updateTournament,
   NewTournamentPayload,
-} from '../../services/tournois';
-import { UserContext } from '../../contexts/UserContext';
-import { UserContextType } from '../../types';
+} from '../../../services/tournois';
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType } from '../../../types';
 
 /**
  * Page dedicated to editing an existing tournament.

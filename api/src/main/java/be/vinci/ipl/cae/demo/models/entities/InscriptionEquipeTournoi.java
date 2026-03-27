@@ -38,6 +38,5 @@ public class InscriptionEquipeTournoi {
 
   private LocalDate dateInscription;
 
-  // Pas d'enum → simple String
-  private String etat;
+
 }

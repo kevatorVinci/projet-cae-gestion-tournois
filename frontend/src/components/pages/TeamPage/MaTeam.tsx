@@ -23,7 +23,7 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
-import { ExitToApp as LeaveIcon } from '@mui/icons-material';
+import { ExitToApp as LeaveIcon, EmojiEvents } from '@mui/icons-material';
 import {
   depromoteResponsable,
   getUserTeam,
@@ -322,17 +322,31 @@ export function MyTeam() {
           </Box>
           <Stack direction="row" spacing={1.5}>
             {isResponsable && (
-              <Button
-                variant="contained"
-                onClick={() => navigate('/equipes/demande')}
-                sx={{
-                  bgcolor: '#e8822a',
-                  color: 'white',
-                  '&:hover': { bgcolor: '#c86e20' },
-                }}
-              >
-                Demandes d'adhésion
-              </Button>
+              <>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/equipes/demande')}
+                  sx={{
+                    bgcolor: '#e8822a',
+                    color: 'white',
+                    '&:hover': { bgcolor: '#c86e20' },
+                  }}
+                >
+                  Demandes d'adhésion
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<EmojiEvents />}
+                  onClick={() => navigate('/tournois/gestion')}
+                  sx={{
+                    bgcolor: '#22c55e',
+                    color: 'white',
+                    '&:hover': { bgcolor: '#16a34a' },
+                  }}
+                >
+                  Gérer les Tournois
+                </Button>
+              </>
             )}
             <Button
               variant="outlined"

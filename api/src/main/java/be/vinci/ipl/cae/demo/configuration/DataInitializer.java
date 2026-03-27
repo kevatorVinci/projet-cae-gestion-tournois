@@ -1,9 +1,11 @@
 package be.vinci.ipl.cae.demo.configuration;
 
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
@@ -29,6 +31,7 @@ public class DataInitializer {
   public CommandLineRunner initDatabase(
       EquipeRepository equipeRepository,
       TournoiRepository tournoiRepository,
+      InscriptionEquipeTournoiRepository inscriptionEquipeTournoiRepository,
       UserRepository userRepository,
       PasswordEncoder passwordEncoder) {
     return args -> {
@@ -151,10 +154,41 @@ public class DataInitializer {
 
       userRepository.saveAll(List.of(lea, tom, ines, tibo));
 
+      // ── Inscriptions de démonstration ───────────────────────────────────
+      // TEAM_ALPHA déjà inscrite à Spring Cup (OUVERT)
+      InscriptionEquipeTournoi alphaSpring = new InscriptionEquipeTournoi();
+      alphaSpring.setTournoi(springCup);
+      alphaSpring.setEquipe(teamAlpha);
+      alphaSpring.setDateInscription(LocalDate.parse("2026-03-20"));
+
+      // TEAM_ALPHA inscrite à Night Masters (CLOTURE)
+      InscriptionEquipeTournoi alphaNight = new InscriptionEquipeTournoi();
+      alphaNight.setTournoi(nightMasters);
+      alphaNight.setEquipe(teamAlpha);
+      alphaNight.setDateInscription(LocalDate.parse("2026-05-01"));
+
+      // TEAM_OMEGA inscrite à Night Masters (CLOTURE)
+      InscriptionEquipeTournoi omegaNight = new InscriptionEquipeTournoi();
+      omegaNight.setTournoi(nightMasters);
+      omegaNight.setEquipe(teamOmega);
+      omegaNight.setDateInscription(LocalDate.parse("2026-05-02"));
+
+      // TEAM_OMEGA inscrite à Winter Clash (EN_COURS)
+      InscriptionEquipeTournoi omegaWinter = new InscriptionEquipeTournoi();
+      omegaWinter.setTournoi(winterClash);
+      omegaWinter.setEquipe(teamOmega);
+      omegaWinter.setDateInscription(LocalDate.parse("2026-03-10"));
+
+      inscriptionEquipeTournoiRepository.saveAll(
+          List.of(alphaSpring, alphaNight, omegaNight, omegaWinter));
+
       System.out.println("✅ DB initialisée :");
       System.out.println("   TEAM_ALPHA → Lea (resp. principal), Tom, Ines");
       System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
       System.out.println("   Tournois → Spring Cup, Night Masters, Arena Finals, Winter Clash");
+      System.out.println(
+          "   Inscriptions → TEAM_ALPHA(Spring Cup, Night Masters), "
+              + "TEAM_OMEGA(Night Masters, Winter Clash)");
     };
   }
 }
