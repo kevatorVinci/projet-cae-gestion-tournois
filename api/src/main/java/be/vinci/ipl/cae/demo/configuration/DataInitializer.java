@@ -11,6 +11,7 @@ import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -227,7 +228,7 @@ public class DataInitializer {
       for (String name : names) {
         String tag = name.replace("TEAM_", "");
         User bot = makeUser(
-            tag.toLowerCase() + "@demo.com",
+            tag.toLowerCase(Locale.ROOT) + "@demo.com",
             "Bot" + tag, "exécuteur",
             "2025-01-01", false,
             pwd, "flash.jpg");
