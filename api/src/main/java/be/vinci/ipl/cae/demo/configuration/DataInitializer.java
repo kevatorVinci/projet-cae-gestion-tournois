@@ -9,186 +9,290 @@ import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/** Classe de configuration pour initialiser les données de démo au démarrage. */
+/** Initialise les données de démo au démarrage. */
 @Configuration
 public class DataInitializer {
 
+  private User makeUser(String email, String tag,
+      String spec, String date, boolean admin,
+      String pwd, String img) {
+    User u = new User();
+    u.setEmail(email);
+    u.setTag(tag);
+    u.setSpecialty(spec);
+    u.setCreationDate(LocalDate.parse(date));
+    u.setAdmin(admin);
+    u.setPassword(pwd);
+    u.setProfileImageUrl(img);
+    return u;
+  }
+
+  private Tournoi makeTournoi(String nom, String desc,
+      String debut, String fin, String limiteInscr,
+      String etat, int maxTeams) {
+    Tournoi t = new Tournoi();
+    t.setNom(nom);
+    t.setDescription(desc);
+    t.setDateDebut(LocalDate.parse(debut));
+    t.setDateFin(LocalDate.parse(fin));
+    t.setDateLimiteInscription(
+        LocalDate.parse(limiteInscr));
+    t.setEtat(etat);
+    t.setNombresParticipantsMax(maxTeams);
+    return t;
+  }
+
+  private void inscrire(
+      InscriptionEquipeTournoiRepository repo,
+      Tournoi tournoi, List<Equipe> teams,
+      String date) {
+    LocalDate d = LocalDate.parse(date);
+    for (Equipe eq : teams) {
+      InscriptionEquipeTournoi ins =
+          new InscriptionEquipeTournoi();
+      ins.setTournoi(tournoi);
+      ins.setEquipe(eq);
+      ins.setDateInscription(d);
+      repo.save(ins);
+    }
+  }
+
   /**
-   * Initialise les utilisateurs et équipes de démo si la DB est vide.
+   * Initialise les données de démo si la DB est vide.
    *
-   * @param equipeRepository le repository des équipes
-   * @param userRepository le repository des utilisateurs
-   * @param passwordEncoder l'encodeur de mots de passe
-   * @return un CommandLineRunner exécuté au démarrage
+   * @param equipeRepo repository des équipes
+   * @param tournoiRepo repository des tournois
+   * @param inscriptionRepo repository inscriptions
+   * @param userRepo repository des utilisateurs
+   * @param pwdEncoder encodeur de mots de passe
+   * @return CommandLineRunner exécuté au démarrage
    */
   @Bean
   public CommandLineRunner initDatabase(
-      EquipeRepository equipeRepository,
-      TournoiRepository tournoiRepository,
-      InscriptionEquipeTournoiRepository inscriptionEquipeTournoiRepository,
-      UserRepository userRepository,
-      PasswordEncoder passwordEncoder) {
+      EquipeRepository equipeRepo,
+      TournoiRepository tournoiRepo,
+      InscriptionEquipeTournoiRepository inscriptionRepo,
+      UserRepository userRepo,
+      PasswordEncoder pwdEncoder) {
     return args -> {
-      final String sharedDemoPassword = "Azerty2026!";
-      final String encodedSharedDemoPassword = passwordEncoder.encode(sharedDemoPassword);
+      final String pwd =
+          pwdEncoder.encode("Azerty2026!");
 
-      if (userRepository.count() > 0) {
-        Iterable<User> existingUsers = userRepository.findAll();
-        for (User user : existingUsers) {
-          user.setPassword(encodedSharedDemoPassword);
-          userRepository.save(user);
+      if (userRepo.count() > 0) {
+        for (User u : userRepo.findAll()) {
+          u.setPassword(pwd);
+          userRepo.save(u);
         }
         return;
       }
-
-      if (equipeRepository.count() > 0 || tournoiRepository.count() > 0) {
+      if (equipeRepo.count() > 0
+          || tournoiRepo.count() > 0) {
         return;
       }
 
-      // ── Utilisateurs (sans équipe pour l'instant) ─────────────────────────
-      User lea = new User();
-      lea.setEmail("lea@mail.com");
-      lea.setTag("Lynx");
-      lea.setSpecialty("tacticien");
-      lea.setCreationDate(LocalDate.parse("2025-11-12"));
-      lea.setAdmin(false);
-      lea.setPassword(encodedSharedDemoPassword);
-      lea.setProfileImageUrl("flash.jpg");
+      // ── 8 utilisateurs réels ────────────────
+      User lea = makeUser("lea@mail.com", "Lynx",
+          "tacticien", "2025-11-12", true,
+          pwd, "flash.jpg");
+      User tom = makeUser("tom@mail.com", "Rogue",
+          "exécuteur", "2025-12-03", false,
+          pwd, "miles.jpg");
+      User ines = makeUser("ines@mail.com", "Pulse",
+          "guérisseur", "2026-01-18", false,
+          pwd, "erza.jpg");
+      User tibo = makeUser("tibo@mail.com", "Iron",
+          "gardien", "2025-10-27", true,
+          pwd, "luffy.png");
+      User lisa = makeUser("lisa@mail.com", "Storm",
+          "exécuteur", "2026-01-10", false,
+          pwd, "flash.jpg");
+      User noa = makeUser("noa@mail.com", "Flash",
+          "architecte", "2026-02-02", false,
+          pwd, "miles.jpg");
+      User tim = makeUser("tim@mail.com", "Titi",
+          "gardien", "2026-02-03", false,
+          pwd, "erza.jpg");
+      User zoe = makeUser("zoe@mail.com", "Vector",
+          "catalyseur", "2026-02-04", false,
+          pwd, "luffy.png");
+      userRepo.saveAll(List.of(
+          lea, tom, ines, tibo,
+          lisa, noa, tim, zoe));
 
-      User tom = new User();
-      tom.setEmail("tom@mail.com");
-      tom.setTag("Rogue");
-      tom.setSpecialty("exécuteur");
-      tom.setCreationDate(LocalDate.parse("2025-12-03"));
-      tom.setAdmin(false);
-      tom.setPassword(encodedSharedDemoPassword);
-      tom.setProfileImageUrl("miles.jpg");
+      // ── 7 tournois ─────────────────────────
+      // 4 passés
+      Tournoi springArena = makeTournoi(
+          "Spring Arena Cup 2025",
+          "Compétition printanière ouverte "
+              + "aux nouvelles teams",
+          "2025-04-15", "2025-04-25",
+          "2025-04-10", "TERMINE", 8);
 
-      User ines = new User();
-      ines.setEmail("ines@mail.com");
-      ines.setTag("Pulse");
-      ines.setSpecialty("guérisseur");
-      ines.setCreationDate(LocalDate.parse("2026-01-18"));
-      ines.setAdmin(true);
-      ines.setPassword(encodedSharedDemoPassword);
-      ines.setProfileImageUrl("erza.jpg");
+      Tournoi elite2025 = makeTournoi(
+          "Elite Championship 2025",
+          "Compétition élite réservée "
+              + "aux meilleures teams",
+          "2025-05-15", "2025-05-30",
+          "2025-05-11", "TERMINE", 8);
 
-      User tibo = new User();
-      tibo.setEmail("tibo@mail.com");
-      tibo.setTag("Iron");
-      tibo.setSpecialty("gardien");
-      tibo.setCreationDate(LocalDate.parse("2025-10-27"));
-      tibo.setAdmin(true);
-      tibo.setPassword(encodedSharedDemoPassword);
-      tibo.setProfileImageUrl("luffy.png");
+      Tournoi summerPro = makeTournoi(
+          "Summer Pro League 2025",
+          "Tournoi estival de haut niveau "
+              + "avec les meilleures teams",
+          "2025-07-01", "2025-07-15",
+          "2025-06-25", "TERMINE", 16);
 
-      // On sauvegarde d'abord sans équipe (les FK equipe sont nullable)
-      userRepository.saveAll(List.of(lea, tom, ines, tibo));
+      Tournoi winterClash = makeTournoi(
+          "Vinci Winter Clash 2026",
+          "Tournoi hivernal réunissant des "
+              + "équipes semi-professionnelles",
+          "2026-01-10", "2026-01-20",
+          "2026-01-05", "TERMINE", 12);
 
-      // ── Tournois de démo ────────────────────────────────────────────────
-      Tournoi springCup = new Tournoi();
-      springCup.setNom("Vinci Spring Cup");
-      springCup.setDescription("Tournoi printanier ouvert aux nouvelles équipes.");
-      springCup.setDateDebut(LocalDate.parse("2026-04-05"));
-      springCup.setDateFin(LocalDate.parse("2026-04-07"));
-      springCup.setDateLimiteInscription(LocalDate.parse("2026-04-02"));
-      springCup.setEtat("OUVERT");
-      springCup.setNombresParticipantsMax(16);
+      // 1 en cours
+      Tournoi springBattle = makeTournoi(
+          "Spring Battle Series 2026",
+          "Série printanière avec élimination "
+              + "directe et forte participation",
+          "2026-04-04", "2026-04-11",
+          "2026-04-01", "EN_COURS", 8);
 
-      Tournoi nightMasters = new Tournoi();
-      nightMasters.setNom("Night Masters");
-      nightMasters.setDescription("Compétition nocturne en BO3.");
-      nightMasters.setDateDebut(LocalDate.parse("2026-05-10"));
-      nightMasters.setDateFin(LocalDate.parse("2026-05-12"));
-      nightMasters.setDateLimiteInscription(LocalDate.parse("2026-05-06"));
-      nightMasters.setEtat("CLOTURE");
-      nightMasters.setNombresParticipantsMax(8);
+      // 2 futurs
+      Tournoi easterCup = makeTournoi(
+          "Vinci Easter Cup 2026",
+          "Tournoi de Pâques ouvert à "
+              + "toutes les teams actives",
+          "2026-04-15", "2026-04-25",
+          "2026-04-08", "OUVERT", 8);
 
-      Tournoi arenaFinals = new Tournoi();
-      arenaFinals.setNom("Arena Finals");
-      arenaFinals.setDescription("Finales annuelles de la Vinci Arena.");
-      arenaFinals.setDateDebut(LocalDate.parse("2026-03-01"));
-      arenaFinals.setDateFin(LocalDate.parse("2026-03-02"));
-      arenaFinals.setDateLimiteInscription(LocalDate.parse("2026-02-20"));
-      arenaFinals.setEtat("TERMINE");
-      arenaFinals.setNombresParticipantsMax(4);
+      Tournoi elite2026 = makeTournoi(
+          "Elite Championship 2026",
+          "Compétition élite réservée "
+              + "aux meilleures teams",
+          "2026-05-15", "2026-05-30",
+          "2026-05-11", "OUVERT", 16);
 
-      Tournoi winterClash = new Tournoi();
-      winterClash.setNom("Winter Clash");
-      winterClash.setDescription("Tournoi hivernal en cours, phase de groupes.");
-      winterClash.setDateDebut(LocalDate.parse("2026-03-20"));
-      winterClash.setDateFin(LocalDate.parse("2026-03-30"));
-      winterClash.setDateLimiteInscription(LocalDate.parse("2026-03-15"));
-      winterClash.setEtat("EN_COURS");
-      winterClash.setNombresParticipantsMax(8);
+      tournoiRepo.saveAll(List.of(
+          springArena, elite2025, summerPro,
+          winterClash, springBattle,
+          easterCup, elite2026));
 
-      tournoiRepository.saveAll(List.of(springCup, nightMasters, arenaFinals, winterClash));
+      // ── 3 équipes réelles ──────────────────
+      Equipe alpha = new Equipe();
+      alpha.setName("TEAM_ALPHA");
+      alpha.setResponsablePrincipal(lea);
+      equipeRepo.save(alpha);
 
-      // ── Équipes ───────────────────────────────────────────────────────────
-      // TEAM_ALPHA : responsable principal = Lea
-      Equipe teamAlpha = new Equipe();
-      teamAlpha.setName("TEAM_ALPHA");
-      teamAlpha.setResponsablePrincipal(lea);
-      equipeRepository.save(teamAlpha);
+      Equipe omega = new Equipe();
+      omega.setName("TEAM_OMEGA");
+      omega.setResponsablePrincipal(tibo);
+      equipeRepo.save(omega);
 
-      // TEAM_OMEGA : responsable principal = Tibo
-      Equipe teamOmega = new Equipe();
-      teamOmega.setName("TEAM_OMEGA");
-      teamOmega.setResponsablePrincipal(tibo);
-      equipeRepository.save(teamOmega);
+      Equipe iota = new Equipe();
+      iota.setName("TEAM_IOTA");
+      iota.setResponsablePrincipal(lisa);
+      iota.setResponsableSecondaire(noa);
+      equipeRepo.save(iota);
 
-      // ── Rattachement des membres à leur équipe ────────────────────────────
-      // TEAM_ALPHA : Lea + Tom + Ines
-      lea.setEquipe(teamAlpha);
-      tom.setEquipe(teamAlpha);
-      ines.setEquipe(teamAlpha);
+      // Rattachement membres → équipes
+      lea.setEquipe(alpha);
+      tom.setEquipe(alpha);
+      ines.setEquipe(alpha);
+      tibo.setEquipe(omega);
+      lisa.setEquipe(iota);
+      noa.setEquipe(iota);
+      tim.setEquipe(iota);
+      zoe.setEquipe(iota);
+      userRepo.saveAll(List.of(
+          lea, tom, ines, tibo,
+          lisa, noa, tim, zoe));
 
-      // TEAM_OMEGA : Tibo
-      tibo.setEquipe(teamOmega);
+      // ── 13 équipes de remplissage ──────────
+      String[] names = {
+          "TEAM_BETA", "TEAM_GAMMA",
+          "TEAM_DELTA", "TEAM_EPSILON",
+          "TEAM_ZETA", "TEAM_THETA",
+          "TEAM_KAPPA", "TEAM_LAMBDA",
+          "TEAM_MU", "TEAM_NU",
+          "TEAM_XI", "TEAM_PI",
+          "TEAM_SIGMA"};
+      List<Equipe> dum = new ArrayList<>();
+      for (String name : names) {
+        String tag = name.replace("TEAM_", "");
+        User bot = makeUser(
+            tag.toLowerCase() + "@demo.com",
+            "Bot" + tag, "exécuteur",
+            "2025-01-01", false,
+            pwd, "flash.jpg");
+        userRepo.save(bot);
+        Equipe eq = new Equipe();
+        eq.setName(name);
+        eq.setResponsablePrincipal(bot);
+        equipeRepo.save(eq);
+        bot.setEquipe(eq);
+        userRepo.save(bot);
+        dum.add(eq);
+      }
 
-      userRepository.saveAll(List.of(lea, tom, ines, tibo));
+      // ── Inscriptions aux tournois ──────────
+      // Spring Arena Cup 2025 : 7 teams
+      List<Equipe> t = new ArrayList<>(
+          List.of(omega, iota));
+      t.addAll(dum.subList(0, 5));
+      inscrire(inscriptionRepo, springArena,
+          t, "2025-04-08");
 
-      // ── Inscriptions de démonstration ───────────────────────────────────
-      // TEAM_ALPHA déjà inscrite à Spring Cup (OUVERT)
-      InscriptionEquipeTournoi alphaSpring = new InscriptionEquipeTournoi();
-      alphaSpring.setTournoi(springCup);
-      alphaSpring.setEquipe(teamAlpha);
-      alphaSpring.setDateInscription(LocalDate.parse("2026-03-20"));
+      // Elite Championship 2025 : 6 teams
+      t = new ArrayList<>(List.of(alpha, iota));
+      t.addAll(dum.subList(0, 4));
+      inscrire(inscriptionRepo, elite2025,
+          t, "2025-05-09");
 
-      // TEAM_ALPHA inscrite à Night Masters (CLOTURE)
-      InscriptionEquipeTournoi alphaNight = new InscriptionEquipeTournoi();
-      alphaNight.setTournoi(nightMasters);
-      alphaNight.setEquipe(teamAlpha);
-      alphaNight.setDateInscription(LocalDate.parse("2026-05-01"));
+      // Summer Pro League 2025 : 14 teams
+      t = new ArrayList<>(
+          List.of(alpha, omega, iota));
+      t.addAll(dum.subList(0, 11));
+      inscrire(inscriptionRepo, summerPro,
+          t, "2025-06-20");
 
-      // TEAM_OMEGA inscrite à Night Masters (CLOTURE)
-      InscriptionEquipeTournoi omegaNight = new InscriptionEquipeTournoi();
-      omegaNight.setTournoi(nightMasters);
-      omegaNight.setEquipe(teamOmega);
-      omegaNight.setDateInscription(LocalDate.parse("2026-05-02"));
+      // Vinci Winter Clash 2026 : 12 teams
+      t = new ArrayList<>(
+          List.of(alpha, omega, iota));
+      t.addAll(dum.subList(0, 9));
+      inscrire(inscriptionRepo, winterClash,
+          t, "2026-01-03");
 
-      // TEAM_OMEGA inscrite à Winter Clash (EN_COURS)
-      InscriptionEquipeTournoi omegaWinter = new InscriptionEquipeTournoi();
-      omegaWinter.setTournoi(winterClash);
-      omegaWinter.setEquipe(teamOmega);
-      omegaWinter.setDateInscription(LocalDate.parse("2026-03-10"));
+      // Spring Battle Series 2026 : 8 teams
+      t = new ArrayList<>(
+          List.of(alpha, omega, iota));
+      t.addAll(dum.subList(0, 5));
+      inscrire(inscriptionRepo, springBattle,
+          t, "2026-03-28");
 
-      inscriptionEquipeTournoiRepository.saveAll(
-          List.of(alphaSpring, alphaNight, omegaNight, omegaWinter));
+      // Vinci Easter Cup 2026 : 7 teams
+      // (TEAM_ALPHA s'inscrit pendant la démo)
+      t = new ArrayList<>(List.of(omega, iota));
+      t.addAll(dum.subList(0, 5));
+      inscrire(inscriptionRepo, easterCup,
+          t, "2026-04-05");
 
-      System.out.println("✅ DB initialisée :");
-      System.out.println("   TEAM_ALPHA → Lea (resp. principal), Tom, Ines");
-      System.out.println("   TEAM_OMEGA → Tibo (resp. principal)");
-      System.out.println("   Tournois → Spring Cup, Night Masters, Arena Finals, Winter Clash");
+      // Elite Championship 2026 : 14 teams
+      t = new ArrayList<>(
+          List.of(alpha, omega, iota));
+      t.addAll(dum.subList(0, 11));
+      inscrire(inscriptionRepo, elite2026,
+          t, "2026-05-05");
+
       System.out.println(
-          "   Inscriptions → TEAM_ALPHA(Spring Cup, Night Masters), "
-              + "TEAM_OMEGA(Night Masters, Winter Clash)");
+          "DB initialisée : 8 users, "
+              + "16 teams, 7 tournois");
     };
   }
 }
