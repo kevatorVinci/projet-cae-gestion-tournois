@@ -1,7 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: './tests/Authentification',
+  
+  /* 1. Global timeout for each test (in milliseconds) */
+  timeout: 30000, // Sets a 60-second limit per test
+
+  expect: {
+    /* 2. Maximum time expect() should wait for a condition (e.g., toHaveURL) */
+    timeout: 10000, 
+  },
+
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -9,34 +18,27 @@ export default defineConfig({
   reporter: 'html',
 
   use: {
-    /* Set the base URL so you can use await page.goto('/') in your tests */
     baseURL: 'http://localhost:5173',
-
-    /* Collect trace when retrying the failed test. */
     trace: 'on-first-retry',
+    
+    /* 3. Navigation timeout (how long to wait for page.goto) */
+    navigationTimeout: 30000,
   },
 
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 
-  /* This tells Playwright to start your React dev server before running tests */
   webServer: {
-    command: 'npm run dev', // Matches your usual 'npm run dev'
-    url: 'http://localhost:5173', // Matches your Vite port
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
     stderr: 'pipe',
+    
+    /* 4. Increase startup timeout for the dev server */
+    timeout: 60000, // Gives the server 2 minutes to boot up
   },
 });
