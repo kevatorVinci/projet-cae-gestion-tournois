@@ -163,7 +163,6 @@ class NotificationServiceTest {
   void createNotification_sauvegardeAvecBonnesValeurs() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    Notification result = notificationService.createNotification(user, "Mon message");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
