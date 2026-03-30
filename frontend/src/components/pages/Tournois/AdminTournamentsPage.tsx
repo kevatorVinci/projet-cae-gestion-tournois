@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useCallback } from 'react';
+import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -26,6 +26,52 @@ import {
 } from '../../../services/tournois';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
+
+type EtatStyle = {
+  label: string;
+  accent: string;
+  chipBg: string;
+  chipText: string;
+};
+
+const ETAT_STYLES: Record<Tournoi['etat'], EtatStyle> = {
+  BROUILLON: {
+    label: 'En attente de publication',
+    accent: '#6b7280',
+    chipBg: 'rgba(107,114,128,0.22)',
+    chipText: '#e5e7eb',
+  },
+  OUVERT: {
+    label: 'Ouvert',
+    accent: '#16a34a',
+    chipBg: 'rgba(22,163,74,0.20)',
+    chipText: '#4ade80',
+  },
+  CLOTURE: {
+    label: 'Clôturé',
+    accent: '#0ea5e9',
+    chipBg: 'rgba(14,165,233,0.20)',
+    chipText: '#38bdf8',
+  },
+  EN_COURS: {
+    label: 'En cours',
+    accent: '#e8822a',
+    chipBg: 'rgba(232,130,42,0.20)',
+    chipText: '#f5a35c',
+  },
+  TERMINE: {
+    label: 'Terminé',
+    accent: '#64748b',
+    chipBg: 'rgba(100,116,139,0.22)',
+    chipText: '#cbd5e1',
+  },
+  ANNULE: {
+    label: 'Annulé',
+    accent: '#ef4444',
+    chipBg: 'rgba(239,68,68,0.20)',
+    chipText: '#fca5a5',
+  },
+};
 
 /**
  * Admin version of the Tournaments page.
@@ -186,6 +232,37 @@ const AdminTournamentsPage = () => {
     return true;
   });
 
+  const sortedTournaments = useMemo(() => {
+    const statusPriority: Record<Tournoi['etat'], number> = {
+      EN_COURS: 0,
+      OUVERT: 1,
+      CLOTURE: 2,
+      ANNULE: 3,
+      BROUILLON: 4,
+      TERMINE: 5,
+    };
+
+    const today = new Date();
+
+    return [...filteredTournaments].sort((a, b) => {
+      const priorityA = statusPriority[a.etat] ?? 99;
+      const priorityB = statusPriority[b.etat] ?? 99;
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      const dateA = new Date(a.dateDebut);
+      const dateB = new Date(b.dateDebut);
+      const distanceA = Math.abs(dateA.getTime() - today.getTime());
+      const distanceB = Math.abs(dateB.getTime() - today.getTime());
+      if (distanceA !== distanceB) {
+        return distanceA - distanceB;
+      }
+
+      return dateA.getTime() - dateB.getTime();
+    });
+  }, [filteredTournaments]);
+
   return (
     <Box
       sx={{
@@ -309,7 +386,7 @@ const AdminTournamentsPage = () => {
             borderBottom="2px solid #2a3b55"
             pb={1}
           >
-            Liste des tournois ({filteredTournaments.length}) 🗂️
+            Liste des tournois ({sortedTournaments.length}) 🗂️
           </Typography>
 
           {loading && (
@@ -318,7 +395,7 @@ const AdminTournamentsPage = () => {
             </Box>
           )}
           {error && <Typography color="error">{error}</Typography>}
-          {!loading && !error && filteredTournaments.length === 0 && (
+          {!loading && !error && sortedTournaments.length === 0 && (
             <Typography color="text.secondary">
               Aucun tournoi ne correspond à ce filtre.
             </Typography>
@@ -326,140 +403,143 @@ const AdminTournamentsPage = () => {
 
           {!loading &&
             !error &&
-            filteredTournaments.map((tournament) => (
-              <Card
-                key={tournament.id}
-                onClick={() => navigate(`/tournois/${tournament.id}`)}
-                sx={{
-                  mb: 2,
-                  backgroundColor: '#111827',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  borderLeft:
-                    tournament.etat === 'BROUILLON'
-                      ? '4px solid #6b7280'
-                      : '4px solid #e8822a',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    borderColor: '#e8822a',
-                  },
-                }}
-              >
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                  }}
-                >
-                  <Box>
-                    <Typography variant="h6" color="white" fontWeight={700}>
-                      {tournament.nom}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Du {formatDate(tournament.dateDebut)} au{' '}
-                      {formatDate(tournament.dateFin)}
-                    </Typography>
+            sortedTournaments.map((tournament) =>
+              (() => {
+                const etatStyle = ETAT_STYLES[tournament.etat];
 
-                    <Chip
-                      label={
-                        tournament.etat === 'BROUILLON'
-                          ? 'En attente de publication'
-                          : tournament.etat
-                      }
-                      size="small"
+                return (
+                  <Card
+                    key={tournament.id}
+                    onClick={() => navigate(`/tournois/${tournament.id}`)}
+                    sx={{
+                      mb: 2,
+                      backgroundColor: '#111827',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderLeft: `4px solid ${etatStyle.accent}`,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        borderColor: etatStyle.accent,
+                      },
+                    }}
+                  >
+                    <CardContent
                       sx={{
-                        mt: 1,
-                        backgroundColor:
-                          tournament.etat === 'BROUILLON'
-                            ? '#4b5563'
-                            : 'rgba(232, 130, 42, 0.2)',
-                        color:
-                          tournament.etat === 'BROUILLON' ? 'white' : '#e8822a',
-                        fontWeight: 'bold',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 2,
                       }}
-                    />
-                  </Box>
-
-                  {tournament.etat === 'BROUILLON' && (
-                    <Box
-                      sx={{ display: 'flex', gap: 2 }}
-                      onClick={(event) => event.stopPropagation()}
                     >
-                      <Button
-                        variant="outlined"
-                        onClick={() =>
-                          navigate(`/admin/tournaments/edit/${tournament.id}`)
-                        }
-                        sx={{
-                          color: '#e8822a',
-                          borderColor: '#e8822a',
-                          '&:hover': {
-                            backgroundColor: 'rgba(232, 130, 42, 0.1)',
-                          },
-                        }}
-                      >
-                        Modifier
-                      </Button>
-                      <Button
-                        variant="contained"
-                        onClick={() => handlePublish(tournament.id)}
-                        sx={{
-                          backgroundColor: '#4caf50',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          '&:hover': { backgroundColor: '#388e3c' },
-                        }}
-                      >
-                        Publier
-                      </Button>
-                    </Box>
-                  )}
+                      <Box>
+                        <Typography variant="h6" color="white" fontWeight={700}>
+                          {tournament.nom}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Du {formatDate(tournament.dateDebut)} au{' '}
+                          {formatDate(tournament.dateFin)}
+                        </Typography>
 
-                  {tournament.etat === 'OUVERT' && (
-                    <Box
-                      sx={{ display: 'flex', gap: 2 }}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        onClick={() => handleCloseRegistrations(tournament.id)}
-                        sx={{ color: 'white', fontWeight: 'bold' }}
-                      >
-                        Clôturer
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => handleCancelTournament(tournament.id)}
-                        sx={{ fontWeight: 'bold' }}
-                      >
-                        Annuler
-                      </Button>
-                    </Box>
-                  )}
+                        <Chip
+                          label={etatStyle.label}
+                          size="small"
+                          sx={{
+                            mt: 1,
+                            backgroundColor: etatStyle.chipBg,
+                            color: etatStyle.chipText,
+                            fontWeight: 'bold',
+                          }}
+                        />
+                      </Box>
 
-                  {(tournament.etat === 'CLOTURE' ||
-                    tournament.etat === 'EN_COURS') && (
-                    <Box
-                      sx={{ display: 'flex', gap: 2 }}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => handleCancelTournament(tournament.id)}
-                        sx={{ fontWeight: 'bold' }}
-                      >
-                        Annuler
-                      </Button>
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                      {tournament.etat === 'BROUILLON' && (
+                        <Box
+                          sx={{ display: 'flex', gap: 2 }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              navigate(
+                                `/admin/tournaments/edit/${tournament.id}`,
+                              )
+                            }
+                            sx={{
+                              color: '#e8822a',
+                              borderColor: '#e8822a',
+                              '&:hover': {
+                                backgroundColor: 'rgba(232, 130, 42, 0.1)',
+                              },
+                            }}
+                          >
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="contained"
+                            onClick={() => handlePublish(tournament.id)}
+                            sx={{
+                              backgroundColor: '#4caf50',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              '&:hover': { backgroundColor: '#388e3c' },
+                            }}
+                          >
+                            Publier
+                          </Button>
+                        </Box>
+                      )}
+
+                      {tournament.etat === 'OUVERT' && (
+                        <Box
+                          sx={{ display: 'flex', gap: 2 }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Button
+                            variant="contained"
+                            color="warning"
+                            onClick={() =>
+                              handleCloseRegistrations(tournament.id)
+                            }
+                            sx={{ color: 'white', fontWeight: 'bold' }}
+                          >
+                            Clôturer
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() =>
+                              handleCancelTournament(tournament.id)
+                            }
+                            sx={{ fontWeight: 'bold' }}
+                          >
+                            Annuler
+                          </Button>
+                        </Box>
+                      )}
+
+                      {(tournament.etat === 'CLOTURE' ||
+                        tournament.etat === 'EN_COURS') && (
+                        <Box
+                          sx={{ display: 'flex', gap: 2 }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() =>
+                              handleCancelTournament(tournament.id)
+                            }
+                            sx={{ fontWeight: 'bold' }}
+                          >
+                            Annuler
+                          </Button>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })(),
+            )}
         </Box>
       </Container>
     </Box>

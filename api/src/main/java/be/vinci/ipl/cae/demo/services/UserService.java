@@ -71,6 +71,7 @@ public class UserService {
       authenticatedUser.setSpecialty(user.getSpecialty());
       authenticatedUser.setProfileImage(user.getProfileImageUrl());
       authenticatedUser.setAdmin(user.isAdmin());
+      authenticatedUser.setBanned(user.isBanned());
     }
 
     return authenticatedUser;
@@ -100,6 +101,9 @@ public class UserService {
   public AuthenticatedUser login(String email, String password) {
     User user = userRepository.findByEmail(email);
     if (user == null) {
+      return null;
+    }
+    if (user.isBanned()) {
       return null;
     }
     if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -210,6 +214,7 @@ public class UserService {
       dto.setSpecialty(user.getSpecialty());
       dto.setProfileImage(user.getProfileImageUrl());
       dto.setAdmin(user.isAdmin());
+      dto.setBanned(user.isBanned());
 
       usersList.add(dto);
     }
@@ -240,6 +245,24 @@ public class UserService {
       user.setAdmin(false);
       userRepository.save(user);
     }
+  }
+
+  /**
+   * Soft-bans a user from the platform.
+   *
+   * @param email email of the user to ban
+   */
+  public void banUser(String email) {
+    if (email == null || email.isBlank()) {
+      return;
+    }
+
+    User user = userRepository.findByEmail(email);
+    if (user == null) {
+      return;
+    }
+    user.setBanned(true);
+    userRepository.save(user);
   }
 
   /**

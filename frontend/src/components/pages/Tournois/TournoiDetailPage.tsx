@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
   Avatar,
@@ -10,9 +10,14 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Stack,
   Typography,
 } from '@mui/material';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GroupsIcon from '@mui/icons-material/Groups';
 import BackButton from '../../BoutonRetour';
 import { Tournoi } from '../../../types';
@@ -91,6 +96,10 @@ const resolveTeamName = (inscription: InscriptionTournoi, index: number) => {
   );
 };
 
+const resolveTeamId = (inscription: InscriptionTournoi) => {
+  return inscription.equipeId || inscription.equipe?.id;
+};
+
 const getAvatarColorFromName = (name: string) => {
   let hash = 0;
   for (let i = 0; i < name.length; i += 1) {
@@ -124,6 +133,7 @@ const fetchAcceptedInscriptions = async (
 
 const TournoiDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [tournoi, setTournoi] = useState<TournoiDetail | null>(null);
   const [acceptedInscriptions, setAcceptedInscriptions] = useState<
     InscriptionTournoi[]
@@ -134,7 +144,9 @@ const TournoiDetailPage = () => {
   );
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerConfirmOpen, setRegisterConfirmOpen] = useState(false);
   const [registerFeedback, setRegisterFeedback] = useState<string | null>(null);
+  const [registerFeedbackIsError, setRegisterFeedbackIsError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -201,57 +213,53 @@ const TournoiDetailPage = () => {
   }, [id]);
 
   const teams = useMemo(() => {
-    if (acceptedInscriptions.length > 0) {
-      return acceptedInscriptions;
-    }
-    return tournoi?.inscriptions || [];
+    const sourceTeams =
+      acceptedInscriptions.length > 0
+        ? acceptedInscriptions
+        : tournoi?.inscriptions || [];
+
+    return [...sourceTeams].sort((a, b) => {
+      const nameA = resolveTeamName(a, 0);
+      const nameB = resolveTeamName(b, 0);
+      return nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
+    });
   }, [acceptedInscriptions, tournoi]);
 
   const handleDirectRegister = async () => {
     if (!id || !responsableTeamId) {
-      return;
-    }
-
-    const maxParticipants = tournoi?.nombresParticipantsMax;
-    const currentParticipants = teams.length;
-    const isLastSlot =
-      !!maxParticipants && currentParticipants + 1 >= maxParticipants;
-
-    const confirmationMessage = isLastSlot
-      ? "Attention: c'est la derniere place. Cette inscription va cloturer le tournoi automatiquement. Continuer ?"
-      : "Confirmez-vous l'inscription de votre equipe a ce tournoi ?";
-
-    if (!window.confirm(confirmationMessage)) {
+      setRegisterConfirmOpen(false);
       return;
     }
 
     const token = getAuthenticatedUser()?.token;
     if (!token) {
       setRegisterFeedback('Session expiree. Veuillez vous reconnecter.');
+      setRegisterFeedbackIsError(true);
+      setRegisterConfirmOpen(false);
       return;
     }
 
     try {
       setRegisterFeedback(null);
+      setRegisterFeedbackIsError(false);
       setRegisterLoading(true);
       await registerTeamToTournament(id, responsableTeamId, token);
       setAlreadyRegistered(true);
       setRegisterFeedback('Votre equipe est inscrite a ce tournoi.');
+      setRegisterFeedbackIsError(false);
 
       const refreshedAccepted = await fetchAcceptedInscriptions(id);
       setAcceptedInscriptions(refreshedAccepted);
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 400);
     } catch (err: unknown) {
       setRegisterFeedback(
         err instanceof Error
           ? err.message
           : "Impossible d'inscrire votre equipe.",
       );
+      setRegisterFeedbackIsError(true);
     } finally {
       setRegisterLoading(false);
+      setRegisterConfirmOpen(false);
     }
   };
 
@@ -343,6 +351,39 @@ const TournoiDetailPage = () => {
                 "Aucune description n'a encore été ajoutée pour ce tournoi."}
             </Typography>
 
+            {tournoi.etat === 'TERMINE' && tournoi.gagnant && (
+              <Box
+                sx={{
+                  mt: 3,
+                  p: 2.5,
+                  borderRadius: 2,
+                  backgroundColor: 'rgba(234,179,8,0.08)',
+                  border: '1px solid rgba(234,179,8,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                }}
+              >
+                <EmojiEventsIcon sx={{ color: '#eab308', fontSize: 36 }} />
+                <Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ textTransform: 'uppercase', letterSpacing: '0.08em' }}
+                  >
+                    Vainqueur
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight={800}
+                    sx={{ color: '#eab308' }}
+                  >
+                    {tournoi.gagnant.name}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+
             <Stack
               direction={{ xs: 'column', md: 'row' }}
               spacing={2}
@@ -370,11 +411,119 @@ const TournoiDetailPage = () => {
               )}
             </Stack>
 
+            {/* ── Stats: places & inscriptions ──────────────── */}
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                mt: 3,
+                flexWrap: 'wrap',
+              }}
+            >
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 140,
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: 'rgba(232,130,42,0.08)',
+                  border: '1px solid rgba(232,130,42,0.25)',
+                  textAlign: 'center',
+                }}
+              >
+                <Typography
+                  variant="h4"
+                  fontWeight={800}
+                  sx={{ color: '#e8822a' }}
+                >
+                  {teams.length}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Équipe{teams.length > 1 ? 's' : ''} inscrite
+                  {teams.length > 1 ? 's' : ''}
+                </Typography>
+              </Box>
+
+              {tournoi.nombresParticipantsMax && (
+                <Box
+                  sx={{
+                    flex: 1,
+                    minWidth: 140,
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor:
+                      tournoi.nombresParticipantsMax - teams.length > 0
+                        ? 'rgba(22,163,106,0.08)'
+                        : 'rgba(239,68,68,0.08)',
+                    border:
+                      tournoi.nombresParticipantsMax - teams.length > 0
+                        ? '1px solid rgba(22,163,106,0.25)'
+                        : '1px solid rgba(239,68,68,0.25)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <Typography
+                    variant="h4"
+                    fontWeight={800}
+                    sx={{
+                      color:
+                        tournoi.nombresParticipantsMax - teams.length > 0
+                          ? '#16a34a'
+                          : '#ef4444',
+                    }}
+                  >
+                    {tournoi.nombresParticipantsMax - teams.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Place
+                    {tournoi.nombresParticipantsMax - teams.length > 1
+                      ? 's'
+                      : ''}{' '}
+                    disponible
+                    {tournoi.nombresParticipantsMax - teams.length > 1
+                      ? 's'
+                      : ''}
+                  </Typography>
+                </Box>
+              )}
+
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 140,
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor:
+                    tournoi.etat === 'OUVERT'
+                      ? 'rgba(22,163,106,0.08)'
+                      : 'rgba(100,116,139,0.08)',
+                  border:
+                    tournoi.etat === 'OUVERT'
+                      ? '1px solid rgba(22,163,106,0.25)'
+                      : '1px solid rgba(100,116,139,0.25)',
+                  textAlign: 'center',
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  fontWeight={800}
+                  sx={{
+                    color: tournoi.etat === 'OUVERT' ? '#16a34a' : '#64748b',
+                  }}
+                >
+                  {tournoi.etat === 'OUVERT' ? 'Ouvertes' : 'Fermées'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Inscriptions
+                </Typography>
+              </Box>
+            </Box>
+
             {isResponsable && (
               <Box sx={{ mt: 3 }}>
                 {registerFeedback && (
                   <Alert
-                    severity={alreadyRegistered ? 'success' : 'info'}
+                    severity={registerFeedbackIsError ? 'error' : 'success'}
                     sx={{ mb: 2 }}
                   >
                     {registerFeedback}
@@ -389,7 +538,7 @@ const TournoiDetailPage = () => {
                 ) : (
                   <Button
                     variant="contained"
-                    onClick={handleDirectRegister}
+                    onClick={() => setRegisterConfirmOpen(true)}
                     disabled={tournoi.etat !== 'OUVERT' || registerLoading}
                     sx={{
                       bgcolor: '#16a34a',
@@ -407,6 +556,49 @@ const TournoiDetailPage = () => {
           </CardContent>
         </Card>
 
+        <Dialog
+          open={registerConfirmOpen}
+          onClose={() => setRegisterConfirmOpen(false)}
+          fullWidth
+          maxWidth="xs"
+          PaperProps={{
+            sx: {
+              bgcolor: '#1a2540',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.12)',
+            },
+          }}
+        >
+          <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
+            Confirmer l'inscription
+          </DialogTitle>
+          <DialogContent>
+            <Typography color="text.secondary">
+              Confirmez-vous l'inscription de votre équipe à ce tournoi ?
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, pt: 0 }}>
+            <Button
+              onClick={() => setRegisterConfirmOpen(false)}
+              sx={{ color: 'rgba(255,255,255,0.8)' }}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleDirectRegister}
+              disabled={registerLoading}
+              sx={{
+                bgcolor: '#16a34a',
+                color: 'white',
+                '&:hover': { bgcolor: '#15803d' },
+              }}
+            >
+              {registerLoading ? 'Inscription...' : 'Confirmer'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Card
           sx={{
             backgroundColor: '#111827',
@@ -422,7 +614,11 @@ const TournoiDetailPage = () => {
             >
               <GroupsIcon sx={{ color: '#e8822a' }} />
               <Typography variant="h6" fontWeight={700} color="white">
-                Équipes inscrites
+                Équipes inscrites ({teams.length}
+                {tournoi.nombresParticipantsMax
+                  ? `/${tournoi.nombresParticipantsMax}`
+                  : ''}
+                )
               </Typography>
             </Stack>
 
@@ -432,46 +628,84 @@ const TournoiDetailPage = () => {
               </Typography>
             ) : (
               <Stack spacing={1.5}>
-                {teams.map((inscription, index) => (
-                  <Box
-                    key={`${resolveTeamName(inscription, index)}-${index}`}
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      p: 1.5,
-                      borderRadius: 1.5,
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      backgroundColor: 'rgba(255,255,255,0.02)',
-                    }}
-                  >
-                    {/** Team avatar generated from team name when no team image exists. */}
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Avatar
+                {teams.map((inscription, index) =>
+                  (() => {
+                    const teamId = resolveTeamId(inscription);
+                    const canNavigate = typeof teamId === 'number';
+
+                    return (
+                      <Box
+                        key={`${resolveTeamName(inscription, index)}-${index}`}
+                        onClick={() => {
+                          if (!canNavigate) {
+                            return;
+                          }
+                          navigate(`/equipes/${teamId}`);
+                        }}
                         sx={{
-                          bgcolor: getAvatarColorFromName(
-                            resolveTeamName(inscription, index),
-                          ),
-                          color: 'white',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          p: 1.5,
+                          borderRadius: 1.5,
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          backgroundColor: 'rgba(255,255,255,0.02)',
+                          cursor: canNavigate ? 'pointer' : 'default',
+                          transition:
+                            'border-color 0.2s ease, background-color 0.2s ease',
+                          '&:hover': canNavigate
+                            ? {
+                                borderColor: 'rgba(96,165,250,0.65)',
+                                backgroundColor: 'rgba(96,165,250,0.08)',
+                              }
+                            : undefined,
                         }}
                       >
-                        {resolveTeamName(inscription, index)
-                          .charAt(0)
-                          .toUpperCase()}
-                      </Avatar>
-                      <Typography color="white" fontWeight={600}>
-                        {resolveTeamName(inscription, index)}
-                      </Typography>
-                    </Stack>
-                    {inscription.etat && inscription.etat !== 'ACCEPTEE' && (
-                      <Chip
-                        size="small"
-                        label={inscription.etat}
-                        sx={{ bgcolor: '#1a2540', color: 'white' }}
-                      />
-                    )}
-                  </Box>
-                ))}
+                        {/** Team avatar generated from team name when no team image exists. */}
+                        <Stack
+                          direction="row"
+                          spacing={1.5}
+                          alignItems="center"
+                        >
+                          <Avatar
+                            sx={{
+                              bgcolor: getAvatarColorFromName(
+                                resolveTeamName(inscription, index),
+                              ),
+                              color: 'white',
+                            }}
+                          >
+                            {resolveTeamName(inscription, index)
+                              .charAt(0)
+                              .toUpperCase()}
+                          </Avatar>
+                          <Typography
+                            color={canNavigate ? '#93c5fd' : 'white'}
+                            fontWeight={600}
+                            sx={{
+                              textDecoration: canNavigate
+                                ? 'underline'
+                                : 'none',
+                              textUnderlineOffset: canNavigate
+                                ? '2px'
+                                : undefined,
+                            }}
+                          >
+                            {resolveTeamName(inscription, index)}
+                          </Typography>
+                        </Stack>
+                        {inscription.etat &&
+                          inscription.etat !== 'ACCEPTEE' && (
+                            <Chip
+                              size="small"
+                              label={inscription.etat}
+                              sx={{ bgcolor: '#1a2540', color: 'white' }}
+                            />
+                          )}
+                      </Box>
+                    );
+                  })(),
+                )}
               </Stack>
             )}
           </CardContent>

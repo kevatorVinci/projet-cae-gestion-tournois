@@ -176,4 +176,100 @@ describe('AdminPage', () => {
       expect(fetch).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('affiche les admins en premier puis trie par tag', async () => {
+    vi.mocked(fetch).mockImplementation(() =>
+      jsonResponse([
+        {
+          email: 'zeta-player@vinci.be',
+          token: 'token-zeta',
+          tag: 'Zeta',
+          admin: false,
+          profileImage: 'zeta.png',
+        },
+        {
+          email: 'bravo-admin@vinci.be',
+          token: 'token-bravo',
+          tag: 'BravoAdmin',
+          admin: true,
+          profileImage: 'bravo.png',
+        },
+        {
+          email: 'alpha-admin@vinci.be',
+          token: 'token-alpha',
+          tag: 'AlphaAdmin',
+          admin: true,
+          profileImage: 'alpha.png',
+        },
+        {
+          email: 'beta-player@vinci.be',
+          token: 'token-beta',
+          tag: 'Beta',
+          admin: false,
+          profileImage: 'beta.png',
+        },
+      ]),
+    );
+
+    renderWithProviders(<AdminPage />, {
+      userContext: createMockUserContext({
+        authenticatedUser: createAuthenticatedUser({
+          email: 'admin@vinci.be',
+          admin: true,
+        }),
+      }),
+    });
+
+    await screen.findByText('AlphaAdmin');
+
+    const rows = Array.from(document.querySelectorAll('tbody tr'));
+    const orderedTags = rows.map((row) =>
+      row.querySelectorAll('td')[1]?.textContent?.trim(),
+    );
+
+    expect(orderedTags).toEqual(['AlphaAdmin', 'BravoAdmin', 'Beta', 'Zeta']);
+  });
+
+  it('place les comptes bannis en bas avec une mention visible', async () => {
+    vi.mocked(fetch).mockImplementation(() =>
+      jsonResponse([
+        {
+          email: 'normal@vinci.be',
+          token: 'token-normal',
+          tag: 'Normal',
+          admin: false,
+          banned: false,
+          profileImage: 'normal.png',
+        },
+        {
+          email: 'ban@vinci.be',
+          token: 'token-ban',
+          tag: 'BannedUser',
+          admin: false,
+          banned: true,
+          profileImage: 'ban.png',
+        },
+      ]),
+    );
+
+    renderWithProviders(<AdminPage />, {
+      userContext: createMockUserContext({
+        authenticatedUser: createAuthenticatedUser({
+          email: 'admin@vinci.be',
+          admin: true,
+        }),
+      }),
+    });
+
+    await screen.findByText('Normal');
+
+    const rows = Array.from(document.querySelectorAll('tbody tr'));
+    const orderedTags = rows.map((row) =>
+      row.querySelectorAll('td')[1]?.textContent?.trim(),
+    );
+
+    expect(orderedTags).toEqual(['Normal', 'BannedUser']);
+    expect(screen.getByText(/joueur - banni/i)).toBeInTheDocument();
+    expect(screen.getByText(/compte banni/i)).toBeInTheDocument();
+  });
 });

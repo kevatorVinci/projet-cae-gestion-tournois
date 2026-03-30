@@ -51,6 +51,9 @@ public class User {
   @Column(nullable = false)
   private boolean admin = false;
 
+  @Column(nullable = false)
+  private boolean banned = false;
+
   private LocalDateTime dateCreationProfil;
 
   /** Team membership relation. */

@@ -401,7 +401,7 @@ const HomePage = () => {
                 </Typography>
                 <Button
                   variant="text"
-                  onClick={() => navigate('/tournois')}
+                  onClick={() => navigate('/tournois?etat=A_VENIR')}
                   sx={{
                     color: '#e8822a',
                     fontWeight: 600,

@@ -125,4 +125,39 @@ describe('TournoiPage', () => {
 
     expect(await screen.findByText('Spring Championship')).toBeInTheDocument();
   });
+
+  test('resets search and state filters with the reset button', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    } as Response);
+
+    render(
+      <MemoryRouter>
+        <TournoiPage />
+      </MemoryRouter>,
+    );
+
+    const searchField = await screen.findByLabelText(/Rechercher un tournoi/i);
+    const stateSelect = screen.getByLabelText(/État/i);
+    const resetButton = screen.getByRole('button', { name: /Réinitialiser/i });
+
+    expect(resetButton).toBeDisabled();
+
+    fireEvent.change(searchField, { target: { value: 'spring' } });
+    fireEvent.mouseDown(stateSelect);
+    fireEvent.click(await screen.findByRole('option', { name: 'En cours' }));
+
+    await waitFor(() => {
+      expect(resetButton).not.toBeDisabled();
+    });
+
+    fireEvent.click(resetButton);
+
+    await waitFor(() => {
+      expect(searchField).toHaveValue('');
+      expect(stateSelect).toHaveTextContent('Tous');
+      expect(resetButton).toBeDisabled();
+    });
+  });
 });

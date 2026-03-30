@@ -308,4 +308,23 @@ class UserServiceTest {
     assertNotNull(result.getToken());
     assertFalse(result.getToken().isBlank());
   }
+
+  @Test
+  void banUser_utilisateurExistant_activeLeSoftBan() {
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+
+    userService.banUser(EMAIL);
+
+    assertTrue(user.isBanned());
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void banUser_utilisateurInexistant_neFaitRien() {
+    when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
+
+    userService.banUser("inconnu@vinci.be");
+
+    verify(userRepository, never()).save(any());
+  }
 }

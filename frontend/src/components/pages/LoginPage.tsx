@@ -33,18 +33,38 @@ const LoginPage = () => {
     setShowPassword(!showPassword);
   };
 
+  /**
+   * Fonction déclenchée quand le joueur clique sur "Se connecter".
+   * On intercepte les erreurs pour vérifier si le compte est banni.
+   * @param {SyntheticEvent} e Evénement de soumission du formulaire.
+   */
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     try {
       setError('');
+      // On essaie de se connecter via le serveur
       await loginUser({ email, password }, rememberMe);
+      // Si ça marche, on va sur la page d'accueil
       navigate('/');
-    } catch (err) {
+    } catch (err: unknown) {
+      // On explique à TypeScript la forme possible de l'erreur envoyée par le serveur
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+
+      // On regarde ce que le serveur Java nous a répondu comme erreur
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'Identifiants incorrects. Veuillez réessayer.';
-      setError(errorMessage);
+        error?.response?.data?.message || error?.message || '';
+
+      // ✨ LA MAGIE EST ICI : On cherche si le mot "banni" est dans l'erreur de Java
+      if (errorMessage.toLowerCase().includes('banni')) {
+        setError('ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.');
+      } else {
+        // Sinon, c'est juste qu'il s'est trompé de mot de passe ou d'email
+        setError('Identifiants incorrects. Veuillez réessayer.');
+      }
+
       console.error('LoginPage::error: ', err);
     }
   };
@@ -94,11 +114,14 @@ const LoginPage = () => {
         <Typography variant="h5" color="white" textAlign="center" mb={3}>
           Connexion
         </Typography>
+
+        {/* C'est ici que l'alerte de bannissement va s'afficher en rouge ! */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
+
         <form onSubmit={handleSubmit}>
           <Box sx={{ marginBottom: 2 }}>
             <TextField

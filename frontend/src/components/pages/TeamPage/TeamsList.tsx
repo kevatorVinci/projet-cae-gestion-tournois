@@ -128,9 +128,13 @@ const TeamsList = () => {
 
   const filteredTeams = useMemo(
     () =>
-      teamsState.filter((team) =>
-        team.name.toLowerCase().includes(normalizedQuery),
-      ),
+      [...teamsState]
+        .filter((team) => team.name.toLowerCase().includes(normalizedQuery))
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, 'fr', {
+            sensitivity: 'base',
+          }),
+        ),
     [normalizedQuery, teamsState],
   );
 
@@ -290,14 +294,14 @@ const TeamsList = () => {
                     key={team.id}
                     sx={{
                       borderRadius: 2,
-                      border: '1px solid rgba(255,255,255,0.07)',
+                      border: '1px solid rgba(96,165,250,0.28)',
                       backgroundColor: '#111827',
                       position: 'relative',
                       overflow: 'hidden',
                       transition: 'transform 0.2s ease, border-color 0.2s ease',
                       '&:hover': {
                         transform: 'translateY(-4px)',
-                        borderColor: '#e8822a',
+                        borderColor: '#60a5fa',
                       },
                     }}
                   >
@@ -305,7 +309,7 @@ const TeamsList = () => {
                       sx={{
                         height: 3,
                         background:
-                          'linear-gradient(90deg, #e8822a, transparent)',
+                          'linear-gradient(90deg, #60a5fa, transparent)',
                       }}
                     />
 
@@ -354,12 +358,16 @@ const TeamsList = () => {
                           disabled={isPostulerDisabled}
                           sx={{
                             backgroundColor: '#e8822a',
+                            color: 'white',
                             fontWeight: 700,
                             '&.Mui-disabled': {
                               backgroundColor: 'rgba(255,255,255,0.15)',
                               color: 'rgba(255,255,255,0.5)',
                             },
-                            '&:hover': { backgroundColor: '#c86e20' },
+                            '&:hover': {
+                              backgroundColor: '#c86e20',
+                              color: 'white',
+                            },
                           }}
                         >
                           {isOwnTeam

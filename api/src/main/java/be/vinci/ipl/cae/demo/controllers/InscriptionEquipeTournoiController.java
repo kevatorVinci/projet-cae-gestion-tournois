@@ -101,8 +101,12 @@ public class InscriptionEquipeTournoiController {
           @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
             equipeId, currentUser, "You can only register your own team");
-    InscriptionEquipeTournoi inscription =
-            inscriptionService.register(tournoiId, equipeId);
+    InscriptionEquipeTournoi inscription;
+    try {
+      inscription = inscriptionService.register(tournoiId, equipeId);
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+    }
     if (inscription == null) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,

@@ -263,4 +263,65 @@ describe('MyTeam', () => {
       expect(depromoteResponsable).toHaveBeenCalledWith(2);
     });
   });
+
+  test('affiche les responsables en haut puis trie les membres par tag', async () => {
+    const equipeTrieeAttendue = {
+      ...equipeSimulee,
+      members: [
+        {
+          id: 4,
+          tag: 'Zeta',
+          specialty: 'Gardien',
+          isResponsable: false,
+          profileImage: '',
+        },
+        {
+          id: 2,
+          tag: 'Bravo',
+          specialty: 'Tacticien',
+          isResponsable: true,
+          profileImage: '',
+        },
+        {
+          id: 3,
+          tag: 'Alpha',
+          specialty: 'Architecte',
+          isResponsable: true,
+          profileImage: '',
+        },
+        {
+          id: 1,
+          tag: 'Charlie',
+          specialty: 'Exécuteur',
+          isResponsable: false,
+          profileImage: '',
+        },
+      ],
+    };
+
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 99 });
+    vi.mocked(getUserTeam).mockResolvedValueOnce(equipeTrieeAttendue);
+    vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(true);
+
+    render(
+      <MemoryRouter>
+        <MyTeam />
+      </MemoryRouter>,
+    );
+
+    await screen.findByText('Alpha');
+
+    const listItems = screen.getAllByRole('listitem');
+    const orderedTags = listItems.map((item) => {
+      const match = item.textContent?.match(/(Alpha|Bravo|Charlie|Zeta)/);
+      return match ? match[1] : '';
+    });
+
+    expect(orderedTags).toEqual(['Alpha', 'Bravo', 'Charlie', 'Zeta']);
+  });
 });
