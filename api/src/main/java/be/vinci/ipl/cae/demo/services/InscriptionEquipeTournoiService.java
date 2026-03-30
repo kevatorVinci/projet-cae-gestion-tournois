@@ -14,21 +14,26 @@ import org.springframework.stereotype.Service;
 @Service
 public class InscriptionEquipeTournoiService {
 
+  private static final int MIN_MEMBERS_FOR_REGISTRATION = 4;
+
   private final InscriptionEquipeTournoiRepository inscriptionRepository;
   private final TournoiRepository tournoiRepository;
   private final EquipeRepository equipeRepository;
   private final TournoiService tournoiService;
+  private final NotificationService notificationService;
 
   /** Creates the service with its repositories and tournament service dependency. */
   public InscriptionEquipeTournoiService(
           InscriptionEquipeTournoiRepository inscriptionRepository,
           TournoiRepository tournoiRepository,
           EquipeRepository equipeRepository,
-          TournoiService tournoiService) {
+          TournoiService tournoiService,
+          NotificationService notificationService) {
     this.inscriptionRepository = inscriptionRepository;
     this.tournoiRepository = tournoiRepository;
     this.equipeRepository = equipeRepository;
     this.tournoiService = tournoiService;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -72,6 +77,11 @@ public class InscriptionEquipeTournoiService {
       return null;
     }
 
+    if (equipe.getMembres() == null || equipe.getMembres().size() < MIN_MEMBERS_FOR_REGISTRATION) {
+      throw new IllegalArgumentException(
+          "Une équipe doit avoir au moins 4 membres pour s'inscrire à un tournoi.");
+    }
+
     // On bloque si l'équipe est déjà inscrite
     if (inscriptionRepository.findByTournoiAndEquipe(tournoi, equipe).isPresent()) {
       return null;
@@ -87,6 +97,16 @@ public class InscriptionEquipeTournoiService {
     // tu devrais le supprimer du fichier InscriptionEquipeTournoi.java)
 
     InscriptionEquipeTournoi saved = inscriptionRepository.save(inscription);
+
+    String message =
+        "Inscription confirmée : votre équipe '"
+            + equipe.getName()
+            + "' est inscrite au tournoi '"
+            + tournoi.getNom()
+            + "'.";
+    for (var membre : equipe.getMembres()) {
+      notificationService.createNotification(membre, message);
+    }
 
     // ── Clôture automatique si le tournoi est plein ──
     if (tournoi.getNombresParticipantsMax() != null) {

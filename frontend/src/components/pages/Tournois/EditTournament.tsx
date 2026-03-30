@@ -103,6 +103,14 @@ const EditTournamentPage = () => {
       return;
     }
 
+    if (
+      nombresParticipantsMax === '' ||
+      !Number.isFinite(Number(nombresParticipantsMax))
+    ) {
+      setError("Veuillez indiquer un nombre max d'équipes valide.");
+      return;
+    }
+
     if (dateDebut.isBefore(dateLimiteInscription, 'day')) {
       setError(
         "La date de début du tournoi doit être après la date limite d'inscription.",
@@ -292,9 +300,12 @@ const EditTournamentPage = () => {
                       variant="outlined"
                       type="number"
                       value={nombresParticipantsMax}
-                      onChange={(e) =>
-                        setNombresParticipantsMax(Number(e.target.value))
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setNombresParticipantsMax(
+                          value === '' ? '' : Number(value),
+                        );
+                      }}
                       required
                       sx={{
                         ...darkInputStyle,

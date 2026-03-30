@@ -63,6 +63,25 @@ export default function TeamDetails() {
     );
   }
 
+  const sortedMembers = [...team.members].sort((a, b) => {
+    const aResponsable = a.isResponsable ? 1 : 0;
+    const bResponsable = b.isResponsable ? 1 : 0;
+    if (aResponsable !== bResponsable) {
+      return bResponsable - aResponsable;
+    }
+
+    const aTag = (a.tag || '').trim();
+    const bTag = (b.tag || '').trim();
+    const byTag = aTag.localeCompare(bTag, 'fr', {
+      sensitivity: 'base',
+    });
+    if (byTag !== 0) {
+      return byTag;
+    }
+
+    return (a.id || 0) - (b.id || 0);
+  });
+
   return (
     <Box
       sx={{
@@ -107,7 +126,7 @@ export default function TeamDetails() {
             </Typography>
           )}
 
-          {team.members.map((member, index) => (
+          {sortedMembers.map((member, index) => (
             <Card
               key={`${member.tag}-${index}`}
               sx={{

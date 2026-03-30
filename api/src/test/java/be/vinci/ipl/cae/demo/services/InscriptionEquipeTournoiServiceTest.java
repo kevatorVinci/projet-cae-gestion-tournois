@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
+import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
@@ -33,6 +34,8 @@ class InscriptionEquipeTournoiServiceTest {
     private EquipeRepository equipeRepository;
     @Mock
     private TournoiService tournoiService;
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private InscriptionEquipeTournoiService service;
@@ -48,9 +51,20 @@ class InscriptionEquipeTournoiServiceTest {
     }
 
     private Equipe makeEquipe(Long id) {
+        return makeEquipeWithMemberCount(id, 4);
+    }
+
+    private Equipe makeEquipeWithMemberCount(Long id, int memberCount) {
         Equipe e = new Equipe();
         e.setId(id);
         e.setName("Equipe " + id);
+        for (int i = 0; i < memberCount; i++) {
+            User u = new User();
+            u.setId((id * 10) + i + 1);
+            u.setTag("user" + i);
+            u.setEquipe(e);
+            e.getMembres().add(u);
+        }
         return e;
     }
 
@@ -172,6 +186,26 @@ class InscriptionEquipeTournoiServiceTest {
             assertThat(result.getTournoi()).isEqualTo(t);
             assertThat(result.getEquipe()).isEqualTo(e);
             assertThat(result.getDateInscription()).isEqualTo(LocalDate.now());
+            verify(notificationService, times(4)).createNotification(any(User.class), anyString());
+        }
+
+        @Test
+        @DisplayName("retourne une erreur si l'équipe a moins de 4 membres")
+        void erreurSiMoinsDeQuatreMembres() {
+            Tournoi t = makeTournoi(1L, "OUVERT");
+            Equipe e = makeEquipeWithMemberCount(1L, 3);
+            when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
+            when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
+
+            IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                    IllegalArgumentException.class,
+                    () -> service.register(1L, 1L)
+            );
+
+            assertThat(exception.getMessage())
+                    .isEqualTo("Une équipe doit avoir au moins 4 membres pour s'inscrire à un tournoi.");
+            verify(inscriptionRepository, never()).save(any());
+            verify(notificationService, never()).createNotification(any(User.class), anyString());
         }
 
         @Test
@@ -184,6 +218,7 @@ class InscriptionEquipeTournoiServiceTest {
 
             assertThat(result).isNull();
             verify(inscriptionRepository, never()).save(any());
+            verify(notificationService, never()).createNotification(any(User.class), anyString());
         }
 
         @Test
@@ -194,6 +229,7 @@ class InscriptionEquipeTournoiServiceTest {
             InscriptionEquipeTournoi result = service.register(99L, 1L);
 
             assertThat(result).isNull();
+            verify(notificationService, never()).createNotification(any(User.class), anyString());
         }
 
         @Test
@@ -206,6 +242,7 @@ class InscriptionEquipeTournoiServiceTest {
             InscriptionEquipeTournoi result = service.register(1L, 99L);
 
             assertThat(result).isNull();
+            verify(notificationService, never()).createNotification(any(User.class), anyString());
         }
 
         @Test
@@ -222,6 +259,7 @@ class InscriptionEquipeTournoiServiceTest {
 
             assertThat(result).isNull();
             verify(inscriptionRepository, never()).save(any());
+            verify(notificationService, never()).createNotification(any(User.class), anyString());
         }
 
         @Test

@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import TeamsList from '../../components/pages/TeamPage/TeamsList';
@@ -229,15 +235,70 @@ describe('TeamsList', () => {
 
     await screen.findByText(/les tacticiens/i);
 
-    const boutonsPostuler = screen.getAllByRole('button', {
-      name: /postuler/i,
-    });
-    fireEvent.click(boutonsPostuler[0]);
+    const tacticiensTitle = screen.getByText(/les tacticiens/i);
+    const tacticiensCard = tacticiensTitle.closest('.MuiCard-root');
+    expect(tacticiensCard).not.toBeNull();
+
+    const boutonPostuler = within(tacticiensCard as HTMLElement).getByRole(
+      'button',
+      {
+        name: /postuler/i,
+      },
+    );
+    fireEvent.click(boutonPostuler);
 
     await waitFor(() => {
       expect(joinEquipe).toHaveBeenCalledWith(1);
       expect(mockNavigate).toHaveBeenCalledWith('/notifications');
     });
+  });
+
+  test('affiche les équipes triées par ordre alphabétique', async () => {
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
+    vi.mocked(getAllEquipes).mockResolvedValueOnce([
+      {
+        id: 40,
+        name: 'Zeta Squad',
+        members: [{ id: 90, tag: 'Zed', isResponsable: true }],
+      },
+      {
+        id: 10,
+        name: 'Alpha Team',
+        members: [{ id: 20, tag: 'Al', isResponsable: true }],
+      },
+      {
+        id: 20,
+        name: 'Beta Crew',
+        members: [{ id: 30, tag: 'Be', isResponsable: true }],
+      },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <UserContext.Provider
+          value={{
+            authenticatedUser: utilisateurAuthentifie,
+            loginUser: vi.fn(),
+            registerUser: vi.fn(),
+            clearUser: vi.fn(),
+            updateUser: vi.fn(),
+          }}
+        >
+          <TeamsList />
+        </UserContext.Provider>
+      </MemoryRouter>,
+    );
+
+    await screen.findByText(/alpha team/i);
+
+    const headingElements = screen
+      .getAllByRole('heading', { level: 6 })
+      .map((node) => node.textContent?.trim())
+      .filter((text) =>
+        ['Alpha Team', 'Beta Crew', 'Zeta Squad'].includes(text || ''),
+      );
+
+    expect(headingElements).toEqual(['Alpha Team', 'Beta Crew', 'Zeta Squad']);
   });
 
   test("affiche une erreur si l'utilisateur est déjà dans une équipe", async () => {

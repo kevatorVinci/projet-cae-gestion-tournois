@@ -7,6 +7,7 @@ import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,9 +57,14 @@ public class AuthController {
    */
   @PostMapping("/login")
   public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
+    var existingUser = userService.readOneFromEmail(credentials.getEmail());
+    if (existingUser != null && existingUser.isBanned()) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ce compte est banni.");
+    }
+
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
-      boolean emailExists = userService.readOneFromEmail(credentials.getEmail()) != null;
+      boolean emailExists = existingUser != null;
       String errorMessage = emailExists 
           ? "Le mot de passe est incorrect." 
           : "Cet email n'existe pas.";
@@ -122,5 +128,20 @@ public class AuthController {
   @IsAdmin
   public void removeAdmin(@RequestBody String email) {
     userService.removeAdmin(email);
+  }
+
+  /**
+   * Bans a user from the platform.
+   *
+   * @param payload a map containing the email of the user to ban
+   */
+  @PostMapping("/ban")
+  @IsAdmin
+  public void banUser(@RequestBody Map<String, String> payload) {
+    String email = payload.get("email");
+    if (email == null || email.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requis pour bannir.");
+    }
+    userService.banUser(email);
   }
 }

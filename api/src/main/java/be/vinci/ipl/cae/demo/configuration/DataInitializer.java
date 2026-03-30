@@ -101,7 +101,7 @@ public class DataInitializer {
       // ── 8 utilisateurs réels ────────────────
       User lea = makeUser("lea@mail.com", "Lynx",
           "tacticien", "2025-11-12", true,
-          pwd, "flash.jpg");
+          pwd, "luffy.png");
       User tom = makeUser("tom@mail.com", "Rogue",
           "exécuteur", "2025-12-03", false,
           pwd, "miles.jpg");
@@ -110,19 +110,19 @@ public class DataInitializer {
           pwd, "erza.jpg");
       User tibo = makeUser("tibo@mail.com", "Iron",
           "gardien", "2025-10-27", true,
-          pwd, "luffy.png");
+          pwd, "kaido.png");
       User lisa = makeUser("lisa@mail.com", "Storm",
           "exécuteur", "2026-01-10", false,
           pwd, "flash.jpg");
       User noa = makeUser("noa@mail.com", "Flash",
           "architecte", "2026-02-02", false,
-          pwd, "miles.jpg");
+          pwd, "Pessi.jpg");
       User tim = makeUser("tim@mail.com", "Titi",
           "gardien", "2026-02-03", false,
-          pwd, "erza.jpg");
+          pwd, "itadori.jpg");
       User zoe = makeUser("zoe@mail.com", "Vector",
           "catalyseur", "2026-02-04", false,
-          pwd, "luffy.png");
+          pwd, "makima.jpg");
       userRepo.saveAll(List.of(
           lea, tom, ines, tibo,
           lisa, noa, tim, zoe));
@@ -224,14 +224,26 @@ public class DataInitializer {
           "TEAM_MU", "TEAM_NU",
           "TEAM_XI", "TEAM_PI",
           "TEAM_SIGMA"};
+      String[] botTags = {
+          "Nova", "Raptor", "Blaze", "Echo",
+          "Mantis", "Viper", "Astra", "Cipher",
+          "Drift", "Sable", "Orion", "Nyx",
+          "Havoc"};
+      String[] botAvatars = {
+          "butcher.jpg", "eren.png", "femmecars.jpg",
+          "garou.jpg", "jjk.jpg", "lookism.jpg",
+          "neon2.jpg", "pevin.jpg", "pion.jpg",
+          "spiderman2099.jpg", "tailong.jpg",
+          "crockmou.jpg", "flash.jpg"};
       List<Equipe> dum = new ArrayList<>();
-      for (String name : names) {
-        String tag = name.replace("TEAM_", "");
+      for (int i = 0; i < names.length; i++) {
+        String name = names[i];
+                String botTag = botTags[i];
         User bot = makeUser(
-            tag.toLowerCase(Locale.ROOT) + "@demo.com",
-            "Bot" + tag, "exécuteur",
+                        botTag.toLowerCase(Locale.ROOT) + "@demo.com",
+                        botTag, "exécuteur",
             "2025-01-01", false,
-            pwd, "flash.jpg");
+            pwd, botAvatars[i % botAvatars.length]);
         userRepo.save(bot);
         Equipe eq = new Equipe();
         eq.setName(name);
@@ -241,6 +253,15 @@ public class DataInitializer {
         userRepo.save(bot);
         dum.add(eq);
       }
+
+      // ── Gagnants des tournois terminés ──────
+      springArena.setGagnant(omega);
+      elite2025.setGagnant(iota);
+      summerPro.setGagnant(iota);
+      winterClash.setGagnant(alpha);
+      tournoiRepo.saveAll(List.of(
+          springArena, elite2025,
+          summerPro, winterClash));
 
       // ── Inscriptions aux tournois ──────────
       // Spring Arena Cup 2025 : 7 teams
@@ -278,9 +299,11 @@ public class DataInitializer {
           t, "2026-03-28");
 
       // Vinci Easter Cup 2026 : 7 teams
-      // (TEAM_ALPHA s'inscrit pendant la démo)
-      t = new ArrayList<>(List.of(omega, iota));
-      t.addAll(dum.subList(0, 5));
+      // (TEAM_ALPHA s'inscrit pendant la démo pour remplir
+      // la dernière place; TEAM_IOTA tente ensuite mais il
+      // n'y a plus de place)
+      t = new ArrayList<>(List.of(omega));
+      t.addAll(dum.subList(0, 6));
       inscrire(inscriptionRepo, easterCup,
           t, "2026-04-05");
 

@@ -20,6 +20,7 @@ import BackButton from '../../BoutonRetour';
 import {
   createTournament,
   NewTournamentPayload,
+  publishTournament,
 } from '../../../services/tournois';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType } from '../../../types';
@@ -49,19 +50,19 @@ const CreateTournamentPage = () => {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // The date of tomorrow to block past dates
   const tomorrow = dayjs().add(1, 'day');
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const validatePayload = (): NewTournamentPayload | null => {
     setError('');
     setSuccess('');
 
     // 1. Check if all dates are filled
     if (!dateDebut || !dateFin || !dateLimiteInscription) {
       setError('Veuillez remplir toutes les dates du calendrier.');
-      return;
+      return null;
     }
 
     // 2. SECURITY: Start date must be after or equal to the deadline
@@ -69,7 +70,7 @@ const CreateTournamentPage = () => {
       setError(
         "La date de début du tournoi doit être après la date limite d'inscription.",
       );
-      return;
+      return null;
     }
 
     // 3. SECURITY: End date must be after or equal to start date
@@ -77,17 +78,17 @@ const CreateTournamentPage = () => {
       setError(
         'La date de fin ne peut pas être avant la date de début du tournoi.',
       );
-      return;
+      return null;
     }
 
     // ✨ CORRECTION: We take the token from authenticatedUser, not from localStorage!
     const token = authenticatedUser?.token;
     if (!token) {
       setError("Vous devez être connecté en tant qu'administrateur.");
-      return;
+      return null;
     }
 
-    const payload: NewTournamentPayload = {
+    return {
       nom,
       description,
       dateDebut: dateDebut.format('YYYY-MM-DD'),
@@ -95,15 +96,51 @@ const CreateTournamentPage = () => {
       dateLimiteInscription: dateLimiteInscription.format('YYYY-MM-DD'),
       nombresParticipantsMax: Number(nombresParticipantsMax),
     };
+  };
+
+  const handleCreateTournament = async (mode: 'save' | 'publish') => {
+    const payload = validatePayload();
+    if (!payload) {
+      return;
+    }
+
+    const token = authenticatedUser?.token;
+    if (!token) {
+      setError("Vous devez être connecté en tant qu'administrateur.");
+      return;
+    }
 
     try {
-      await createTournament(payload, token);
-      setSuccess('Le tournoi a été créé avec succès !');
+      setIsSubmitting(true);
+      const createdTournament = await createTournament(payload, token);
+
+      if (mode === 'publish') {
+        const createdId = createdTournament?.id;
+        if (typeof createdId !== 'number') {
+          throw new Error('ID tournoi manquant après création.');
+        }
+        await publishTournament(createdId, token);
+        setSuccess('Le tournoi a été créé et publié avec succès !');
+      } else {
+        setSuccess('Le tournoi a été sauvegardé en brouillon avec succès !');
+      }
+
       // Redirect after 2 seconds
       setTimeout(() => navigate('/admin/tournaments'), 2000);
     } catch (err) {
-      setError('Erreur lors de la création du tournoi. Vérifiez la console.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Erreur lors de la création du tournoi. Vérifiez la console.',
+      );
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    await handleCreateTournament('save');
   };
 
   const darkInputStyle = {
@@ -237,9 +274,29 @@ const CreateTournamentPage = () => {
             <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
               <Grid container spacing={3} mb={4} alignItems="center">
                 <Grid item xs={12} sm={6}>
+                  <DatePicker
+                    label="Date de début"
+                    value={dateDebut}
+                    onChange={(val) => setDateDebut(val)}
+                    minDate={dateLimiteInscription || tomorrow}
+                    slotProps={datePickerSlotProps}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <DatePicker
+                    label="Date de fin"
+                    value={dateFin}
+                    onChange={(val) => setDateFin(val)}
+                    minDate={dateDebut || undefined}
+                    slotProps={datePickerSlotProps}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
                   {/* ✨ Removed the extra * in the label since required adds it automatically */}
                   <TextField
-                    label="Nombre max d'équipes"
+                    label="Nombre de places"
                     fullWidth
                     variant="outlined"
                     type="number"
@@ -268,44 +325,54 @@ const CreateTournamentPage = () => {
                     slotProps={datePickerSlotProps}
                   />
                 </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    label="Date de début"
-                    value={dateDebut}
-                    onChange={(val) => setDateDebut(val)}
-                    minDate={dateLimiteInscription || tomorrow}
-                    slotProps={datePickerSlotProps}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    label="Date de fin"
-                    value={dateFin}
-                    onChange={(val) => setDateFin(val)}
-                    minDate={dateDebut || dateLimiteInscription || tomorrow}
-                    slotProps={datePickerSlotProps}
-                  />
-                </Grid>
               </Grid>
             </LocalizationProvider>
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
+            <Box
               sx={{
-                backgroundColor: '#e8822a',
-                color: 'white',
-                py: 1.5,
-                fontWeight: 'bold',
-                fontSize: '1rem',
-                '&:hover': { backgroundColor: '#c86e20' },
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                gap: 1.5,
               }}
             >
-              CRÉER LE TOURNOI
-            </Button>
+              <Button
+                type="submit"
+                variant="outlined"
+                disabled={isSubmitting}
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.35)',
+                  color: 'white',
+                  py: 1.5,
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  '&:hover': {
+                    borderColor: '#93c5fd',
+                    backgroundColor: 'rgba(147,197,253,0.12)',
+                  },
+                }}
+              >
+                {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder le tournoi'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="contained"
+                disabled={isSubmitting}
+                onClick={() => {
+                  void handleCreateTournament('publish');
+                }}
+                sx={{
+                  backgroundColor: '#16a34a',
+                  color: 'white',
+                  py: 1.5,
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  '&:hover': { backgroundColor: '#15803d' },
+                }}
+              >
+                {isSubmitting ? 'Publication...' : 'Publier le tournoi'}
+              </Button>
+            </Box>
           </form>
         </Paper>
       </Container>
