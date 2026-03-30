@@ -6,8 +6,11 @@ import static org.mockito.Mockito.*;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,11 +23,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-  @Mock private UserRepository userRepository;
-  @Mock private BCryptPasswordEncoder passwordEncoder;
-  @Mock private NotificationService notificationService;
+  @Mock
+  private UserRepository userRepository;
+  @Mock
+  private EquipeRepository equipeRepository;
+  @Mock
+  private BCryptPasswordEncoder passwordEncoder;
+  @Mock
+  private NotificationService notificationService;
 
-  @InjectMocks private UserService userService;
+  @InjectMocks
+  private UserService userService;
 
   private User user;
   private Credentials credentials;
@@ -42,6 +51,7 @@ class UserServiceTest {
     user.setTag("AliceTag");
     user.setSpecialty("tacticien");
     user.setProfileImageUrl("avatar1.png");
+    user.setCreationDate(LocalDate.of(2026, 1, 1));
 
     credentials = new Credentials();
     credentials.setEmail(EMAIL);
@@ -249,8 +259,7 @@ class UserServiceTest {
     // Règle : membre peut modifier sa spécialité et son image (Énoncé p.3)
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "gardien", "avatar2.png", null, null);
+    AuthenticatedUser result = userService.updateProfile(EMAIL, "gardien", "avatar2.png", null, null);
 
     assertNotNull(result);
     assertEquals("gardien", user.getSpecialty());
@@ -265,8 +274,7 @@ class UserServiceTest {
     when(passwordEncoder.matches("oldPass", HASHED)).thenReturn(true);
     when(passwordEncoder.encode("newPass")).thenReturn("$2a$newHash");
 
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "gardien", "avatar2.png", "oldPass", "newPass");
+    AuthenticatedUser result = userService.updateProfile(EMAIL, "gardien", "avatar2.png", "oldPass", "newPass");
 
     assertNotNull(result);
     assertEquals("$2a$newHash", user.getPassword());
@@ -278,8 +286,7 @@ class UserServiceTest {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(passwordEncoder.matches("mauvais", HASHED)).thenReturn(false);
 
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "gardien", "avatar2.png", "mauvais", "newPass");
+    AuthenticatedUser result = userService.updateProfile(EMAIL, "gardien", "avatar2.png", "mauvais", "newPass");
 
     assertNull(result);
     // Le mot de passe ne doit pas avoir changé
@@ -291,8 +298,7 @@ class UserServiceTest {
   void updateProfile_utilisateurInexistant_retourneNull() {
     when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
 
-    AuthenticatedUser result =
-        userService.updateProfile("inconnu@vinci.be", "gardien", "avatar2.png", null, null);
+    AuthenticatedUser result = userService.updateProfile("inconnu@vinci.be", "gardien", "avatar2.png", null, null);
 
     assertNull(result);
   }
@@ -302,8 +308,7 @@ class UserServiceTest {
     // Après update, un nouveau token est généré pour la session React
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "architecte", "avatar3.png", null, null);
+    AuthenticatedUser result = userService.updateProfile(EMAIL, "architecte", "avatar3.png", null, null);
 
     assertNotNull(result.getToken());
     assertFalse(result.getToken().isBlank());
@@ -312,6 +317,8 @@ class UserServiceTest {
   @Test
   void banUser_utilisateurExistant_activeLeSoftBan() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.empty());
 
     userService.banUser(EMAIL);
 
@@ -326,5 +333,117 @@ class UserServiceTest {
     userService.banUser("inconnu@vinci.be");
 
     verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void banUser_responsablePrincipal_avecSecondaire_promeutLeSecondaire() {
+    User secondary = new User();
+    secondary.setId(2L);
+    secondary.setCreationDate(LocalDate.of(2026, 1, 2));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(user);
+    equipe.setResponsableSecondaire(secondary);
+    equipe.getMembres().add(user);
+    equipe.getMembres().add(secondary);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.of(equipe));
+
+    userService.banUser(EMAIL);
+
+    assertEquals(secondary, equipe.getResponsablePrincipal());
+    assertNull(equipe.getResponsableSecondaire());
+    assertTrue(user.isBanned());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void banUser_responsablePrincipalSansSecondaire_designeMembrePlusAncien() {
+    User oldest = new User();
+    oldest.setId(3L);
+    oldest.setCreationDate(LocalDate.of(2024, 2, 1));
+
+    User newest = new User();
+    newest.setId(4L);
+    newest.setCreationDate(LocalDate.of(2025, 5, 1));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(user);
+    equipe.getMembres().add(user);
+    equipe.getMembres().add(newest);
+    equipe.getMembres().add(oldest);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.of(equipe));
+
+    userService.banUser(EMAIL);
+
+    assertEquals(oldest, equipe.getResponsablePrincipal());
+    assertNull(equipe.getResponsableSecondaire());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
+  }
+
+  @Test
+  void banUser_responsableSecondaire_retirerRoleSecondaire() {
+    User principal = new User();
+    principal.setId(10L);
+    principal.setCreationDate(LocalDate.of(2025, 1, 1));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(principal);
+    equipe.setResponsableSecondaire(user);
+    equipe.getMembres().add(principal);
+    equipe.getMembres().add(user);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.of(equipe));
+
+    userService.banUser(EMAIL);
+
+    assertEquals(principal, equipe.getResponsablePrincipal());
+    assertNull(equipe.getResponsableSecondaire());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
+  }
+
+  @Test
+  void banUser_membreSimple_estRetireDeLEquipe() {
+    User principal = new User();
+    principal.setId(10L);
+    principal.setCreationDate(LocalDate.of(2025, 1, 1));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(principal);
+    equipe.getMembres().add(principal);
+    equipe.getMembres().add(user);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.empty());
+
+    userService.banUser(EMAIL);
+
+    assertEquals(principal, equipe.getResponsablePrincipal());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
   }
 }
