@@ -11,8 +11,6 @@ import {
   Divider,
   List,
   ListItem,
-  ListItemAvatar,
-  ListItemText,
   Alert,
   CircularProgress,
   Dialog,
@@ -34,8 +32,15 @@ import {
 import { Equipe } from '../../../types';
 import { useNavigate } from 'react-router-dom';
 import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
+import {
+  fetchTeamRegistrations,
+  TeamRegistrationItem,
+} from '../../../services/tournois';
 
 export function MyTeam() {
+  const pageBlueGradient =
+    'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
+
   const navigate = useNavigate();
   const [team, setTeam] = useState<Equipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,6 +59,13 @@ export function MyTeam() {
     id: number;
     tag?: string;
   } | null>(null);
+  const [teamRegistrations, setTeamRegistrations] = useState<
+    TeamRegistrationItem[]
+  >([]);
+  const [registrationsLoading, setRegistrationsLoading] = useState(true);
+  const [registrationsError, setRegistrationsError] = useState<string | null>(
+    null,
+  );
 
   const currentUserId = (() => {
     const token = getAuthenticatedUser()?.token;
@@ -80,6 +92,8 @@ export function MyTeam() {
   );
 
   const loadMyTeam = useCallback(async () => {
+    setRegistrationsLoading(true);
+    setRegistrationsError(null);
     try {
       const [myTeam, responsable] = await Promise.all([
         getUserTeam(),
@@ -88,14 +102,30 @@ export function MyTeam() {
 
       setTeam(myTeam);
       setIsResponsable(responsable);
+
+      if (myTeam?.id) {
+        const token = getAuthenticatedUser()?.token;
+        if (!token) {
+          throw new Error('Session expiree. Veuillez vous reconnecter.');
+        }
+        const registrations = await fetchTeamRegistrations(myTeam.id, token);
+        setTeamRegistrations(registrations);
+      } else {
+        setTeamRegistrations([]);
+      }
     } catch (err: unknown) {
       console.error('Erreur API :', err);
       if (handleAuthFailure(err)) {
         return;
       }
       setMessage('Impossible de charger votre équipe pour le moment.');
+      setRegistrationsError(
+        "Impossible de charger l'historique des matchs pour le moment.",
+      );
+      setTeamRegistrations([]);
     } finally {
       setLoading(false);
+      setRegistrationsLoading(false);
     }
   }, [handleAuthFailure]);
 
@@ -247,7 +277,7 @@ export function MyTeam() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: 'background.default',
+          background: pageBlueGradient,
         }}
       >
         <CircularProgress color="secondary" />
@@ -263,7 +293,7 @@ export function MyTeam() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: 'background.default',
+          background: pageBlueGradient,
           p: 3,
         }}
       >
@@ -298,12 +328,171 @@ export function MyTeam() {
     return (a.id || 0) - (b.id || 0);
   });
 
+  const parseTournamentDate = (date?: string): number => {
+    if (!date) return Number.MAX_SAFE_INTEGER;
+    const timestamp = Date.parse(date);
+    return Number.isNaN(timestamp) ? Number.MAX_SAFE_INTEGER : timestamp;
+  };
+
+  const normalizeState = (etat?: string): string => (etat || '').toUpperCase();
+
+  const registrationsSorted = [...teamRegistrations].sort((a, b) => {
+    const aDate = parseTournamentDate(a.tournoi?.dateDebut);
+    const bDate = parseTournamentDate(b.tournoi?.dateDebut);
+    return aDate - bDate;
+  });
+
+  const upcomingRegistrations = registrationsSorted.filter((registration) => {
+    const etat = normalizeState(registration.tournoi?.etat);
+    return etat === 'OUVERT' || etat === 'CLOTURE' || etat === 'BROUILLON';
+  });
+
+  const inProgressRegistrations = registrationsSorted.filter(
+    (registration) => normalizeState(registration.tournoi?.etat) === 'EN_COURS',
+  );
+
+  const pastRegistrations = registrationsSorted
+    .filter((registration) => {
+      const etat = normalizeState(registration.tournoi?.etat);
+      return etat === 'TERMINE';
+    })
+    .sort(
+      (a, b) =>
+        parseTournamentDate(b.tournoi?.dateDebut) -
+        parseTournamentDate(a.tournoi?.dateDebut),
+    );
+
+  const formatDate = (value?: string) => {
+    if (!value) return 'Date non définie';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString('fr-BE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const statusLabel: Record<string, string> = {
+    BROUILLON: 'Brouillon',
+    OUVERT: 'À venir',
+    CLOTURE: 'À venir',
+    EN_COURS: 'En cours',
+    TERMINE: 'Passé',
+    ANNULE: 'Annulé',
+  };
+
+  const statusColor: Record<string, string> = {
+    BROUILLON: '#64748b',
+    OUVERT: '#3b82f6',
+    CLOTURE: '#0ea5e9',
+    EN_COURS: '#f59e0b',
+    TERMINE: '#10b981',
+    ANNULE: '#ef4444',
+  };
+
+  const renderRegistrationSection = (
+    title: string,
+    registrations: TeamRegistrationItem[],
+    emptyMessage: string,
+    accentColor: string,
+  ) => (
+    <Paper
+      variant="outlined"
+      sx={{
+        mb: 2,
+        p: 2,
+        borderRadius: 2,
+        border: `1px solid ${accentColor}`,
+        background:
+          'linear-gradient(120deg, rgba(8,11,20,0.75), rgba(26,37,64,0.55))',
+      }}
+    >
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 1.5 }}
+      >
+        <Typography variant="subtitle1" fontWeight={700} color="white">
+          {title}
+        </Typography>
+        <Chip
+          label={registrations.length}
+          size="small"
+          sx={{ bgcolor: accentColor, color: 'white', fontWeight: 700 }}
+        />
+      </Stack>
+
+      <Divider sx={{ mb: 1.5, borderColor: 'rgba(255,255,255,0.15)' }} />
+
+      {registrations.length === 0 ? (
+        <Typography variant="body2" color="rgba(255,255,255,0.75)">
+          {emptyMessage}
+        </Typography>
+      ) : (
+        <List disablePadding>
+          {registrations.map((registration, index) => {
+            const tournamentState = normalizeState(registration.tournoi?.etat);
+            return (
+              <Box
+                key={`${registration.tournoiId}-${registration.equipeId}-${index}`}
+              >
+                <ListItem
+                  sx={{
+                    py: 1.5,
+                    px: 1,
+                    borderRadius: 1,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.06)',
+                    },
+                  }}
+                  onClick={() =>
+                    navigate(`/tournois/${registration.tournoiId}`)
+                  }
+                >
+                  <Box>
+                    <Typography fontWeight={700} color="white">
+                      {registration.tournoi?.nom || 'Tournoi sans nom'}
+                    </Typography>
+                    <Typography variant="body2" color="rgba(255,255,255,0.75)">
+                      Début: {formatDate(registration.tournoi?.dateDebut)}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={
+                      statusLabel[tournamentState] ||
+                      tournamentState ||
+                      'Inconnu'
+                    }
+                    size="small"
+                    sx={{
+                      bgcolor: statusColor[tournamentState] || '#334155',
+                      color: 'white',
+                      fontWeight: 700,
+                    }}
+                  />
+                </ListItem>
+                {index < registrations.length - 1 && <Divider />}
+              </Box>
+            );
+          })}
+        </List>
+      )}
+    </Paper>
+  );
+
   return (
     <Box
       sx={{
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
         py: 5,
-        backgroundColor: 'background.default',
+        background: pageBlueGradient,
       }}
     >
       <Container maxWidth="lg" sx={{ mb: 1 }}>
@@ -381,139 +570,207 @@ export function MyTeam() {
           </Stack>
         </Paper>
 
-        <Paper
-          variant="outlined"
+        <Box
           sx={{
-            p: 3,
-            borderRadius: 2,
-            backgroundColor: '#1a2540',
-            border: '1px solid rgba(255,255,255,0.10)',
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' },
+            gap: 3,
+            alignItems: 'start',
           }}
         >
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}
-            color="white"
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(3, 1fr)',
+              },
+              gap: 2,
+            }}
           >
-            👥 Mes Coéquipiers
-          </Typography>
-          <List disablePadding>
-            {sortedMembers.map((member, index) => (
-              <Box key={member.id}>
-                <ListItem sx={{ py: 2, px: 0 }}>
-                  <ListItemAvatar>
-                    <Avatar
-                      src={member.profileImageUrl || member.profileImage}
-                      sx={{
-                        width: 50,
-                        height: 50,
-                        border: '1px solid rgba(255,255,255,0.20)',
-                      }}
-                    />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography fontWeight={700}>
-                          <Typography
-                            component="span"
-                            fontWeight={700}
-                            color="white"
-                            onClick={() => {
-                              navigate(`/players/${member.id}`);
-                            }}
-                            sx={{
-                              cursor: 'pointer',
-                              '&:hover': { color: '#e8822a' },
-                            }}
-                          >
-                            {member.tag}{' '}
-                            {member.id === currentUserId && '(Vous)'}
-                          </Typography>
-                        </Typography>
-                        <Chip
-                          label={
-                            member.isResponsable ? 'Responsable' : 'Membre'
-                          }
-                          size="small"
-                          sx={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            bgcolor: member.isResponsable
-                              ? '#e8822a'
-                              : '#080b14',
-                            color: 'white',
-                          }}
-                        />
-                        {isResponsable &&
-                          member.id !== currentUserId &&
-                          (member.isResponsable || canPromoteMore) && (
-                            <Button
-                              size="small"
-                              variant={
-                                member.isResponsable ? 'outlined' : 'contained'
-                              }
-                              disabled={memberActionLoadingId === member.id}
-                              onClick={() => {
-                                const targetMemberId = member.id;
-                                if (typeof targetMemberId !== 'number') {
-                                  return;
-                                }
+            {sortedMembers.map((member) => (
+              <Paper
+                key={member.id}
+                sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  backgroundColor: '#1a2540',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: member.isResponsable
+                      ? '#e8822a'
+                      : 'rgba(255,255,255,0.25)',
+                    backgroundColor: 'rgba(26, 37, 64, 0.8)',
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+                  },
+                }}
+              >
+                <Avatar
+                  src={member.profileImageUrl || member.profileImage}
+                  alt={member.tag}
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    mb: 1.5,
+                    border: '3px solid rgba(255,255,255,0.15)',
+                    transition: 'transform 0.3s ease',
+                  }}
+                />
 
-                                if (member.isResponsable) {
-                                  handleDepromote(targetMemberId, member.tag);
-                                } else {
-                                  openPromoteConfirm(
-                                    targetMemberId,
-                                    member.tag,
-                                  );
-                                }
-                              }}
-                              sx={{
-                                textTransform: 'none',
-                                fontSize: 11,
-                                minWidth: 130,
-                                bgcolor: member.isResponsable
-                                  ? 'transparent'
-                                  : '#e8822a',
-                                color: 'white',
-                                borderColor: 'rgba(255,255,255,0.35)',
-                                '&:hover': {
-                                  bgcolor: member.isResponsable
-                                    ? '#080b14'
-                                    : '#c86e20',
-                                  borderColor: '#c86e20',
-                                },
-                              }}
-                            >
-                              {member.isResponsable
-                                ? 'Retirer le rôle de responsable'
-                                : 'Nommer responsable'}
-                            </Button>
-                          )}
-                      </Stack>
-                    }
-                    secondary={
-                      <Chip
-                        label={member.specialty || 'Membre'}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          mt: 0.5,
-                          fontSize: 11,
-                          color: 'white',
-                          borderColor: 'rgba(255,255,255,0.25)',
-                        }}
-                      />
-                    }
-                  />
-                </ListItem>
-                {index < sortedMembers.length - 1 && <Divider />}
-              </Box>
+                <Typography
+                  variant="h6"
+                  fontWeight={700}
+                  color="white"
+                  onClick={() => {
+                    navigate(`/players/${member.id}`);
+                  }}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': { color: '#e8822a' },
+                    mb: 0.5,
+                  }}
+                >
+                  {member.tag}
+                </Typography>
+
+                {member.id === currentUserId && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: '#3b82f6',
+                      fontStyle: 'italic',
+                      mb: 1,
+                    }}
+                  >
+                    (Vous)
+                  </Typography>
+                )}
+
+                <Chip
+                  label={member.specialty || 'Membre'}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    fontSize: 11,
+                    color: 'white',
+                    borderColor: 'rgba(255,255,255,0.25)',
+                    mb: 1,
+                  }}
+                />
+
+                <Chip
+                  label={member.isResponsable ? 'Responsable' : 'Membre'}
+                  size="small"
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    bgcolor: member.isResponsable ? '#e8822a' : '#334155',
+                    color: 'white',
+                    mt: 1.5,
+                    mb: 2,
+                  }}
+                />
+
+                {isResponsable &&
+                  member.id !== currentUserId &&
+                  (member.isResponsable || canPromoteMore) && (
+                    <Button
+                      size="small"
+                      variant={member.isResponsable ? 'outlined' : 'contained'}
+                      disabled={memberActionLoadingId === member.id}
+                      onClick={() => {
+                        const targetMemberId = member.id;
+                        if (typeof targetMemberId !== 'number') {
+                          return;
+                        }
+
+                        if (member.isResponsable) {
+                          handleDepromote(targetMemberId, member.tag);
+                        } else {
+                          openPromoteConfirm(targetMemberId, member.tag);
+                        }
+                      }}
+                      sx={{
+                        textTransform: 'none',
+                        fontSize: 11,
+                        width: '100%',
+                        bgcolor: member.isResponsable
+                          ? 'transparent'
+                          : '#e8822a',
+                        color: 'white',
+                        borderColor: 'rgba(255,255,255,0.35)',
+                        '&:hover': {
+                          bgcolor: member.isResponsable ? '#080b14' : '#c86e20',
+                          borderColor: '#c86e20',
+                        },
+                      }}
+                    >
+                      {member.isResponsable
+                        ? 'Retirer rôle'
+                        : 'Nommer responsable'}
+                    </Button>
+                  )}
+              </Paper>
             ))}
-          </List>
-        </Paper>
+          </Box>
+
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              backgroundColor: '#1a2540',
+              border: '1px solid rgba(255,255,255,0.10)',
+            }}
+          >
+            <Typography
+              variant="h6"
+              fontWeight={700}
+              sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}
+              color="white"
+            >
+              Historique des tournois
+            </Typography>
+
+            {registrationsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                <CircularProgress color="secondary" size={24} />
+              </Box>
+            ) : registrationsError ? (
+              <Alert severity="warning">{registrationsError}</Alert>
+            ) : (
+              <>
+                {renderRegistrationSection(
+                  'Tournois en cours',
+                  inProgressRegistrations,
+                  'Aucun tournoi en cours actuellement.',
+                  '#f59e0b',
+                )}
+
+                {renderRegistrationSection(
+                  'Tournois à venir',
+                  upcomingRegistrations,
+                  "Aucun tournoi à venir pour l'instant.",
+                  '#3b82f6',
+                )}
+
+                {renderRegistrationSection(
+                  'Tournois passés',
+                  pastRegistrations,
+                  'Aucun tournoi passé pour le moment.',
+                  '#10b981',
+                )}
+              </>
+            )}
+          </Paper>
+        </Box>
       </Container>
 
       <Dialog
