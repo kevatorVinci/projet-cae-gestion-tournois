@@ -710,7 +710,6 @@ const TournoiDetailPage = () => {
             )}
           </CardContent>
         </Card>
-
       </Container>
     </Box>
   );
