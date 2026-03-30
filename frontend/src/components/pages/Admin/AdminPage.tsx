@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import BackButton from '../../BoutonRetour';
 import {
   Box,
@@ -43,7 +43,7 @@ export default function AdminPage() {
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<string | null>(null);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     if (!authenticatedUser?.token) return;
 
     try {
@@ -52,11 +52,11 @@ export default function AdminPage() {
     } catch (error) {
       setMessage({ type: 'error', text: 'Impossible de charger les joueurs.' });
     }
-  };
+  }, [authenticatedUser?.token]);
 
   useEffect(() => {
     loadUsers();
-  }, [authenticatedUser?.token]);
+  }, [loadUsers]);
 
   const handleToggleAdmin = async (
     email: string,
