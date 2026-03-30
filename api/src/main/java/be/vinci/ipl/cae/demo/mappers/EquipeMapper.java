@@ -8,15 +8,18 @@ import be.vinci.ipl.cae.demo.services.EquipeService;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
+/** Mapper for equipe-related DTO conversions. */
 @Component
 public class EquipeMapper {
 
   private final EquipeService equipeService;
 
+  /** Builds the mapper with required service helpers. */
   public EquipeMapper(EquipeService equipeService) {
     this.equipeService = equipeService;
   }
 
+  /** Converts one equipe to the API public payload. */
   public EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
     if (equipe == null) {
       return null;
@@ -34,7 +37,8 @@ public class EquipeMapper {
                         equipeService.isUserResponsible(equipe, m)))
             .toList();
 
-    boolean isResponsable = currentUser != null && equipeService.isUserResponsible(equipe, currentUser);
+    boolean isResponsable =
+        currentUser != null && equipeService.isUserResponsible(equipe, currentUser);
     return new EquipePublicDto(equipe.getId(), equipe.getName(), membres, isResponsable);
   }
 }

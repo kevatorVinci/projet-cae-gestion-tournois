@@ -72,7 +72,11 @@ public class UserService {
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
-    return userMapper.toAuthenticatedUser(user, token);
+    AuthenticatedUser authenticatedUser = userMapper.toAuthenticatedUser(user, token);
+    if (authenticatedUser.getEmail() == null) {
+      authenticatedUser.setEmail(email);
+    }
+    return authenticatedUser;
   }
 
   /**

@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
+/** Mapper for tournoi inscription DTO conversions. */
 @Component
 public class InscriptionEquipeTournoiMapper {
 
+  /** Converts one inscription into the public tournament team inscription DTO. */
   public TournoiEquipeInscriptionDto toTournoiEquipeInscriptionDto(
       InscriptionEquipeTournoi inscription) {
     if (inscription == null) {
@@ -23,6 +25,7 @@ public class InscriptionEquipeTournoiMapper {
         inscription.getDateInscription());
   }
 
+        /** Converts multiple inscriptions to public tournament team inscription DTOs. */
   public List<TournoiEquipeInscriptionDto> toTournoiEquipeInscriptionDtos(
       Iterable<InscriptionEquipeTournoi> inscriptions) {
     List<TournoiEquipeInscriptionDto> result = new ArrayList<>();
@@ -32,6 +35,7 @@ public class InscriptionEquipeTournoiMapper {
     return result;
   }
 
+  /** Converts one inscription to the team registration DTO. */
   public EquipeTournamentRegistrationDto toEquipeTournamentRegistrationDto(
       InscriptionEquipeTournoi inscription) {
     if (inscription == null) {
@@ -52,6 +56,7 @@ public class InscriptionEquipeTournoiMapper {
         tournoi);
   }
 
+        /** Converts multiple inscriptions to team registration DTOs. */
   public List<EquipeTournamentRegistrationDto> toEquipeTournamentRegistrationDtos(
       Iterable<InscriptionEquipeTournoi> inscriptions) {
     List<EquipeTournamentRegistrationDto> result = new ArrayList<>();

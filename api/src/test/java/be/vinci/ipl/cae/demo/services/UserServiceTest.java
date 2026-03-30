@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
@@ -31,6 +32,8 @@ class UserServiceTest {
   private BCryptPasswordEncoder passwordEncoder;
   @Mock
   private NotificationService notificationService;
+  @Mock
+  private UserMapper userMapper;
 
   @InjectMocks
   private UserService userService;
@@ -58,6 +61,25 @@ class UserServiceTest {
     credentials.setPassword(PASSWORD);
     credentials.setTag("AliceTag");
     credentials.setSpecialty("tacticien");
+
+    lenient()
+      .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
+        .thenAnswer(
+            invocation -> {
+              User source = invocation.getArgument(0);
+              String token = invocation.getArgument(1);
+              AuthenticatedUser dto = new AuthenticatedUser();
+              dto.setToken(token);
+              if (source != null) {
+                dto.setEmail(source.getEmail());
+                dto.setTag(source.getTag());
+                dto.setSpecialty(source.getSpecialty());
+                dto.setProfileImage(source.getProfileImageUrl());
+                dto.setAdmin(source.isAdmin());
+                dto.setBanned(source.isBanned());
+              }
+              return dto;
+            });
   }
 
   // ═══════════════════════════════════════════════════════════════════

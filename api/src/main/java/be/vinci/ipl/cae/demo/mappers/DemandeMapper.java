@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
+/** Mapper for demande-related DTO conversions. */
 @Component
 public class DemandeMapper {
 
+  /** Converts one demande entity to its public DTO. */
   public DemandeDto toDto(Demande demande) {
     if (demande == null) {
       return null;
@@ -29,6 +31,7 @@ public class DemandeMapper {
         demande.getRaisonRefus());
   }
 
+        /** Converts a collection of demandes into DTOs. */
   public List<DemandeDto> toDtos(Iterable<Demande> demandes) {
     List<DemandeDto> result = new ArrayList<>();
     for (Demande demande : demandes) {

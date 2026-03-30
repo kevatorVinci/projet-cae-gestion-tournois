@@ -53,7 +53,8 @@ public class NotificationController {
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<NotificationDto> markAsRead(
       @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
-    return ResponseEntity.ok(notificationMapper.toDto(notificationService.markAsRead(idNotification)));
+    return ResponseEntity.ok(
+        notificationMapper.toDto(notificationService.markAsRead(idNotification)));
   }
 
   /** Marque toutes les notifications d'un membre comme lues. */
