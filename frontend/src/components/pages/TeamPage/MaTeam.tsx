@@ -579,6 +579,8 @@ export function MyTeam() {
           }}
         >
           <Box
+            role="list"
+            aria-label="team-members-list"
             sx={{
               display: 'grid',
               gridTemplateColumns: {
@@ -591,6 +593,7 @@ export function MyTeam() {
           >
             {sortedMembers.map((member) => (
               <Paper
+                role="listitem"
                 key={member.id}
                 sx={{
                   p: 3,
@@ -713,7 +716,7 @@ export function MyTeam() {
                       }}
                     >
                       {member.isResponsable
-                        ? 'Retirer rôle'
+                        ? 'Retirer le rôle de responsable'
                         : 'Nommer responsable'}
                     </Button>
                   )}
