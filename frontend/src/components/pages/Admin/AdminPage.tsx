@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import BackButton from '../../components/BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   Box,
   Typography,
@@ -22,8 +22,13 @@ import {
   DialogActions,
 } from '@mui/material';
 
-import { UserContext } from '../../contexts/UserContext';
-import { AuthenticatedUser, UserContextType } from '../../types';
+import { UserContext } from '../../../contexts/UserContext';
+import { AuthenticatedUser, UserContextType } from '../../../types';
+import {
+  banUser,
+  fetchAllUsers,
+  toggleAdminRole,
+} from '../../../services/authService';
 
 export default function AdminPage() {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
@@ -38,58 +43,42 @@ export default function AdminPage() {
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
+  const loadUsers = async () => {
+    if (!authenticatedUser?.token) return;
+
     try {
-      const response = await fetch('/api/auths/users', {
-        headers: {
-          Authorization: authenticatedUser?.token || '',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
+      const data = await fetchAllUsers(authenticatedUser.token);
+      setUsers(data);
     } catch (error) {
       setMessage({ type: 'error', text: 'Impossible de charger les joueurs.' });
     }
   };
 
   useEffect(() => {
-    fetchUsers(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    loadUsers();
+  }, [authenticatedUser?.token]);
 
   const handleToggleAdmin = async (
     email: string,
     isCurrentlyAdmin: boolean,
   ) => {
-    const url = isCurrentlyAdmin
-      ? '/api/auths/removeAdmin'
-      : '/api/auths/addAdmin';
+    if (!authenticatedUser?.token) return;
 
     try {
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'text/plain',
-          Authorization: authenticatedUser?.token || '',
-        },
-        body: email,
+      await toggleAdminRole(email, isCurrentlyAdmin, authenticatedUser.token);
+      setMessage({
+        type: 'success',
+        text: `Le rôle a été mis à jour avec succès !`,
       });
-
-      if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: `Le rôle a été mis à jour avec succès !`,
-        });
-        fetchUsers();
-      } else {
-        setMessage({
-          type: 'error',
-          text: 'Erreur lors de la modification. Vérifiez le serveur Java.',
-        });
-      }
+      loadUsers();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur de connexion au serveur.' });
+      setMessage({
+        type: 'error',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Erreur de connexion au serveur.',
+      });
     }
   }; // ✨ NOUVEAU : On filtre la liste des joueurs en fonction de ce qu'on tape dans la recherche !
 
@@ -104,32 +93,23 @@ export default function AdminPage() {
   };
 
   const confirmBan = async () => {
-    if (!userToBan) return;
+    if (!userToBan || !authenticatedUser?.token) return;
 
     try {
-      const response = await fetch('/api/auths/ban', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authenticatedUser?.token || '',
-        },
-        body: JSON.stringify({ email: userToBan }),
+      await banUser(userToBan, authenticatedUser.token);
+      setMessage({
+        type: 'success',
+        text: `Le joueur a été banni définitivement.`,
       });
-
-      if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: `Le joueur a été banni définitivement.`,
-        });
-        fetchUsers();
-      } else {
-        setMessage({
-          type: 'error',
-          text: 'Erreur lors du bannissement sur le serveur.',
-        });
-      }
+      loadUsers();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur de connexion au serveur.' });
+      setMessage({
+        type: 'error',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Erreur de connexion au serveur.',
+      });
     }
 
     closeBanDialog();
