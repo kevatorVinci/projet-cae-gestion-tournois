@@ -68,7 +68,7 @@ describe('TournoiPage', () => {
     expect(await screen.findByText('Arena Live')).toBeInTheDocument();
     expect(screen.getByText('Future Cup')).toBeInTheDocument();
     expect(screen.getByText('Canceled Clash')).toBeInTheDocument();
-    expect(screen.getByText(/Tournois passés et annulés/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tournois passés/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Arena Live'));
     expect(mockNavigate).toHaveBeenCalledWith('/tournois/1');

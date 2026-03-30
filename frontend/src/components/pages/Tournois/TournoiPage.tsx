@@ -53,7 +53,7 @@ const parseCategoryFilter = (value: string | null): CategoryFilter => {
 const COLORS = {
   EN_COURS: '#e8822a',
   A_VENIR: '#3b82f6',
-  PASSES: '#4b5563',
+  PASSES: '#10b981',
 } as const;
 
 const TournoiPage = () => {
@@ -408,7 +408,7 @@ const TournoiPage = () => {
 
             <Box>
               <Typography variant="h6" gutterBottom color="white">
-                Tournois passés et annulés
+                Tournois passés
               </Typography>
               {passes.length === 0 && (
                 <Typography variant="body2" color="text.secondary">

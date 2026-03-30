@@ -1,6 +1,12 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
+import { beforeEach, describe, test, expect, vi } from 'vitest';
 import { MyTeam } from '../../components/pages/TeamPage/MaTeam';
 import {
   getUserTeam,
@@ -9,6 +15,7 @@ import {
   depromoteResponsable,
   leaveEquipe,
 } from '../../services/teams';
+import { fetchTeamRegistrations } from '../../services/tournois';
 import { getAuthenticatedUser, decodeJwtPayload } from '../../utils/session';
 
 vi.mock('react-router-dom', async () => {
@@ -25,6 +32,10 @@ vi.mock('../../services/teams', () => ({
   leaveEquipe: vi.fn(),
   promoteResponsable: vi.fn(),
   depromoteResponsable: vi.fn(),
+}));
+
+vi.mock('../../services/tournois', () => ({
+  fetchTeamRegistrations: vi.fn(),
 }));
 
 vi.mock('../../utils/session', () => ({
@@ -54,6 +65,11 @@ const equipeSimulee = {
 };
 
 describe('MyTeam', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(fetchTeamRegistrations).mockResolvedValue([]);
+  });
+
   test("affiche le nom de l'équipe et les membres", async () => {
     vi.mocked(getAuthenticatedUser).mockReturnValue({
       token: 'fake-token',
@@ -316,12 +332,69 @@ describe('MyTeam', () => {
 
     await screen.findByText('Alpha');
 
-    const listItems = screen.getAllByRole('listitem');
+    const membersList = screen.getByRole('list', { name: 'team-members-list' });
+    const listItems = within(membersList).getAllByRole('listitem');
     const orderedTags = listItems.map((item) => {
       const match = item.textContent?.match(/(Alpha|Bravo|Charlie|Zeta)/);
       return match ? match[1] : '';
     });
 
     expect(orderedTags).toEqual(['Alpha', 'Bravo', 'Charlie', 'Zeta']);
+  });
+
+  test('affiche les tournois à venir, en cours et passés', async () => {
+    vi.mocked(getAuthenticatedUser).mockReturnValue({
+      token: 'fake-token',
+      email: 'test@vinci.be',
+      admin: false,
+    });
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
+    vi.mocked(getUserTeam).mockResolvedValueOnce(equipeSimulee);
+    vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(false);
+    vi.mocked(fetchTeamRegistrations).mockResolvedValueOnce([
+      {
+        tournoiId: 10,
+        equipeId: 1,
+        tournoi: {
+          id: 10,
+          nom: 'Tournoi Futur',
+          etat: 'OUVERT',
+          dateDebut: '2030-05-10',
+        },
+      },
+      {
+        tournoiId: 11,
+        equipeId: 1,
+        tournoi: {
+          id: 11,
+          nom: 'Tournoi Live',
+          etat: 'EN_COURS',
+          dateDebut: '2030-05-01',
+        },
+      },
+      {
+        tournoiId: 12,
+        equipeId: 1,
+        tournoi: {
+          id: 12,
+          nom: 'Tournoi Terminé',
+          etat: 'TERMINE',
+          dateDebut: '2024-04-01',
+        },
+      },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <MyTeam />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('Tournoi Futur')).toBeInTheDocument();
+    expect(screen.getByText('Tournoi Live')).toBeInTheDocument();
+    expect(screen.getByText('Tournoi Terminé')).toBeInTheDocument();
+    expect(screen.getByText(/tournois à venir/i)).toBeInTheDocument();
+    expect(screen.getByText(/tournois en cours/i)).toBeInTheDocument();
+    expect(screen.getByText(/tournois passés/i)).toBeInTheDocument();
   });
 });
