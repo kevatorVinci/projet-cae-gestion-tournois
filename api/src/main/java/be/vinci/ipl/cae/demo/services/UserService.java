@@ -2,14 +2,18 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Service for user authentication and profile management. */
 @Service
@@ -21,21 +25,24 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final EquipeRepository equipeRepository;
   private final NotificationService notificationService;
 
   /**
    * Builds the user service.
    *
-   * @param passwordEncoder encoder used for password hashing
-   * @param userRepository user repository
+   * @param passwordEncoder     encoder used for password hashing
+   * @param userRepository      user repository
    * @param notificationService notification service
    */
   public UserService(
       BCryptPasswordEncoder passwordEncoder,
       UserRepository userRepository,
+      EquipeRepository equipeRepository,
       NotificationService notificationService) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.equipeRepository = equipeRepository;
     this.notificationService = notificationService;
   }
 
@@ -48,16 +55,16 @@ public class UserService {
   public AuthenticatedUser createJwtToken(String email) {
     User user = userRepository.findByEmail(email);
 
-    var tokenBuilder =
-        JWT.create()
-            .withIssuer("auth0")
-            .withClaim("email", email)
-            .withIssuedAt(new Date())
-            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
+    var tokenBuilder = JWT.create()
+        .withIssuer("auth0")
+        .withClaim("email", email)
+        .withIssuedAt(new Date())
+        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
 
     if (user != null && user.getId() != null) {
-      tokenBuilder =
-          tokenBuilder.withSubject(String.valueOf(user.getId())).withClaim("id", user.getId());
+      tokenBuilder = tokenBuilder
+          .withSubject(String.valueOf(user.getId()))
+          .withClaim("id", user.getId());
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
@@ -94,7 +101,7 @@ public class UserService {
   /**
    * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
    *
-   * @param email l'email
+   * @param email    l'email
    * @param password le mot de passe
    * @return l'utilisateur authentifié ou null
    */
@@ -165,11 +172,11 @@ public class UserService {
   /**
    * Met à jour les informations visuelles du joueur.
    *
-   * @param email email du joueur
-   * @param specialty nouvelle spécialité
+   * @param email        email du joueur
+   * @param specialty    nouvelle spécialité
    * @param profileImage nouvelle image
-   * @param oldPassword ancien mdp
-   * @param newPassword nouveau mdp
+   * @param oldPassword  ancien mdp
+   * @param newPassword  nouveau mdp
    * @return l'utilisateur mis à jour ou null
    */
   public AuthenticatedUser updateProfile(
@@ -252,6 +259,7 @@ public class UserService {
    *
    * @param email email of the user to ban
    */
+  @Transactional
   public void banUser(String email) {
     if (email == null || email.isBlank()) {
       return;
@@ -261,8 +269,67 @@ public class UserService {
     if (user == null) {
       return;
     }
+
+    detachUserFromTeamAndReassignResponsibilitiesIfNeeded(user);
     user.setBanned(true);
     userRepository.save(user);
+  }
+
+  private void detachUserFromTeamAndReassignResponsibilitiesIfNeeded(User user) {
+    if (user.getId() == null) {
+      return;
+    }
+
+    Equipe equipe = equipeRepository
+        .findByResponsablePrincipalIdOrResponsableSecondaireId(user.getId(), user.getId())
+        .orElse(user.getEquipe());
+
+    if (equipe == null) {
+      return;
+    }
+
+    Long bannedUserId = user.getId();
+
+    boolean wasPrincipal = equipe.getResponsablePrincipal() != null
+        && equipe.getResponsablePrincipal().getId().equals(bannedUserId);
+    boolean wasSecondaire = equipe.getResponsableSecondaire() != null
+        && equipe.getResponsableSecondaire().getId().equals(bannedUserId);
+
+    if (wasPrincipal) {
+      equipe.setResponsablePrincipal(null);
+    }
+    if (wasSecondaire) {
+      equipe.setResponsableSecondaire(null);
+    }
+
+    if (equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() != null) {
+      User secondary = equipe.getResponsableSecondaire();
+      if (!secondary.isBanned() && !secondary.getId().equals(bannedUserId)) {
+        equipe.setResponsablePrincipal(secondary);
+      }
+      equipe.setResponsableSecondaire(null);
+    }
+
+    if (equipe.getResponsablePrincipal() == null) {
+      User replacement = equipe.getMembres().stream()
+          .filter(member -> member.getId() != null)
+          .filter(member -> !member.getId().equals(bannedUserId))
+          .filter(member -> !member.isBanned())
+          .min(
+              Comparator.comparing(
+                  User::getCreationDate,
+                  Comparator.nullsLast(Comparator.naturalOrder()))
+                  .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
+          .orElse(null);
+
+      equipe.setResponsablePrincipal(replacement);
+    }
+
+    equipe.getMembres().removeIf(
+        member -> member.getId() != null && member.getId().equals(bannedUserId));
+    user.setEquipe(null);
+
+    equipeRepository.save(equipe);
   }
 
   /**

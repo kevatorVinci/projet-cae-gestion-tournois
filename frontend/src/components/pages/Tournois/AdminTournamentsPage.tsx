@@ -19,8 +19,6 @@ import {
 
 import BackButton from '../../BoutonRetour';
 import {
-  cancelTournamentWithReason,
-  closeRegistrations,
   fetchAllTournaments,
   publishTournament,
 } from '../../../services/tournois';
@@ -135,64 +133,6 @@ const AdminTournamentsPage = () => {
       setActionMessage({
         type: 'error',
         text: 'Erreur lors de la publication du tournoi. Vérifiez votre connexion.',
-      });
-    }
-  };
-
-  const handleCloseRegistrations = async (id: number) => {
-    if (!authenticatedUser?.token) return;
-    setActionMessage(null);
-
-    try {
-      await closeRegistrations(id, authenticatedUser.token);
-      setActionMessage({
-        type: 'success',
-        text: 'Les inscriptions du tournoi sont maintenant clôturées.',
-      });
-      await loadTournaments();
-    } catch (err) {
-      setActionMessage({
-        type: 'error',
-        text: 'Impossible de clôturer ce tournoi (minimum 2 équipes requises).',
-      });
-    }
-  };
-
-  const handleCancelTournament = async (id: number) => {
-    if (!authenticatedUser?.token) return;
-
-    const reason = window.prompt(
-      "Raison d'annulation du tournoi (obligatoire):",
-    );
-    if (reason === null) {
-      return;
-    }
-    const trimmedReason = reason.trim();
-    if (!trimmedReason) {
-      setActionMessage({
-        type: 'error',
-        text: "Veuillez saisir une raison d'annulation.",
-      });
-      return;
-    }
-
-    setActionMessage(null);
-
-    try {
-      await cancelTournamentWithReason(
-        id,
-        authenticatedUser.token,
-        trimmedReason,
-      );
-      setActionMessage({
-        type: 'success',
-        text: 'Le tournoi a été annulé.',
-      });
-      await loadTournaments();
-    } catch (err) {
-      setActionMessage({
-        type: 'error',
-        text: "Impossible d'annuler ce tournoi.",
       });
     }
   };
@@ -485,53 +425,6 @@ const AdminTournamentsPage = () => {
                             }}
                           >
                             Publier
-                          </Button>
-                        </Box>
-                      )}
-
-                      {tournament.etat === 'OUVERT' && (
-                        <Box
-                          sx={{ display: 'flex', gap: 2 }}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Button
-                            variant="contained"
-                            color="warning"
-                            onClick={() =>
-                              handleCloseRegistrations(tournament.id)
-                            }
-                            sx={{ color: 'white', fontWeight: 'bold' }}
-                          >
-                            Clôturer
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            onClick={() =>
-                              handleCancelTournament(tournament.id)
-                            }
-                            sx={{ fontWeight: 'bold' }}
-                          >
-                            Annuler
-                          </Button>
-                        </Box>
-                      )}
-
-                      {(tournament.etat === 'CLOTURE' ||
-                        tournament.etat === 'EN_COURS') && (
-                        <Box
-                          sx={{ display: 'flex', gap: 2 }}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            onClick={() =>
-                              handleCancelTournament(tournament.id)
-                            }
-                            sx={{ fontWeight: 'bold' }}
-                          >
-                            Annuler
                           </Button>
                         </Box>
                       )}

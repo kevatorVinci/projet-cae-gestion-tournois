@@ -34,8 +34,8 @@ public class InscriptionEquipeTournoiController {
 
   /** Creates the controller with required services. */
   public InscriptionEquipeTournoiController(
-          InscriptionEquipeTournoiService inscriptionService,
-          EquipeService equipeService) {
+      InscriptionEquipeTournoiService inscriptionService,
+      EquipeService equipeService) {
     this.inscriptionService = inscriptionService;
     this.equipeService = equipeService;
   }
@@ -44,15 +44,16 @@ public class InscriptionEquipeTournoiController {
   @GetMapping("/{tournoiId}/inscriptions")
   @IsAdmin
   public Iterable<InscriptionEquipeTournoi> getAllByTournoi(@PathVariable Long tournoiId) {
-    Iterable<InscriptionEquipeTournoi> inscriptions =
-            inscriptionService.getAllByTournoi(tournoiId);
+    Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
     return inscriptions;
   }
 
-  /** Retourne les inscriptions visibles publiquement pour la page détail tournoi. */
+  /**
+   * Retourne les inscriptions visibles publiquement pour la page détail tournoi.
+   */
   @GetMapping("/{tournoiId}/inscriptions/accepted")
   public Iterable<TournoiEquipeInscriptionDto> getAcceptedByTournoi(@PathVariable Long tournoiId) {
     Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
@@ -70,16 +71,18 @@ public class InscriptionEquipeTournoiController {
     return result;
   }
 
-  /** Retourne toutes les inscriptions d'une équipe. Accessible au responsable ou à un admin. */
+  /**
+   * Retourne toutes les inscriptions d'une équipe. Accessible au responsable ou à
+   * un admin.
+   */
   @GetMapping("/equipes/{equipeId}/inscriptions")
   @IsAdminOrResponsable
   public Iterable<EquipeTournamentRegistrationDto> getAllByEquipe(
-          @PathVariable Long equipeId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long equipeId,
+      @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-            equipeId, currentUser, "You can only view your own team registrations");
-    Iterable<InscriptionEquipeTournoi> inscriptions =
-            inscriptionService.getAllByEquipe(equipeId);
+        equipeId, currentUser, "You can only view your own team registrations");
+    Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByEquipe(equipeId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
@@ -96,11 +99,11 @@ public class InscriptionEquipeTournoiController {
   @ResponseStatus(HttpStatus.CREATED)
   @IsResponsable
   public InscriptionEquipeTournoi register(
-          @PathVariable Long tournoiId,
-          @PathVariable Long equipeId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long tournoiId,
+      @PathVariable Long equipeId,
+      @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-            equipeId, currentUser, "You can only register your own team");
+        equipeId, currentUser, "You can only register your own team");
     InscriptionEquipeTournoi inscription;
     try {
       inscription = inscriptionService.register(tournoiId, equipeId);
@@ -109,55 +112,68 @@ public class InscriptionEquipeTournoiController {
     }
     if (inscription == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Tournament not found, not OUVERT, or team already registered");
+          HttpStatus.BAD_REQUEST,
+          "Tournament not found, not OUVERT, or team already registered");
     }
     return inscription;
   }
 
-  /** Désinscrit une équipe d'un tournoi via la clé (tournoiId, equipeId). */
+  /**
+   * Unregisters a team from a tournament using the logical key (tournoiId,
+   * equipeId).
+   *
+   * <p>
+   * This endpoint is currently not used by the frontend application.
+   */
   @DeleteMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @IsAdminOrResponsable
   public void unregisterByTournoiAndEquipe(
-          @PathVariable Long tournoiId,
-          @PathVariable Long equipeId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long tournoiId,
+      @PathVariable Long equipeId,
+      @AuthenticationPrincipal User currentUser) {
+    if (!currentUser.isAdmin()) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "A responsible cannot unregister a team from a tournament");
+    }
+
     ensureCurrentUserResponsibleForTeam(
-            equipeId, currentUser, "You can only unregister your own team");
+        equipeId, currentUser, "You can only unregister your own team");
 
     boolean success = inscriptionService.unregisterByTournoiAndEquipe(tournoiId, equipeId);
     if (!success) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament is not OUVERT, or registration deadline passed");
+          HttpStatus.BAD_REQUEST,
+          "Registration not found, tournament is not OUVERT, or registration deadline passed");
     }
   }
 
-  /** Désinscrit une équipe d'un tournoi. Réservé au responsable de l'équipe ou à un admin. */
+  /**
+   * Unregisters a team from a tournament using the registration ID.
+   *
+   * <p>
+   * This endpoint is currently not used by the frontend application.
+   */
   @DeleteMapping("/inscriptions/{inscriptionId}")
   @IsAdminOrResponsable
   public void unregister(
-          @PathVariable Long inscriptionId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long inscriptionId,
+      @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
-      InscriptionEquipeTournoi existing = inscriptionService.getById(inscriptionId);
-      if (existing == null) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found");
-      }
-      ensureCurrentUserResponsibleForTeam(
-              existing.getEquipe().getId(), currentUser,
-              "You can only unregister your own team");
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "A responsible cannot unregister a team from a tournament");
     }
     boolean success = inscriptionService.unregister(inscriptionId);
     if (!success) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament is not OUVERT, or registration deadline passed");
+          HttpStatus.BAD_REQUEST,
+          "Registration not found, tournament is not OUVERT, or registration deadline passed");
     }
   }
 
   private void ensureCurrentUserResponsibleForTeam(
-          Long equipeId, User currentUser, String forbiddenMessage) {
+      Long equipeId, User currentUser, String forbiddenMessage) {
     if (currentUser.isAdmin()) {
       return;
     }
@@ -173,16 +189,16 @@ public class InscriptionEquipeTournoiController {
   private EquipeTournamentRegistrationDto toEquipeRegistrationDto(
       InscriptionEquipeTournoi inscription) {
     TournoiResumeDto tournoi = new TournoiResumeDto(
-            inscription.getTournoi().getId(),
-            inscription.getTournoi().getNom(),
-            inscription.getTournoi().getEtat(),
-            inscription.getTournoi().getDateDebut(),
-            inscription.getTournoi().getNombresParticipantsMax());
+        inscription.getTournoi().getId(),
+        inscription.getTournoi().getNom(),
+        inscription.getTournoi().getEtat(),
+        inscription.getTournoi().getDateDebut(),
+        inscription.getTournoi().getNombresParticipantsMax());
 
     return new EquipeTournamentRegistrationDto(
-            inscription.getTournoi().getId(),
-            inscription.getEquipe().getId(),
-            inscription.getDateInscription(),
-            tournoi);
+        inscription.getTournoi().getId(),
+        inscription.getEquipe().getId(),
+        inscription.getDateInscription(),
+        tournoi);
   }
 }
