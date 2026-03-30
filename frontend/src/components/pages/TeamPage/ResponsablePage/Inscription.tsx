@@ -17,18 +17,13 @@ import {
   Alert,
   Divider,
 } from '@mui/material';
-import {
-  EmojiEvents,
-  AddCircleOutline,
-  CancelOutlined,
-} from '@mui/icons-material';
+import { EmojiEvents, AddCircleOutline } from '@mui/icons-material';
 import {
   fetchAcceptedTournamentRegistrations,
   fetchPublicTournaments,
   fetchTeamRegistrations,
   registerTeamToTournament,
   TeamRegistrationItem,
-  unregisterTeam,
 } from '../../../../services/tournois';
 import { getUserTeam } from '../../../../services/teams';
 import { getAuthenticatedUser } from '../../../../utils/session';
@@ -86,11 +81,7 @@ export function TournoisResponsable() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [isUnregisterModalOpen, setIsUnregisterModalOpen] = useState(false);
   const [tournoiCible, setTournoiCible] = useState<Tournoi | null>(null);
-  const [inscriptionCible, setInscriptionCible] = useState<Inscription | null>(
-    null,
-  );
   const [registerWarningMessage, setRegisterWarningMessage] = useState<
     string | null
   >(null);
@@ -180,31 +171,6 @@ export function TournoisResponsable() {
       setActionLoading(null);
       setIsRegisterModalOpen(false);
       setTournoiCible(null);
-    }
-  };
-
-  const handleUnregister = async () => {
-    if (!inscriptionCible || !token || !equipeId) return;
-
-    try {
-      setErrorMessage(null);
-      setFeedback(null);
-      setActionLoading(inscriptionCible.tournoiId);
-
-      await unregisterTeam(inscriptionCible.tournoiId, equipeId, token);
-
-      setFeedback(
-        `Vous etes desinscrit du tournoi : ${inscriptionCible.tournoi.nom}.`,
-      );
-      await loadData();
-    } catch (err: unknown) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Impossible d'annuler.",
-      );
-    } finally {
-      setActionLoading(null);
-      setIsUnregisterModalOpen(false);
-      setInscriptionCible(null);
     }
   };
 
@@ -337,21 +303,14 @@ export function TournoisResponsable() {
                   {mesInscriptions.map((inscription) =>
                     renderTournoiCard(
                       inscription.tournoi,
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<CancelOutlined />}
-                        disabled={
-                          actionLoading === inscription.tournoiId ||
-                          inscription.tournoi.etat !== 'OUVERT'
-                        }
-                        onClick={() => {
-                          setInscriptionCible(inscription);
-                          setIsUnregisterModalOpen(true);
+                      <Chip
+                        label="Inscription confirmee"
+                        sx={{
+                          bgcolor: 'rgba(34,197,94,0.18)',
+                          color: '#86efac',
+                          fontWeight: 'bold',
                         }}
-                      >
-                        Se desinscrire
-                      </Button>,
+                      />,
                     ),
                   )}
                 </Stack>
@@ -397,9 +356,7 @@ export function TournoisResponsable() {
                                   accepted.length;
 
                                 if (remainingSlots <= 1) {
-                                  setRegisterWarningMessage(
-                                    "Attention: c'est la derniere place. Cette inscription va cloturer le tournoi automatiquement.",
-                                  );
+                                  setRegisterWarningMessage(null);
                                 } else {
                                   setRegisterWarningMessage(null);
                                 }
@@ -484,40 +441,10 @@ export function TournoisResponsable() {
             onClick={() => setIsRegisterModalOpen(false)}
             sx={{ color: 'rgba(255,255,255,0.7)' }}
           >
-            Annuler
+            Retour
           </Button>
           <Button onClick={handleRegister} variant="contained" color="success">
             Confirmer
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={isUnregisterModalOpen}
-        onClose={() => setIsUnregisterModalOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{ fontWeight: 700, bgcolor: '#1a2540', color: 'white' }}
-        >
-          Annuler l'inscription
-        </DialogTitle>
-        <DialogContent sx={{ bgcolor: '#1a2540', color: 'white', pt: 2 }}>
-          <DialogContentText sx={{ color: 'rgba(255,255,255,0.7)' }}>
-            Voulez-vous vraiment desinscrire votre equipe du tournoi{' '}
-            <strong>{inscriptionCible?.tournoi.nom}</strong> ?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ bgcolor: '#1a2540', p: 2 }}>
-          <Button
-            onClick={() => setIsUnregisterModalOpen(false)}
-            sx={{ color: 'rgba(255,255,255,0.7)' }}
-          >
-            Retour
-          </Button>
-          <Button onClick={handleUnregister} variant="contained" color="error">
-            Se desinscrire
           </Button>
         </DialogActions>
       </Dialog>
