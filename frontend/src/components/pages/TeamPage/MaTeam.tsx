@@ -23,7 +23,7 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
-import { ExitToApp as LeaveIcon } from '@mui/icons-material';
+import { ExitToApp as LeaveIcon, EmojiEvents } from '@mui/icons-material';
 import {
   depromoteResponsable,
   getUserTeam,
@@ -279,6 +279,24 @@ export function MyTeam() {
     (member) => member.isResponsable,
   ).length;
   const canPromoteMore = responsablesCount < 2;
+  const sortedMembers = [...team.members].sort((a, b) => {
+    const aResponsable = a.isResponsable ? 1 : 0;
+    const bResponsable = b.isResponsable ? 1 : 0;
+    if (aResponsable !== bResponsable) {
+      return bResponsable - aResponsable;
+    }
+
+    const aTag = (a.tag || '').trim();
+    const bTag = (b.tag || '').trim();
+    const byTag = aTag.localeCompare(bTag, 'fr', {
+      sensitivity: 'base',
+    });
+    if (byTag !== 0) {
+      return byTag;
+    }
+
+    return (a.id || 0) - (b.id || 0);
+  });
 
   return (
     <Box
@@ -322,17 +340,31 @@ export function MyTeam() {
           </Box>
           <Stack direction="row" spacing={1.5}>
             {isResponsable && (
-              <Button
-                variant="contained"
-                onClick={() => navigate('/equipes/demande')}
-                sx={{
-                  bgcolor: '#e8822a',
-                  color: 'white',
-                  '&:hover': { bgcolor: '#c86e20' },
-                }}
-              >
-                Demandes d'adhésion
-              </Button>
+              <>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/equipes/demande')}
+                  sx={{
+                    bgcolor: '#e8822a',
+                    color: 'white',
+                    '&:hover': { bgcolor: '#c86e20' },
+                  }}
+                >
+                  Demandes d'adhésion
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<EmojiEvents />}
+                  onClick={() => navigate('/tournois/gestion')}
+                  sx={{
+                    bgcolor: '#22c55e',
+                    color: 'white',
+                    '&:hover': { bgcolor: '#16a34a' },
+                  }}
+                >
+                  Gérer les Tournois
+                </Button>
+              </>
             )}
             <Button
               variant="outlined"
@@ -367,7 +399,7 @@ export function MyTeam() {
             👥 Mes Coéquipiers
           </Typography>
           <List disablePadding>
-            {team.members.map((member, index) => (
+            {sortedMembers.map((member, index) => (
               <Box key={member.id}>
                 <ListItem sx={{ py: 2, px: 0 }}>
                   <ListItemAvatar>
@@ -477,7 +509,7 @@ export function MyTeam() {
                     }
                   />
                 </ListItem>
-                {index < team.members.length - 1 && <Divider />}
+                {index < sortedMembers.length - 1 && <Divider />}
               </Box>
             ))}
           </List>

@@ -19,14 +19,14 @@ import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 dayjs.locale('fr');
 
-import BackButton from '../BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   fetchTournamentById,
   updateTournament,
   NewTournamentPayload,
-} from '../../services/tournois';
-import { UserContext } from '../../contexts/UserContext';
-import { UserContextType } from '../../types';
+} from '../../../services/tournois';
+import { UserContext } from '../../../contexts/UserContext';
+import { UserContextType } from '../../../types';
 
 /**
  * Page dedicated to editing an existing tournament.
@@ -100,6 +100,14 @@ const EditTournamentPage = () => {
 
     if (!dateDebut || !dateFin || !dateLimiteInscription) {
       setError('Veuillez remplir toutes les dates du calendrier.');
+      return;
+    }
+
+    if (
+      nombresParticipantsMax === '' ||
+      !Number.isFinite(Number(nombresParticipantsMax))
+    ) {
+      setError("Veuillez indiquer un nombre max d'équipes valide.");
       return;
     }
 
@@ -292,9 +300,12 @@ const EditTournamentPage = () => {
                       variant="outlined"
                       type="number"
                       value={nombresParticipantsMax}
-                      onChange={(e) =>
-                        setNombresParticipantsMax(Number(e.target.value))
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setNombresParticipantsMax(
+                          value === '' ? '' : Number(value),
+                        );
+                      }}
                       required
                       sx={{
                         ...darkInputStyle,
@@ -302,7 +313,7 @@ const EditTournamentPage = () => {
                         '& label.Mui-focused': { color: '#e8822a' },
                       }}
                       InputLabelProps={{ shrink: true }}
-                      inputProps={{ min: 1 }}
+                      inputProps={{ min: 2 }}
                     />
                   </Grid>
 

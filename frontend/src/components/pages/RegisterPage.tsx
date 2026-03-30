@@ -18,7 +18,8 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { AuthenticatedUser, Equipe } from '../../types';
+import { Equipe } from '../../types';
+import { registerUser } from '../../services/auth';
 import { getAllEquipes, joinEquipe } from '../../services/teams';
 import {
   clearAuthenticatedUser,
@@ -140,14 +141,10 @@ export default function RegisterPage() {
     };
 
     try {
-      const response = await fetch('/api/auths/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser),
-      });
+      const result = await registerUser(newUser);
 
-      if (response.ok) {
-        const authenticatedUser = (await response.json()) as AuthenticatedUser;
+      if (result.ok) {
+        const { authenticatedUser } = result;
 
         if (selectedTeamId) {
           try {
@@ -159,7 +156,7 @@ export default function RegisterPage() {
         }
 
         navigate('/login');
-      } else if (response.status === 401) {
+      } else if (result.status === 401) {
         setErrorMessage('Cette adresse email est déjà utilisée.');
       } else {
         setErrorMessage(

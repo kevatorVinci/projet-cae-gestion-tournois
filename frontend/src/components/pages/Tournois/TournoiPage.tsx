@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Alert,
   Box,
+  Button,
   CardActionArea,
   Chip,
   CircularProgress,
@@ -17,9 +18,14 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { Dayjs } from 'dayjs';
+import 'dayjs/locale/fr';
 import SearchIcon from '@mui/icons-material/Search';
-import { Tournoi } from '../../types';
-import BackButton from '../BoutonRetour';
+import { Tournoi } from '../../../types';
+import BackButton from '../../BoutonRetour';
 
 const fetchFilteredTournaments = async (nom?: string): Promise<Tournoi[]> => {
   const params = new URLSearchParams();
@@ -32,6 +38,18 @@ const fetchFilteredTournaments = async (nom?: string): Promise<Tournoi[]> => {
 
 type CategoryFilter = 'TOUS' | 'EN_COURS' | 'A_VENIR' | 'PASSES';
 
+const parseCategoryFilter = (value: string | null): CategoryFilter => {
+  if (
+    value === 'TOUS' ||
+    value === 'EN_COURS' ||
+    value === 'A_VENIR' ||
+    value === 'PASSES'
+  ) {
+    return value;
+  }
+  return 'TOUS';
+};
+
 const COLORS = {
   EN_COURS: '#e8822a',
   A_VENIR: '#3b82f6',
@@ -40,12 +58,30 @@ const COLORS = {
 
 const TournoiPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [search, setSearch] = useState('');
-  const [etatFilter, setEtatFilter] = useState<CategoryFilter>('TOUS');
+  const [etatFilter, setEtatFilter] = useState<CategoryFilter>(() =>
+    parseCategoryFilter(searchParams.get('etat')),
+  );
+  const [dateDebut, setDateDebut] = useState<Dayjs | null>(null);
+  const [dateFin, setDateFin] = useState<Dayjs | null>(null);
   const [allTournaments, setAllTournaments] = useState<Tournoi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    etatFilter !== 'TOUS' ||
+    dateDebut !== null ||
+    dateFin !== null;
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setEtatFilter('TOUS');
+    setDateDebut(null);
+    setDateFin(null);
+  };
 
   const formatDate = (dateValue: string) => {
     const parsedDate = new Date(dateValue);
@@ -73,11 +109,15 @@ const TournoiPage = () => {
   }, [search, etatFilter]);
 
   const tournamentsByFilter = allTournaments.filter((t) => {
-    if (etatFilter === 'EN_COURS') return t.etat === 'EN_COURS';
-    if (etatFilter === 'A_VENIR') {
-      return t.etat === 'OUVERT' || t.etat === 'CLOTURE';
-    }
-    if (etatFilter === 'PASSES') return t.etat === 'TERMINE';
+    if (etatFilter === 'EN_COURS' && t.etat !== 'EN_COURS') return false;
+    if (etatFilter === 'A_VENIR' && t.etat !== 'OUVERT' && t.etat !== 'CLOTURE')
+      return false;
+    if (etatFilter === 'PASSES' && t.etat !== 'TERMINE' && t.etat !== 'ANNULE')
+      return false;
+
+    if (dateDebut && t.dateDebut < dateDebut.format('YYYY-MM-DD')) return false;
+    if (dateFin && t.dateFin > dateFin.format('YYYY-MM-DD')) return false;
+
     return true;
   });
 
@@ -85,7 +125,9 @@ const TournoiPage = () => {
   const aVenir = tournamentsByFilter.filter(
     (t) => t.etat === 'OUVERT' || t.etat === 'CLOTURE',
   );
-  const passes = tournamentsByFilter.filter((t) => t.etat === 'TERMINE');
+  const passes = tournamentsByFilter.filter(
+    (t) => t.etat === 'TERMINE' || t.etat === 'ANNULE',
+  );
 
   return (
     <Box
@@ -141,7 +183,7 @@ const TournoiPage = () => {
             mb: 4,
             gridTemplateColumns: {
               xs: '1fr',
-              md: '2fr 1fr',
+              md: '2fr 1fr 1fr 1fr auto',
             },
           }}
         >
@@ -185,6 +227,87 @@ const TournoiPage = () => {
               <MenuItem value="PASSES">Passés</MenuItem>
             </Select>
           </FormControl>
+
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+            <DatePicker
+              label="Date début"
+              value={dateDebut}
+              onChange={(val) => setDateDebut(val)}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  sx: {
+                    backgroundColor: '#111827',
+                    borderRadius: 1,
+                    input: { color: 'white' },
+                    label: { color: 'rgba(255,255,255,0.7)' },
+                    '& label.Mui-focused': { color: '#e8822a' },
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'rgba(255,255,255,0.2)',
+                      },
+                      '&:hover fieldset': { borderColor: '#e8822a' },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#e8822a',
+                      },
+                    },
+                    svg: { color: 'white' },
+                  },
+                },
+              }}
+            />
+          </LocalizationProvider>
+
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+            <DatePicker
+              label="Date fin"
+              value={dateFin}
+              onChange={(val) => setDateFin(val)}
+              minDate={dateDebut || undefined}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  sx: {
+                    backgroundColor: '#111827',
+                    borderRadius: 1,
+                    input: { color: 'white' },
+                    label: { color: 'rgba(255,255,255,0.7)' },
+                    '& label.Mui-focused': { color: '#e8822a' },
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: 'rgba(255,255,255,0.2)',
+                      },
+                      '&:hover fieldset': { borderColor: '#e8822a' },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#e8822a',
+                      },
+                    },
+                    svg: { color: 'white' },
+                  },
+                },
+              }}
+            />
+          </LocalizationProvider>
+
+          <Button
+            variant="outlined"
+            onClick={handleResetFilters}
+            disabled={!hasActiveFilters}
+            sx={{
+              color: hasActiveFilters ? '#e8822a' : 'rgba(255,255,255,0.45)',
+              borderColor: hasActiveFilters
+                ? 'rgba(232,130,42,0.6)'
+                : 'rgba(255,255,255,0.2)',
+              height: '56px',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                borderColor: '#e8822a',
+                backgroundColor: 'rgba(232,130,42,0.08)',
+              },
+            }}
+          >
+            Réinitialiser
+          </Button>
         </Box>
 
         {loading ? (
@@ -285,7 +408,7 @@ const TournoiPage = () => {
 
             <Box>
               <Typography variant="h6" gutterBottom color="white">
-                Tournois passés
+                Tournois passés et annulés
               </Typography>
               {passes.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
@@ -313,7 +436,9 @@ const TournoiPage = () => {
                       {tournament.nom}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Terminé le {formatDate(tournament.dateFin)}
+                      {tournament.etat === 'ANNULE'
+                        ? `Annulé le ${formatDate(tournament.dateFin)}`
+                        : `Terminé le ${formatDate(tournament.dateFin)}`}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -414,21 +539,6 @@ const TournoiPage = () => {
                           >
                             {tournament.nom}
                           </Typography>
-                          {etatFilter === 'EN_COURS' && (
-                            <Chip
-                              label="LIVE"
-                              size="small"
-                              sx={{
-                                backgroundColor: 'rgba(232,130,42,0.15)',
-                                color: '#e8822a',
-                                fontWeight: 700,
-                                fontSize: '0.65rem',
-                                letterSpacing: '0.1em',
-                                border: '1px solid rgba(232,130,42,0.4)',
-                                flexShrink: 0,
-                              }}
-                            />
-                          )}
                         </Box>
                         {etatFilter === 'EN_COURS' && (
                           <Typography variant="body2" color="text.secondary">
@@ -462,7 +572,9 @@ const TournoiPage = () => {
                         )}
                         {etatFilter === 'PASSES' && (
                           <Typography variant="body2" color="text.secondary">
-                            Terminé le {formatDate(tournament.dateFin)}
+                            {tournament.etat === 'ANNULE'
+                              ? `Annulé le ${formatDate(tournament.dateFin)}`
+                              : `Terminé le ${formatDate(tournament.dateFin)}`}
                           </Typography>
                         )}
                       </CardContent>

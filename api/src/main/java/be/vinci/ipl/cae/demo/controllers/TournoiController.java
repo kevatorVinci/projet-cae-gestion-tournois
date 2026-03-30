@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
 import be.vinci.ipl.cae.demo.services.TournoiService;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,11 +25,7 @@ public class TournoiController {
 
   private final TournoiService tournoiService;
 
-  /**
-   * Constructs a TournoiController with the given service.
-   *
-   * @param tournoiService the tournament service
-   */
+  /** Creates the controller with its service dependency. */
   public TournoiController(TournoiService tournoiService) {
     this.tournoiService = tournoiService;
   }
@@ -43,8 +40,8 @@ public class TournoiController {
    */
   @GetMapping("/")
   public Iterable<Tournoi> getAllPublic(
-      @RequestParam(required = false) String etat,
-      @RequestParam(required = false) String nom) {
+          @RequestParam(required = false) String etat,
+          @RequestParam(required = false) String nom) {
     return tournoiService.getFiltered(etat, nom);
   }
 
@@ -59,8 +56,8 @@ public class TournoiController {
   @GetMapping("/{id}")
   public Tournoi getOne(@PathVariable Long id) {
     return tournoiService
-        .getOne(id)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            .getOne(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
   /** Creates a new tournament in BROUILLON state. Reserved for admins (US 7). */
@@ -71,7 +68,7 @@ public class TournoiController {
     Tournoi created = tournoiService.create(tournoi);
     if (created == null) {
       throw new ResponseStatusException(
-          HttpStatus.CONFLICT, "A tournament with this name already exists");
+              HttpStatus.CONFLICT, "A tournament with this name already exists");
     }
     return created;
   }
@@ -83,7 +80,7 @@ public class TournoiController {
     Tournoi updated = tournoiService.update(id, payload);
     if (updated == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
     }
     return updated;
   }
@@ -95,13 +92,14 @@ public class TournoiController {
     Tournoi tournoi = tournoiService.publish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
     }
     return tournoi;
   }
 
   /**
    * Closes registrations for a tournament (OUVERT → CLOTURE). Reserved for admins (Should US 10).
+   * Requires at least 2 registered teams.
    */
   @PatchMapping("/{id}/close-registrations")
   @IsAdmin
@@ -109,14 +107,14 @@ public class TournoiController {
     Tournoi tournoi = tournoiService.closeRegistrations(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Tournament not found or not in OUVERT state");
+              HttpStatus.BAD_REQUEST,
+              "Tournament not found, not OUVERT, or not enough teams (minimum 2)");
     }
     return tournoi;
   }
 
   /**
-   * Starts a tournament (CLOTURE → EN_COURS). All pending registrations are automatically refused.
-   * Reserved for admins.
+   * Starts a tournament (CLOTURE → EN_COURS). Reserved for admins.
    */
   @PatchMapping("/{id}/start")
   @IsAdmin
@@ -124,7 +122,7 @@ public class TournoiController {
     Tournoi tournoi = tournoiService.start(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Tournament not found or not in CLOTURE state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in CLOTURE state");
     }
     return tournoi;
   }
@@ -136,7 +134,7 @@ public class TournoiController {
     Tournoi tournoi = tournoiService.finish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Tournament not found or not in EN_COURS state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in EN_COURS state");
     }
     return tournoi;
   }
@@ -144,11 +142,14 @@ public class TournoiController {
   /** Cancels a tournament from any active state. Reserved for admins. */
   @PatchMapping("/{id}/cancel")
   @IsAdmin
-  public Tournoi cancel(@PathVariable Long id) {
-    Tournoi tournoi = tournoiService.cancel(id);
+  public Tournoi cancel(
+      @PathVariable Long id,
+      @RequestBody(required = false) Map<String, String> payload) {
+    String reason = payload == null ? null : payload.get("reason");
+    Tournoi tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
+              HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
     }
     return tournoi;
   }

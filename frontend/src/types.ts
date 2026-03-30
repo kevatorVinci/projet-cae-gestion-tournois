@@ -61,6 +61,7 @@ interface AuthenticatedUser {
   specialty?: string;
   profileImage?: string;
   admin?: boolean;
+  banned?: boolean;
 }
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
@@ -82,6 +83,7 @@ interface Tournoi {
   dateLimiteInscription: string;
   etat: 'BROUILLON' | 'OUVERT' | 'CLOTURE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
   nombresParticipantsMax?: number;
+  gagnant?: { id: number; name: string } | null;
 }
 
 export type {
