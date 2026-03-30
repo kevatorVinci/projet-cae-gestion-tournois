@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import ProfilePage from '../../components/pages/ProfilePage';
+import ProfilePage from '../../components/pages/Espace/ProfilePage';
 import { UserContext } from '../../contexts/UserContext';
 
 // 1. Mock react-router-dom correctly

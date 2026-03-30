@@ -1,9 +1,9 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.mappers.EquipeMapper;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeCreationDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeJoinDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipePublicDto;
-import be.vinci.ipl.cae.demo.models.dtos.membre.MembrePublicDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.EquipeService;
@@ -34,14 +34,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class EquipeController {
 
   private final EquipeService equipeService;
+  private final EquipeMapper equipeMapper;
 
   /**
    * Constructor for EquipeController.
    *
    * @param equipeService the injected service.
    */
-  public EquipeController(EquipeService equipeService) {
+  public EquipeController(EquipeService equipeService, EquipeMapper equipeMapper) {
     this.equipeService = equipeService;
+    this.equipeMapper = equipeMapper;
   }
 
   /** Récupérer toutes les équipes (version publique). */
@@ -49,7 +51,7 @@ public class EquipeController {
   public Iterable<EquipePublicDto> readAllEquipes(@AuthenticationPrincipal User currentUser) {
     List<EquipePublicDto> equipes = new ArrayList<>();
     for (Equipe equipe : equipeService.getAllEquipes()) {
-      equipes.add(toPublicDto(equipe, currentUser));
+      equipes.add(equipeMapper.toPublicDto(equipe, currentUser));
     }
     return equipes;
   }
@@ -63,7 +65,7 @@ public class EquipeController {
             .getEquipeById(id)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable"));
-    return toPublicDto(equipe, currentUser);
+    return equipeMapper.toPublicDto(equipe, currentUser);
   }
 
   /**
@@ -210,22 +212,5 @@ public class EquipeController {
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
-  }
-
-  private EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
-    List<MembrePublicDto> membres =
-        equipe.getMembres().stream()
-            .map(
-                m ->
-                    new MembrePublicDto(
-                        m.getId(),
-                        m.getTag(),
-                        m.getSpecialty(),
-                        m.getProfileImageUrl(),
-                        equipeService.isUserResponsible(equipe, m)))
-            .toList();
-
-    boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
-    return new EquipePublicDto(equipe.getId(), equipe.getName(), membres, isResponsable);
   }
 }

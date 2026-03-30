@@ -3,16 +3,14 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.annotations.IsAdminOrResponsable;
 import be.vinci.ipl.cae.demo.annotations.IsResponsable;
+import be.vinci.ipl.cae.demo.mappers.InscriptionEquipeTournoiMapper;
 import be.vinci.ipl.cae.demo.models.dtos.tournoi.EquipeTournamentRegistrationDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournoi.TournoiEquipeInscriptionDto;
-import be.vinci.ipl.cae.demo.models.dtos.tournoi.TournoiResumeDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.EquipeService;
 import be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiService;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,13 +29,16 @@ public class InscriptionEquipeTournoiController {
 
   private final InscriptionEquipeTournoiService inscriptionService;
   private final EquipeService equipeService;
+  private final InscriptionEquipeTournoiMapper inscriptionMapper;
 
   /** Creates the controller with required services. */
   public InscriptionEquipeTournoiController(
       InscriptionEquipeTournoiService inscriptionService,
-      EquipeService equipeService) {
+      EquipeService equipeService,
+      InscriptionEquipeTournoiMapper inscriptionMapper) {
     this.inscriptionService = inscriptionService;
     this.equipeService = equipeService;
+    this.inscriptionMapper = inscriptionMapper;
   }
 
   /** Retourne toutes les inscriptions d'un tournoi. Réservé aux admins. */
@@ -60,15 +61,7 @@ public class InscriptionEquipeTournoiController {
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
-
-    List<TournoiEquipeInscriptionDto> result = new ArrayList<>();
-    for (InscriptionEquipeTournoi inscription : inscriptions) {
-      result.add(new TournoiEquipeInscriptionDto(
-          inscription.getEquipe().getId(),
-          inscription.getEquipe().getName(),
-          inscription.getDateInscription()));
-    }
-    return result;
+    return inscriptionMapper.toTournoiEquipeInscriptionDtos(inscriptions);
   }
 
   /**
@@ -86,12 +79,7 @@ public class InscriptionEquipeTournoiController {
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
-
-    List<EquipeTournamentRegistrationDto> result = new ArrayList<>();
-    for (InscriptionEquipeTournoi inscription : inscriptions) {
-      result.add(toEquipeRegistrationDto(inscription));
-    }
-    return result;
+    return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
   }
 
   /** Inscrit une équipe à un tournoi. Réservé au responsable de l'équipe. */
@@ -186,19 +174,4 @@ public class InscriptionEquipeTournoiController {
     }
   }
 
-  private EquipeTournamentRegistrationDto toEquipeRegistrationDto(
-      InscriptionEquipeTournoi inscription) {
-    TournoiResumeDto tournoi = new TournoiResumeDto(
-        inscription.getTournoi().getId(),
-        inscription.getTournoi().getNom(),
-        inscription.getTournoi().getEtat(),
-        inscription.getTournoi().getDateDebut(),
-        inscription.getTournoi().getNombresParticipantsMax());
-
-    return new EquipeTournamentRegistrationDto(
-        inscription.getTournoi().getId(),
-        inscription.getEquipe().getId(),
-        inscription.getDateInscription(),
-        tournoi);
-  }
 }

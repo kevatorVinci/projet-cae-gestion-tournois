@@ -29,7 +29,7 @@ import {
   addIndisponibilite,
   deleteIndisponibilite,
   Period,
-} from '../../services/indisponibilites';
+} from '../../../services/indisponibilites';
 
 const DisponibilitesPage = () => {
   const navigate = useNavigate();

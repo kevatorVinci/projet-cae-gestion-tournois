@@ -1,5 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
-import BackButton from '../../components/BoutonRetour';
+import { useState, useEffect, useContext, useCallback } from 'react';
+import BackButton from '../../BoutonRetour';
 import {
   Box,
   Typography,
@@ -22,8 +22,13 @@ import {
   DialogActions,
 } from '@mui/material';
 
-import { UserContext } from '../../contexts/UserContext';
-import { AuthenticatedUser, UserContextType } from '../../types';
+import { UserContext } from '../../../contexts/UserContext';
+import { AuthenticatedUser, UserContextType } from '../../../types';
+import {
+  banUser,
+  fetchAllUsers,
+  toggleAdminRole,
+} from '../../../services/authService';
 
 export default function AdminPage() {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
@@ -38,58 +43,42 @@ export default function AdminPage() {
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
+  const loadUsers = useCallback(async () => {
+    if (!authenticatedUser?.token) return;
+
     try {
-      const response = await fetch('/api/auths/users', {
-        headers: {
-          Authorization: authenticatedUser?.token || '',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
+      const data = await fetchAllUsers(authenticatedUser.token);
+      setUsers(data);
     } catch (error) {
       setMessage({ type: 'error', text: 'Impossible de charger les joueurs.' });
     }
-  };
+  }, [authenticatedUser?.token]);
 
   useEffect(() => {
-    fetchUsers(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    loadUsers();
+  }, [loadUsers]);
 
   const handleToggleAdmin = async (
     email: string,
     isCurrentlyAdmin: boolean,
   ) => {
-    const url = isCurrentlyAdmin
-      ? '/api/auths/removeAdmin'
-      : '/api/auths/addAdmin';
+    if (!authenticatedUser?.token) return;
 
     try {
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'text/plain',
-          Authorization: authenticatedUser?.token || '',
-        },
-        body: email,
+      await toggleAdminRole(email, isCurrentlyAdmin, authenticatedUser.token);
+      setMessage({
+        type: 'success',
+        text: `Le rôle a été mis à jour avec succès !`,
       });
-
-      if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: `Le rôle a été mis à jour avec succès !`,
-        });
-        fetchUsers();
-      } else {
-        setMessage({
-          type: 'error',
-          text: 'Erreur lors de la modification. Vérifiez le serveur Java.',
-        });
-      }
+      loadUsers();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur de connexion au serveur.' });
+      setMessage({
+        type: 'error',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Erreur de connexion au serveur.',
+      });
     }
   }; // ✨ NOUVEAU : On filtre la liste des joueurs en fonction de ce qu'on tape dans la recherche !
 
@@ -104,32 +93,23 @@ export default function AdminPage() {
   };
 
   const confirmBan = async () => {
-    if (!userToBan) return;
+    if (!userToBan || !authenticatedUser?.token) return;
 
     try {
-      const response = await fetch('/api/auths/ban', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authenticatedUser?.token || '',
-        },
-        body: JSON.stringify({ email: userToBan }),
+      await banUser(userToBan, authenticatedUser.token);
+      setMessage({
+        type: 'success',
+        text: `Le joueur a été banni définitivement.`,
       });
-
-      if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: `Le joueur a été banni définitivement.`,
-        });
-        fetchUsers();
-      } else {
-        setMessage({
-          type: 'error',
-          text: 'Erreur lors du bannissement sur le serveur.',
-        });
-      }
+      loadUsers();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur de connexion au serveur.' });
+      setMessage({
+        type: 'error',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Erreur de connexion au serveur.',
+      });
     }
 
     closeBanDialog();
@@ -170,21 +150,21 @@ export default function AdminPage() {
 
   return (
     <Box sx={{ padding: 4, backgroundColor: '#080b14', minHeight: '100vh' }}>
-      <BackButton />{' '}
+      <BackButton />
       <Typography variant="h4" color="white" mb={4} textAlign="center">
-        Gestion des Administrateurs 👑{' '}
-      </Typography>{' '}
+        Gestion des Administrateurs 👑
+      </Typography>
+
       {message && (
         <Alert
           severity={message.type}
           sx={{ mb: 3, maxWidth: 800, margin: '0 auto 20px auto' }}
         >
-          {message.text}{' '}
+          {message.text}
         </Alert>
       )}
-      {/* ✨ NOUVEAU : La barre de recherche */}{' '}
+
       <Box sx={{ maxWidth: 1000, margin: '0 auto 20px auto' }}>
-        {' '}
         <TextField
           fullWidth
           variant="outlined"
@@ -204,66 +184,61 @@ export default function AdminPage() {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                {' '}
                 <Typography sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                  🔍{' '}
-                </Typography>{' '}
+                  🔍
+                </Typography>
               </InputAdornment>
             ),
           }}
-        />{' '}
-      </Box>{' '}
+        />
+      </Box>
+
       <TableContainer
         component={Paper}
         sx={{ maxWidth: 1000, margin: 'auto', backgroundColor: '#1a2540' }}
       >
-        {' '}
         <Table>
-          {' '}
           <TableHead sx={{ backgroundColor: '#2a3b55' }}>
-            {' '}
             <TableRow>
-              {' '}
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                Avatar{' '}
-              </TableCell>{' '}
+                Avatar
+              </TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                Tag / Pseudo{' '}
-              </TableCell>{' '}
+                Tag / Pseudo
+              </TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                Email{' '}
-              </TableCell>{' '}
+                Email
+              </TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                Rôle{' '}
-              </TableCell>{' '}
+                Rôle
+              </TableCell>
               <TableCell
                 sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}
               >
-                Action{' '}
-              </TableCell>{' '}
-            </TableRow>{' '}
-          </TableHead>{' '}
+                Action
+              </TableCell>
+            </TableRow>
+          </TableHead>
+
           <TableBody>
-            {' '}
-            {/* ✨ On utilise la liste filtrée au lieu de la liste complète */}{' '}
             {sortedUsers.map((user) => (
               <TableRow
                 key={user.email}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
-                {' '}
                 <TableCell>
-                  {' '}
                   <Avatar
                     src={`/${user.profileImage}`}
                     alt={user.tag}
                     sx={{ border: '2px solid #e8822a' }}
-                  />{' '}
-                </TableCell>{' '}
-                <TableCell sx={{ color: 'white' }}>{user.tag}</TableCell>{' '}
+                  />
+                </TableCell>
+
+                <TableCell sx={{ color: 'white' }}>{user.tag}</TableCell>
                 <TableCell sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                  {user.email}{' '}
-                </TableCell>{' '}
+                  {user.email}
+                </TableCell>
+
                 <TableCell
                   sx={{
                     color: user.banned
@@ -278,11 +253,10 @@ export default function AdminPage() {
                     ? 'Joueur - Banni'
                     : user.admin
                       ? 'Administrateur'
-                      : 'Joueur'}{' '}
-                </TableCell>{' '}
+                      : 'Joueur'}
+                </TableCell>
+
                 <TableCell sx={{ textAlign: 'center' }}>
-                  {' '}
-                  {/* ✨ NOUVEAU : On cache le bouton si c'est la personne connectée ! */}{' '}
                   {user.email === authenticatedUser?.email ? (
                     <Typography
                       variant="body2"
@@ -291,7 +265,7 @@ export default function AdminPage() {
                         fontStyle: 'italic',
                       }}
                     >
-                      Vous-même{' '}
+                      Vous-même
                     </Typography>
                   ) : user.banned ? (
                     <Typography
@@ -344,6 +318,7 @@ export default function AdminPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
       <Dialog
         open={banDialogOpen}
         onClose={closeBanDialog}
