@@ -1,11 +1,10 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType, AuthenticatedUser } from '../../types';
 import MemberDetails from '../../components/pages/Member/MemberDetails';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 
-// Mocking the session utility
 vi.mock('../../utils/session', () => ({
   getAuthenticatedUser: vi.fn(() => ({ token: 'fake-token' })),
   storeAuthenticatedUser: vi.fn(),
@@ -13,7 +12,10 @@ vi.mock('../../utils/session', () => ({
   isTokenExpired: vi.fn(() => false),
 }));
 
-// Adjusted to fit your provided AuthenticatedUser interface
+vi.mock('../../services/tournois', () => ({
+  fetchTeamRegistrationsPublic: vi.fn(() => Promise.resolve([])),
+}));
+
 const mockAuthUser: AuthenticatedUser = {
   tag: 'Luffy',
   email: 'luffy@strawhat.com',
@@ -25,6 +27,7 @@ const mockAuthUser: AuthenticatedUser = {
 
 const mockTeamsResponse = [
   {
+    id: 1,
     name: 'Straw Hat Crew',
     membres: [
       {
@@ -69,7 +72,7 @@ describe('MemberDetails Component', () => {
   it('renders loading state initially', () => {
     (global.fetch as Mock).mockReturnValue(new Promise(() => {}));
     renderComponent(undefined);
-    expect(screen.getByText(/Chargement.../i)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('fetches and displays user data correctly from the teams API', async () => {
@@ -81,37 +84,27 @@ describe('MemberDetails Component', () => {
     renderComponent(undefined);
 
     await waitFor(() => {
-      expect(screen.getByText('Luffy')).toBeInTheDocument();
-      expect(screen.getByText('Captain')).toBeInTheDocument();
+      expect(screen.getAllByText('Luffy').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Captain').length).toBeGreaterThan(0);
     });
   });
 
-  it('shows private email and masked password when tags match (own profile)', async () => {
+  it('does not show email or password even on own profile', async () => {
     (global.fetch as Mock).mockResolvedValue({
       ok: true,
       json: async () => mockTeamsResponse,
     });
 
-    // Components matches "Luffy" from AuthContext with "Luffy" from API
     renderComponent(mockAuthUser);
 
     await waitFor(() => {
-      expect(screen.getByText('luffy@strawhat.com')).toBeInTheDocument();
+      expect(screen.getAllByText('Luffy').length).toBeGreaterThan(0);
     });
 
-    expect(screen.getByText('********')).toBeInTheDocument();
-
-    // Use Option 2: Find icon by test ID
-    const visibilityIcon = screen.getByTestId('VisibilityIcon');
-    const toggleBtn = visibilityIcon.closest('button');
-
-    if (!toggleBtn)
-      throw new Error('Could not find the password toggle button');
-
-    fireEvent.click(toggleBtn);
-
-    expect(screen.getByText('gear5password')).toBeInTheDocument();
-    expect(screen.getByTestId('VisibilityOffIcon')).toBeInTheDocument();
+    expect(screen.queryByText('luffy@strawhat.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Mail')).not.toBeInTheDocument();
+    expect(screen.queryByText('Mot de Passe')).not.toBeInTheDocument();
+    expect(screen.queryByText('gear5password')).not.toBeInTheDocument();
   });
 
   it('hides sensitive information when tags do not match', async () => {
@@ -120,14 +113,12 @@ describe('MemberDetails Component', () => {
       json: async () => mockTeamsResponse,
     });
 
-    // Logged in as Zoro, but viewing Luffy's page
     renderComponent({ ...mockAuthUser, tag: 'Zoro' });
 
     await waitFor(() => {
-      expect(screen.getByText('Luffy')).toBeInTheDocument();
+      expect(screen.getAllByText('Luffy').length).toBeGreaterThan(0);
     });
 
-    // Sensitive fields should be hidden
     expect(screen.queryByText('Mail')).not.toBeInTheDocument();
     expect(screen.queryByText('Mot de Passe')).not.toBeInTheDocument();
   });
@@ -142,7 +133,7 @@ describe('MemberDetails Component', () => {
     renderComponent(undefined);
 
     await waitFor(() => {
-      expect(screen.getByText(/Chargement.../i)).toBeInTheDocument();
+      expect(screen.getByText('Joueur introuvable')).toBeInTheDocument();
     });
 
     consoleSpy.mockRestore();

@@ -41,7 +41,7 @@ public class AuthController {
    * @return authenticated user with token
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) { 
+  public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) {
     AuthenticatedUser user = userService.register(credentials);
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -59,15 +59,18 @@ public class AuthController {
   public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
     var existingUser = userService.readOneFromEmail(credentials.getEmail());
     if (existingUser != null && existingUser.isBanned()) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ce compte est banni.");
+      String banMessage = "Ce compte est banni.";
+      if (existingUser.getBanReason() != null && !existingUser.getBanReason().isBlank()) {
+        banMessage += " Raison : " + existingUser.getBanReason();
+      }
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, banMessage);
     }
 
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
       boolean emailExists = existingUser != null;
-      String errorMessage = emailExists 
-          ? "Le mot de passe est incorrect." 
-          : "Cet email n'existe pas.";
+      String errorMessage =
+          emailExists ? "Le mot de passe est incorrect." : "Cet email n'existe pas.";
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
@@ -142,6 +145,7 @@ public class AuthController {
     if (email == null || email.isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requis pour bannir.");
     }
-    userService.banUser(email);
+    String reason = payload.get("reason");
+    userService.banUser(email, reason);
   }
 }

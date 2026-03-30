@@ -24,19 +24,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-  @Mock
-  private UserRepository userRepository;
-  @Mock
-  private EquipeRepository equipeRepository;
-  @Mock
-  private BCryptPasswordEncoder passwordEncoder;
-  @Mock
-  private NotificationService notificationService;
-  @Mock
-  private UserMapper userMapper;
+  @Mock private UserRepository userRepository;
+  @Mock private EquipeRepository equipeRepository;
+  @Mock private BCryptPasswordEncoder passwordEncoder;
+  @Mock private NotificationService notificationService;
+  @Mock private UserMapper userMapper;
 
-  @InjectMocks
-  private UserService userService;
+  @InjectMocks private UserService userService;
 
   private User user;
   private Credentials credentials;
@@ -63,7 +57,7 @@ class UserServiceTest {
     credentials.setSpecialty("tacticien");
 
     lenient()
-      .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
+        .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
         .thenAnswer(
             invocation -> {
               User source = invocation.getArgument(0);
@@ -281,7 +275,8 @@ class UserServiceTest {
     // Règle : membre peut modifier sa spécialité et son image (Énoncé p.3)
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
-    AuthenticatedUser result = userService.updateProfile(EMAIL, "gardien", "avatar2.png", null, null);
+    AuthenticatedUser result =
+        userService.updateProfile(EMAIL, "gardien", "avatar2.png", null, null);
 
     assertNotNull(result);
     assertEquals("gardien", user.getSpecialty());
@@ -296,7 +291,8 @@ class UserServiceTest {
     when(passwordEncoder.matches("oldPass", HASHED)).thenReturn(true);
     when(passwordEncoder.encode("newPass")).thenReturn("$2a$newHash");
 
-    AuthenticatedUser result = userService.updateProfile(EMAIL, "gardien", "avatar2.png", "oldPass", "newPass");
+    AuthenticatedUser result =
+        userService.updateProfile(EMAIL, "gardien", "avatar2.png", "oldPass", "newPass");
 
     assertNotNull(result);
     assertEquals("$2a$newHash", user.getPassword());
@@ -308,7 +304,8 @@ class UserServiceTest {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(passwordEncoder.matches("mauvais", HASHED)).thenReturn(false);
 
-    AuthenticatedUser result = userService.updateProfile(EMAIL, "gardien", "avatar2.png", "mauvais", "newPass");
+    AuthenticatedUser result =
+        userService.updateProfile(EMAIL, "gardien", "avatar2.png", "mauvais", "newPass");
 
     assertNull(result);
     // Le mot de passe ne doit pas avoir changé
@@ -320,7 +317,8 @@ class UserServiceTest {
   void updateProfile_utilisateurInexistant_retourneNull() {
     when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
 
-    AuthenticatedUser result = userService.updateProfile("inconnu@vinci.be", "gardien", "avatar2.png", null, null);
+    AuthenticatedUser result =
+        userService.updateProfile("inconnu@vinci.be", "gardien", "avatar2.png", null, null);
 
     assertNull(result);
   }
@@ -330,7 +328,8 @@ class UserServiceTest {
     // Après update, un nouveau token est généré pour la session React
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
-    AuthenticatedUser result = userService.updateProfile(EMAIL, "architecte", "avatar3.png", null, null);
+    AuthenticatedUser result =
+        userService.updateProfile(EMAIL, "architecte", "avatar3.png", null, null);
 
     assertNotNull(result.getToken());
     assertFalse(result.getToken().isBlank());
@@ -342,7 +341,7 @@ class UserServiceTest {
     when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
         .thenReturn(Optional.empty());
 
-    userService.banUser(EMAIL);
+    userService.banUser(EMAIL, null);
 
     assertTrue(user.isBanned());
     verify(userRepository).save(user);
@@ -352,7 +351,7 @@ class UserServiceTest {
   void banUser_utilisateurInexistant_neFaitRien() {
     when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
 
-    userService.banUser("inconnu@vinci.be");
+    userService.banUser("inconnu@vinci.be", null);
 
     verify(userRepository, never()).save(any());
   }
@@ -375,7 +374,7 @@ class UserServiceTest {
     when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
         .thenReturn(Optional.of(equipe));
 
-    userService.banUser(EMAIL);
+    userService.banUser(EMAIL, null);
 
     assertEquals(secondary, equipe.getResponsablePrincipal());
     assertNull(equipe.getResponsableSecondaire());
@@ -408,7 +407,7 @@ class UserServiceTest {
     when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
         .thenReturn(Optional.of(equipe));
 
-    userService.banUser(EMAIL);
+    userService.banUser(EMAIL, null);
 
     assertEquals(oldest, equipe.getResponsablePrincipal());
     assertNull(equipe.getResponsableSecondaire());
@@ -435,7 +434,7 @@ class UserServiceTest {
     when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
         .thenReturn(Optional.of(equipe));
 
-    userService.banUser(EMAIL);
+    userService.banUser(EMAIL, null);
 
     assertEquals(principal, equipe.getResponsablePrincipal());
     assertNull(equipe.getResponsableSecondaire());
@@ -461,7 +460,7 @@ class UserServiceTest {
     when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
         .thenReturn(Optional.empty());
 
-    userService.banUser(EMAIL);
+    userService.banUser(EMAIL, null);
 
     assertEquals(principal, equipe.getResponsablePrincipal());
     assertFalse(equipe.getMembres().contains(user));

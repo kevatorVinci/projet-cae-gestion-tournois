@@ -57,9 +57,15 @@ const LoginPage = () => {
       const errorMessage =
         error?.response?.data?.message || error?.message || '';
 
-      // ✨ LA MAGIE EST ICI : On cherche si le mot "banni" est dans l'erreur de Java
+      // On cherche si le mot "banni" est dans l'erreur de Java
       if (errorMessage.toLowerCase().includes('banni')) {
-        setError('ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.');
+        const reasonMatch = errorMessage.match(/Raison\s*:\s*(.+)/i);
+        const reason = reasonMatch ? reasonMatch[1].trim() : null;
+        setError(
+          reason
+            ? `ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.\nRaison : ${reason}`
+            : 'ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.',
+        );
       } else {
         // Sinon, c'est juste qu'il s'est trompé de mot de passe ou d'email
         setError('Identifiants incorrects. Veuillez réessayer.');
@@ -117,7 +123,7 @@ const LoginPage = () => {
 
         {/* C'est ici que l'alerte de bannissement va s'afficher en rouge ! */}
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
             {error}
           </Alert>
         )}

@@ -15,4 +15,5 @@ public class AuthenticatedUser {
   private String profileImage;
   private boolean admin;
   private boolean banned;
+  private String banReason;
 }

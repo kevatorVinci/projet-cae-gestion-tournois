@@ -61,14 +61,18 @@ export async function toggleAdminRole(
   }
 }
 
-export async function banUser(email: string, token: string): Promise<void> {
+export async function banUser(
+  email: string,
+  token: string,
+  reason?: string,
+): Promise<void> {
   const response = await fetch('/api/auths/ban', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: token,
     },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, reason: reason || undefined }),
   });
 
   if (!response.ok) {

@@ -711,11 +711,6 @@ const TournoiDetailPage = () => {
           </CardContent>
         </Card>
 
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            Astuce: cliquez sur retour pour revenir à la liste des tournois.
-          </Typography>
-        </Box>
       </Container>
     </Box>
   );

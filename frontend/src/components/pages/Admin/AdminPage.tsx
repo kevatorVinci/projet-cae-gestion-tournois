@@ -42,6 +42,7 @@ export default function AdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<string | null>(null);
+  const [banReason, setBanReason] = useState('');
 
   const loadUsers = useCallback(async () => {
     if (!authenticatedUser?.token) return;
@@ -90,13 +91,18 @@ export default function AdminPage() {
   const closeBanDialog = () => {
     setBanDialogOpen(false);
     setUserToBan(null);
+    setBanReason('');
   };
 
   const confirmBan = async () => {
     if (!userToBan || !authenticatedUser?.token) return;
 
     try {
-      await banUser(userToBan, authenticatedUser.token);
+      await banUser(
+        userToBan,
+        authenticatedUser.token,
+        banReason.trim() || undefined,
+      );
       setMessage({
         type: 'success',
         text: `Le joueur a été banni définitivement.`,
@@ -268,16 +274,30 @@ export default function AdminPage() {
                       Vous-même
                     </Typography>
                   ) : user.banned ? (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#ef4444',
-                        fontStyle: 'italic',
-                        fontWeight: 700,
-                      }}
-                    >
-                      Compte banni
-                    </Typography>
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: '#ef4444',
+                          fontStyle: 'italic',
+                          fontWeight: 700,
+                        }}
+                      >
+                        Compte banni
+                      </Typography>
+                      {user.banReason && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'rgba(255,255,255,0.5)',
+                            display: 'block',
+                            mt: 0.5,
+                          }}
+                        >
+                          Raison : {user.banReason}
+                        </Typography>
+                      )}
+                    </Box>
                   ) : (
                     <Box
                       sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}
@@ -334,7 +354,7 @@ export default function AdminPage() {
           ⚠️ Confirmer le bannissement
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: 'rgba(255,255,255,0.7)' }}>
+          <DialogContentText sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
             Êtes-vous sûr de vouloir bannir définitivement l'utilisateur{' '}
             <strong>{userToBan}</strong> ?
             <br />
@@ -342,6 +362,25 @@ export default function AdminPage() {
             Cette action est immédiate. Le compte reste en base mais ne pourra
             plus se connecter.
           </DialogContentText>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            maxRows={4}
+            placeholder="Raison du bannissement (optionnel)"
+            value={banReason}
+            onChange={(e) => setBanReason(e.target.value)}
+            sx={{
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              borderRadius: 1,
+              '& .MuiOutlinedInput-root': {
+                color: 'white',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                '&:hover fieldset': { borderColor: '#ef4444' },
+                '&.Mui-focused fieldset': { borderColor: '#ef4444' },
+              },
+            }}
+          />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button
