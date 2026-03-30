@@ -16,23 +16,12 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { UserContext } from '../../../contexts/UserContext';
 import { User } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
-
-// Define the shape of the API response to avoid 'any'
-interface TeamMember {
-  id: number;
-  tag: string;
-  specialty?: string;
-  profileImageUrl?: string;
-  isResponsable?: boolean;
-}
-
-interface Equipe {
-  name: string;
-  membres: TeamMember[];
-}
+import { getAllEquipes } from '../../../services/teams';
+import BackButton from '../../../components/BoutonRetour';
 
 export default function MemberDetails() {
-  const { id } = useParams<{ id: string }>(); // Typed params
+  // "id" can be a tag (from TeamsList) or a numeric id (from MaTeam)
+  const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const { authenticatedUser } = useContext(UserContext);
@@ -41,51 +30,77 @@ export default function MemberDetails() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (id) {
-        try {
-          const token =
-            authenticatedUser?.token || getAuthenticatedUser()?.token || '';
+      // Guard: do nothing if id is missing or literally "undefined"
+      if (!id || id === 'undefined') {
+        return;
+      }
 
-          const response = await fetch(`/api/equipes`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+      // Decode in case the tag was URL-encoded (e.g. spaces => %20)
+      const decodedId = decodeURIComponent(id);
 
-          if (!response.ok) {
-            throw new Error('Failed to fetch teams');
-          }
+      try {
+        const equipes = await getAllEquipes().catch(() => []);
 
-          const equipes: Equipe[] = await response.json(); // Replaced any[] with Equipe[]
+        const token =
+          authenticatedUser?.token || getAuthenticatedUser()?.token || '';
 
-          let foundUser: TeamMember | null = null;
-          let userTeamName = '';
+        const playersResponse = await fetch('/api/auths/players', {
+          headers: { Authorization: token },
+        });
 
-          for (const equipe of equipes) {
-            const member = equipe.membres?.find((m) => m.id === Number(id));
-            if (member) {
-              foundUser = member;
-              userTeamName = equipe.name;
-              break;
-            }
-          }
-
-          if (foundUser) {
-            const userData: User = {
-              id: foundUser.id,
-              tag: foundUser.tag,
-              email: '',
-              specialty: foundUser.specialty || 'Unknown',
-              team: userTeamName,
-              profileImage: foundUser.profileImageUrl || '/luffy.png',
-              isResponsable: foundUser.isResponsable || false,
-              admin: false,
-            };
-            setUser(userData);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+        let players: any[] = [];
+        if (playersResponse.ok) {
+          players = await playersResponse.json();
         }
+
+        // Match by tag (string from TeamsList) or by numeric id (from MaTeam)
+        const playerBase = players.find(
+          (p: any) => p.tag === decodedId || String(p.id) === decodedId,
+        );
+
+        let foundUserInTeam: any = null;
+        let userTeamName = '';
+
+        for (const equipe of equipes) {
+          const listJoueurs = equipe.members || [];
+          const member = listJoueurs.find(
+            (m: any) => m.tag === decodedId || String(m.id) === decodedId,
+          );
+          if (member) {
+            foundUserInTeam = member;
+            userTeamName = equipe.name;
+            break;
+          }
+        }
+
+        if (playerBase) {
+          setUser({
+            id: playerBase.id || 0,
+            tag: playerBase.tag,
+            email: playerBase.email || '',
+            specialty: playerBase.specialty || 'Unknown',
+            team: userTeamName,
+            profileImage:
+              playerBase.profileImage ||
+              playerBase.profileImageUrl ||
+              '/luffy.png',
+            isResponsable: foundUserInTeam?.isResponsable || false,
+            admin: playerBase.admin || false,
+          });
+        } else if (foundUserInTeam) {
+          setUser({
+            id: foundUserInTeam.id,
+            tag: foundUserInTeam.tag,
+            email: '',
+            specialty: foundUserInTeam.specialty || 'Unknown',
+            team: userTeamName,
+            profileImage: foundUserInTeam.profileImageUrl || '/luffy.png',
+            isResponsable: foundUserInTeam.isResponsable || false,
+            admin: false,
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors de la recuperation des donnees :', error);
       }
     };
 
@@ -111,7 +126,9 @@ export default function MemberDetails() {
           backgroundColor: 'background.default',
         }}
       >
-        <Typography color="white">Chargement...</Typography>
+        <Typography color="white">
+          Recherche du profil de {id ? decodeURIComponent(id) : ''}...
+        </Typography>
       </Box>
     );
   }
@@ -125,6 +142,7 @@ export default function MemberDetails() {
       }}
     >
       <Container maxWidth="lg">
+        <BackButton />
         <Stack spacing={4}>
           <Box
             sx={{
@@ -217,11 +235,11 @@ export default function MemberDetails() {
                 >
                   <BuildIcon sx={{ color: '#e8822a', fontSize: 20 }} />
                   <Typography variant="caption" color="text.secondary">
-                    Spécialité
+                    Specialite
                   </Typography>
                 </Box>
                 <Typography variant="h6" color="white" fontWeight={600}>
-                  {user.specialty || 'Non spécifiée'}
+                  {user.specialty || 'Non specifiee'}
                 </Typography>
               </Box>
 
@@ -238,11 +256,11 @@ export default function MemberDetails() {
                 >
                   <GroupsIcon sx={{ color: '#9c27b0', fontSize: 20 }} />
                   <Typography variant="caption" color="text.secondary">
-                    Équipe
+                    Equipe
                   </Typography>
                 </Box>
                 <Typography variant="h6" color="white" fontWeight={600}>
-                  {user.team || 'Aucune équipe'}
+                  {user.team || 'Aucune equipe'}
                 </Typography>
               </Box>
             </Stack>
@@ -267,7 +285,7 @@ export default function MemberDetails() {
                 >
                   <EmojiEventsIcon sx={{ color: '#e8822a', fontSize: 24 }} />
                   <Typography variant="h6" fontWeight={700} color="white">
-                    Tournois & Résultats
+                    Tournois & Resultats
                   </Typography>
                 </Box>
                 <Typography
@@ -275,7 +293,7 @@ export default function MemberDetails() {
                   color="text.secondary"
                   sx={{ fontStyle: 'italic' }}
                 >
-                  Aucun résultat disponible pour le moment.
+                  Aucun resultat disponible pour le moment.
                 </Typography>
               </Box>
             </Box>

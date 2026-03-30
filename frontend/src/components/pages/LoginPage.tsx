@@ -29,56 +29,74 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const theme = useTheme();
 
+  /**
+   * Toggles the visibility of the password field.
+   */
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
   /**
-   * Fonction déclenchée quand le joueur clique sur "Se connecter".
-   * On intercepte les erreurs pour vérifier si le compte est banni.
-   * @param {SyntheticEvent} e Evénement de soumission du formulaire.
+   * Function triggered when the user clicks on "Login".
+   * We intercept errors to check if the account is banned or if credentials are bad.
+   * @param {SyntheticEvent} e Form submission event.
    */
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     try {
+      // Clears any previous error message
       setError('');
-      // On essaie de se connecter via le serveur
+      
+      // Attempts to connect via the server
       await loginUser({ email, password }, rememberMe);
-      // Si ça marche, on va sur la page d'accueil
+      
+      // If successful, redirects to the home page
       navigate('/');
     } catch (err: unknown) {
-      // On explique à TypeScript la forme possible de l'erreur envoyée par le serveur
+      // Tells TypeScript the possible shape of the error sent by the server
       const error = err as {
         response?: { data?: { message?: string } };
         message?: string;
       };
 
-      // On regarde ce que le serveur Java nous a répondu comme erreur
+      // Retrieves the error message sent by the Java server
       const errorMessage =
         error?.response?.data?.message || error?.message || '';
 
-      // ✨ LA MAGIE EST ICI : On cherche si le mot "banni" est dans l'erreur de Java
+      // Checks if the word "banni" is inside the server error message
       if (errorMessage.toLowerCase().includes('banni')) {
         setError('ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.');
       } else {
-        // Sinon, c'est juste qu'il s'est trompé de mot de passe ou d'email
-        setError('Identifiants incorrects. Veuillez réessayer.');
+        // Vague message for security reasons (wrong email or password)
+        setError('Informations incorrectes. Veuillez réessayer.');
       }
 
       console.error('LoginPage::error: ', err);
     }
   };
 
+  /**
+   * Updates the email state when the user types.
+   * @param {SyntheticEvent} e Input change event.
+   */
   const handleEmailInputChange = (e: SyntheticEvent) => {
     const input = e.target as HTMLInputElement;
     setEmail(input.value);
   };
 
+  /**
+   * Updates the password state when the user types.
+   * @param {SyntheticEvent} e Input change event.
+   */
   const handlePasswordChange = (e: SyntheticEvent) => {
     const input = e.target as HTMLInputElement;
     setPassword(input.value);
   };
 
+  /**
+   * Updates the "Remember me" checkbox state.
+   * @param {SyntheticEvent} e Checkbox change event.
+   */
   const handleRememberMeChange = (e: SyntheticEvent) => {
     const input = e.target as HTMLInputElement;
     setRememberMe(input.checked);
@@ -115,7 +133,7 @@ const LoginPage = () => {
           Connexion
         </Typography>
 
-        {/* C'est ici que l'alerte de bannissement va s'afficher en rouge ! */}
+        {/* This is where the error alert (banned or incorrect info) is displayed in red! */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
