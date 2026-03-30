@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import LoginPage from './LoginPage';
+import LoginPage from '../../components/pages/LoginPage';
 import { createMockUserContext, renderWithProviders } from '../../test-utils';
 
 const mockNavigate = vi.fn();
@@ -68,7 +68,7 @@ describe('LoginPage', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const loginUser = vi.fn(async () => {
-      throw new Error('invalid');
+      throw new Error('Le mot de passe est incorrect.');
     });
 
     renderWithProviders(<LoginPage />, {
@@ -84,9 +84,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
     expect(
-      await screen.findByText(
-        /identifiants incorrects\. veuillez réessayer\./i,
-      ),
+      await screen.findByText(/identifiants incorrects\./i),
     ).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });

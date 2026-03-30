@@ -58,13 +58,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           if (user.isAdmin()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
           }
+          if (isResponsable(user)) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_RESPONSABLE"));
+          }
           UsernamePasswordAuthenticationToken authentication =
-                  new UsernamePasswordAuthenticationToken(user, null, authorities);
+              new UsernamePasswordAuthenticationToken(user, null, authorities);
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
       }
     }
     filterChain.doFilter(request, response);
+  }
+
+  private boolean isResponsable(User user) {
+    if (user == null || user.getEquipe() == null) {
+      return false;
+    }
+    User principal = user.getEquipe().getResponsablePrincipal();
+    User secondaire = user.getEquipe().getResponsableSecondaire();
+    Long userId = user.getId();
+    return (principal != null && principal.getId().equals(userId))
+        || (secondaire != null && secondaire.getId().equals(userId));
   }
 }

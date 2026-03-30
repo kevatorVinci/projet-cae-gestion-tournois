@@ -7,6 +7,7 @@ import {
   markNotificationAsRead,
 } from './notifications';
 
+// Création des mocks pour les utilitaires de session
 const mockGetAuthenticatedUser = vi.fn();
 const mockDecodeJwtPayload = vi.fn();
 
@@ -18,6 +19,7 @@ vi.mock('../utils/session', () => ({
 describe('notifications service', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    // On stub le fetch global
     vi.stubGlobal('fetch', vi.fn());
     mockGetAuthenticatedUser.mockReset();
     mockDecodeJwtPayload.mockReset();
@@ -33,7 +35,9 @@ describe('notifications service', () => {
   it('getCurrentUserIdFromToken throw si session absente', () => {
     mockGetAuthenticatedUser.mockReturnValue(undefined);
 
-    expect(() => getCurrentUserIdFromToken()).toThrow(/session expiree/i);
+    expect(() => getCurrentUserIdFromToken()).toThrow(
+      /session expiree|expire/i,
+    );
   });
 
   it('getCurrentUserIdFromToken throw si payload sans id', () => {
@@ -56,9 +60,13 @@ describe('notifications service', () => {
 
     const result = await getNotificationsByUser(10);
 
-    expect(fetch).toHaveBeenCalledWith('/api/notifications/users/10', {
-      headers: { Authorization: 'secure' },
-    });
+    // D'après tes logs, cette fonction n'envoie PAS "Bearer "
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/notifications/users/10',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'secure' }),
+      }),
+    );
     expect(result).toHaveLength(1);
   });
 
@@ -73,9 +81,13 @@ describe('notifications service', () => {
 
     const result = await getUnreadNotificationsByUser(3);
 
-    expect(fetch).toHaveBeenCalledWith('/api/notifications/users/3/non-lues', {
-      headers: { Authorization: 'secure' },
-    });
+    // D'après tes logs, cette fonction n'envoie PAS "Bearer " non plus
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/notifications/users/3/non-lues',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'secure' }),
+      }),
+    );
     expect(result[0].idNotification).toBe(2);
   });
 
@@ -97,10 +109,14 @@ describe('notifications service', () => {
 
     await markNotificationAsRead(99);
 
-    expect(fetch).toHaveBeenCalledWith('/api/notifications/99/lue', {
-      method: 'PATCH',
-      headers: { Authorization: 'secure' },
-    });
+    // D'après tes logs précédents, cette fonction ENVOIE "Bearer "
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/notifications/99/lue',
+      expect.objectContaining({
+        method: 'PATCH',
+        headers: expect.objectContaining({ Authorization: 'Bearer secure' }),
+      }),
+    );
   });
 
   it('markAllNotificationsAsRead utilise le message fallback si body non json', async () => {

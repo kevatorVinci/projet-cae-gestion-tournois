@@ -14,4 +14,5 @@ public class AuthenticatedUser {
   private String specialty;
   private String profileImage;
   private boolean admin;
+  private boolean banned;
 }

@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/dom';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import App from './index';
+import App from '../components/App/index';
 
 describe('App', () => {
   it('affiche la barre de navigation et le contenu de base', () => {

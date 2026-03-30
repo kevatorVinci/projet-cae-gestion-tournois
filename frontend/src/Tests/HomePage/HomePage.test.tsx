@@ -1,16 +1,17 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import HomePage from './HomePage';
+import HomePage from '../../components/pages/HomePage/HomePage';
 import {
   createAuthenticatedUser,
   createMockUserContext,
   renderWithProviders,
-} from '../../../test-utils';
+} from '../../test-utils';
 
 const mockNavigate = vi.fn();
 const mockGetCurrentUserIdFromToken = vi.fn();
 const mockGetUnreadNotificationsByUser = vi.fn();
 
+// Mock react-router-dom
 vi.mock('react-router-dom', async () => {
   const actual =
     await vi.importActual<typeof import('react-router-dom')>(
@@ -23,10 +24,12 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('../../../services/notifications', () => ({
-  getCurrentUserIdFromToken: () => mockGetCurrentUserIdFromToken(),
-  getUnreadNotificationsByUser: (userId: number) =>
+// FIXED PATH: From src/Tests/Team/ to src/services/ is only 2 levels up (../../)
+vi.mock('../../services/notifications', () => ({
+  getCurrentUserIdFromToken: vi.fn(() => mockGetCurrentUserIdFromToken()),
+  getUnreadNotificationsByUser: vi.fn((userId: number) =>
     mockGetUnreadNotificationsByUser(userId),
+  ),
 }));
 
 describe('HomePage', () => {

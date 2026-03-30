@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.entities.Indisponibilite;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.IndisponibiliteRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,9 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Contrôleur pour gérer les appels liés aux indisponibilités.
- */
+/** Contrôleur pour gérer les appels liés aux indisponibilités. */
 @RestController
 @RequestMapping("/indisponibilites")
 public class IndisponibiliteController {
@@ -54,7 +53,8 @@ public class IndisponibiliteController {
    */
   @PostMapping
   public Indisponibilite addIndisponibilite(
-      @AuthenticationPrincipal User currentUser, @RequestBody Indisponibilite indisponibilite) {
+      @AuthenticationPrincipal User currentUser,
+      @RequestBody @Valid Indisponibilite indisponibilite) {
     ensureAuthenticated(currentUser);
     indisponibilite.setUser(currentUser);
 
@@ -72,14 +72,17 @@ public class IndisponibiliteController {
       @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
 
-    Indisponibilite indisponibilite = indisponibiliteRepository.findById(id)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+    Indisponibilite indisponibilite =
+        indisponibiliteRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
 
     if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez supprimer que vos propres indisponibilites.");
+          HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
     }
 
     indisponibiliteRepository.delete(indisponibilite);

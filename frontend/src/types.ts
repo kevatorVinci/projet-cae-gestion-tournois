@@ -56,10 +56,12 @@ interface DemandePendingItem {
 interface AuthenticatedUser {
   email: string;
   token: string;
+  password?: string;
   tag?: string;
   specialty?: string;
   profileImage?: string;
-  admin: boolean;
+  admin?: boolean;
+  banned?: boolean;
 }
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
@@ -72,6 +74,18 @@ interface UserContextType {
   updateUser: (updatedData: Partial<AuthenticatedUser>) => void;
 }
 
+interface Tournoi {
+  id: number;
+  nom: string;
+  description?: string;
+  dateDebut: string;
+  dateFin: string;
+  dateLimiteInscription: string;
+  etat: 'BROUILLON' | 'OUVERT' | 'CLOTURE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
+  nombresParticipantsMax?: number;
+  gagnant?: { id: number; name: string } | null;
+}
+
 export type {
   User,
   AuthenticatedUser,
@@ -80,4 +94,5 @@ export type {
   NotificationItem,
   DemandeDecisionResult,
   DemandePendingItem,
+  Tournoi,
 };

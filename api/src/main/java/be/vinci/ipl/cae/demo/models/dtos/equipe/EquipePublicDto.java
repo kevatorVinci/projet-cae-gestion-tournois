@@ -6,8 +6,7 @@ import java.util.List;
 
 /** DTO for public team information. */
 public record EquipePublicDto(
-        Long id,
-        String name,
-        List<MembrePublicDto> membres,
-        @JsonProperty("isResponsable") boolean isResponsable) {
-}
+    Long id,
+    String name,
+    List<MembrePublicDto> membres,
+    @JsonProperty("isResponsable") boolean isResponsable) {}

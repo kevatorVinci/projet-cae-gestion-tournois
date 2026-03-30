@@ -1,9 +1,13 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
 import be.vinci.ipl.cae.demo.services.UserService;
+import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,14 +34,6 @@ public class AuthController {
     this.userService = userService;
   }
 
-  private boolean isInvalidCredentials(Credentials credentials) {
-    return credentials == null
-            || credentials.getEmail() == null
-            || credentials.getEmail().isBlank()
-            || credentials.getPassword() == null
-            || credentials.getPassword().isBlank();
-  }
-
   /**
    * Register a new user.
    *
@@ -45,10 +41,7 @@ public class AuthController {
    * @return authenticated user with token
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@RequestBody Credentials credentials) {
-    if (isInvalidCredentials(credentials)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-    }
+  public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) { 
     AuthenticatedUser user = userService.register(credentials);
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -63,13 +56,19 @@ public class AuthController {
    * @return authenticated user with token
    */
   @PostMapping("/login")
-  public AuthenticatedUser login(@RequestBody Credentials credentials) {
-    if (isInvalidCredentials(credentials)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+  public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
+    var existingUser = userService.readOneFromEmail(credentials.getEmail());
+    if (existingUser != null && existingUser.isBanned()) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ce compte est banni.");
     }
+
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+      boolean emailExists = existingUser != null;
+      String errorMessage = emailExists 
+          ? "Le mot de passe est incorrect." 
+          : "Cet email n'existe pas.";
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
   }
@@ -77,23 +76,23 @@ public class AuthController {
   /**
    * Porte d'entrée pour modifier le profil.
    *
-   * @param credentials le colis envoyé par React
+   * @param dto le colis envoyé par React
    * @return le profil mis à jour avec un nouveau token
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
-  public AuthenticatedUser updateProfile(@RequestBody Credentials credentials) {
+  public AuthenticatedUser updateProfile(@RequestBody @Valid UpdateProfileDto dto) {
     AuthenticatedUser user =
-            userService.updateProfile(
-                    credentials.getEmail(),
-                    credentials.getSpecialty(),
-                    credentials.getProfileImage(),
-                    credentials.getOldPassword(),
-                    credentials.getNewPassword());
+        userService.updateProfile(
+            dto.getEmail(),
+            dto.getSpecialty(),
+            dto.getProfileImage(),
+            dto.getOldPassword(),
+            dto.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
@@ -104,7 +103,7 @@ public class AuthController {
    * @return la liste des utilisateurs authentifiés
    */
   @GetMapping("/users")
-  @PreAuthorize("isAuthenticated()")
+  @IsAdmin
   public List<AuthenticatedUser> getAllUsers() {
     return userService.getAllUsersForAdmin();
   }
@@ -115,7 +114,7 @@ public class AuthController {
    * @param email l'adresse email de l'utilisateur à promouvoir
    */
   @PutMapping("/addAdmin")
-  @PreAuthorize("isAuthenticated()")
+  @IsAdmin
   public void addAdmin(@RequestBody String email) {
     userService.addAdmin(email);
   }
@@ -126,8 +125,23 @@ public class AuthController {
    * @param email l'adresse email de l'utilisateur à rétrograder
    */
   @PutMapping("/removeAdmin")
-  @PreAuthorize("isAuthenticated()")
+  @IsAdmin
   public void removeAdmin(@RequestBody String email) {
     userService.removeAdmin(email);
+  }
+
+  /**
+   * Bans a user from the platform.
+   *
+   * @param payload a map containing the email of the user to ban
+   */
+  @PostMapping("/ban")
+  @IsAdmin
+  public void banUser(@RequestBody Map<String, String> payload) {
+    String email = payload.get("email");
+    if (email == null || email.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requis pour bannir.");
+    }
+    userService.banUser(email);
   }
 }

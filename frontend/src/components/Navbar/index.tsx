@@ -131,7 +131,7 @@ const Navbar = () => {
             <Button color="inherit" onClick={() => navigate('/')}>
               Accueil
             </Button>
-            <Button color="inherit" onClick={() => navigate('/tournaments')}>
+            <Button color="inherit" onClick={() => navigate('/tournois')}>
               Tournois
             </Button>
             <Button color="inherit" onClick={() => navigate('/equipes')}>
