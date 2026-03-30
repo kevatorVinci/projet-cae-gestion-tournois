@@ -20,9 +20,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
 
-  @Mock private NotificationRepository notificationRepository;
+  @Mock
+  private NotificationRepository notificationRepository;
 
-  @InjectMocks private NotificationService notificationService;
+  @InjectMocks
+  private NotificationService notificationService;
 
   private User user;
   private Notification notification;
@@ -163,6 +165,7 @@ class NotificationServiceTest {
   void createNotification_sauvegardeAvecBonnesValeurs() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
+    notificationService.createNotification(user, "Mon message");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
