@@ -1,6 +1,7 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.mappers.NotificationMapper;
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.NotificationService;
 import java.util.List;
@@ -20,35 +21,39 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationController {
 
   private final NotificationService notificationService;
+  private final NotificationMapper notificationMapper;
 
   /**
    * Builds the notification controller.
    *
    * @param notificationService notification business service
    */
-  public NotificationController(NotificationService notificationService) {
+  public NotificationController(
+      NotificationService notificationService,
+      NotificationMapper notificationMapper) {
     this.notificationService = notificationService;
+    this.notificationMapper = notificationMapper;
   }
 
   /** Toutes les notifications d'un membre (lues + non lues), les plus récentes en premier. */
   @GetMapping("/users/{userId}")
-  public ResponseEntity<List<Notification>> getAll(
+  public ResponseEntity<List<NotificationDto>> getAll(
       @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
-    return ResponseEntity.ok(notificationService.getByUser(userId));
+    return ResponseEntity.ok(notificationMapper.toDtos(notificationService.getByUser(userId)));
   }
 
   /** Uniquement les notifications non lues d'un membre. */
   @GetMapping("/users/{userId}/non-lues")
-  public ResponseEntity<List<Notification>> getUnread(
+  public ResponseEntity<List<NotificationDto>> getUnread(
       @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
-    return ResponseEntity.ok(notificationService.getUnread(userId));
+    return ResponseEntity.ok(notificationMapper.toDtos(notificationService.getUnread(userId)));
   }
 
   /** Marque une notification spécifique comme lue. */
   @PatchMapping("/{idNotification}/lue")
-  public ResponseEntity<Notification> markAsRead(
+  public ResponseEntity<NotificationDto> markAsRead(
       @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
-    return ResponseEntity.ok(notificationService.markAsRead(idNotification));
+    return ResponseEntity.ok(notificationMapper.toDto(notificationService.markAsRead(idNotification)));
   }
 
   /** Marque toutes les notifications d'un membre comme lues. */

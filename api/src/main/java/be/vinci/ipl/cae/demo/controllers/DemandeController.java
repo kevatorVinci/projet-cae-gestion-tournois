@@ -1,11 +1,10 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.annotations.IsResponsable;
+import be.vinci.ipl.cae.demo.mappers.DemandeMapper;
 import be.vinci.ipl.cae.demo.models.dtos.demande.DemandeDto;
-import be.vinci.ipl.cae.demo.models.entities.Demande;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.DemandeService;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -25,14 +24,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class DemandeController {
 
   private final DemandeService demandeService;
+  private final DemandeMapper demandeMapper;
 
   /**
    * Constructor for DemandeController.
    *
    * @param demandeService the injected service.
    */
-  public DemandeController(DemandeService demandeService) {
+  public DemandeController(DemandeService demandeService, DemandeMapper demandeMapper) {
     this.demandeService = demandeService;
+    this.demandeMapper = demandeMapper;
   }
 
   /** List pending demands for the current responsible user's team. */
@@ -40,24 +41,7 @@ public class DemandeController {
   @IsResponsable
   public Iterable<DemandeDto> readDemandesEnAttente(@AuthenticationPrincipal User currentUser) {
     try {
-      List<DemandeDto> demandes = new ArrayList<>();
-      for (Demande demande : demandeService.getDemandesEnAttentePourResponsable(currentUser)) {
-        demandes.add(
-            new DemandeDto(
-                demande.getIdDemande(),
-                demande.getMembre().getId(),
-                demande.getMembre().getEmail(),
-                demande.getMembre().getTag(),
-                demande.getMembre().getSpecialty(),
-                demande.getMembre().getProfileImageUrl(),
-                demande.getEquipe().getId(),
-                demande.getEquipe().getName(),
-                demande.getEtat(),
-                demande.getDateDemande(),
-                demande.getDateTraitement(),
-                demande.getRaisonRefus()));
-      }
-      return demandes;
+      return demandeMapper.toDtos(demandeService.getDemandesEnAttentePourResponsable(currentUser));
     } catch (RuntimeException e) {
       handleDemandeException(e);
       return List.of(); // jamais atteint mais requis par le compilateur

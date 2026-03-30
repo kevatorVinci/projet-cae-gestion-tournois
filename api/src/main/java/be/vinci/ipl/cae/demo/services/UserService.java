@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
@@ -27,6 +28,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final EquipeRepository equipeRepository;
   private final NotificationService notificationService;
+  private final UserMapper userMapper;
 
   /**
    * Builds the user service.
@@ -39,11 +41,13 @@ public class UserService {
       BCryptPasswordEncoder passwordEncoder,
       UserRepository userRepository,
       EquipeRepository equipeRepository,
-      NotificationService notificationService) {
+      NotificationService notificationService,
+      UserMapper userMapper) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.equipeRepository = equipeRepository;
     this.notificationService = notificationService;
+    this.userMapper = userMapper;
   }
 
   /**
@@ -68,20 +72,7 @@ public class UserService {
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
-
-    AuthenticatedUser authenticatedUser = new AuthenticatedUser();
-    authenticatedUser.setEmail(email);
-    authenticatedUser.setToken(token);
-
-    if (user != null) {
-      authenticatedUser.setTag(user.getTag());
-      authenticatedUser.setSpecialty(user.getSpecialty());
-      authenticatedUser.setProfileImage(user.getProfileImageUrl());
-      authenticatedUser.setAdmin(user.isAdmin());
-      authenticatedUser.setBanned(user.isBanned());
-    }
-
-    return authenticatedUser;
+    return userMapper.toAuthenticatedUser(user, token);
   }
 
   /**
@@ -210,22 +201,7 @@ public class UserService {
    * @return la liste des utilisateurs
    */
   public java.util.List<AuthenticatedUser> getAllUsersForAdmin() {
-    java.util.List<AuthenticatedUser> usersList = new java.util.ArrayList<>();
-
-    Iterable<User> users = userRepository.findAll();
-
-    for (User user : users) {
-      AuthenticatedUser dto = new AuthenticatedUser();
-      dto.setEmail(user.getEmail());
-      dto.setTag(user.getTag());
-      dto.setSpecialty(user.getSpecialty());
-      dto.setProfileImage(user.getProfileImageUrl());
-      dto.setAdmin(user.isAdmin());
-      dto.setBanned(user.isBanned());
-
-      usersList.add(dto);
-    }
-    return usersList;
+    return userMapper.toAuthenticatedUsers(userRepository.findAll());
   }
 
   /**
