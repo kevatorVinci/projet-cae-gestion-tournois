@@ -1,6 +1,6 @@
 import { useState, SyntheticEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../components/BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   Box,
   Button,
@@ -15,9 +15,9 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { UserContextType } from '../../types';
-import { UserContext } from '../../contexts/UserContext';
-import backgroundImage from '../../assets/images/background.png';
+import { UserContextType } from '../../../types';
+import { UserContext } from '../../../contexts/UserContext';
+import backgroundImage from '../../../assets/images/background.png';
 
 const LoginPage = () => {
   const { loginUser }: UserContextType = useContext(UserContext);

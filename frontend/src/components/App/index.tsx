@@ -8,7 +8,7 @@ import TeamDetails from '../pages/TeamPage/TeamDetail';
 import Profile from '../pages/TableauDebord/Profil';
 import { CreateEquipe } from '../pages/TeamPage/CreeEquipe';
 import { MyTeam } from '../pages/TeamPage/MaTeam';
-import LoginPage from '../ConnectionPage/LoginPage';
+import LoginPage from '../pages/ConnectionPage/LoginPage';
 import RegisterPage from '../pages/Espace/RegisterPage';
 import ProfilePage from '../pages/Espace/ProfilePage';
 import AdminPage from '../pages/Admin/AdminPage';
