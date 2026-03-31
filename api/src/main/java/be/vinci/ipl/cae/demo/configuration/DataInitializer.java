@@ -218,54 +218,43 @@ public class DataInitializer {
               lisa, noa, tim, zoe));
 
       // ── 13 dummy teams ──────────
-      String[] names = {
-              "TEAM_BETA", "TEAM_GAMMA",
-              "TEAM_DELTA", "TEAM_EPSILON",
-              "TEAM_ZETA", "TEAM_THETA",
-              "TEAM_KAPPA", "TEAM_LAMBDA",
-              "TEAM_MU", "TEAM_NU",
-              "TEAM_XI", "TEAM_PI",
-              "TEAM_SIGMA"
-      };
+      // ✨ On utilise List.of() pour eviter tout probleme d'indentation avec les tableaux !
+      List<String> names = List.of(
+              "TEAM_BETA", "TEAM_GAMMA", "TEAM_DELTA", "TEAM_EPSILON", "TEAM_ZETA",
+              "TEAM_THETA", "TEAM_KAPPA", "TEAM_LAMBDA", "TEAM_MU", "TEAM_NU",
+              "TEAM_XI", "TEAM_PI", "TEAM_SIGMA"
+      );
 
-      String[] botTags = {
-              "Nova", "Raptor", "Blaze", "Echo",
-              "Mantis", "Viper", "Astra", "Cipher",
-              "Drift", "Sable", "Orion", "Nyx",
-              "Havoc"
-      };
+      List<String> botTags = List.of(
+              "Nova", "Raptor", "Blaze", "Echo", "Mantis", "Viper", "Astra",
+              "Cipher", "Drift", "Sable", "Orion", "Nyx", "Havoc"
+      );
 
-      String[] botAvatars = {
-              "butcher.jpg", "eren.png", "femmecars.jpg",
-              "garou.jpg", "jjk.jpg", "lookism.jpg",
-              "neon2.jpg", "pevin.jpg", "pion.jpg",
-              "spiderman2099.jpg", "tailong.jpg",
-              "crockmou.jpg", "flash.jpg"
-      };
+      List<String> botAvatars = List.of(
+              "butcher.jpg", "eren.png", "femmecars.jpg", "garou.jpg", "jjk.jpg",
+              "lookism.jpg", "neon2.jpg", "pevin.jpg", "pion.jpg", "spiderman2099.jpg",
+              "tailong.jpg", "crockmou.jpg", "flash.jpg"
+      );
 
-      String[] teamAvatars = {
-              "hunter.jpg",
-              "onepiece.jpg",
-              "akatsuki.jpg",
-              "espada.jpg",
-              "fairytail.jpg"
-      };
+      List<String> teamAvatars = List.of(
+              "hunter.jpg", "onepiece.jpg", "akatsuki.jpg", "espada.jpg", "fairytail.jpg"
+      );
 
       List<Equipe> dum = new ArrayList<>();
-      for (int i = 0; i < names.length; i++) {
-        String name = names[i];
-        String botTag = botTags[i];
+      for (int i = 0; i < names.size(); i++) {
+        String name = names.get(i);
+        String botTag = botTags.get(i);
         User bot = makeUser(
                 botTag.toLowerCase(Locale.ROOT) + "@demo.com",
                 botTag, "exécuteur",
                 "2025-01-01", false,
-                pwd, botAvatars[i % botAvatars.length]);
+                pwd, botAvatars.get(i % botAvatars.size()));
         userRepo.save(bot);
 
         Equipe eq = new Equipe();
         eq.setName(name);
         eq.setResponsablePrincipal(bot);
-        eq.setProfileImage(teamAvatars[i % teamAvatars.length]);
+        eq.setProfileImage(teamAvatars.get(i % teamAvatars.size()));
         equipeRepo.save(eq);
 
         bot.setEquipe(eq);

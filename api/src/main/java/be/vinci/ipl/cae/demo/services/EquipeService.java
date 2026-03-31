@@ -85,8 +85,7 @@ public class EquipeService {
    */
   public Equipe creerEquipe(User user, String nomEquipe, String profileImage) {
     if (user.getEquipe() != null) {
-      throw new IllegalStateException(
-              "Le membre appartient deja a une equipe.");
+      throw new IllegalStateException("Le membre appartient deja a une equipe.");
     }
 
     if (equipeRepository.existsByName(nomEquipe)) {
@@ -179,8 +178,7 @@ public class EquipeService {
     } else if (equipe.getResponsableSecondaire() == null) {
       equipe.setResponsableSecondaire(membre);
     } else {
-      throw new IllegalStateException(
-              "L'equipe a deja le max de responsables.");
+      throw new IllegalStateException("L'equipe a deja le max de responsables.");
     }
 
     equipeRepository.save(equipe);
@@ -254,8 +252,7 @@ public class EquipeService {
 
         User nouveauResponsable = findMemberInTeam(equipe, nouveauResponsableId);
         if (nouveauResponsable.getId().equals(persistedUser.getId())) {
-          throw new IllegalStateException(
-                  "Le remplaçant doit etre un autre membre.");
+          throw new IllegalStateException("Le remplaçant doit etre un autre membre.");
         }
         if (!isUserResponsible(equipe, nouveauResponsable)) {
           if (equipe.getResponsablePrincipal() == null) {
@@ -382,8 +379,10 @@ public class EquipeService {
   }
 
   private void normalizeResponsibleSlots(Equipe equipe) {
-    if (equipe.getResponsablePrincipal() ==
-            null && equipe.getResponsableSecondaire() != null) {
+    boolean hasPrincipal = equipe.getResponsablePrincipal() != null;
+    boolean hasSecondaire = equipe.getResponsableSecondaire() != null;
+
+    if (!hasPrincipal && hasSecondaire) {
       equipe.setResponsablePrincipal(equipe.getResponsableSecondaire());
       equipe.setResponsableSecondaire(null);
     }
