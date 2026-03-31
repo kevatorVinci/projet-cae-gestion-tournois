@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import StarIcon from '@mui/icons-material/Star';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { User } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
@@ -275,7 +274,7 @@ export default function MemberDetails() {
             }}
           >
             {/* Avatar */}
-            <Box sx={{ position: 'relative' }}>
+            <Stack direction="row" alignItems="center" spacing={3} sx={{ position: 'relative' }}>
               <Avatar
                 src={normalizeAvatarUrl(user.profileImage)}
                 alt={user.tag}

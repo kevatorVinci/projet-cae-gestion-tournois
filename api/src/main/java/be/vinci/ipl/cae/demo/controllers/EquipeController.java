@@ -5,7 +5,6 @@ import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeCreationDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeJoinDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipePublicDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeUpdateDto;
-import be.vinci.ipl.cae.demo.models.dtos.membre.MembrePublicDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.EquipeService;
@@ -40,6 +39,7 @@ public class EquipeController {
    * Constructor for EquipeController.
    *
    * @param equipeService the injected service.
+   * @param equipeMapper the injected mapper.
    */
   public EquipeController(EquipeService equipeService, EquipeMapper equipeMapper) {
     this.equipeService = equipeService;
@@ -64,7 +64,7 @@ public class EquipeController {
             .orElseThrow(() -> new ResponseStatusException(
                     HttpStatus.NOT_FOUND, "Équipe introuvable"));
 
-    return toPublicDto(equipe, currentUser);
+    return equipeMapper.toPublicDto(equipe, currentUser);
   }
 
   /**
@@ -244,26 +244,5 @@ public class EquipeController {
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
-  }
-
-  private EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
-    List<MembrePublicDto> membres = equipe.getMembres().stream()
-            .map(m -> new MembrePublicDto(
-                    m.getId(),
-                    m.getTag(),
-                    m.getSpecialty(),
-                    m.getProfileImageUrl(),
-                    equipeService.isUserResponsible(equipe, m)))
-            .toList();
-
-    boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
-
-    return new EquipePublicDto(
-            equipe.getId(),
-            equipe.getName(),
-            equipe.getProfileImage(),
-            membres,
-            isResponsable
-    );
   }
 }

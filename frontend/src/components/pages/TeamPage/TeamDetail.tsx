@@ -4,6 +4,8 @@ import {
   Alert,
   Avatar,
   Box,
+  Card,
+  CardContent,
   Chip,
   CircularProgress,
   Container,
@@ -21,6 +23,106 @@ import {
   fetchPublicTournaments,
 } from '../../../services/tournois';
 import { Equipe, Tournoi } from '../../../types';
+
+interface MemberCardProps {
+  member: Equipe['members'][number];
+  isResponsable: boolean;
+}
+
+const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
+  const navigate = useNavigate();
+
+  const normalizeAvatarUrl = (avatar?: string) => {
+    if (!avatar) return undefined;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return avatar;
+    }
+    if (avatar.startsWith('/')) {
+      return avatar;
+    }
+    return `/${avatar}`;
+  };
+
+  return (
+    <Paper
+      sx={{
+        p: 3,
+        borderRadius: 2,
+        backgroundColor: '#1a2540',
+        border: '1px solid rgba(255,255,255,0.10)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          borderColor: isResponsable ? '#e8822a' : 'rgba(255,255,255,0.25)',
+          backgroundColor: 'rgba(26, 37, 64, 0.8)',
+          transform: 'translateY(-4px)',
+          boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+        },
+      }}
+    >
+      <Avatar
+        src={normalizeAvatarUrl(member.profileImageUrl || member.profileImage)}
+        alt={member.tag}
+        sx={{
+          width: 80,
+          height: 80,
+          mb: 1.5,
+          border: '3px solid rgba(255,255,255,0.15)',
+          transition: 'transform 0.3s ease',
+        }}
+      />
+
+      <Typography
+        variant="h6"
+        fontWeight={700}
+        color="white"
+        onClick={() => {
+          navigate(`/players/${member.id}`);
+        }}
+        sx={{
+          cursor: 'pointer',
+          '&:hover': { color: '#e8822a' },
+          mb: 0.5,
+        }}
+      >
+        {member.tag}
+      </Typography>
+
+      <Chip
+        label={
+          member.specialty
+            ? member.specialty.charAt(0).toUpperCase() +
+              member.specialty.slice(1)
+            : 'Membre'
+        }
+        size="small"
+        variant="outlined"
+        sx={{
+          fontSize: 11,
+          color: 'white',
+          borderColor: 'rgba(255,255,255,0.25)',
+        }}
+      />
+
+      {isResponsable && (
+        <Chip
+          label="Responsable"
+          size="small"
+          sx={{
+            fontSize: 10,
+            fontWeight: 700,
+            bgcolor: '#e8822a',
+            color: 'white',
+            mt: 1,
+          }}
+        />
+      )}
+    </Paper>
+  );
+};
 
 export default function TeamDetails() {
   const pageBlueGradient =
@@ -280,7 +382,8 @@ export default function TeamDetails() {
       }}
     >
       <Container maxWidth="lg" sx={{ mb: 1 }}>
-        <Paper
+        {/* ✨ J'ai remplacé Paper par Card ici pour que ça matche bien avec CardContent ! */}
+        <Card
           elevation={0}
           sx={{
             p: 5,
@@ -301,7 +404,7 @@ export default function TeamDetails() {
               <Avatar
                 src={normalizeAvatarUrl(team.profileImage)}
                 alt={team.name}
-                variant="rounded" // Makes the avatar square with rounded corners
+                variant="rounded"
                 sx={{
                   width: 80,
                   height: 80,
@@ -333,166 +436,70 @@ export default function TeamDetails() {
           Effectif de la Team
         </Typography>
 
-        <Stack spacing={2}>
+        <Stack spacing={2} sx={{ mb: 4 }}>
           {team.members.length === 0 && (
             <Typography variant="body2" color="text.secondary">
               Cette équipe n'a plus de membre.
             </Typography>
           )}
 
-          {sortedMembers.map((member, index) => (
-            <Card
-              key={`${member.tag}-${index}`}
-              sx={{
-                borderRadius: 2,
-                border: '1px solid rgba(255,255,255,0.10)',
-                backgroundColor: '#1a2540',
-              }}
-            >
-              Effectif de la Team
-            </Typography>
+          {sortedMembers.map((member) => (
+            <MemberCard
+              key={member.id}
+              member={member}
+              isResponsable={member.isResponsable ?? false}
+            />
+          ))}
+        </Stack>
 
-            {team.members.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                Cette équipe n'a plus de membre.
-              </Typography>
-            )}
-
-            {sortedMembers.map((member) => (
-              <Paper
-                key={member.id}
-                sx={{
-                  p: 3,
-                  borderRadius: 2,
-                  backgroundColor: '#1a2540',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    borderColor: member.isResponsable
-                      ? '#e8822a'
-                      : 'rgba(255,255,255,0.25)',
-                    backgroundColor: 'rgba(26, 37, 64, 0.8)',
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
-                  },
-                }}
-              >
-                <Avatar
-                  src={normalizeAvatarUrl(
-                    member.profileImageUrl || member.profileImage,
-                  )}
-                  alt={member.tag}
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    mb: 1.5,
-                    border: '3px solid rgba(255,255,255,0.15)',
-                    transition: 'transform 0.3s ease',
-                  }}
-                />
-
-                <Typography
-                  variant="h6"
-                  fontWeight={700}
-                  color="white"
-                  onClick={() => {
-                    navigate(`/players/${member.id}`);
-                  }}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': { color: '#e8822a' },
-                    mb: 0.5,
-                  }}
-                >
-                  {member.tag}
-                </Typography>
-
-                <Chip
-                  label={
-                    member.specialty
-                      ? member.specialty.charAt(0).toUpperCase() +
-                        member.specialty.slice(1)
-                      : 'Membre'
-                  }
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    fontSize: 11,
-                    color: 'white',
-                    borderColor: 'rgba(255,255,255,0.25)',
-                  }}
-                />
-
-                {member.isResponsable && (
-                  <Chip
-                    label="Responsable"
-                    size="small"
-                    sx={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      bgcolor: '#e8822a',
-                      color: 'white',
-                      mt: 1,
-                    }}
-                  />
-                )}
-              </Paper>
-            ))}
-          </Box>
-
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: 2,
-              border: '1px solid rgba(255,255,255,0.10)',
-              backgroundColor: '#1a2540',
-            }}
+        <Paper
+          sx={{
+            p: 3,
+            borderRadius: 2,
+            border: '1px solid rgba(255,255,255,0.10)',
+            backgroundColor: '#1a2540',
+          }}
+        >
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{ mb: 2 }}
+            color="white"
           >
-            <Typography
-              variant="h5"
-              fontWeight={700}
-              sx={{ mb: 2 }}
-              color="white"
-            >
-              Historique des tournois
-            </Typography>
+            Historique des tournois
+          </Typography>
 
-            {loadingHistory ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                <CircularProgress color="secondary" size={24} />
-              </Box>
-            ) : historyError ? (
-              <Alert severity="warning">{historyError}</Alert>
-            ) : (
-              <>
-                {renderTournamentSection(
-                  'Tournois en cours',
-                  inProgressTournaments,
-                  'Aucun tournoi en cours actuellement.',
-                  '#f59e0b',
-                )}
+          {loadingHistory ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+              <CircularProgress color="secondary" size={24} />
+            </Box>
+          ) : historyError ? (
+            <Alert severity="warning">{historyError}</Alert>
+          ) : (
+            <>
+              {renderTournamentSection(
+                'Tournois en cours',
+                inProgressTournaments,
+                'Aucun tournoi en cours actuellement.',
+                '#f59e0b',
+              )}
 
-                {renderTournamentSection(
-                  'Tournois à venir',
-                  upcomingTournaments,
-                  "Aucun tournoi à venir pour l'instant.",
-                  '#3b82f6',
-                )}
+              {renderTournamentSection(
+                'Tournois à venir',
+                upcomingTournaments,
+                "Aucun tournoi à venir pour l'instant.",
+                '#3b82f6',
+              )}
 
-                {renderTournamentSection(
-                  'Tournois passés',
-                  pastTournaments,
-                  'Aucun tournoi passé pour le moment.',
-                  '#10b981',
-                )}
-              </>
-            )}
-          </Paper>
-        </Box>
+              {renderTournamentSection(
+                'Tournois passés',
+                pastTournaments,
+                'Aucun tournoi passé pour le moment.',
+                '#10b981',
+              )}
+            </>
+          )}
+        </Paper>
       </Container>
     </Box>
   );
