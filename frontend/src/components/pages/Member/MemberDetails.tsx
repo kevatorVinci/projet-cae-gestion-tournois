@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Avatar,
@@ -10,14 +10,19 @@ import {
   Stack,
   Typography,
   CircularProgress,
+  IconButton,
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import { User } from '../../../types';
+import BuildIcon from '@mui/icons-material/Build';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { User, Equipe, UserContextType } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import { getAllEquipes } from '../../../services/teams';
 import BackButton from '../../../components/BoutonRetour';
+import { UserContext } from '../../../contexts/UserContext';
 
 interface Player {
   tag: string;
@@ -30,23 +35,55 @@ interface Player {
   isResponsable?: boolean;
 }
 
+interface TeamMember extends Player {
+  password?: string;
+}
+
+interface TournamentRegistration {
+  tournoiId: number;
+  equipeId: number;
+  tournoi?: {
+    nom: string;
+    etat?: string;
+  };
+}
+
+const pageGradient =
+  'linear-gradient(135deg, #0f172a 0%, #1a2540 50%, #0f172a 100%)';
+
+const fetchTeamRegistrationsPublic = async (
+  teamId: number,
+): Promise<TournamentRegistration[]> => {
+  const token = getAuthenticatedUser()?.token || '';
+  const response = await fetch(`/api/teams/${teamId}/registrations`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to fetch registrations');
+  return response.json();
+};
+
+const capitalize = (str?: string): string => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 export default function MemberDetails() {
-  // "id" can be a tag (from TeamsList) or a numeric id (from MaTeam)
   const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const { authenticatedUser } = useContext(UserContext);
+  const [loading, setLoading] = useState(true);
+  const [teamId, setTeamId] = useState<number | null>(null);
+  const [tournaments, setTournaments] = useState<TournamentRegistration[]>([]);
+  const { authenticatedUser } = useContext(UserContext) as UserContextType;
 
   const isOwnProfile = authenticatedUser?.tag === user?.tag;
 
   useEffect(() => {
     const fetchUser = async () => {
-      // Guard: do nothing if id is missing or literally "undefined"
       if (!id || id === 'undefined') {
         return;
       }
 
-      // Decode in case the tag was URL-encoded (e.g. spaces => %20)
       const decodedId = decodeURIComponent(id);
 
       try {
@@ -64,7 +101,6 @@ export default function MemberDetails() {
           players = await playersResponse.json();
         }
 
-        // Match by tag (string from TeamsList) or by numeric id (from MaTeam)
         const playerBase = players.find(
           (p: Player) => p.tag === decodedId || String(p.id) === decodedId,
         );
@@ -141,9 +177,9 @@ export default function MemberDetails() {
         let foundTeamId: number | null = null;
 
         for (const equipe of equipes) {
-          const member = equipe.membres?.find((m) => m.id === Number(id));
+          const member = equipe.members?.find((m) => m.id === Number(id));
           if (member) {
-            foundUser = member;
+            foundUser = member as TeamMember;
             userTeamName = equipe.name;
             foundTeamId = equipe.id;
             break;
@@ -273,8 +309,13 @@ export default function MemberDetails() {
               backgroundColor: '#111827',
             }}
           >
-            {/* Avatar */}
-            <Stack direction="row" alignItems="center" spacing={3} sx={{ position: 'relative' }}>
+            {/* Avatar & Informations principales */}
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={3}
+              sx={{ position: 'relative' }}
+            >
               <Avatar
                 src={normalizeAvatarUrl(user.profileImage)}
                 alt={user.tag}
@@ -361,11 +402,11 @@ export default function MemberDetails() {
                 >
                   <BuildIcon sx={{ color: '#e8822a', fontSize: 20 }} />
                   <Typography variant="caption" color="text.secondary">
-                    Specialite
+                    Spécialité
                   </Typography>
                 </Box>
                 <Typography variant="h6" color="white" fontWeight={600}>
-                  {user.specialty || 'Non specifiee'}
+                  {user.specialty || 'Non spécifiée'}
                 </Typography>
               </Box>
 
@@ -382,11 +423,11 @@ export default function MemberDetails() {
                 >
                   <GroupsIcon sx={{ color: '#9c27b0', fontSize: 20 }} />
                   <Typography variant="caption" color="text.secondary">
-                    Equipe
+                    Équipe
                   </Typography>
                 </Box>
                 <Typography variant="h6" color="white" fontWeight={600}>
-                  {user.team || 'Aucune equipe'}
+                  {user.team || 'Aucune équipe'}
                 </Typography>
               </Box>
             </Stack>
@@ -399,6 +440,7 @@ export default function MemberDetails() {
                   border: '1px solid rgba(255,255,255,0.07)',
                   backgroundColor: '#111827',
                   minHeight: 200,
+                  position: 'relative',
                 }}
               >
                 <Box
@@ -411,28 +453,33 @@ export default function MemberDetails() {
                     color: 'white',
                     fontWeight: 700,
                     fontSize: '0.7rem',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
                   }}
                 >
-                  <EmojiEventsIcon sx={{ color: '#e8822a', fontSize: 24 }} />
-                  <Typography variant="h6" fontWeight={700} color="white">
-                    Tournois & Resultats
+                  <EmojiEventsIcon sx={{ color: 'white', fontSize: 16 }} />
+                  <Typography variant="caption" fontWeight={700} color="white">
+                    Tournois & Résultats
                   </Typography>
                 </Box>
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ fontStyle: 'italic' }}
+                  sx={{ fontStyle: 'italic', textAlign: 'center', mt: 4 }}
                 >
-                  Aucun resultat disponible pour le moment.
+                  Aucun résultat disponible pour le moment.
                 </Typography>
               </Box>
             </Box>
           </Stack>
-        </Container>
-      </Box>
+        </Stack>
+      </Container>
 
       {/* ── STATS BAR ───────────────────────────────────────────── */}
-      <Container maxWidth="lg" sx={{ mt: -4 }}>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Paper
           elevation={0}
           sx={{
