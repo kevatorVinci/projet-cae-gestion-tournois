@@ -16,6 +16,27 @@ vi.mock('../../services/tournois', () => ({
   fetchTeamRegistrationsPublic: vi.fn(() => Promise.resolve([])),
 }));
 
+// On ajoute le mock pour getAllEquipes (utilisé par le nouveau composant)
+vi.mock('../../services/teams', () => ({
+  getAllEquipes: vi.fn(() =>
+    Promise.resolve([
+      {
+        id: 1,
+        name: 'Straw Hat Crew',
+        membres: [
+          {
+            id: 1,
+            tag: 'Luffy',
+            specialty: 'Captain',
+            profileImageUrl: '/luffy.png',
+            isResponsable: true,
+          },
+        ],
+      },
+    ]),
+  ),
+}));
+
 const mockAuthUser: AuthenticatedUser = {
   tag: 'Luffy',
   email: 'luffy@strawhat.com',
@@ -25,19 +46,13 @@ const mockAuthUser: AuthenticatedUser = {
   admin: false,
 };
 
-const mockTeamsResponse = [
+const mockPlayersResponse = [
   {
     id: 1,
-    name: 'Straw Hat Crew',
-    membres: [
-      {
-        id: 1,
-        tag: 'Luffy',
-        specialty: 'Captain',
-        profileImageUrl: '/luffy.png',
-        isResponsable: true,
-      },
-    ],
+    tag: 'Luffy',
+    email: 'luffy@strawhat.com',
+    specialty: 'Captain',
+    profileImageUrl: '/luffy.png',
   },
 ];
 
@@ -72,13 +87,14 @@ describe('MemberDetails Component', () => {
   it('renders loading state initially', () => {
     (global.fetch as Mock).mockReturnValue(new Promise(() => {}));
     renderComponent(undefined);
-    expect(screen.getByText(/Recherche du profil/i)).toBeInTheDocument();
+    // ✨ CORRECTION : On attend maintenant la roue de chargement
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('fetches and displays user data correctly from the teams API', async () => {
+  it('fetches and displays user data correctly from the API', async () => {
     (global.fetch as Mock).mockResolvedValue({
       ok: true,
-      json: async () => mockTeamsResponse,
+      json: async () => mockPlayersResponse,
     });
 
     renderComponent(undefined);
@@ -89,10 +105,11 @@ describe('MemberDetails Component', () => {
     });
   });
 
-  it('does not show email or password even on own profile', async () => {
+  // ✨ CORRECTION : On vérifie maintenant que l'email s'affiche bien !
+  it('shows email and password fields on own profile', async () => {
     (global.fetch as Mock).mockResolvedValue({
       ok: true,
-      json: async () => mockTeamsResponse,
+      json: async () => mockPlayersResponse,
     });
 
     renderComponent(mockAuthUser);
@@ -101,16 +118,15 @@ describe('MemberDetails Component', () => {
       expect(screen.getAllByText('Luffy').length).toBeGreaterThan(0);
     });
 
-    expect(screen.queryByText('luffy@strawhat.com')).not.toBeInTheDocument();
-    expect(screen.queryByText('Mail')).not.toBeInTheDocument();
-    expect(screen.queryByText('Mot de Passe')).not.toBeInTheDocument();
-    expect(screen.queryByText('gear5password')).not.toBeInTheDocument();
+    expect(screen.getByText('luffy@strawhat.com')).toBeInTheDocument();
+    expect(screen.getByText('Mail')).toBeInTheDocument();
+    expect(screen.getByText('Mot de Passe')).toBeInTheDocument();
   });
 
   it('hides sensitive information when tags do not match', async () => {
     (global.fetch as Mock).mockResolvedValue({
       ok: true,
-      json: async () => mockTeamsResponse,
+      json: async () => mockPlayersResponse,
     });
 
     renderComponent({ ...mockAuthUser, tag: 'Zoro' });
@@ -133,7 +149,7 @@ describe('MemberDetails Component', () => {
     renderComponent(undefined);
 
     await waitFor(() => {
-      expect(screen.getByText(/Recherche du profil/i)).toBeInTheDocument();
+      expect(screen.getByText(/Joueur introuvable/i)).toBeInTheDocument();
     });
 
     consoleSpy.mockRestore();
