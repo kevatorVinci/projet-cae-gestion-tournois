@@ -63,6 +63,7 @@ interface AuthenticatedUser {
   profileImage?: string;
   admin?: boolean;
   banned?: boolean;
+  banReason?: string;
 }
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;

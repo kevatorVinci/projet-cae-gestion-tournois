@@ -1,6 +1,6 @@
 import { useState, SyntheticEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../components/BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   Box,
   Button,
@@ -15,9 +15,9 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { UserContextType } from '../../types';
-import { UserContext } from '../../contexts/UserContext';
-import backgroundImage from '../../assets/images/background.png';
+import { UserContextType } from '../../../types';
+import { UserContext } from '../../../contexts/UserContext';
+import backgroundImage from '../../../assets/images/background.png';
 
 const LoginPage = () => {
   const { loginUser }: UserContextType = useContext(UserContext);
@@ -65,7 +65,13 @@ const LoginPage = () => {
 
       // Checks if the word "banni" is inside the server error message
       if (errorMessage.toLowerCase().includes('banni')) {
-        setError('ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.');
+        const reasonMatch = errorMessage.match(/Raison\s*:\s*(.+)/i);
+        const reason = reasonMatch ? reasonMatch[1].trim() : null;
+        setError(
+          reason
+            ? `ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.\nRaison : ${reason}`
+            : 'ACCÈS REFUSÉ : Ce compte a été banni de la plateforme.',
+        );
       } else {
         // Vague message for security reasons (wrong email or password)
         setError('Informations incorrectes. Veuillez réessayer.');
@@ -135,7 +141,7 @@ const LoginPage = () => {
 
         {/* This is where the error alert (banned or incorrect info) is displayed in red! */}
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
             {error}
           </Alert>
         )}

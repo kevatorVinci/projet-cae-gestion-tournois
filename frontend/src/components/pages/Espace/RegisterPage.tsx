@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../components/BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   Box,
   Button,
@@ -18,15 +18,15 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { Equipe } from '../../types';
-import { registerUser } from '../../services/auth';
-import { getAllEquipes, joinEquipe } from '../../services/teams';
+import { Equipe } from '../../../types';
+import { registerUser } from '../../../services/auth';
+import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import {
   clearAuthenticatedUser,
   storeAuthenticatedUser,
-} from '../../utils/session';
+} from '../../../utils/session';
 
-import backgroundImage from '../../assets/images/background.png';
+import backgroundImage from '../../../assets/images/background.png';
 
 export default function RegisterPage() {
   const navigate = useNavigate();

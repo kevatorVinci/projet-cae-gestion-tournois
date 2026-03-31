@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.mappers.EquipeMapper;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeCreationDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeJoinDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipePublicDto;
@@ -33,14 +34,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class EquipeController {
 
   private final EquipeService equipeService;
+  private final EquipeMapper equipeMapper;
 
   /**
    * Constructor for EquipeController.
    *
    * @param equipeService the injected service.
    */
-  public EquipeController(EquipeService equipeService) {
+  public EquipeController(EquipeService equipeService, EquipeMapper equipeMapper) {
     this.equipeService = equipeService;
+    this.equipeMapper = equipeMapper;
   }
 
   /** Retrieve all teams (public version). */
@@ -48,7 +51,7 @@ public class EquipeController {
   public Iterable<EquipePublicDto> readAllEquipes(@AuthenticationPrincipal User currentUser) {
     List<EquipePublicDto> equipes = new ArrayList<>();
     for (Equipe equipe : equipeService.getAllEquipes()) {
-      equipes.add(toPublicDto(equipe, currentUser));
+      equipes.add(equipeMapper.toPublicDto(equipe, currentUser));
     }
     return equipes;
   }

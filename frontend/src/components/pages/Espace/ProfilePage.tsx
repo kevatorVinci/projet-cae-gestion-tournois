@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../components/BoutonRetour';
+import BackButton from '../../BoutonRetour';
 import {
   Box,
   Button,
@@ -20,7 +20,7 @@ import {
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
-import { UserContext } from '../../contexts/UserContext';
+import { UserContext } from '../../../contexts/UserContext';
 
 export default function ProfilePage() {
   const { authenticatedUser, updateUser } = useContext(UserContext);

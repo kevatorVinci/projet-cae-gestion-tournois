@@ -1,15 +1,20 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Service for user authentication and profile management. */
 @Service
@@ -21,7 +26,9 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final EquipeRepository equipeRepository;
   private final NotificationService notificationService;
+  private final UserMapper userMapper;
 
   /**
    * Builds the user service.
@@ -33,10 +40,14 @@ public class UserService {
   public UserService(
       BCryptPasswordEncoder passwordEncoder,
       UserRepository userRepository,
-      NotificationService notificationService) {
+      EquipeRepository equipeRepository,
+      NotificationService notificationService,
+      UserMapper userMapper) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.equipeRepository = equipeRepository;
     this.notificationService = notificationService;
+    this.userMapper = userMapper;
   }
 
   /**
@@ -61,19 +72,10 @@ public class UserService {
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
-
-    AuthenticatedUser authenticatedUser = new AuthenticatedUser();
-    authenticatedUser.setEmail(email);
-    authenticatedUser.setToken(token);
-
-    if (user != null) {
-      authenticatedUser.setTag(user.getTag());
-      authenticatedUser.setSpecialty(user.getSpecialty());
-      authenticatedUser.setProfileImage(user.getProfileImageUrl());
-      authenticatedUser.setAdmin(user.isAdmin());
-      authenticatedUser.setBanned(user.isBanned());
+    AuthenticatedUser authenticatedUser = userMapper.toAuthenticatedUser(user, token);
+    if (authenticatedUser.getEmail() == null) {
+      authenticatedUser.setEmail(email);
     }
-
     return authenticatedUser;
   }
 
@@ -203,22 +205,7 @@ public class UserService {
    * @return la liste des utilisateurs
    */
   public java.util.List<AuthenticatedUser> getAllUsersForAdmin() {
-    java.util.List<AuthenticatedUser> usersList = new java.util.ArrayList<>();
-
-    Iterable<User> users = userRepository.findAll();
-
-    for (User user : users) {
-      AuthenticatedUser dto = new AuthenticatedUser();
-      dto.setEmail(user.getEmail());
-      dto.setTag(user.getTag());
-      dto.setSpecialty(user.getSpecialty());
-      dto.setProfileImage(user.getProfileImageUrl());
-      dto.setAdmin(user.isAdmin());
-      dto.setBanned(user.isBanned());
-
-      usersList.add(dto);
-    }
-    return usersList;
+    return userMapper.toAuthenticatedUsers(userRepository.findAll());
   }
 
   /**
@@ -248,11 +235,13 @@ public class UserService {
   }
 
   /**
-   * Soft-bans a user from the platform.
+   * Soft-bans a user from the platform with an optional reason.
    *
    * @param email email of the user to ban
+   * @param reason optional reason for the ban
    */
-  public void banUser(String email) {
+  @Transactional
+  public void banUser(String email, String reason) {
     if (email == null || email.isBlank()) {
       return;
     }
@@ -261,8 +250,74 @@ public class UserService {
     if (user == null) {
       return;
     }
+
+    detachUserFromTeamAndReassignResponsibilitiesIfNeeded(user);
     user.setBanned(true);
+    if (reason != null && !reason.isBlank()) {
+      user.setBanReason(reason.trim());
+    }
     userRepository.save(user);
+  }
+
+  private void detachUserFromTeamAndReassignResponsibilitiesIfNeeded(User user) {
+    if (user.getId() == null) {
+      return;
+    }
+
+    Equipe equipe =
+        equipeRepository
+            .findByResponsablePrincipalIdOrResponsableSecondaireId(user.getId(), user.getId())
+            .orElse(user.getEquipe());
+
+    if (equipe == null) {
+      return;
+    }
+
+    Long bannedUserId = user.getId();
+
+    boolean wasPrincipal =
+        equipe.getResponsablePrincipal() != null
+            && equipe.getResponsablePrincipal().getId().equals(bannedUserId);
+    boolean wasSecondaire =
+        equipe.getResponsableSecondaire() != null
+            && equipe.getResponsableSecondaire().getId().equals(bannedUserId);
+
+    if (wasPrincipal) {
+      equipe.setResponsablePrincipal(null);
+    }
+    if (wasSecondaire) {
+      equipe.setResponsableSecondaire(null);
+    }
+
+    if (equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() != null) {
+      User secondary = equipe.getResponsableSecondaire();
+      if (!secondary.isBanned() && !secondary.getId().equals(bannedUserId)) {
+        equipe.setResponsablePrincipal(secondary);
+      }
+      equipe.setResponsableSecondaire(null);
+    }
+
+    if (equipe.getResponsablePrincipal() == null) {
+      User replacement =
+          equipe.getMembres().stream()
+              .filter(member -> member.getId() != null)
+              .filter(member -> !member.getId().equals(bannedUserId))
+              .filter(member -> !member.isBanned())
+              .min(
+                  Comparator.comparing(
+                          User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                      .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
+              .orElse(null);
+
+      equipe.setResponsablePrincipal(replacement);
+    }
+
+    equipe
+        .getMembres()
+        .removeIf(member -> member.getId() != null && member.getId().equals(bannedUserId));
+    user.setEquipe(null);
+
+    equipeRepository.save(equipe);
   }
 
   /**

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import DisponibilitesPage from '../../components/pages/DisponibilitesPage';
+import DisponibilitesPage from '../../components/pages/Espace/DisponibilitesPage';
 import {
   getMesIndisponibilites,
   deleteIndisponibilite,

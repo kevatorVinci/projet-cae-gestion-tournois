@@ -3,16 +3,14 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.annotations.IsAdminOrResponsable;
 import be.vinci.ipl.cae.demo.annotations.IsResponsable;
+import be.vinci.ipl.cae.demo.mappers.InscriptionEquipeTournoiMapper;
 import be.vinci.ipl.cae.demo.models.dtos.tournoi.EquipeTournamentRegistrationDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournoi.TournoiEquipeInscriptionDto;
-import be.vinci.ipl.cae.demo.models.dtos.tournoi.TournoiResumeDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.EquipeService;
 import be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiService;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,21 +29,23 @@ public class InscriptionEquipeTournoiController {
 
   private final InscriptionEquipeTournoiService inscriptionService;
   private final EquipeService equipeService;
+  private final InscriptionEquipeTournoiMapper inscriptionMapper;
 
   /** Creates the controller with required services. */
   public InscriptionEquipeTournoiController(
-          InscriptionEquipeTournoiService inscriptionService,
-          EquipeService equipeService) {
+      InscriptionEquipeTournoiService inscriptionService,
+      EquipeService equipeService,
+      InscriptionEquipeTournoiMapper inscriptionMapper) {
     this.inscriptionService = inscriptionService;
     this.equipeService = equipeService;
+    this.inscriptionMapper = inscriptionMapper;
   }
 
   /** Retourne toutes les inscriptions d'un tournoi. Réservé aux admins. */
   @GetMapping("/{tournoiId}/inscriptions")
   @IsAdmin
   public Iterable<InscriptionEquipeTournoi> getAllByTournoi(@PathVariable Long tournoiId) {
-    Iterable<InscriptionEquipeTournoi> inscriptions =
-            inscriptionService.getAllByTournoi(tournoiId);
+    Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
@@ -59,36 +59,32 @@ public class InscriptionEquipeTournoiController {
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
-
-    List<TournoiEquipeInscriptionDto> result = new ArrayList<>();
-    for (InscriptionEquipeTournoi inscription : inscriptions) {
-      result.add(new TournoiEquipeInscriptionDto(
-          inscription.getEquipe().getId(),
-          inscription.getEquipe().getName(),
-          inscription.getDateInscription()));
-    }
-    return result;
+    return inscriptionMapper.toTournoiEquipeInscriptionDtos(inscriptions);
   }
 
   /** Retourne toutes les inscriptions d'une équipe. Accessible au responsable ou à un admin. */
   @GetMapping("/equipes/{equipeId}/inscriptions")
   @IsAdminOrResponsable
   public Iterable<EquipeTournamentRegistrationDto> getAllByEquipe(
-          @PathVariable Long equipeId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long equipeId, @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-            equipeId, currentUser, "You can only view your own team registrations");
-    Iterable<InscriptionEquipeTournoi> inscriptions =
-            inscriptionService.getAllByEquipe(equipeId);
+        equipeId, currentUser, "You can only view your own team registrations");
+    Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByEquipe(equipeId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
+    return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
+  }
 
-    List<EquipeTournamentRegistrationDto> result = new ArrayList<>();
-    for (InscriptionEquipeTournoi inscription : inscriptions) {
-      result.add(toEquipeRegistrationDto(inscription));
+  /** Retourne les inscriptions d'une équipe visibles publiquement (profil joueur). */
+  @GetMapping("/equipes/{equipeId}/inscriptions/public")
+  public Iterable<EquipeTournamentRegistrationDto> getPublicByEquipe(
+      @PathVariable Long equipeId) {
+    Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByEquipe(equipeId);
+    if (inscriptions == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
-    return result;
+    return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
   }
 
   /** Inscrit une équipe à un tournoi. Réservé au responsable de l'équipe. */
@@ -96,11 +92,11 @@ public class InscriptionEquipeTournoiController {
   @ResponseStatus(HttpStatus.CREATED)
   @IsResponsable
   public InscriptionEquipeTournoi register(
-          @PathVariable Long tournoiId,
-          @PathVariable Long equipeId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long tournoiId,
+      @PathVariable Long equipeId,
+      @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-            equipeId, currentUser, "You can only register your own team");
+        equipeId, currentUser, "You can only register your own team");
     InscriptionEquipeTournoi inscription;
     try {
       inscription = inscriptionService.register(tournoiId, equipeId);
@@ -109,55 +105,61 @@ public class InscriptionEquipeTournoiController {
     }
     if (inscription == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Tournament not found, not OUVERT, or team already registered");
+          HttpStatus.BAD_REQUEST, "Tournament not found, not OUVERT, or team already registered");
     }
     return inscription;
   }
 
-  /** Désinscrit une équipe d'un tournoi via la clé (tournoiId, equipeId). */
+  /**
+   * Unregisters a team from a tournament using the logical key (tournoiId, equipeId).
+   *
+   * <p>This endpoint is currently not used by the frontend application.
+   */
   @DeleteMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @IsAdminOrResponsable
   public void unregisterByTournoiAndEquipe(
-          @PathVariable Long tournoiId,
-          @PathVariable Long equipeId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long tournoiId,
+      @PathVariable Long equipeId,
+      @AuthenticationPrincipal User currentUser) {
+    if (!currentUser.isAdmin()) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
+    }
+
     ensureCurrentUserResponsibleForTeam(
-            equipeId, currentUser, "You can only unregister your own team");
+        equipeId, currentUser, "You can only unregister your own team");
 
     boolean success = inscriptionService.unregisterByTournoiAndEquipe(tournoiId, equipeId);
     if (!success) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament is not OUVERT, or registration deadline passed");
+          HttpStatus.BAD_REQUEST,
+          "Registration not found, tournament is not OUVERT, or registration deadline passed");
     }
   }
 
-  /** Désinscrit une équipe d'un tournoi. Réservé au responsable de l'équipe ou à un admin. */
+  /**
+   * Unregisters a team from a tournament using the registration ID.
+   *
+   * <p>This endpoint is currently not used by the frontend application.
+   */
   @DeleteMapping("/inscriptions/{inscriptionId}")
   @IsAdminOrResponsable
   public void unregister(
-          @PathVariable Long inscriptionId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long inscriptionId, @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
-      InscriptionEquipeTournoi existing = inscriptionService.getById(inscriptionId);
-      if (existing == null) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found");
-      }
-      ensureCurrentUserResponsibleForTeam(
-              existing.getEquipe().getId(), currentUser,
-              "You can only unregister your own team");
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
     }
     boolean success = inscriptionService.unregister(inscriptionId);
     if (!success) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament is not OUVERT, or registration deadline passed");
+          HttpStatus.BAD_REQUEST,
+          "Registration not found, tournament is not OUVERT, or registration deadline passed");
     }
   }
 
   private void ensureCurrentUserResponsibleForTeam(
-          Long equipeId, User currentUser, String forbiddenMessage) {
+      Long equipeId, User currentUser, String forbiddenMessage) {
     if (currentUser.isAdmin()) {
       return;
     }
@@ -168,21 +170,5 @@ public class InscriptionEquipeTournoiController {
     if (!equipeService.isUserResponsible(equipe, currentUser)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, forbiddenMessage);
     }
-  }
-
-  private EquipeTournamentRegistrationDto toEquipeRegistrationDto(
-      InscriptionEquipeTournoi inscription) {
-    TournoiResumeDto tournoi = new TournoiResumeDto(
-            inscription.getTournoi().getId(),
-            inscription.getTournoi().getNom(),
-            inscription.getTournoi().getEtat(),
-            inscription.getTournoi().getDateDebut(),
-            inscription.getTournoi().getNombresParticipantsMax());
-
-    return new EquipeTournamentRegistrationDto(
-            inscription.getTournoi().getId(),
-            inscription.getEquipe().getId(),
-            inscription.getDateInscription(),
-            tournoi);
   }
 }

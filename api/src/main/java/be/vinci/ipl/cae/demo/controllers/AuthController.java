@@ -63,7 +63,11 @@ public class AuthController {
 
     // Check if the user is banned before logging them in
     if (existingUser != null && existingUser.isBanned()) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Ce compte est banni.");
+      String banMessage = "Ce compte est banni.";
+      if (existingUser.getBanReason() != null && !existingUser.getBanReason().isBlank()) {
+        banMessage += " Raison : " + existingUser.getBanReason();
+      }
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, banMessage);
     }
 
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
@@ -146,7 +150,8 @@ public class AuthController {
     if (email == null || email.isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requis pour bannir.");
     }
-    userService.banUser(email);
+    String reason = payload.get("reason");
+    userService.banUser(email, reason);
   }
 
   /**
