@@ -45,7 +45,10 @@ const Profile = () => {
   }, [authenticatedUser]);
 
   const userTag = authenticatedUser?.tag || 'Joueur';
-  const userRole = authenticatedUser?.specialty || 'Rôle non défini';
+  const rawSpecialty = authenticatedUser?.specialty || '';
+  const userRole = rawSpecialty
+    ? rawSpecialty.charAt(0).toUpperCase() + rawSpecialty.slice(1)
+    : 'Rôle non défini';
   const userEmail = authenticatedUser?.email || 'Email non disponible';
   const userAvatar =
     authenticatedUser?.profileImage ||

@@ -195,6 +195,17 @@ export const fetchTeamRegistrations = async (
   return await response.json();
 };
 
+export const fetchTeamRegistrationsPublic = async (
+  equipeId: string | number,
+): Promise<TeamRegistrationItem[]> => {
+  const response = await fetch(
+    `/api/tournois/equipes/${equipeId}/inscriptions/public`,
+  );
+  if (!response.ok)
+    throw new Error("Impossible de charger l'historique de l'équipe.");
+  return await response.json();
+};
+
 export const registerTeamToTournament = async (
   tournoiId: string | number,
   equipeId: string | number,

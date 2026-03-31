@@ -33,8 +33,8 @@ public class UserService {
   /**
    * Builds the user service.
    *
-   * @param passwordEncoder     encoder used for password hashing
-   * @param userRepository      user repository
+   * @param passwordEncoder encoder used for password hashing
+   * @param userRepository user repository
    * @param notificationService notification service
    */
   public UserService(
@@ -59,16 +59,16 @@ public class UserService {
   public AuthenticatedUser createJwtToken(String email) {
     User user = userRepository.findByEmail(email);
 
-    var tokenBuilder = JWT.create()
-        .withIssuer("auth0")
-        .withClaim("email", email)
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
+    var tokenBuilder =
+        JWT.create()
+            .withIssuer("auth0")
+            .withClaim("email", email)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
 
     if (user != null && user.getId() != null) {
-      tokenBuilder = tokenBuilder
-          .withSubject(String.valueOf(user.getId()))
-          .withClaim("id", user.getId());
+      tokenBuilder =
+          tokenBuilder.withSubject(String.valueOf(user.getId())).withClaim("id", user.getId());
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
@@ -96,7 +96,7 @@ public class UserService {
   /**
    * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
    *
-   * @param email    l'email
+   * @param email l'email
    * @param password le mot de passe
    * @return l'utilisateur authentifié ou null
    */
@@ -167,11 +167,11 @@ public class UserService {
   /**
    * Met à jour les informations visuelles du joueur.
    *
-   * @param email        email du joueur
-   * @param specialty    nouvelle spécialité
+   * @param email email du joueur
+   * @param specialty nouvelle spécialité
    * @param profileImage nouvelle image
-   * @param oldPassword  ancien mdp
-   * @param newPassword  nouveau mdp
+   * @param oldPassword ancien mdp
+   * @param newPassword nouveau mdp
    * @return l'utilisateur mis à jour ou null
    */
   public AuthenticatedUser updateProfile(
@@ -235,12 +235,13 @@ public class UserService {
   }
 
   /**
-   * Soft-bans a user from the platform.
+   * Soft-bans a user from the platform with an optional reason.
    *
    * @param email email of the user to ban
+   * @param reason optional reason for the ban
    */
   @Transactional
-  public void banUser(String email) {
+  public void banUser(String email, String reason) {
     if (email == null || email.isBlank()) {
       return;
     }
@@ -252,6 +253,9 @@ public class UserService {
 
     detachUserFromTeamAndReassignResponsibilitiesIfNeeded(user);
     user.setBanned(true);
+    if (reason != null && !reason.isBlank()) {
+      user.setBanReason(reason.trim());
+    }
     userRepository.save(user);
   }
 
@@ -260,9 +264,10 @@ public class UserService {
       return;
     }
 
-    Equipe equipe = equipeRepository
-        .findByResponsablePrincipalIdOrResponsableSecondaireId(user.getId(), user.getId())
-        .orElse(user.getEquipe());
+    Equipe equipe =
+        equipeRepository
+            .findByResponsablePrincipalIdOrResponsableSecondaireId(user.getId(), user.getId())
+            .orElse(user.getEquipe());
 
     if (equipe == null) {
       return;
@@ -270,10 +275,12 @@ public class UserService {
 
     Long bannedUserId = user.getId();
 
-    boolean wasPrincipal = equipe.getResponsablePrincipal() != null
-        && equipe.getResponsablePrincipal().getId().equals(bannedUserId);
-    boolean wasSecondaire = equipe.getResponsableSecondaire() != null
-        && equipe.getResponsableSecondaire().getId().equals(bannedUserId);
+    boolean wasPrincipal =
+        equipe.getResponsablePrincipal() != null
+            && equipe.getResponsablePrincipal().getId().equals(bannedUserId);
+    boolean wasSecondaire =
+        equipe.getResponsableSecondaire() != null
+            && equipe.getResponsableSecondaire().getId().equals(bannedUserId);
 
     if (wasPrincipal) {
       equipe.setResponsablePrincipal(null);
@@ -291,22 +298,23 @@ public class UserService {
     }
 
     if (equipe.getResponsablePrincipal() == null) {
-      User replacement = equipe.getMembres().stream()
-          .filter(member -> member.getId() != null)
-          .filter(member -> !member.getId().equals(bannedUserId))
-          .filter(member -> !member.isBanned())
-          .min(
-              Comparator.comparing(
-                  User::getCreationDate,
-                  Comparator.nullsLast(Comparator.naturalOrder()))
-                  .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
-          .orElse(null);
+      User replacement =
+          equipe.getMembres().stream()
+              .filter(member -> member.getId() != null)
+              .filter(member -> !member.getId().equals(bannedUserId))
+              .filter(member -> !member.isBanned())
+              .min(
+                  Comparator.comparing(
+                          User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                      .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
+              .orElse(null);
 
       equipe.setResponsablePrincipal(replacement);
     }
 
-    equipe.getMembres().removeIf(
-        member -> member.getId() != null && member.getId().equals(bannedUserId));
+    equipe
+        .getMembres()
+        .removeIf(member -> member.getId() != null && member.getId().equals(bannedUserId));
     user.setEquipe(null);
 
     equipeRepository.save(equipe);

@@ -54,6 +54,9 @@ public class User {
   @Column(nullable = false)
   private boolean banned = false;
 
+  @Column(nullable = true)
+  private String banReason;
+
   private LocalDateTime dateCreationProfil;
 
   /** Team membership relation. */

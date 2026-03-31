@@ -30,6 +30,7 @@ public class UserMapper {
     dto.setProfileImage(user.getProfileImageUrl());
     dto.setAdmin(user.isAdmin());
     dto.setBanned(user.isBanned());
+    dto.setBanReason(user.getBanReason());
     return dto;
   }
 

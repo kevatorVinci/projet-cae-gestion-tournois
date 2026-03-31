@@ -33,7 +33,7 @@ import { Equipe } from '../../../types';
 import { useNavigate } from 'react-router-dom';
 import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 import {
-  fetchTeamRegistrations,
+  fetchTeamRegistrationsPublic,
   TeamRegistrationItem,
 } from '../../../services/tournois';
 
@@ -105,11 +105,19 @@ export function MyTeam() {
 
       if (myTeam?.id) {
         const token = getAuthenticatedUser()?.token;
-        if (!token) {
-          throw new Error('Session expiree. Veuillez vous reconnecter.');
+        if (token) {
+          try {
+            const registrations = await fetchTeamRegistrationsPublic(myTeam.id);
+            setTeamRegistrations(registrations);
+          } catch {
+            setRegistrationsError(
+              "Impossible de charger l'historique des tournois pour le moment.",
+            );
+            setTeamRegistrations([]);
+          }
+        } else {
+          setTeamRegistrations([]);
         }
-        const registrations = await fetchTeamRegistrations(myTeam.id, token);
-        setTeamRegistrations(registrations);
       } else {
         setTeamRegistrations([]);
       }
@@ -119,9 +127,6 @@ export function MyTeam() {
         return;
       }
       setMessage('Impossible de charger votre équipe pour le moment.');
-      setRegistrationsError(
-        "Impossible de charger l'historique des matchs pour le moment.",
-      );
       setTeamRegistrations([]);
     } finally {
       setLoading(false);
@@ -496,7 +501,11 @@ export function MyTeam() {
       }}
     >
       <Container maxWidth="lg" sx={{ mb: 1 }}>
-        {message && <Alert sx={{ mb: 2 }}>{message}</Alert>}
+        {message && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {message}
+          </Alert>
+        )}
 
         {/* 1. BANNIÈRE HEAD */}
         <Paper
@@ -657,7 +666,12 @@ export function MyTeam() {
                 )}
 
                 <Chip
-                  label={member.specialty || 'Membre'}
+                  label={
+                    member.specialty
+                      ? member.specialty.charAt(0).toUpperCase() +
+                        member.specialty.slice(1)
+                      : 'Membre'
+                  }
                   size="small"
                   variant="outlined"
                   sx={{
@@ -864,7 +878,7 @@ export function MyTeam() {
                     }}
                   />
                 }
-                label={`${member.tag} (${member.specialty || 'Membre'})`}
+                label={`${member.tag} (${member.specialty ? member.specialty.charAt(0).toUpperCase() + member.specialty.slice(1) : 'Membre'})`}
                 sx={{ color: 'white' }}
               />
             ))}

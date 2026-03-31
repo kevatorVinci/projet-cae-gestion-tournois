@@ -398,7 +398,12 @@ export default function TeamDetails() {
                 </Typography>
 
                 <Chip
-                  label={member.specialty ?? 'Membre'}
+                  label={
+                    member.specialty
+                      ? member.specialty.charAt(0).toUpperCase() +
+                        member.specialty.slice(1)
+                      : 'Membre'
+                  }
                   size="small"
                   variant="outlined"
                   sx={{

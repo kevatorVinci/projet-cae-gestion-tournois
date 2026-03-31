@@ -15,7 +15,7 @@ import {
   depromoteResponsable,
   leaveEquipe,
 } from '../../services/teams';
-import { fetchTeamRegistrations } from '../../services/tournois';
+import { fetchTeamRegistrationsPublic } from '../../services/tournois';
 import { getAuthenticatedUser, decodeJwtPayload } from '../../utils/session';
 
 vi.mock('react-router-dom', async () => {
@@ -35,7 +35,7 @@ vi.mock('../../services/teams', () => ({
 }));
 
 vi.mock('../../services/tournois', () => ({
-  fetchTeamRegistrations: vi.fn(),
+  fetchTeamRegistrationsPublic: vi.fn(),
 }));
 
 vi.mock('../../utils/session', () => ({
@@ -67,7 +67,7 @@ const equipeSimulee = {
 describe('MyTeam', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchTeamRegistrations).mockResolvedValue([]);
+    vi.mocked(fetchTeamRegistrationsPublic).mockResolvedValue([]);
   });
 
   test("affiche le nom de l'équipe et les membres", async () => {
@@ -351,7 +351,7 @@ describe('MyTeam', () => {
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getUserTeam).mockResolvedValueOnce(equipeSimulee);
     vi.mocked(isCurrentUserResponsable).mockResolvedValueOnce(false);
-    vi.mocked(fetchTeamRegistrations).mockResolvedValueOnce([
+    vi.mocked(fetchTeamRegistrationsPublic).mockResolvedValueOnce([
       {
         tournoiId: 10,
         equipeId: 1,

@@ -52,9 +52,7 @@ public class InscriptionEquipeTournoiController {
     return inscriptions;
   }
 
-  /**
-   * Retourne les inscriptions visibles publiquement pour la page détail tournoi.
-   */
+  /** Retourne les inscriptions visibles publiquement pour la page détail tournoi. */
   @GetMapping("/{tournoiId}/inscriptions/accepted")
   public Iterable<TournoiEquipeInscriptionDto> getAcceptedByTournoi(@PathVariable Long tournoiId) {
     Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
@@ -64,17 +62,24 @@ public class InscriptionEquipeTournoiController {
     return inscriptionMapper.toTournoiEquipeInscriptionDtos(inscriptions);
   }
 
-  /**
-   * Retourne toutes les inscriptions d'une équipe. Accessible au responsable ou à
-   * un admin.
-   */
+  /** Retourne toutes les inscriptions d'une équipe. Accessible au responsable ou à un admin. */
   @GetMapping("/equipes/{equipeId}/inscriptions")
   @IsAdminOrResponsable
   public Iterable<EquipeTournamentRegistrationDto> getAllByEquipe(
-      @PathVariable Long equipeId,
-      @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long equipeId, @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
         equipeId, currentUser, "You can only view your own team registrations");
+    Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByEquipe(equipeId);
+    if (inscriptions == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
+    }
+    return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
+  }
+
+  /** Retourne les inscriptions d'une équipe visibles publiquement (profil joueur). */
+  @GetMapping("/equipes/{equipeId}/inscriptions/public")
+  public Iterable<EquipeTournamentRegistrationDto> getPublicByEquipe(
+      @PathVariable Long equipeId) {
     Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByEquipe(equipeId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
@@ -100,18 +105,15 @@ public class InscriptionEquipeTournoiController {
     }
     if (inscription == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Tournament not found, not OUVERT, or team already registered");
+          HttpStatus.BAD_REQUEST, "Tournament not found, not OUVERT, or team already registered");
     }
     return inscription;
   }
 
   /**
-   * Unregisters a team from a tournament using the logical key (tournoiId,
-   * equipeId).
+   * Unregisters a team from a tournament using the logical key (tournoiId, equipeId).
    *
-   * <p>
-   * This endpoint is currently not used by the frontend application.
+   * <p>This endpoint is currently not used by the frontend application.
    */
   @DeleteMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @IsAdminOrResponsable
@@ -121,8 +123,7 @@ public class InscriptionEquipeTournoiController {
       @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "A responsible cannot unregister a team from a tournament");
+          HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
     }
 
     ensureCurrentUserResponsibleForTeam(
@@ -139,18 +140,15 @@ public class InscriptionEquipeTournoiController {
   /**
    * Unregisters a team from a tournament using the registration ID.
    *
-   * <p>
-   * This endpoint is currently not used by the frontend application.
+   * <p>This endpoint is currently not used by the frontend application.
    */
   @DeleteMapping("/inscriptions/{inscriptionId}")
   @IsAdminOrResponsable
   public void unregister(
-      @PathVariable Long inscriptionId,
-      @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long inscriptionId, @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "A responsible cannot unregister a team from a tournament");
+          HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
     }
     boolean success = inscriptionService.unregister(inscriptionId);
     if (!success) {
@@ -173,5 +171,4 @@ public class InscriptionEquipeTournoiController {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, forbiddenMessage);
     }
   }
-
 }
