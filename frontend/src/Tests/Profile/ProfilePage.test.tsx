@@ -120,7 +120,7 @@ describe('ProfilePage', () => {
     fireEvent.click(screen.getByRole('button', { name: /sauvegarder/i }));
 
     await waitFor(() => {
-      expect(naviguerMock).toHaveBeenCalledWith('/');
+      expect(naviguerMock).toHaveBeenCalledWith('/profil');
     });
   });
 

@@ -3,7 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeCreationDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeJoinDto;
 import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipePublicDto;
-import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeUpdateDto; // ✨ CHANGED IMPORT HERE
+import be.vinci.ipl.cae.demo.models.dtos.equipe.EquipeUpdateDto;
 import be.vinci.ipl.cae.demo.models.dtos.membre.MembrePublicDto;
 import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -57,11 +57,10 @@ public class EquipeController {
   @GetMapping("/{id}")
   public EquipePublicDto readOneEquipe(
           @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
-    Equipe equipe =
-            equipeService
-                    .getEquipeById(id)
-                    .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable"));
+    Equipe equipe = equipeService.getEquipeById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Équipe introuvable"));
+
     return toPublicDto(equipe, currentUser);
   }
 
@@ -70,6 +69,7 @@ public class EquipeController {
    *
    * @param userId user id
    * @param dto creation payload
+   * @param currentUser the authenticated user
    * @return created team
    */
   @PostMapping("/{userId}/equipes")
@@ -82,7 +82,8 @@ public class EquipeController {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN, "Vous ne pouvez créer une équipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez créer une équipe que pour votre propre compte.");
     }
 
     try {
@@ -101,6 +102,7 @@ public class EquipeController {
    *
    * @param userId user id
    * @param dto join payload
+   * @param currentUser the authenticated user
    */
   @PostMapping("/{userId}/equipes/rejoindre")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -128,6 +130,7 @@ public class EquipeController {
    * Leave current team for a given user id.
    *
    * @param userId user id
+   * @param body map containing optional new responsible id
    * @param currentUser authenticated user
    */
   @PostMapping("/{userId}/equipes/quitter")
@@ -140,7 +143,8 @@ public class EquipeController {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN, "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
     }
 
     try {
@@ -187,7 +191,10 @@ public class EquipeController {
     executeTeamAction(() -> equipeService.depromouvoirResponsable(currentUser, membreId));
   }
 
-  /** Checks if the current user is responsible for their team. */
+  /** Checks if the current user is responsible for their team.
+   * @param currentUser the authenticated user
+   * @return true if responsible
+   */
   @GetMapping("/me/isResponsable")
   @PreAuthorize("isAuthenticated()")
   public boolean isCurrentUserResponsable(@AuthenticationPrincipal User currentUser) {
@@ -196,7 +203,8 @@ public class EquipeController {
 
   /**
    * Updates the profile image of a specific team.
-   * * @param equipeId the ID of the team
+   *
+   * @param equipeId the ID of the team
    * @param dto the payload containing the new image name
    * @param currentUser the authenticated user making the request
    */
@@ -205,7 +213,7 @@ public class EquipeController {
   @PreAuthorize("isAuthenticated()")
   public void updateEquipeImage(
           @PathVariable Long equipeId,
-          @RequestBody @Valid EquipeUpdateDto dto, // ✨ CHANGED DTO NAME HERE
+          @RequestBody @Valid EquipeUpdateDto dto,
           @AuthenticationPrincipal User currentUser) {
 
     try {
@@ -216,7 +224,6 @@ public class EquipeController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
     }
   }
-
 
   private void ensureSelfTeamManagement(Long userId, User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
@@ -244,11 +251,18 @@ public class EquipeController {
                                             m.getTag(),
                                             m.getSpecialty(),
                                             m.getProfileImageUrl(),
-                                            equipeService.isUserResponsible(equipe, m)))
+                                            equipeService
+                                                    .isUserResponsible(equipe, m)))
                     .toList();
 
     boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
 
-    return new EquipePublicDto(equipe.getId(), equipe.getName(), equipe.getProfileImage(), membres, isResponsable);
+    return new EquipePublicDto(
+            equipe.getId(),
+            equipe.getName(),
+            equipe.getProfileImage(),
+            membres,
+            isResponsable
+    );
   }
 }

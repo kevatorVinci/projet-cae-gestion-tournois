@@ -133,7 +133,10 @@ describe('CreateEquipe', () => {
     fireEvent.click(screen.getByRole('button', { name: /fonder l'équipe/i }));
 
     await waitFor(() => {
-      expect(createEquipe).toHaveBeenCalledWith('Les Architectes du Chaos');
+      expect(createEquipe).toHaveBeenCalledWith(
+        'Les Architectes du Chaos',
+        'akatsuki.jpg',
+      );
       expect(navigateMock).toHaveBeenCalledWith('/maTeam');
     });
   });

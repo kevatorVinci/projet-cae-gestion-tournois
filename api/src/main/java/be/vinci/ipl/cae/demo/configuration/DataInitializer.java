@@ -17,7 +17,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/** * Initializes demo data on startup.
+/**
+ * Initializes demo data on startup.
  */
 @Configuration
 public class DataInitializer {
@@ -199,20 +200,20 @@ public class DataInitializer {
       Equipe alpha = new Equipe();
       alpha.setName("TEAM_ALPHA");
       alpha.setResponsablePrincipal(lea);
-      alpha.setProfileImage("akatsuki.jpg"); // ✨ Added team image
+      alpha.setProfileImage("akatsuki.jpg");
       equipeRepo.save(alpha);
 
       Equipe omega = new Equipe();
       omega.setName("TEAM_OMEGA");
       omega.setResponsablePrincipal(tibo);
-      omega.setProfileImage("espada.jpg"); // ✨ Added team image
+      omega.setProfileImage("espada.jpg");
       equipeRepo.save(omega);
 
       Equipe iota = new Equipe();
       iota.setName("TEAM_IOTA");
       iota.setResponsablePrincipal(lisa);
       iota.setResponsableSecondaire(noa);
-      iota.setProfileImage("fairytail.jpg"); // ✨ Added team image
+      iota.setProfileImage("fairytail.jpg");
       equipeRepo.save(iota);
 
       // Link members to teams
@@ -249,10 +250,12 @@ public class DataInitializer {
               "spiderman2099.jpg", "tailong.jpg",
               "crockmou.jpg", "flash.jpg"};
 
-      // ✨ List of images to distribute to the dummy teams
       String[] teamAvatars = {
-              "hunter.jpg", "onepiece.jpg", "akatsuki.jpg",
-              "espada.jpg", "fairytail.jpg"
+              "hunter.jpg",
+              "onepiece.jpg",
+              "akatsuki.jpg",
+              "espada.jpg",
+              "fairytail.jpg"
       };
 
       List<Equipe> dum = new ArrayList<>();
@@ -269,7 +272,7 @@ public class DataInitializer {
         Equipe eq = new Equipe();
         eq.setName(name);
         eq.setResponsablePrincipal(bot);
-        eq.setProfileImage(teamAvatars[i % teamAvatars.length]); // ✨ Added image to dummy team
+        eq.setProfileImage(teamAvatars[i % teamAvatars.length]);
         equipeRepo.save(eq);
 
         bot.setEquipe(eq);

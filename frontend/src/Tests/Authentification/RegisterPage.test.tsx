@@ -67,7 +67,9 @@ describe('RegisterPage', () => {
       .closest('form')!;
     fireEvent.submit(form);
 
-    expect(await screen.findByText(/choisir un avatar/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/choisir ton plus bel avatar/i),
+    ).toBeInTheDocument();
   });
 
   test('navigates to /login on successful registration', async () => {

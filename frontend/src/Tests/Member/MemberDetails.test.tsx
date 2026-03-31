@@ -69,7 +69,7 @@ describe('MemberDetails Component', () => {
   it('renders loading state initially', () => {
     (global.fetch as Mock).mockReturnValue(new Promise(() => {}));
     renderComponent(undefined);
-    expect(screen.getByText(/Chargement.../i)).toBeInTheDocument();
+    expect(screen.getByText(/Recherche du profil/i)).toBeInTheDocument();
   });
 
   it('fetches and displays user data correctly from the teams API', async () => {
@@ -142,7 +142,7 @@ describe('MemberDetails Component', () => {
     renderComponent(undefined);
 
     await waitFor(() => {
-      expect(screen.getByText(/Chargement.../i)).toBeInTheDocument();
+      expect(screen.getByText(/Recherche du profil/i)).toBeInTheDocument();
     });
 
     consoleSpy.mockRestore();
