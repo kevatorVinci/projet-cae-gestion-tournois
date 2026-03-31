@@ -18,7 +18,7 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import BuildIcon from '@mui/icons-material/Build';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { User, Equipe, UserContextType } from '../../../types';
+import { User, UserContextType } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import { getAllEquipes } from '../../../services/teams';
 import BackButton from '../../../components/BoutonRetour';
@@ -33,9 +33,6 @@ interface Player {
   profileImageUrl?: string;
   admin?: boolean;
   isResponsable?: boolean;
-}
-
-interface TeamMember extends Player {
   password?: string;
 }
 
@@ -78,82 +75,6 @@ export default function MemberDetails() {
 
   const isOwnProfile = authenticatedUser?.tag === user?.tag;
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!id || id === 'undefined') {
-        return;
-      }
-
-      const decodedId = decodeURIComponent(id);
-
-      try {
-        const equipes = await getAllEquipes().catch(() => []);
-
-        const token =
-          authenticatedUser?.token || getAuthenticatedUser()?.token || '';
-
-        const playersResponse = await fetch('/api/auths/players', {
-          headers: { Authorization: token },
-        });
-
-        let players: Player[] = [];
-        if (playersResponse.ok) {
-          players = await playersResponse.json();
-        }
-
-        const playerBase = players.find(
-          (p: Player) => p.tag === decodedId || String(p.id) === decodedId,
-        );
-
-        let foundUserInTeam: Player | null = null;
-        let userTeamName = '';
-
-        for (const equipe of equipes) {
-          const listJoueurs = (equipe.members || []) as Player[];
-          const member = listJoueurs.find(
-            (m: Player) => m.tag === decodedId || String(m.id) === decodedId,
-          );
-          if (member && member.tag) {
-            foundUserInTeam = member;
-            userTeamName = equipe.name;
-            break;
-          }
-        }
-
-        if (playerBase) {
-          setUser({
-            id: playerBase.id || 0,
-            tag: playerBase.tag,
-            email: playerBase.email || '',
-            specialty: playerBase.specialty || 'Unknown',
-            team: userTeamName,
-            profileImage:
-              playerBase.profileImage ||
-              playerBase.profileImageUrl ||
-              '/luffy.png',
-            isResponsable: foundUserInTeam?.isResponsable || false,
-            admin: playerBase.admin || false,
-          });
-        } else if (foundUserInTeam) {
-          setUser({
-            id: foundUserInTeam.id,
-            tag: foundUserInTeam.tag,
-            email: '',
-            specialty: foundUserInTeam.specialty || 'Unknown',
-            team: userTeamName,
-            profileImage: foundUserInTeam.profileImageUrl || '/luffy.png',
-            isResponsable: foundUserInTeam.isResponsable || false,
-            admin: false,
-          });
-        }
-      } catch (error) {
-        console.error('Erreur lors de la recuperation des donnees :', error);
-      }
-    };
-
-    fetchUser();
-  }, [id, authenticatedUser]);
-
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return undefined;
     if (avatar.startsWith('http://') || avatar.startsWith('https://'))
@@ -162,49 +83,88 @@ export default function MemberDetails() {
   };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!id) return;
-      try {
-        const token = getAuthenticatedUser()?.token || '';
-        const response = await fetch(`/api/equipes`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error('Failed to fetch teams');
+    const fetchUserAndTeam = async () => {
+      if (!id || id === 'undefined') {
+        setLoading(false);
+        return;
+      }
 
-        const equipes: Equipe[] = await response.json();
-        let foundUser: TeamMember | null = null;
+      const decodedId = decodeURIComponent(id);
+      setLoading(true);
+
+      try {
+        const token =
+          authenticatedUser?.token || getAuthenticatedUser()?.token || '';
+
+        let players: Player[] = [];
+        try {
+          const playersResponse = await fetch('/api/auths/players', {
+            headers: { Authorization: token ? `Bearer ${token}` : '' }, // Format Bearer
+          });
+          if (playersResponse.ok) {
+            players = await playersResponse.json();
+          }
+        } catch (e) {
+          // Silently ignore player fetch error
+        }
+
+        const playerBase = players.find(
+          (p: Player) => p.tag === decodedId || String(p.id) === decodedId,
+        );
+
+        const equipes = await getAllEquipes().catch(() => []);
+        let foundUserInTeam: Player | null = null;
         let userTeamName = '';
         let foundTeamId: number | null = null;
 
         for (const equipe of equipes) {
-          const member = equipe.members?.find((m) => m.id === Number(id));
+          const listJoueurs = (equipe.members || []) as Player[];
+          const member = listJoueurs.find(
+            (m: Player) => m.tag === decodedId || String(m.id) === decodedId,
+          );
           if (member) {
-            foundUser = member as TeamMember;
+            foundUserInTeam = member;
             userTeamName = equipe.name;
             foundTeamId = equipe.id;
             break;
           }
         }
 
-        if (foundUser) {
+        // 3. Assemble les données (priorité à playerBase, sinon les données de l'équipe)
+        if (playerBase || foundUserInTeam) {
+          const finalId = playerBase?.id || foundUserInTeam?.id || 0;
+          const finalTag = playerBase?.tag || foundUserInTeam?.tag || '';
+          const finalSpecialty =
+            playerBase?.specialty ||
+            foundUserInTeam?.specialty ||
+            'Non spécifiée';
+
           setUser({
-            id: foundUser.id,
-            tag: foundUser.tag,
-            specialty: foundUser.specialty || 'Non spécifiée',
-            team: userTeamName,
-            profileImage: foundUser.profileImageUrl || '/luffy.png',
-            isResponsable: foundUser.isResponsable || false,
+            id: finalId,
+            tag: finalTag,
+            email: playerBase?.email || '',
+            specialty: finalSpecialty,
+            team: userTeamName || 'Aucune équipe',
+            profileImage:
+              playerBase?.profileImage ||
+              playerBase?.profileImageUrl ||
+              foundUserInTeam?.profileImageUrl ||
+              '/luffy.png',
+            isResponsable: foundUserInTeam?.isResponsable || false,
+            admin: playerBase?.admin || false,
+            password: playerBase?.password, // Récupère le mot de passe s'il est là
           });
           setTeamId(foundTeamId);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Erreur globale lors de la récupération:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchUser();
-  }, [id]);
+
+    fetchUserAndTeam();
+  }, [id, authenticatedUser]);
 
   useEffect(() => {
     const loadTournaments = async () => {
@@ -309,7 +269,6 @@ export default function MemberDetails() {
               backgroundColor: '#111827',
             }}
           >
-            {/* Avatar & Informations principales */}
             <Stack
               direction="row"
               alignItems="center"
