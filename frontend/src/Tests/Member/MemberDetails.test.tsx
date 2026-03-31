@@ -72,11 +72,7 @@ describe('MemberDetails Component', () => {
   it('renders loading state initially', () => {
     (global.fetch as Mock).mockReturnValue(new Promise(() => {}));
     renderComponent(undefined);
-<<<<<<< HEAD
     expect(screen.getByText(/Recherche du profil/i)).toBeInTheDocument();
-=======
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
->>>>>>> 239dc5d53fcf3821bcc9ac6dbd04d42de791bfc2
   });
 
   it('fetches and displays user data correctly from the teams API', async () => {
@@ -137,11 +133,7 @@ describe('MemberDetails Component', () => {
     renderComponent(undefined);
 
     await waitFor(() => {
-<<<<<<< HEAD
       expect(screen.getByText(/Recherche du profil/i)).toBeInTheDocument();
-=======
-      expect(screen.getByText('Joueur introuvable')).toBeInTheDocument();
->>>>>>> 239dc5d53fcf3821bcc9ac6dbd04d42de791bfc2
     });
 
     consoleSpy.mockRestore();
