@@ -67,19 +67,52 @@ export default function ProfilePage() {
   // The complete list of 40 avatars, matching the registration page
   const allImages = [
     // Page 1 (0 to 11) - Row 1
-    'butcher.jpg', 'chat.jpg', 'chouine.jpg', 'crockmou.jpg', 'denji.jpg', 'dexter.jpg',
-    'djilsi.png', 'enfant.jpg', 'eren.png', 'erza.jpg', 'femmecars.jpg', 'flash.jpg',
-    
+    'butcher.jpg',
+    'chat.jpg',
+    'chouine.jpg',
+    'crockmou.jpg',
+    'denji.jpg',
+    'dexter.jpg',
+    'djilsi.png',
+    'enfant.jpg',
+    'eren.png',
+    'erza.jpg',
+    'femmecars.jpg',
+    'flash.jpg',
+
     // Page 1 continued (12 to 19) / start of page 2 (20 to 23) - Row 2
-    'fou.jpg', 'garou.jpg', 'gazo.jpg', 'homer.jpg', 'isagi.jpg', 'itadori.jpg',
-    'jjk.jpg', 'joe.jpg', 'kaido.png', 'lapin.jpg', 'lion.jpg', 'lookism.jpg',
-    
+    'fou.jpg',
+    'garou.jpg',
+    'gazo.jpg',
+    'homer.jpg',
+    'isagi.jpg',
+    'itadori.jpg',
+    'jjk.jpg',
+    'joe.jpg',
+    'kaido.png',
+    'lapin.jpg',
+    'lion.jpg',
+    'lookism.jpg',
+
     // Page 2 continued (24 to 35) - Row 3
-    'luffy.png', 'makima.jpg', 'miles.jpg', 'neon2.jpg', 'Pessi.jpg', 'pevin.jpg',
-    'pion.jpg', 'saitama.jpg', 'shigaraki.jpg', 'shrek.jpg', 'spiderman2099.jpg', 'tailong.jpg',
-    
+    'luffy.png',
+    'makima.jpg',
+    'miles.jpg',
+    'neon2.jpg',
+    'Pessi.jpg',
+    'pevin.jpg',
+    'pion.jpg',
+    'saitama.jpg',
+    'shigaraki.jpg',
+    'shrek.jpg',
+    'spiderman2099.jpg',
+    'tailong.jpg',
+
     // Page 2 continued (36 to 39) - Row 4
-    'tk.jpg', 'vini.jpg', 'yuichi.png', 'speed.jpg'
+    'tk.jpg',
+    'vini.jpg',
+    'yuichi.png',
+    'speed.jpg',
   ];
 
   // Exactly 20 images per page to form a 5x4 grid
@@ -107,7 +140,7 @@ export default function ProfilePage() {
   // Cuts the big array to keep only the 20 images of the current page
   const displayedImages = allImages.slice(
     imagePage * imagesPerPage,
-    (imagePage + 1) * imagesPerPage
+    (imagePage + 1) * imagesPerPage,
   );
 
   /**
@@ -129,7 +162,6 @@ export default function ProfilePage() {
 
   const strengthScore = calculateStrength(newPassword);
 
-  // 🎨 2. Determine the colors of the gauge based on the score
   let barColor = 'transparent';
   let strengthLabel = '';
   let barWidth = '0%';
@@ -150,23 +182,19 @@ export default function ProfilePage() {
     }
   }
 
-  // 🛡️ 3. Button blocking logic
+  // 3. Button blocking logic
   // Checks if the user is currently trying to type a new password
   const isChangingPassword = newPassword.length > 0;
-  
+
   // If we want to change the password, the score must be 5 AND the confirmation must match
   const isPasswordValid =
     strengthScore === 5 && newPassword === confirmPassword;
-    
+
   // We can save IF: we DO NOT change the password OR we change it correctly (with the old one typed)
   const canSubmit =
     !isChangingPassword ||
     (isChangingPassword && isPasswordValid && oldPassword.length > 0);
 
-  /**
-   * Handles the form submission when the user clicks save
-   * @param e The form event
-   */
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -179,8 +207,13 @@ export default function ProfilePage() {
     }
 
     // Creates the base object with user visual info
-    // We use 'any' type here to allow adding properties conditionally
-    const updatedInfo: any = {
+    const updatedInfo: {
+      email?: string;
+      specialty: string;
+      profileImage: string;
+      oldPassword?: string;
+      newPassword?: string;
+    } = {
       email: authenticatedUser?.email,
       specialty: specialty,
       profileImage: profileImage,
@@ -213,7 +246,7 @@ export default function ProfilePage() {
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        
+
         // Redirects the user to the profile page
         navigate('/profil');
       } else {
@@ -262,7 +295,7 @@ export default function ProfilePage() {
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
           width: '100%',
           // ✨ Increased maxWidth from 600 to 660 to fit 5 large images per row
-          maxWidth: 660, 
+          maxWidth: 660,
         }}
       >
         <BackButton />
@@ -296,7 +329,7 @@ export default function ProfilePage() {
               >
                 Choisissez votre avatar
               </Typography>
-              
+
               {/* 📸 The slider section for images */}
               <Box
                 sx={{
@@ -310,7 +343,7 @@ export default function ProfilePage() {
                   disabled={imagePage === 0}
                   sx={{
                     color: imagePage === 0 ? 'rgba(255,255,255,0.2)' : 'white',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
                   }}
                 >
                   {'<'}
@@ -330,7 +363,7 @@ export default function ProfilePage() {
                   {displayedImages.map((img) => (
                     <Box
                       // We use the image name as the key, not the index, to help React with pagination
-                      key={img} 
+                      key={img}
                       component="img"
                       src={img}
                       alt={`Avatar ${img}`}
@@ -359,8 +392,11 @@ export default function ProfilePage() {
                   onClick={handleNextPage}
                   disabled={(imagePage + 1) * imagesPerPage >= allImages.length}
                   sx={{
-                    color: (imagePage + 1) * imagesPerPage >= allImages.length ? 'rgba(255,255,255,0.2)' : 'white',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                    color:
+                      (imagePage + 1) * imagesPerPage >= allImages.length
+                        ? 'rgba(255,255,255,0.2)'
+                        : 'white',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
                   }}
                 >
                   {'>'}

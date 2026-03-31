@@ -19,6 +19,17 @@ import { getAuthenticatedUser } from '../../../utils/session';
 import { getAllEquipes } from '../../../services/teams';
 import BackButton from '../../../components/BoutonRetour';
 
+interface Player {
+  tag: string;
+  id: number;
+  email?: string;
+  specialty?: string;
+  profileImage?: string;
+  profileImageUrl?: string;
+  admin?: boolean;
+  isResponsable?: boolean;
+}
+
 export default function MemberDetails() {
   // "id" can be a tag (from TeamsList) or a numeric id (from MaTeam)
   const { id } = useParams<{ id: string }>();
@@ -48,25 +59,25 @@ export default function MemberDetails() {
           headers: { Authorization: token },
         });
 
-        let players: any[] = [];
+        let players: Player[] = [];
         if (playersResponse.ok) {
           players = await playersResponse.json();
         }
 
         // Match by tag (string from TeamsList) or by numeric id (from MaTeam)
         const playerBase = players.find(
-          (p: any) => p.tag === decodedId || String(p.id) === decodedId,
+          (p: Player) => p.tag === decodedId || String(p.id) === decodedId,
         );
 
-        let foundUserInTeam: any = null;
+        let foundUserInTeam: Player | null = null;
         let userTeamName = '';
 
         for (const equipe of equipes) {
-          const listJoueurs = equipe.members || [];
+          const listJoueurs = (equipe.members || []) as Player[];
           const member = listJoueurs.find(
-            (m: any) => m.tag === decodedId || String(m.id) === decodedId,
+            (m: Player) => m.tag === decodedId || String(m.id) === decodedId,
           );
-          if (member) {
+          if (member && member.tag) {
             foundUserInTeam = member;
             userTeamName = equipe.name;
             break;

@@ -19,24 +19,20 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
-import PersonIcon from '@mui/icons-material/Person'; // We add the icon for the players
+import PersonIcon from '@mui/icons-material/Person';
 import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType, AuthenticatedUser } from '../../../types';
 import { decodeJwtPayload } from '../../../utils/session';
 
-/**
- * Component that displays the directory of Teams and Players.
- * Users can search and apply to teams from here.
- */
 const TeamsList = () => {
   const [query, setQuery] = useState('');
   const [teamsState, setTeamsState] = useState<Equipe[]>([]);
 
-  // We add a state to store the list of players
+  // State to store the list of players
   const [playersState, setPlayersState] = useState<AuthenticatedUser[]>([]);
 
-  // We add a state to know which tab is currently active ('teams' or 'players')
+  // State to know which tab is currently active ('teams' or 'players')
   const [activeTab, setActiveTab] = useState<'teams' | 'players'>('teams');
 
   const [loading, setLoading] = useState(true);
@@ -53,11 +49,11 @@ const TeamsList = () => {
      */
     const loadData = async () => {
       try {
-        // On charge les équipes
+        // Loads the teams
         const teamsData = await getAllEquipes();
         setTeamsState(teamsData);
 
-        // ✨ NOUVEAU : On ajoute le token de sécurité (le badge) pour rassurer le serveur Java !
+        // Loads the players using the security token
         const playersResponse = await fetch('/api/auths/players', {
           headers: {
             Authorization: authenticatedUser?.token || '',
@@ -81,7 +77,7 @@ const TeamsList = () => {
     };
 
     loadData();
-  }, []);
+  }, [authenticatedUser?.token]);
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -94,11 +90,6 @@ const TeamsList = () => {
     return Number.isFinite(subAsNumber) ? subAsNumber : undefined;
   })();
 
-  /**
-   * Checks if the current authenticated user belongs to the given team.
-   * * @param team The team to check
-   * @return true if the user is in the team, false otherwise
-   */
   const isCurrentUsersTeam = (team: Equipe) => {
     return team.members.some(
       (member) =>
@@ -109,11 +100,6 @@ const TeamsList = () => {
     );
   };
 
-  /**
-   * Handles the logic when a user clicks on "Postuler" (Apply).
-   * * @param teamId The ID of the team
-   * @param teamName The name of the team
-   */
   const handlePostulerClick = async (teamId: number, teamName: string) => {
     if (!authenticatedUser) {
       navigate('/login');
@@ -183,16 +169,27 @@ const TeamsList = () => {
       setMessage(null);
     }
   };
-  // We filter the teams based on the search bar
+
+  // We filter and sort the teams based on the search bar AND availability
   const filteredTeams = useMemo(
     () =>
       [...teamsState]
         .filter((team) => team.name.toLowerCase().includes(normalizedQuery))
-        .sort((a, b) =>
-          a.name.localeCompare(b.name, 'fr', {
+        .sort((a, b) => {
+          // Check if teams are unavailable (0 members)
+          const aUnavailable = a.members.length === 0;
+          const bUnavailable = b.members.length === 0;
+
+          // If 'a' is empty but 'b' is not, 'a' goes to the bottom (return 1)
+          if (aUnavailable && !bUnavailable) return 1;
+          // If 'b' is empty but 'a' is not, 'b' goes to the bottom (return -1)
+          if (!aUnavailable && bUnavailable) return -1;
+
+          // If both have the same availability status, sort alphabetically
+          return a.name.localeCompare(b.name, 'fr', {
             sensitivity: 'base',
-          }),
-        ),
+          });
+        }),
     [normalizedQuery, teamsState],
   );
 
@@ -403,14 +400,36 @@ const TeamsList = () => {
                           }}
                         />
                         <CardContent sx={{ p: 2.5 }}>
-                          <Typography
-                            variant="h6"
-                            fontWeight={700}
-                            color="white"
-                            mb={1.5}
+                          {/* ✨ TEAM IMAGE AND NAME ALIGNED TOGETHER ✨ */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              mb: 1.5,
+                            }}
                           >
-                            {team.name}
-                          </Typography>
+                            {team.profileImage && (
+                              <Avatar
+                                src={`/${team.profileImage}`}
+                                alt={team.name}
+                                variant="rounded"
+                                sx={{
+                                  width: 50,
+                                  height: 50,
+                                  border: '1px solid rgba(255,255,255,0.2)',
+                                  borderRadius: 1.5,
+                                }}
+                              />
+                            )}
+                            <Typography
+                              variant="h6"
+                              fontWeight={700}
+                              color="white"
+                            >
+                              {team.name}
+                            </Typography>
+                          </Box>
 
                           <Stack spacing={0.8} mb={2.5}>
                             <Typography variant="body2" color="text.secondary">
@@ -547,10 +566,15 @@ const TeamsList = () => {
                       variant="outlined"
                       size="small"
                       disabled={!player.tag}
-                      sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                      sx={{
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                      }}
                       onClick={() => {
                         if (player.tag) {
-                          navigate(`/players/${encodeURIComponent(player.tag)}`);
+                          navigate(
+                            `/players/${encodeURIComponent(player.tag)}`,
+                          );
                         }
                       }}
                     >

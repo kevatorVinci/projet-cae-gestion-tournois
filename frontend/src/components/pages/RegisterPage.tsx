@@ -42,7 +42,7 @@ export default function RegisterPage() {
   const [loadingTeams, setLoadingTeams] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // State to track the current page of avatars (starts at 0)
   const [imagePage, setImagePage] = useState(0);
 
@@ -60,11 +60,6 @@ export default function RegisterPage() {
     setShowPassword(!showPassword);
   };
 
-  /**
-   * Calculates the strength of the password.
-   * @param pwd The password string to evaluate.
-   * @returns The strength score out of 5.
-   */
   const calculateStrength = (pwd: string) => {
     let score = 0;
     if (!pwd) return score;
@@ -111,19 +106,52 @@ export default function RegisterPage() {
   // The complete list of 40 avatars, based on the file explorer view
   const allImages = [
     // Page 1 (0 to 11) - Row 1
-    'butcher.jpg', 'chat.jpg', 'chouine.jpg', 'crockmou.jpg', 'denji.jpg', 'dexter.jpg',
-    'djilsi.png', 'enfant.jpg', 'eren.png', 'erza.jpg', 'femmecars.jpg', 'flash.jpg',
-    
+    'butcher.jpg',
+    'chat.jpg',
+    'chouine.jpg',
+    'crockmou.jpg',
+    'denji.jpg',
+    'dexter.jpg',
+    'djilsi.png',
+    'enfant.jpg',
+    'eren.png',
+    'erza.jpg',
+    'femmecars.jpg',
+    'flash.jpg',
+
     // Page 1 continued (12 to 19) / start of page 2 (20 to 23) - Row 2
-    'fou.jpg', 'garou.jpg', 'gazo.jpg', 'homer.jpg', 'isagi.jpg', 'itadori.jpg',
-    'jjk.jpg', 'joe.jpg', 'kaido.png', 'lapin.jpg', 'lion.jpg', 'lookism.jpg',
-    
+    'fou.jpg',
+    'garou.jpg',
+    'gazo.jpg',
+    'homer.jpg',
+    'isagi.jpg',
+    'itadori.jpg',
+    'jjk.jpg',
+    'joe.jpg',
+    'kaido.png',
+    'lapin.jpg',
+    'lion.jpg',
+    'lookism.jpg',
+
     // Page 2 continued (24 to 35) - Row 3
-    'luffy.png', 'makima.jpg', 'miles.jpg', 'neon2.jpg', 'Pessi.jpg', 'pevin.jpg',
-    'pion.jpg', 'saitama.jpg', 'shigaraki.jpg', 'shrek.jpg', 'spiderman2099.jpg', 'tailong.jpg',
-    
+    'luffy.png',
+    'makima.jpg',
+    'miles.jpg',
+    'neon2.jpg',
+    'Pessi.jpg',
+    'pevin.jpg',
+    'pion.jpg',
+    'saitama.jpg',
+    'shigaraki.jpg',
+    'shrek.jpg',
+    'spiderman2099.jpg',
+    'tailong.jpg',
+
     // Page 2 continued (36 to 39) - Row 4
-    'tk.jpg', 'vini.jpg', 'yuichi.png', 'speed.jpg'
+    'tk.jpg',
+    'vini.jpg',
+    'yuichi.png',
+    'speed.jpg',
   ];
 
   // Exactly 20 images per page to form a 5x4 grid
@@ -151,13 +179,9 @@ export default function RegisterPage() {
   // Cuts the big array to keep only the 20 images of the current page
   const displayedImages = allImages.slice(
     imagePage * imagesPerPage,
-    (imagePage + 1) * imagesPerPage
+    (imagePage + 1) * imagesPerPage,
   );
 
-  /**
-   * Handles the registration form submission.
-   * @param e The form event triggered when the user clicks submit.
-   */
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -168,7 +192,9 @@ export default function RegisterPage() {
     }
 
     if (!tag) {
-      setErrorMessage("Hé ! Tu as oublié de choisir un super pseudo (Tag) ! 🦸");
+      setErrorMessage(
+        'Hé ! Tu as oublié de choisir un super pseudo (Tag) ! 🦸',
+      );
       return;
     }
 
@@ -202,7 +228,11 @@ export default function RegisterPage() {
         }
 
         navigate('/login');
-      } else if (result.status === 401 || result.status === 409 || result.status === 400) {
+      } else if (
+        result.status === 401 ||
+        result.status === 409 ||
+        result.status === 400
+      ) {
         setErrorMessage('Mince ! Cette adresse email est déjà utilisée. 😅');
       } else {
         setErrorMessage(
@@ -456,7 +486,7 @@ export default function RegisterPage() {
             >
               Choisissez votre avatar *
             </Typography>
-            
+
             {/* 📸 The slider section for images */}
             <Box
               sx={{
@@ -470,7 +500,7 @@ export default function RegisterPage() {
                 disabled={imagePage === 0}
                 sx={{
                   color: imagePage === 0 ? 'rgba(255,255,255,0.2)' : 'white',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
                 }}
               >
                 {'<'}
@@ -490,7 +520,7 @@ export default function RegisterPage() {
                 {displayedImages.map((img) => (
                   <Box
                     // We use the image name as the key, not the index, to help React with pagination
-                    key={img} 
+                    key={img}
                     component="img"
                     src={img}
                     alt={`Avatar ${img}`}
@@ -519,8 +549,11 @@ export default function RegisterPage() {
                 onClick={handleNextPage}
                 disabled={(imagePage + 1) * imagesPerPage >= allImages.length}
                 sx={{
-                  color: (imagePage + 1) * imagesPerPage >= allImages.length ? 'rgba(255,255,255,0.2)' : 'white',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                  color:
+                    (imagePage + 1) * imagesPerPage >= allImages.length
+                      ? 'rgba(255,255,255,0.2)'
+                      : 'white',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
                 }}
               >
                 {'>'}

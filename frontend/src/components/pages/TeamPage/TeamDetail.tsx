@@ -99,19 +99,38 @@ export default function TeamDetails() {
             mb: 4,
           }}
         >
-          <CardContent>
-            <Typography
-              variant="h4"
-              fontWeight={700}
-              sx={{ mb: 1 }}
-              color="white"
-            >
-              {team.name}
-            </Typography>
+          {/* ✨ WE ADDED DISPLAY FLEX TO ALIGN THE IMAGE AND TEXT ✨ */}
+          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            {/* 📸 TEAM IMAGE */}
+            {team.profileImage && (
+              <Avatar
+                src={normalizeAvatarUrl(team.profileImage)}
+                alt={team.name}
+                variant="rounded" // Makes the avatar square with rounded corners
+                sx={{
+                  width: 80,
+                  height: 80,
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  borderRadius: 2,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                }}
+              />
+            )}
 
-            <Typography variant="body1" color="text.secondary">
-              Membres : {team.members.length}
-            </Typography>
+            <Box>
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ mb: 1 }}
+                color="white"
+              >
+                {team.name}
+              </Typography>
+
+              <Typography variant="body1" color="text.secondary">
+                Membres : {team.members.length}
+              </Typography>
+            </Box>
           </CardContent>
         </Card>
 

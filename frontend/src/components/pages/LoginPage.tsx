@@ -46,10 +46,10 @@ const LoginPage = () => {
     try {
       // Clears any previous error message
       setError('');
-      
+
       // Attempts to connect via the server
       await loginUser({ email, password }, rememberMe);
-      
+
       // If successful, redirects to the home page
       navigate('/');
     } catch (err: unknown) {
