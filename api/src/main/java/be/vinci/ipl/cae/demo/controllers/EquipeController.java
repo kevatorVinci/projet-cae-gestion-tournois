@@ -191,7 +191,9 @@ public class EquipeController {
     executeTeamAction(() -> equipeService.depromouvoirResponsable(currentUser, membreId));
   }
 
-  /** Checks if the current user is responsible for their team.
+  /**
+   * Checks if the current user is responsible for their team.
+   *
    * @param currentUser the authenticated user
    * @return true if responsible
    */
@@ -242,18 +244,14 @@ public class EquipeController {
   }
 
   private EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
-    List<MembrePublicDto> membres =
-            equipe.getMembres().stream()
-                    .map(
-                            m ->
-                                    new MembrePublicDto(
-                                            m.getId(),
-                                            m.getTag(),
-                                            m.getSpecialty(),
-                                            m.getProfileImageUrl(),
-                                            equipeService
-                                                    .isUserResponsible(equipe, m)))
-                    .toList();
+    List<MembrePublicDto> membres = equipe.getMembres().stream()
+            .map(m -> new MembrePublicDto(
+                    m.getId(),
+                    m.getTag(),
+                    m.getSpecialty(),
+                    m.getProfileImageUrl(),
+                    equipeService.isUserResponsible(equipe, m)))
+            .toList();
 
     boolean isResponsable = equipeService.isUserResponsible(equipe, currentUser);
 

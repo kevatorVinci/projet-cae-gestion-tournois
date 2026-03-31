@@ -94,8 +94,7 @@ public class DataInitializer {
           UserRepository userRepo,
           PasswordEncoder pwdEncoder) {
     return args -> {
-      final String pwd =
-              pwdEncoder.encode("Azerty2026!");
+      final String pwd = pwdEncoder.encode("Azerty2026!");
 
       if (userRepo.count() > 0) {
         for (User u : userRepo.findAll()) {
@@ -104,8 +103,7 @@ public class DataInitializer {
         }
         return;
       }
-      if (equipeRepo.count() > 0
-              || tournoiRepo.count() > 0) {
+      if (equipeRepo.count() > 0 || tournoiRepo.count() > 0) {
         return;
       }
 
@@ -139,55 +137,45 @@ public class DataInitializer {
               lisa, noa, tim, zoe));
 
       // ── 7 tournaments ─────────────────────────
-      // 4 past tournaments
       Tournoi springArena = makeTournoi(
               "Spring Arena Cup 2025",
-              "Compétition printanière ouverte "
-                      + "aux nouvelles teams",
+              "Compétition printanière ouverte aux nouvelles teams",
               "2025-04-15", "2025-04-25",
               "2025-04-10", "TERMINE", 8);
 
       Tournoi elite2025 = makeTournoi(
               "Elite Championship 2025",
-              "Compétition élite réservée "
-                      + "aux meilleures teams",
+              "Compétition élite réservée aux meilleures teams",
               "2025-05-15", "2025-05-30",
               "2025-05-11", "TERMINE", 8);
 
       Tournoi summerPro = makeTournoi(
               "Summer Pro League 2025",
-              "Tournoi estival de haut niveau "
-                      + "avec les meilleures teams",
+              "Tournoi estival de haut niveau avec les meilleures teams",
               "2025-07-01", "2025-07-15",
               "2025-06-25", "TERMINE", 16);
 
       Tournoi winterClash = makeTournoi(
               "Vinci Winter Clash 2026",
-              "Tournoi hivernal réunissant des "
-                      + "équipes semi-professionnelles",
+              "Tournoi hivernal réunissant des équipes semi-professionnelles",
               "2026-01-10", "2026-01-20",
               "2026-01-05", "TERMINE", 12);
 
-      // 1 current tournament
       Tournoi springBattle = makeTournoi(
               "Spring Battle Series 2026",
-              "Série printanière avec élimination "
-                      + "directe et forte participation",
+              "Série printanière avec élimination directe et forte participation",
               "2026-04-04", "2026-04-11",
               "2026-04-01", "EN_COURS", 8);
 
-      // 2 future tournaments
       Tournoi easterCup = makeTournoi(
               "Vinci Easter Cup 2026",
-              "Tournoi de Pâques ouvert à "
-                      + "toutes les teams actives",
+              "Tournoi de Pâques ouvert à toutes les teams actives",
               "2026-04-15", "2026-04-25",
               "2026-04-08", "OUVERT", 8);
 
       Tournoi elite2026 = makeTournoi(
               "Elite Championship 2026",
-              "Compétition élite réservée "
-                      + "aux meilleures teams",
+              "Compétition élite réservée aux meilleures teams",
               "2026-05-15", "2026-05-30",
               "2026-05-11", "OUVERT", 16);
 
@@ -237,18 +225,23 @@ public class DataInitializer {
               "TEAM_KAPPA", "TEAM_LAMBDA",
               "TEAM_MU", "TEAM_NU",
               "TEAM_XI", "TEAM_PI",
-              "TEAM_SIGMA"};
+              "TEAM_SIGMA"
+      };
+
       String[] botTags = {
               "Nova", "Raptor", "Blaze", "Echo",
               "Mantis", "Viper", "Astra", "Cipher",
               "Drift", "Sable", "Orion", "Nyx",
-              "Havoc"};
+              "Havoc"
+      };
+
       String[] botAvatars = {
               "butcher.jpg", "eren.png", "femmecars.jpg",
               "garou.jpg", "jjk.jpg", "lookism.jpg",
               "neon2.jpg", "pevin.jpg", "pion.jpg",
               "spiderman2099.jpg", "tailong.jpg",
-              "crockmou.jpg", "flash.jpg"};
+              "crockmou.jpg", "flash.jpg"
+      };
 
       String[] teamAvatars = {
               "hunter.jpg",
@@ -290,56 +283,35 @@ public class DataInitializer {
               summerPro, winterClash));
 
       // ── Tournament registrations ──────────
-      // Spring Arena Cup 2025 : 7 teams
-      List<Equipe> t = new ArrayList<>(
-              List.of(omega, iota));
+      List<Equipe> t = new ArrayList<>(List.of(omega, iota));
       t.addAll(dum.subList(0, 5));
-      inscrire(inscriptionRepo, springArena,
-              t, "2025-04-08");
+      inscrire(inscriptionRepo, springArena, t, "2025-04-08");
 
-      // Elite Championship 2025 : 6 teams
       t = new ArrayList<>(List.of(alpha, iota));
       t.addAll(dum.subList(0, 4));
-      inscrire(inscriptionRepo, elite2025,
-              t, "2025-05-09");
+      inscrire(inscriptionRepo, elite2025, t, "2025-05-09");
 
-      // Summer Pro League 2025 : 14 teams
-      t = new ArrayList<>(
-              List.of(alpha, omega, iota));
+      t = new ArrayList<>(List.of(alpha, omega, iota));
       t.addAll(dum.subList(0, 11));
-      inscrire(inscriptionRepo, summerPro,
-              t, "2025-06-20");
+      inscrire(inscriptionRepo, summerPro, t, "2025-06-20");
 
-      // Vinci Winter Clash 2026 : 12 teams
-      t = new ArrayList<>(
-              List.of(alpha, omega, iota));
+      t = new ArrayList<>(List.of(alpha, omega, iota));
       t.addAll(dum.subList(0, 9));
-      inscrire(inscriptionRepo, winterClash,
-              t, "2026-01-03");
+      inscrire(inscriptionRepo, winterClash, t, "2026-01-03");
 
-      // Spring Battle Series 2026 : 8 teams
-      t = new ArrayList<>(
-              List.of(alpha, omega, iota));
+      t = new ArrayList<>(List.of(alpha, omega, iota));
       t.addAll(dum.subList(0, 5));
-      inscrire(inscriptionRepo, springBattle,
-              t, "2026-03-28");
+      inscrire(inscriptionRepo, springBattle, t, "2026-03-28");
 
-      // Vinci Easter Cup 2026 : 7 teams
       t = new ArrayList<>(List.of(omega));
       t.addAll(dum.subList(0, 6));
-      inscrire(inscriptionRepo, easterCup,
-              t, "2026-04-05");
+      inscrire(inscriptionRepo, easterCup, t, "2026-04-05");
 
-      // Elite Championship 2026 : 14 teams
-      t = new ArrayList<>(
-              List.of(alpha, omega, iota));
+      t = new ArrayList<>(List.of(alpha, omega, iota));
       t.addAll(dum.subList(0, 11));
-      inscrire(inscriptionRepo, elite2026,
-              t, "2026-05-05");
+      inscrire(inscriptionRepo, elite2026, t, "2026-05-05");
 
-      System.out.println(
-              "DB initialisée : 8 users, "
-                      + "16 teams, 7 tournois");
+      System.out.println("DB initialisée : 8 users, 16 teams, 7 tournois");
     };
   }
 }

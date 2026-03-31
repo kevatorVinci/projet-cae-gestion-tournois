@@ -80,11 +80,13 @@ public class EquipeService {
    *
    * @param user the creator
    * @param nomEquipe team name
+   * @param profileImage the team profile image
    * @return created team or null when name already exists
    */
   public Equipe creerEquipe(User user, String nomEquipe, String profileImage) {
     if (user.getEquipe() != null) {
-      throw new IllegalStateException("Le membre appartient deja a une equipe.");
+      throw new IllegalStateException(
+              "Le membre appartient deja a une equipe.");
     }
 
     if (equipeRepository.existsByName(nomEquipe)) {
@@ -115,7 +117,6 @@ public class EquipeService {
    * @param equipeId target team id
    */
   public void demanderRejoindreEquipe(User user, Long equipeId) {
-    // Use the demand service to create a join request
     demandService.creerDemande(user.getId(), equipeId);
   }
 
@@ -132,12 +133,12 @@ public class EquipeService {
     }
 
     Long userId = user.getId();
-    boolean isPrincipal =
-            equipe.getResponsablePrincipal() != null
-                    && equipe.getResponsablePrincipal().getId().equals(userId);
-    boolean isSecondaire =
-            equipe.getResponsableSecondaire() != null
-                    && equipe.getResponsableSecondaire().getId().equals(userId);
+    boolean isPrincipal = equipe.getResponsablePrincipal() != null
+            && equipe.getResponsablePrincipal().getId().equals(userId);
+
+    boolean isSecondaire = equipe.getResponsableSecondaire() != null
+            && equipe.getResponsableSecondaire().getId().equals(userId);
+
     return isPrincipal || isSecondaire;
   }
 
@@ -178,7 +179,8 @@ public class EquipeService {
     } else if (equipe.getResponsableSecondaire() == null) {
       equipe.setResponsableSecondaire(membre);
     } else {
-      throw new IllegalStateException("L'equipe a deja le nombre maximum de responsables.");
+      throw new IllegalStateException(
+              "L'equipe a deja le max de responsables.");
     }
 
     equipeRepository.save(equipe);
@@ -198,11 +200,13 @@ public class EquipeService {
 
     User membre = findMemberInTeam(equipe, membreId);
     if (!isUserResponsible(equipe, membre)) {
-      throw new IllegalStateException("Ce membre n'est pas responsable.");
+      throw new IllegalStateException(
+              "Ce membre n'est pas responsable.");
     }
 
     if (countResponsables(equipe) <= 1) {
-      throw new IllegalStateException("Impossible de depromouvoir le dernier responsable.");
+      throw new IllegalStateException(
+              "Impossible de depromouvoir le dernier responsable.");
     }
 
     removeResponsibleRole(equipe, membre.getId());
@@ -218,20 +222,18 @@ public class EquipeService {
    */
   @Transactional
   public void quitterEquipe(User user, Long nouveauResponsableId) {
-    User persistedUser =
-            userRepository
-                    .findById(user.getId())
-                    .orElseThrow(
-                            () -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
+    User persistedUser = userRepository.findById(user.getId())
+            .orElseThrow(() -> new IllegalStateException(
+                    "Le membre n'appartient a aucune equipe."
+            ));
 
     Equipe equipe = resolveCurrentUserTeam(persistedUser);
 
     boolean isResponsible = isUserResponsible(equipe, persistedUser);
     List<User> membres = equipe.getMembres();
 
-    // If the responsible is the only member, leaving dissolves the team.
     if (isResponsible && membres.size() == 1) {
-      equipe.getMembres().clear(); // Empties the list on the team side!
+      equipe.getMembres().clear();
 
       persistedUser.setEquipe(null);
       equipe.setResponsablePrincipal(null);
@@ -241,17 +243,19 @@ public class EquipeService {
       equipeRepository.save(equipe);
       return;
     }
+
     if (isResponsible) {
       boolean seulResponsable = countResponsables(equipe) == 1;
       if (seulResponsable) {
         if (nouveauResponsableId == null) {
           throw new IllegalStateException(
-                  "Vous devez designer un autre membre responsable avant de quitter l'equipe.");
+                  "Vous devez designer un remplaçant avant de quitter l'equipe.");
         }
 
         User nouveauResponsable = findMemberInTeam(equipe, nouveauResponsableId);
         if (nouveauResponsable.getId().equals(persistedUser.getId())) {
-          throw new IllegalStateException("Le nouveau responsable doit etre un autre membre.");
+          throw new IllegalStateException(
+                  "Le remplaçant doit etre un autre membre.");
         }
         if (!isUserResponsible(equipe, nouveauResponsable)) {
           if (equipe.getResponsablePrincipal() == null) {
@@ -266,7 +270,7 @@ public class EquipeService {
       normalizeResponsibleSlots(equipe);
 
       if (countResponsables(equipe) == 0 && !equipe.getMembres().isEmpty()) {
-        throw new IllegalStateException("L'equipe doit toujours avoir au moins un responsable.");
+        throw new IllegalStateException("L'equipe doit garder au moins un responsable.");
       }
     }
 
@@ -277,7 +281,6 @@ public class EquipeService {
     equipeRepository.save(equipe);
   }
 
-  // ✨ NEW METHOD: Updates the team profile image ✨
   /**
    * Updates the profile image of a team.
    * Only a responsible member of the team can perform this action.
@@ -290,19 +293,17 @@ public class EquipeService {
    */
   @Transactional
   public void updateEquipeImage(Long equipeId, String imageName, User currentUser) {
-    // 1. We look for the team in the database
     Equipe equipe = equipeRepository.findById(equipeId)
             .orElseThrow(() -> new IllegalArgumentException("Équipe introuvable."));
 
-    // 2. We load the current user from the database to be sure of their identity
     User persistedUser = loadPersistedUser(currentUser);
 
-    // 3. We check if the user is a responsible (leader) of THIS team
     if (!isUserResponsible(equipe, persistedUser)) {
-      throw new IllegalStateException("Seul un responsable peut modifier l'image de l'équipe.");
+      throw new IllegalStateException(
+              "Seul un responsable peut modifier l'image de l'équipe."
+      );
     }
 
-    // 4. If everything is fine, we update the image and save!
     equipe.setProfileImage(imageName);
     equipeRepository.save(equipe);
   }
@@ -321,9 +322,9 @@ public class EquipeService {
     }
 
     for (Equipe equipe : equipeRepository.findAll()) {
-      boolean isMember =
-              equipe.getMembres().stream()
-                      .anyMatch(member -> member.getId().equals(currentUser.getId()));
+      boolean isMember = equipe.getMembres().stream()
+              .anyMatch(member -> member.getId().equals(currentUser.getId()));
+
       if (isMember || isUserResponsible(equipe, currentUser)) {
         return equipe;
       }
@@ -342,8 +343,9 @@ public class EquipeService {
     return equipe.getMembres().stream()
             .filter(membre -> membre.getId().equals(membreId))
             .findFirst()
-            .orElseThrow(
-                    () -> new IllegalStateException("Le membre cible n'appartient pas a l'equipe."));
+            .orElseThrow(() -> new IllegalStateException(
+                    "Le membre n'appartient pas a l'equipe."
+            ));
   }
 
   private User loadPersistedUser(User currentUser) {
@@ -351,9 +353,10 @@ public class EquipeService {
       throw new IllegalStateException("Le membre n'appartient a aucune equipe.");
     }
 
-    return userRepository
-            .findById(currentUser.getId())
-            .orElseThrow(() -> new IllegalStateException("Le membre n'appartient a aucune equipe."));
+    return userRepository.findById(currentUser.getId())
+            .orElseThrow(() -> new IllegalStateException(
+                    "Le membre n'appartient a aucune equipe."
+            ));
   }
 
   private int countResponsables(Equipe equipe) {
@@ -379,7 +382,8 @@ public class EquipeService {
   }
 
   private void normalizeResponsibleSlots(Equipe equipe) {
-    if (equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() != null) {
+    if (equipe.getResponsablePrincipal() ==
+            null && equipe.getResponsableSecondaire() != null) {
       equipe.setResponsablePrincipal(equipe.getResponsableSecondaire());
       equipe.setResponsableSecondaire(null);
     }
