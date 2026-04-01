@@ -17,7 +17,9 @@ test.describe('Team Details Page', () => {
 
   test('should display team name and member count', async ({ page }) => {
     await page.goto(`/equipes/${TEAM_ID}`);
-    await page.waitForSelector('text=Effectif de la Team', { state: 'visible' });
+    await page.waitForSelector('text=Effectif de la Team', {
+      state: 'visible',
+    });
 
     // Team name should be visible
     await expect(page.locator('h4')).toBeVisible();
@@ -29,9 +31,13 @@ test.describe('Team Details Page', () => {
     await expect(page.getByText('Effectif de la Team')).toBeVisible();
   });
 
-  test('should display member cards with avatar, tag and specialty', async ({ page }) => {
+  test('should display member cards with avatar, tag and specialty', async ({
+    page,
+  }) => {
     await page.goto(`/equipes/${TEAM_ID}`);
-    await page.waitForSelector('text=Effectif de la Team', { state: 'visible' });
+    await page.waitForSelector('text=Effectif de la Team', {
+      state: 'visible',
+    });
 
     // At least one member card should be visible
     const memberCards = page.locator('.MuiCard-root').nth(1); // first card is team info
@@ -41,19 +47,27 @@ test.describe('Team Details Page', () => {
     await expect(page.locator('.MuiAvatar-root').first()).toBeVisible();
   });
 
-  test('should navigate to player page when clicking on member tag', async ({ page }) => {
+  test('should navigate to player page when clicking on member tag', async ({
+    page,
+  }) => {
     await page.goto(`/equipes/${TEAM_ID}`);
-    await page.waitForSelector('text=Effectif de la Team', { state: 'visible' });
+    await page.waitForSelector('text=Effectif de la Team', {
+      state: 'visible',
+    });
 
     // Click the first member tag (h6 with cursor pointer)
-    const firstMemberTag = page.locator('h6[style*="cursor"], .MuiTypography-h6').first();
+    const firstMemberTag = page
+      .locator('h6[style*="cursor"], .MuiTypography-h6')
+      .first();
     await firstMemberTag.click();
 
     // Should navigate to /players/:id
     await expect(page).toHaveURL(/.*players\/\d+/, { timeout: 10000 });
   });
 
-  test('should show loading state before team data arrives', async ({ page }) => {
+  test('should show loading state before team data arrives', async ({
+    page,
+  }) => {
     // Intercept the API call to delay it
     await page.route('**/api/equipes/**', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -66,12 +80,18 @@ test.describe('Team Details Page', () => {
     await expect(page.getByText('Chargement...')).toBeVisible();
 
     // Then team content should appear
-    await expect(page.getByText('Effectif de la Team')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Effectif de la Team')).toBeVisible({
+      timeout: 10000,
+    });
   });
 
-  test('responsible members should appear first in the list', async ({ page }) => {
+  test('responsible members should appear first in the list', async ({
+    page,
+  }) => {
     await page.goto(`/equipes/${TEAM_ID}`);
-    await page.waitForSelector('text=Effectif de la Team', { state: 'visible' });
+    await page.waitForSelector('text=Effectif de la Team', {
+      state: 'visible',
+    });
 
     // Get all member cards after the first one (team info card)
     const memberCards = page.locator('.MuiCard-root');
