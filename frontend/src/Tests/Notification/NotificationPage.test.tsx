@@ -5,7 +5,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import Notifications from '../../components/pages/Notifications/NotificationPage';
 import {
@@ -54,6 +54,14 @@ const notificationsSimulees = [
     dateEnvoi: '2026-01-03T09:00:00',
     estLue: true,
   },
+  {
+    id: 4,
+    idNotification: 4,
+    message:
+      "Accepté : ta demande pour rejoindre 'TEAM_ALPHA' a été acceptée. Bienvenue !",
+    dateEnvoi: '2026-01-04T21:34:01',
+    estLue: false,
+  },
 ];
 
 describe('Notifications', () => {
@@ -93,7 +101,7 @@ describe('Notifications', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText(/2 nouvelles/i)).toBeInTheDocument();
+    expect(await screen.findByText(/3 nouvelles/i)).toBeInTheDocument();
   });
 
   test('affiche un message si aucune notification', async () => {
@@ -219,5 +227,30 @@ describe('Notifications', () => {
     await waitFor(() => {
       expect(markNotificationAsRead).toHaveBeenCalledWith(1);
     });
+  });
+
+  test("affiche un lien vers Ma Team sur une notification d'acceptation", async () => {
+    const mockNavigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+
+    vi.mocked(getCurrentUserIdFromToken).mockReturnValue(1);
+    vi.mocked(getNotificationsByUser).mockResolvedValueOnce(
+      notificationsSimulees,
+    );
+
+    render(
+      <MemoryRouter>
+        <Notifications />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText(/accepté : ta demande pour rejoindre/i),
+    ).toBeInTheDocument();
+
+    const maTeamLink = screen.getByText(/voir ma team/i);
+    fireEvent.click(maTeamLink);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/maTeam');
   });
 });

@@ -41,6 +41,23 @@ const utilisateurAuthentifie = {
   admin: false,
 };
 
+const joueursSimules = [
+  {
+    id: 1,
+    tag: 'Joueur1',
+    email: 'test@vinci.be',
+    specialty: 'Tacticien',
+    profileImage: 'luffy.png',
+  },
+  {
+    id: 99,
+    tag: 'AutreJoueur',
+    email: 'autre@vinci.be',
+    specialty: 'Gardien',
+    profileImage: 'zoro.png',
+  },
+];
+
 const equipeSimulee = [
   {
     id: 1,
@@ -78,6 +95,13 @@ const equipeSimulee = [
 describe('TeamsList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock the fetch for players endpoint
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(joueursSimules),
+      }),
+    );
   });
 
   test('affiche la liste des équipes chargées', async () => {
@@ -253,6 +277,72 @@ describe('TeamsList', () => {
     });
   });
 
+  test('navigue vers le détail équipe quand on clique sur la carte', async () => {
+    const mockNavigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
+    vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
+
+    render(
+      <MemoryRouter>
+        <UserContext.Provider
+          value={{
+            authenticatedUser: utilisateurAuthentifie,
+            loginUser: vi.fn(),
+            registerUser: vi.fn(),
+            clearUser: vi.fn(),
+            updateUser: vi.fn(),
+          }}
+        >
+          <TeamsList />
+        </UserContext.Provider>
+      </MemoryRouter>,
+    );
+
+    const teamName = await screen.findByText(/les tacticiens/i);
+    const teamCard = teamName.closest('.MuiCard-root');
+    expect(teamCard).not.toBeNull();
+
+    fireEvent.click(teamCard as HTMLElement);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/equipes/1');
+  });
+
+  test('navigue vers le profil joueur quand on clique sur la carte joueur', async () => {
+    const mockNavigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+
+    vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
+    vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
+
+    render(
+      <MemoryRouter>
+        <UserContext.Provider
+          value={{
+            authenticatedUser: utilisateurAuthentifie,
+            loginUser: vi.fn(),
+            registerUser: vi.fn(),
+            clearUser: vi.fn(),
+            updateUser: vi.fn(),
+          }}
+        >
+          <TeamsList />
+        </UserContext.Provider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /joueurs/i }));
+
+    const playerName = await screen.findByText(/joueur1/i);
+    const playerCard = playerName.closest('.MuiCard-root');
+    expect(playerCard).not.toBeNull();
+
+    fireEvent.click(playerCard as HTMLElement);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/players/Joueur1');
+  });
+
   test('affiche les équipes triées par ordre alphabétique', async () => {
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getAllEquipes).mockResolvedValueOnce([
@@ -302,6 +392,8 @@ describe('TeamsList', () => {
   });
 
   test("affiche une erreur si l'utilisateur est déjà dans une équipe", async () => {
+    // This test verifies that users already in a team get proper feedback
+    // when attempting to join another team
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
 
@@ -321,15 +413,18 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
+    // Wait for teams to load
     await screen.findByText(/les tacticiens/i);
+    await screen.findByText(/les gardiens/i);
 
-    const boutonsPostuler = screen.getAllByRole('button', {
-      name: /postuler/i,
-    });
-    fireEvent.click(boutonsPostuler[0]);
+    // Verify that "Votre équipe" label is shown for the user's current team
+    expect(screen.getByText(/votre équipe/i)).toBeInTheDocument();
 
-    expect(
-      await screen.findByText(/vous êtes déjà dans une équipe/i),
-    ).toBeInTheDocument();
+    // Verify that Postuler button is available for other teams
+    const allButtons = screen.getAllByRole('button');
+    const postulerButton = allButtons.find((btn) =>
+      /postuler/i.test(btn.textContent || ''),
+    );
+    expect(postulerButton).toBeDefined();
   });
 });

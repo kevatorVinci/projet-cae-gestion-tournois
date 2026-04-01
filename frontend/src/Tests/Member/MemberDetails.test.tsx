@@ -1,9 +1,17 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType, AuthenticatedUser } from '../../types';
 import MemberDetails from '../../components/pages/Member/MemberDetails';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: vi.fn(),
+  };
+});
 
 vi.mock('../../utils/session', () => ({
   getAuthenticatedUser: vi.fn(() => ({ token: 'fake-token' })),
@@ -23,7 +31,7 @@ vi.mock('../../services/teams', () => ({
       {
         id: 1,
         name: 'Straw Hat Crew',
-        membres: [
+        members: [
           {
             id: 1,
             tag: 'Luffy',
@@ -64,6 +72,7 @@ describe('MemberDetails Component', () => {
 
   const renderComponent = (
     authenticatedUser: AuthenticatedUser | undefined,
+    memberId = '1',
   ) => {
     const contextValue: UserContextType = {
       authenticatedUser,
@@ -75,7 +84,7 @@ describe('MemberDetails Component', () => {
 
     return render(
       <UserContext.Provider value={contextValue}>
-        <MemoryRouter initialEntries={['/member/1']}>
+        <MemoryRouter initialEntries={[`/member/${memberId}`]}>
           <Routes>
             <Route path="/member/:id" element={<MemberDetails />} />
           </Routes>
@@ -106,7 +115,7 @@ describe('MemberDetails Component', () => {
   });
 
   // ✨ CORRECTION : On vérifie maintenant que l'email s'affiche bien !
-  it('shows email and password fields on own profile', async () => {
+  it('shows email and specialty fields on own profile', async () => {
     (global.fetch as Mock).mockResolvedValue({
       ok: true,
       json: async () => mockPlayersResponse,
@@ -119,8 +128,8 @@ describe('MemberDetails Component', () => {
     });
 
     expect(screen.getByText('luffy@strawhat.com')).toBeInTheDocument();
-    expect(screen.getByText('Mail')).toBeInTheDocument();
-    expect(screen.getByText('Mot de Passe')).toBeInTheDocument();
+    expect(screen.getByText('Email')).toBeInTheDocument();
+    expect(screen.getAllByText('Captain').length).toBeGreaterThan(0);
   });
 
   it('hides sensitive information when tags do not match', async () => {
@@ -135,8 +144,9 @@ describe('MemberDetails Component', () => {
       expect(screen.getAllByText('Luffy').length).toBeGreaterThan(0);
     });
 
-    expect(screen.queryByText('Mail')).not.toBeInTheDocument();
-    expect(screen.queryByText('Mot de Passe')).not.toBeInTheDocument();
+    // Check that email is hidden (shows "Privé" instead)
+    expect(screen.getByText('Privé')).toBeInTheDocument();
+    // Don't look for "Mot de Passe" since it's not in the component anymore
   });
 
   it('handles API errors gracefully', async () => {
@@ -146,12 +156,29 @@ describe('MemberDetails Component', () => {
       status: 500,
     });
 
-    renderComponent(undefined);
+    renderComponent(undefined, '999');
 
     await waitFor(() => {
       expect(screen.getByText(/Joueur introuvable/i)).toBeInTheDocument();
     });
 
     consoleSpy.mockRestore();
+  });
+
+  it('navigue vers le détail équipe quand on clique le bloc équipe', async () => {
+    const mockNavigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+
+    (global.fetch as Mock).mockResolvedValue({
+      ok: true,
+      json: async () => mockPlayersResponse,
+    });
+
+    renderComponent(undefined);
+
+    const teamLabel = await screen.findByText('Straw Hat Crew');
+    fireEvent.click(teamLabel);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/equipes/1');
   });
 });

@@ -6,4 +6,5 @@ import java.time.LocalDate;
 public record TournoiEquipeInscriptionDto(
     Long equipeId,
     String equipeName,
+    String equipeProfileImage,
     LocalDate dateInscription) {}

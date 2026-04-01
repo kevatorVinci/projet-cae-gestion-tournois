@@ -378,6 +378,15 @@ const TeamsList = () => {
                     return (
                       <Card
                         key={team.id}
+                        onClick={() => navigate(`/equipes/${team.id}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            navigate(`/equipes/${team.id}`);
+                          }
+                        }}
                         sx={{
                           borderRadius: 2,
                           border: '1px solid rgba(96,165,250,0.28)',
@@ -386,6 +395,7 @@ const TeamsList = () => {
                           overflow: 'hidden',
                           transition:
                             'transform 0.2s ease, border-color 0.2s ease',
+                          cursor: 'pointer',
                           '&:hover': {
                             transform: 'translateY(-4px)',
                             borderColor: '#60a5fa',
@@ -453,16 +463,20 @@ const TeamsList = () => {
                             <Button
                               fullWidth
                               variant="outlined"
-                              onClick={() => navigate(`/equipes/${team.id}`)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                navigate(`/equipes/${team.id}`);
+                              }}
                             >
                               Voir les détails
                             </Button>
                             <Button
                               fullWidth
                               variant="contained"
-                              onClick={() =>
-                                handlePostulerClick(team.id, team.name)
-                              }
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handlePostulerClick(team.id, team.name);
+                              }}
                               disabled={isPostulerDisabled}
                               sx={{
                                 backgroundColor: '#e8822a',
@@ -518,6 +532,22 @@ const TeamsList = () => {
                 {filteredPlayers.map((player) => (
                   <Card
                     key={player.email} // We use email as the unique key
+                    onClick={() => {
+                      if (player.tag) {
+                        navigate(`/players/${encodeURIComponent(player.tag)}`);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (
+                        player.tag &&
+                        (event.key === 'Enter' || event.key === ' ')
+                      ) {
+                        event.preventDefault();
+                        navigate(`/players/${encodeURIComponent(player.tag)}`);
+                      }
+                    }}
                     sx={{
                       borderRadius: 2,
                       border: '1px solid rgba(255,255,255,0.07)',
@@ -526,6 +556,7 @@ const TeamsList = () => {
                       alignItems: 'center',
                       p: 2,
                       transition: 'transform 0.2s ease',
+                      cursor: 'pointer',
                       '&:hover': {
                         transform: 'translateY(-2px)',
                         borderColor: '#e8822a',
@@ -570,7 +601,8 @@ const TeamsList = () => {
                         borderColor: 'rgba(255,255,255,0.2)',
                         color: 'white',
                       }}
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation();
                         if (player.tag) {
                           navigate(
                             `/players/${encodeURIComponent(player.tag)}`,

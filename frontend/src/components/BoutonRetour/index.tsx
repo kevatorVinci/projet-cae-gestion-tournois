@@ -1,8 +1,13 @@
 import { Button } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { useNavigate } from 'react-router-dom';
+import { SxProps, Theme } from '@mui/material/styles';
 
-export default function BoutonRetour() {
+type BoutonRetourProps = {
+  sx?: SxProps<Theme>;
+};
+
+export default function BoutonRetour({ sx }: BoutonRetourProps) {
   const navigate = useNavigate();
   return (
     <Button
@@ -18,6 +23,7 @@ export default function BoutonRetour() {
         left: 16,
         minWidth: 'auto',
         p: 0,
+        ...(sx ?? {}),
         '&:hover': {
           color: 'rgba(255,255,255,0.7)',
           bgcolor: 'transparent',

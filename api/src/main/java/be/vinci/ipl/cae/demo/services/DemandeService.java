@@ -10,6 +10,7 @@ import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service gérant la logique métier des candidatures (demandes) pour rejoindre une équipe.
@@ -97,6 +98,7 @@ public class DemandeService {
    * @param equipeId L'identifiant de l'équipe pour laquelle on cherche les candidatures.
    * @return Une collection itérable contenant uniquement les demandes au statut EN_ATTENTE.
    */
+  @Transactional
   public Iterable<Demande> getDemandesEnAttentePourEquipe(Long equipeId) {
     Equipe equipe = equipeRepo.findById(equipeId).orElse(null);
     if (equipe != null && !isEquipeEligibleForJoin(equipe)) {
@@ -113,6 +115,7 @@ public class DemandeService {
    * @param currentUser authenticated user
    * @return pending demands for current user's team
    */
+  @Transactional
   public Iterable<Demande> getDemandesEnAttentePourResponsable(User currentUser) {
     if (currentUser == null) {
       throw new SecurityException("Utilisateur non authentifie.");
@@ -146,6 +149,7 @@ public class DemandeService {
    * @return La demande mise à jour avec le statut ACCEPTEE.
    * @throws RuntimeException Si la demande spécifiée n'existe pas en base de données.
    */
+  @Transactional
   public Demande accepterDemande(Long demandeId, User currentUser) {
     Demande demande = getAndVerifyDemande(demandeId, currentUser);
     Equipe equipe = demande.getEquipe();
@@ -187,6 +191,7 @@ public class DemandeService {
    * @return La demande mise à jour avec le statut REFUSEE et son motif.
    * @throws RuntimeException Si la demande spécifiée n'existe pas en base de données.
    */
+  @Transactional
   public Demande refuserDemande(Long demandeId, String raison, User currentUser) {
     Demande demande = getAndVerifyDemande(demandeId, currentUser);
     String raisonNormalisee =

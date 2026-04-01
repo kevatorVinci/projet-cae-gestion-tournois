@@ -6,10 +6,12 @@ import {
   Card,
   CardContent,
   CardActionArea,
+  Chip,
   Button,
   Box,
   Alert,
   CircularProgress,
+  Stack,
 } from '@mui/material';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
@@ -259,50 +261,65 @@ const HomePage = () => {
             <CircularProgress sx={{ color: '#e8822a' }} />
           </Box>
         ) : (
-          <>
-            {/* ── EN COURS ─────────────────────────────────────────── */}
-            <Box sx={{ mb: 8 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', xl: '1.15fr 0.85fr' },
+              gap: 4,
+              alignItems: 'start',
+            }}
+          >
+            <Box>
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
+                  justifyContent: 'space-between',
                   mb: 3,
+                  gap: 2,
+                  flexWrap: 'wrap',
                 }}
               >
-                {/* Dot pulsant */}
-                <Box
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: '#e8822a',
+                      boxShadow: '0 0 0 0 rgba(232,130,42,0.6)',
+                      animation: 'pulse 2s infinite',
+                      '@keyframes pulse': {
+                        '0%': { boxShadow: '0 0 0 0 rgba(232,130,42,0.6)' },
+                        '70%': { boxShadow: '0 0 0 8px rgba(232,130,42,0)' },
+                        '100%': { boxShadow: '0 0 0 0 rgba(232,130,42,0)' },
+                      },
+                    }}
+                  />
+                  <Typography
+                    variant="h5"
+                    fontWeight={800}
+                    color="white"
+                    sx={{
+                      fontFamily: '"Orbitron", sans-serif',
+                      fontSize: '1.1rem',
+                    }}
+                  >
+                    En ce moment
+                  </Typography>
+                </Box>
+
+                <Button
+                  variant="text"
+                  onClick={() => navigate('/tournois?etat=EN_COURS')}
                   sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    backgroundColor: '#e8822a',
-                    boxShadow: '0 0 0 0 rgba(232,130,42,0.6)',
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                      '0%': {
-                        boxShadow: '0 0 0 0 rgba(232,130,42,0.6)',
-                      },
-                      '70%': {
-                        boxShadow: '0 0 0 8px rgba(232,130,42,0)',
-                      },
-                      '100%': {
-                        boxShadow: '0 0 0 0 rgba(232,130,42,0)',
-                      },
-                    },
-                  }}
-                />
-                <Typography
-                  variant="h5"
-                  fontWeight={700}
-                  color="white"
-                  sx={{
-                    fontFamily: '"Orbitron", sans-serif',
-                    fontSize: '1.1rem',
+                    color: '#e8822a',
+                    fontWeight: 700,
+                    '&:hover': { backgroundColor: 'rgba(232,130,42,0.08)' },
                   }}
                 >
-                  En ce moment
-                </Typography>
+                  Voir tout →
+                </Button>
               </Box>
 
               {enCours.length === 0 ? (
@@ -313,6 +330,7 @@ const HomePage = () => {
                     borderRadius: 2,
                     border: '1px dashed rgba(255,255,255,0.1)',
                     textAlign: 'center',
+                    bgcolor: 'rgba(255,255,255,0.02)',
                   }}
                 >
                   <Typography color="text.secondary">
@@ -326,7 +344,10 @@ const HomePage = () => {
                     gap: 2,
                     gridTemplateColumns: {
                       xs: '1fr',
-                      md: enCours.length === 1 ? '1fr' : 'repeat(2, 1fr)',
+                      md:
+                        enCours.length === 1
+                          ? '1fr'
+                          : 'repeat(2, minmax(0, 1fr))',
                     },
                   }}
                 >
@@ -335,10 +356,11 @@ const HomePage = () => {
                       key={tournament.id}
                       sx={{
                         backgroundColor: '#0d1117',
-                        border: '1px solid rgba(232,130,42,0.3)',
+                        border: '1px solid rgba(232,130,42,0.18)',
                         borderLeft: '4px solid #e8822a',
-                        borderRadius: 2,
-                        transition: 'transform 0.15s, box-shadow 0.15s',
+                        borderRadius: 3,
+                        transition:
+                          'transform 0.15s ease, box-shadow 0.15s ease',
                         '&:hover': {
                           transform: 'translateY(-2px)',
                           boxShadow: '0 8px 24px rgba(232,130,42,0.15)',
@@ -347,7 +369,7 @@ const HomePage = () => {
                     >
                       <CardActionArea
                         onClick={() => navigate(`/tournois/${tournament.id}`)}
-                        sx={{ p: 0 }}
+                        sx={{ height: '100%' }}
                       >
                         <CardContent sx={{ p: 3 }}>
                           <Box
@@ -355,21 +377,38 @@ const HomePage = () => {
                               display: 'flex',
                               justifyContent: 'space-between',
                               alignItems: 'flex-start',
-                              mb: 1,
+                              gap: 2,
                             }}
                           >
-                            <Typography
-                              variant="h6"
-                              fontWeight={700}
-                              color="white"
-                            >
-                              {tournament.nom}
-                            </Typography>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography
+                                variant="subtitle1"
+                                fontWeight={800}
+                                color="white"
+                                sx={{ mb: 0.5 }}
+                              >
+                                {tournament.nom}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Du {formatDate(tournament.dateDebut)} au{' '}
+                                {formatDate(tournament.dateFin)}
+                              </Typography>
+                            </Box>
+
+                            <Chip
+                              label="En cours"
+                              size="small"
+                              sx={{
+                                bgcolor: 'rgba(232,130,42,0.12)',
+                                color: '#e8822a',
+                                border: '1px solid rgba(232,130,42,0.25)',
+                                fontWeight: 700,
+                              }}
+                            />
                           </Box>
-                          <Typography variant="body2" color="text.secondary">
-                            Du {formatDate(tournament.dateDebut)} au{' '}
-                            {formatDate(tournament.dateFin)}
-                          </Typography>
                         </CardContent>
                       </CardActionArea>
                     </Card>
@@ -378,19 +417,20 @@ const HomePage = () => {
               )}
             </Box>
 
-            {/* ── À VENIR ──────────────────────────────────────────── */}
             <Box>
               <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
                   mb: 3,
+                  gap: 2,
+                  flexWrap: 'wrap',
                 }}
               >
                 <Typography
                   variant="h5"
-                  fontWeight={700}
+                  fontWeight={800}
                   color="white"
                   sx={{
                     fontFamily: '"Orbitron", sans-serif',
@@ -399,14 +439,14 @@ const HomePage = () => {
                 >
                   Prochains tournois
                 </Typography>
+
                 <Button
                   variant="text"
                   onClick={() => navigate('/tournois?etat=A_VENIR')}
                   sx={{
-                    color: '#e8822a',
-                    fontWeight: 600,
-                    fontSize: '0.85rem',
-                    '&:hover': { backgroundColor: 'rgba(232,130,42,0.08)' },
+                    color: '#3b82f6',
+                    fontWeight: 700,
+                    '&:hover': { backgroundColor: 'rgba(59,130,246,0.08)' },
                   }}
                 >
                   Voir tout →
@@ -421,6 +461,7 @@ const HomePage = () => {
                     borderRadius: 2,
                     border: '1px dashed rgba(255,255,255,0.1)',
                     textAlign: 'center',
+                    bgcolor: 'rgba(255,255,255,0.02)',
                   }}
                 >
                   <Typography color="text.secondary">
@@ -428,85 +469,81 @@ const HomePage = () => {
                   </Typography>
                 </Box>
               ) : (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gap: 2,
-                    gridTemplateColumns: {
-                      xs: '1fr',
-                      sm: 'repeat(2, 1fr)',
-                      md: 'repeat(3, 1fr)',
-                    },
-                  }}
-                >
+                <Stack spacing={2}>
                   {aVenir.map((tournament) => (
                     <Card
                       key={tournament.id}
                       sx={{
                         backgroundColor: '#111827',
                         border: '1px solid rgba(255,255,255,0.07)',
-                        borderLeft: '3px solid #3b82f6',
-                        borderRadius: 2,
-                        transition: 'transform 0.15s, border-color 0.15s',
+                        borderLeft: '4px solid #3b82f6',
+                        borderRadius: 3,
+                        transition:
+                          'transform 0.15s ease, border-color 0.15s ease',
                         '&:hover': {
                           transform: 'translateY(-2px)',
-                          borderColor: 'rgba(59,130,246,0.4)',
+                          borderColor: 'rgba(59,130,246,0.35)',
                         },
                       }}
                     >
                       <CardActionArea
                         onClick={() => navigate(`/tournois/${tournament.id}`)}
-                        sx={{ p: 0, height: '100%' }}
+                        sx={{ height: '100%' }}
                       >
                         <CardContent sx={{ p: 2.5 }}>
-                          <Typography
-                            variant="subtitle1"
-                            fontWeight={700}
-                            color="white"
-                            gutterBottom
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              gap: 2,
+                            }}
                           >
-                            {tournament.nom}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Début : {formatDate(tournament.dateDebut)}
-                          </Typography>
-                          {tournament.nombresParticipantsMax && (
-                            <Typography
-                              variant="body2"
-                              sx={{ color: '#e8822a', mt: 0.5 }}
-                            >
-                              👥 Max {tournament.nombresParticipantsMax} équipes
-                            </Typography>
-                          )}
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography
+                                variant="subtitle1"
+                                fontWeight={800}
+                                color="white"
+                                sx={{ mb: 0.5 }}
+                              >
+                                {tournament.nom}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Début : {formatDate(tournament.dateDebut)}
+                              </Typography>
+                              {tournament.nombresParticipantsMax && (
+                                <Typography
+                                  variant="body2"
+                                  sx={{ color: '#e8822a', mt: 0.5 }}
+                                >
+                                  👥 Max {tournament.nombresParticipantsMax}{' '}
+                                  équipes
+                                </Typography>
+                              )}
+                            </Box>
+
+                            <Chip
+                              label="À venir"
+                              size="small"
+                              sx={{
+                                bgcolor: 'rgba(59,130,246,0.12)',
+                                color: '#3b82f6',
+                                border: '1px solid rgba(59,130,246,0.25)',
+                                fontWeight: 700,
+                              }}
+                            />
+                          </Box>
                         </CardContent>
                       </CardActionArea>
                     </Card>
                   ))}
-                </Box>
+                </Stack>
               )}
-
-              {/* CTA final */}
-              <Box sx={{ textAlign: 'center', mt: 5 }}>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  onClick={() => navigate('/tournois')}
-                  sx={{
-                    borderColor: '#e8822a',
-                    color: '#e8822a',
-                    fontWeight: 700,
-                    px: 5,
-                    '&:hover': {
-                      borderColor: '#c86e20',
-                      backgroundColor: 'rgba(232,130,42,0.06)',
-                    },
-                  }}
-                >
-                  Explorer tous les tournois
-                </Button>
-              </Box>
             </Box>
-          </>
+          </Box>
         )}
       </Container>
     </Box>

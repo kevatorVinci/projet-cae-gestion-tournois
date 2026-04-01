@@ -8,6 +8,7 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Stack,
   Typography,
   Card,
   CardContent,
@@ -24,6 +25,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
+import History from '@mui/icons-material/History';
 import { Tournoi } from '../../../types';
 import BackButton from '../../BoutonRetour';
 
@@ -315,7 +318,6 @@ const TournoiPage = () => {
             <CircularProgress sx={{ color: '#e8822a' }} />
           </Box>
         ) : etatFilter === 'TOUS' ? (
-          /* ── Vue 3 colonnes (filtre TOUS) ────────────────────────── */
           <Box
             sx={{
               display: 'grid',
@@ -324,129 +326,293 @@ const TournoiPage = () => {
                 xs: '1fr',
                 md: 'repeat(3, minmax(0, 1fr))',
               },
+              alignItems: 'start',
             }}
           >
             <Box>
-              <Typography variant="h6" gutterBottom color="white">
-                Tournois en cours
-              </Typography>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(59,130,246,0.12)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#60a5fa',
+                  }}
+                >
+                  <SearchIcon sx={{ fontSize: 18 }} />
+                </Box>
+                <Typography variant="h6" color="white" fontWeight={800}>
+                  Tournois en cours
+                </Typography>
+              </Box>
+
               {enCours.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
                   Aucun tournoi en cours.
                 </Typography>
               )}
-              {enCours.map((tournament) => (
-                <Card
-                  key={tournament.id}
-                  sx={{
-                    cursor: 'pointer',
-                    mb: 2,
-                    backgroundColor: '#111827',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    borderLeft: `3px solid ${COLORS.EN_COURS}`,
-                  }}
-                  onClick={() => navigate(`/tournois/${tournament.id}`)}
-                >
-                  <CardContent>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={700}
-                      color="white"
-                    >
-                      {tournament.nom}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Du {formatDate(tournament.dateDebut)} au{' '}
-                      {formatDate(tournament.dateFin)}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
+
+              <Stack spacing={2}>
+                {enCours.map((tournament) => (
+                  <Card
+                    key={tournament.id}
+                    sx={{
+                      cursor: 'pointer',
+                      backgroundColor: '#111827',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderLeft: `4px solid ${COLORS.EN_COURS}`,
+                      borderRadius: 3,
+                      transition:
+                        'transform 0.15s ease, border-color 0.15s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        borderColor: `${COLORS.EN_COURS}88`,
+                      },
+                    }}
+                    onClick={() => navigate(`/tournois/${tournament.id}`)}
+                  >
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          gap: 2,
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight={800}
+                            color="white"
+                            sx={{ mb: 0.5 }}
+                          >
+                            {tournament.nom}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Du {formatDate(tournament.dateDebut)} au{' '}
+                            {formatDate(tournament.dateFin)}
+                          </Typography>
+                        </Box>
+
+                        <Chip
+                          label="En cours"
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(59,130,246,0.12)',
+                            color: '#60a5fa',
+                            border: '1px solid rgba(59,130,246,0.25)',
+                            fontWeight: 700,
+                          }}
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
             </Box>
 
             <Box>
-              <Typography variant="h6" gutterBottom color="white">
-                Tournois à venir
-              </Typography>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(232,130,42,0.12)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#e8822a',
+                  }}
+                >
+                  <AddCircleOutline sx={{ fontSize: 18 }} />
+                </Box>
+                <Typography variant="h6" color="white" fontWeight={800}>
+                  Tournois à venir
+                </Typography>
+              </Box>
+
               {aVenir.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
                   Aucun tournoi à venir.
                 </Typography>
               )}
-              {aVenir.map((tournament) => (
-                <Card
-                  key={tournament.id}
-                  sx={{
-                    cursor: 'pointer',
-                    mb: 2,
-                    backgroundColor: '#111827',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    borderLeft: `3px solid ${COLORS.A_VENIR}`,
-                  }}
-                  onClick={() => navigate(`/tournois/${tournament.id}`)}
-                >
-                  <CardContent>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={700}
-                      color="white"
-                    >
-                      {tournament.nom}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Début : {formatDate(tournament.dateDebut)}
-                    </Typography>
-                    {tournament.nombresParticipantsMax && (
-                      <Typography variant="body2" sx={{ color: '#e8822a' }}>
-                        👥 Max : {tournament.nombresParticipantsMax} équipes
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+
+              <Stack spacing={2}>
+                {aVenir.map((tournament) => (
+                  <Card
+                    key={tournament.id}
+                    sx={{
+                      cursor: 'pointer',
+                      backgroundColor: '#111827',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderLeft: `4px solid ${COLORS.A_VENIR}`,
+                      borderRadius: 3,
+                      transition:
+                        'transform 0.15s ease, border-color 0.15s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        borderColor: `${COLORS.A_VENIR}88`,
+                      },
+                    }}
+                    onClick={() => navigate(`/tournois/${tournament.id}`)}
+                  >
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          gap: 2,
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight={800}
+                            color="white"
+                            sx={{ mb: 0.5 }}
+                          >
+                            {tournament.nom}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Début : {formatDate(tournament.dateDebut)}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mt: 0.5 }}
+                          >
+                            Inscriptions avant le{' '}
+                            {formatDate(tournament.dateLimiteInscription)}
+                          </Typography>
+                          {tournament.nombresParticipantsMax && (
+                            <Typography
+                              variant="body2"
+                              sx={{ color: '#e8822a', mt: 0.5 }}
+                            >
+                              👥 Max : {tournament.nombresParticipantsMax}{' '}
+                              équipes
+                            </Typography>
+                          )}
+                        </Box>
+
+                        <Chip
+                          label="À venir"
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(232,130,42,0.12)',
+                            color: '#e8822a',
+                            border: '1px solid rgba(232,130,42,0.25)',
+                            fontWeight: 700,
+                          }}
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
             </Box>
 
             <Box>
-              <Typography variant="h6" gutterBottom color="white">
-                Tournois passés
-              </Typography>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(16,185,129,0.12)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#10b981',
+                  }}
+                >
+                  <History sx={{ fontSize: 18 }} />
+                </Box>
+                <Typography variant="h6" color="white" fontWeight={800}>
+                  Tournois passés
+                </Typography>
+              </Box>
+
               {passes.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
                   Aucun tournoi passé.
                 </Typography>
               )}
-              {passes.map((tournament) => (
-                <Card
-                  key={tournament.id}
-                  sx={{
-                    cursor: 'pointer',
-                    mb: 2,
-                    backgroundColor: '#111827',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    borderLeft: `3px solid ${COLORS.PASSES}`,
-                  }}
-                  onClick={() => navigate(`/tournois/${tournament.id}`)}
-                >
-                  <CardContent>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={700}
-                      color="white"
-                    >
-                      {tournament.nom}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {tournament.etat === 'ANNULE'
-                        ? `Annulé le ${formatDate(tournament.dateFin)}`
-                        : `Terminé le ${formatDate(tournament.dateFin)}`}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
+
+              <Stack spacing={2}>
+                {passes.map((tournament) => (
+                  <Card
+                    key={tournament.id}
+                    sx={{
+                      cursor: 'pointer',
+                      backgroundColor: '#111827',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderLeft: `4px solid ${COLORS.PASSES}`,
+                      borderRadius: 3,
+                      transition:
+                        'transform 0.15s ease, border-color 0.15s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        borderColor: `${COLORS.PASSES}88`,
+                      },
+                    }}
+                    onClick={() => navigate(`/tournois/${tournament.id}`)}
+                  >
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          gap: 2,
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight={800}
+                            color="white"
+                            sx={{ mb: 0.5 }}
+                          >
+                            {tournament.nom}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {tournament.etat === 'ANNULE'
+                              ? `Annulé le ${formatDate(tournament.dateFin)}`
+                              : `Terminé le ${formatDate(tournament.dateFin)}`}
+                          </Typography>
+                        </Box>
+
+                        <Chip
+                          label={
+                            tournament.etat === 'ANNULE' ? 'Annulé' : 'Terminé'
+                          }
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(16,185,129,0.12)',
+                            color: '#10b981',
+                            border: '1px solid rgba(16,185,129,0.25)',
+                            fontWeight: 700,
+                          }}
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
             </Box>
           </Box>
         ) : (
-          /* ── Vue grille pleine largeur (filtre actif) ────────────── */
           <>
             <Box
               sx={{
@@ -454,13 +620,15 @@ const TournoiPage = () => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 mb: 3,
+                gap: 2,
+                flexWrap: 'wrap',
               }}
             >
-              <Typography variant="h6" color="white" fontWeight={700}>
+              <Typography variant="h6" color="white" fontWeight={800}>
                 {tournamentsByFilter.length} tournoi
                 {tournamentsByFilter.length !== 1 ? 's' : ''} trouvé
-                {tournamentsByFilter.length !== 1 ? 's' : ''}
               </Typography>
+
               <Chip
                 label={
                   etatFilter === 'EN_COURS'
@@ -499,7 +667,7 @@ const TournoiPage = () => {
                   gridTemplateColumns: {
                     xs: '1fr',
                     sm: 'repeat(2, 1fr)',
-                    md: 'repeat(3, 1fr)',
+                    lg: 'repeat(3, 1fr)',
                   },
                 }}
               >
@@ -510,7 +678,7 @@ const TournoiPage = () => {
                       backgroundColor: '#111827',
                       border: '1px solid rgba(255,255,255,0.07)',
                       borderLeft: `4px solid ${COLORS[etatFilter as keyof typeof COLORS]}`,
-                      borderRadius: 2,
+                      borderRadius: 3,
                       transition: 'transform 0.15s, border-color 0.15s',
                       '&:hover': {
                         transform: 'translateY(-2px)',
@@ -520,7 +688,7 @@ const TournoiPage = () => {
                   >
                     <CardActionArea
                       onClick={() => navigate(`/tournois/${tournament.id}`)}
-                      sx={{ p: 0, height: '100%' }}
+                      sx={{ height: '100%' }}
                     >
                       <CardContent sx={{ p: 3 }}>
                         <Box
@@ -528,55 +696,88 @@ const TournoiPage = () => {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'flex-start',
-                            mb: 1,
+                            gap: 2,
                           }}
                         >
-                          <Typography
-                            variant="subtitle1"
-                            fontWeight={700}
-                            color="white"
-                            sx={{ flex: 1, mr: 1 }}
-                          >
-                            {tournament.nom}
-                          </Typography>
-                        </Box>
-                        {etatFilter === 'EN_COURS' && (
-                          <Typography variant="body2" color="text.secondary">
-                            Du {formatDate(tournament.dateDebut)} au{' '}
-                            {formatDate(tournament.dateFin)}
-                          </Typography>
-                        )}
-                        {etatFilter === 'A_VENIR' && (
-                          <>
-                            <Typography variant="body2" color="text.secondary">
-                              Début : {formatDate(tournament.dateDebut)}
-                            </Typography>
+                          <Box sx={{ minWidth: 0 }}>
                             <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ mt: 0.5 }}
+                              variant="subtitle1"
+                              fontWeight={800}
+                              color="white"
+                              sx={{ mb: 0.5 }}
                             >
-                              Inscriptions avant le{' '}
-                              {formatDate(tournament.dateLimiteInscription)}
+                              {tournament.nom}
                             </Typography>
-                            {tournament.nombresParticipantsMax && (
+
+                            {etatFilter === 'EN_COURS' && (
                               <Typography
                                 variant="body2"
-                                sx={{ color: '#e8822a', mt: 0.5 }}
+                                color="text.secondary"
                               >
-                                👥 Max : {tournament.nombresParticipantsMax}{' '}
-                                équipes
+                                Du {formatDate(tournament.dateDebut)} au{' '}
+                                {formatDate(tournament.dateFin)}
                               </Typography>
                             )}
-                          </>
-                        )}
-                        {etatFilter === 'PASSES' && (
-                          <Typography variant="body2" color="text.secondary">
-                            {tournament.etat === 'ANNULE'
-                              ? `Annulé le ${formatDate(tournament.dateFin)}`
-                              : `Terminé le ${formatDate(tournament.dateFin)}`}
-                          </Typography>
-                        )}
+
+                            {etatFilter === 'A_VENIR' && (
+                              <>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
+                                  Début : {formatDate(tournament.dateDebut)}
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ mt: 0.5 }}
+                                >
+                                  Inscriptions avant le{' '}
+                                  {formatDate(tournament.dateLimiteInscription)}
+                                </Typography>
+                                {tournament.nombresParticipantsMax && (
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ color: '#e8822a', mt: 0.5 }}
+                                  >
+                                    👥 Max : {tournament.nombresParticipantsMax}{' '}
+                                    équipes
+                                  </Typography>
+                                )}
+                              </>
+                            )}
+
+                            {etatFilter === 'PASSES' && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {tournament.etat === 'ANNULE'
+                                  ? `Annulé le ${formatDate(tournament.dateFin)}`
+                                  : `Terminé le ${formatDate(tournament.dateFin)}`}
+                              </Typography>
+                            )}
+                          </Box>
+
+                          <Chip
+                            label={
+                              etatFilter === 'EN_COURS'
+                                ? 'En cours'
+                                : etatFilter === 'A_VENIR'
+                                  ? 'À venir'
+                                  : tournament.etat === 'ANNULE'
+                                    ? 'Annulé'
+                                    : 'Terminé'
+                            }
+                            size="small"
+                            sx={{
+                              bgcolor: `${COLORS[etatFilter as keyof typeof COLORS]}22`,
+                              color: COLORS[etatFilter as keyof typeof COLORS],
+                              border: `1px solid ${COLORS[etatFilter as keyof typeof COLORS]}66`,
+                              fontWeight: 700,
+                            }}
+                          />
+                        </Box>
                       </CardContent>
                     </CardActionArea>
                   </Card>

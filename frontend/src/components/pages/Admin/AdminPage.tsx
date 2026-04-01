@@ -21,6 +21,7 @@ import {
   DialogContentText,
   DialogActions,
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
 import { UserContext } from '../../../contexts/UserContext';
 import { AuthenticatedUser, UserContextType } from '../../../types';
@@ -158,7 +159,7 @@ export default function AdminPage() {
     <Box sx={{ padding: 4, backgroundColor: '#080b14', minHeight: '100vh' }}>
       <BackButton />
       <Typography variant="h4" color="white" mb={4} textAlign="center">
-        Gestion des Administrateurs 👑
+        Gestion des Administrateurs
       </Typography>
 
       {message && (
@@ -177,22 +178,10 @@ export default function AdminPage() {
           placeholder="Chercher un joueur (par Tag ou Email)..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{
-            backgroundColor: '#1a2540',
-            borderRadius: 1,
-            input: { color: 'white' },
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': { borderColor: '#2a3b55' },
-              '&:hover fieldset': { borderColor: '#e8822a' },
-              '&.Mui-focused fieldset': { borderColor: '#e8822a' },
-            },
-          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Typography sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                  🔍
-                </Typography>
+                <SearchIcon sx={{ color: '#e8822a' }} />
               </InputAdornment>
             ),
           }}
@@ -308,16 +297,6 @@ export default function AdminPage() {
                         onClick={() =>
                           handleToggleAdmin(user.email, user.admin ?? false)
                         }
-                        sx={{
-                          backgroundColor: !user.admin
-                            ? '#e8822a'
-                            : 'transparent',
-                          '&:hover': {
-                            backgroundColor: !user.admin
-                              ? '#c86e20'
-                              : 'rgba(211, 47, 47, 0.1)',
-                          },
-                        }}
                       >
                         {user.admin ? 'Retirer Admin' : 'Nommer Admin'}
                       </Button>
@@ -339,19 +318,9 @@ export default function AdminPage() {
         </Table>
       </TableContainer>
 
-      <Dialog
-        open={banDialogOpen}
-        onClose={closeBanDialog}
-        PaperProps={{
-          sx: {
-            backgroundColor: '#1a2540',
-            color: 'white',
-            border: '1px solid rgba(255,0,0,0.5)',
-          },
-        }}
-      >
+      <Dialog open={banDialogOpen} onClose={closeBanDialog}>
         <DialogTitle sx={{ color: '#ff5252', fontWeight: 'bold' }}>
-          ⚠️ Confirmer le bannissement
+          Confirmer le bannissement
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
@@ -370,16 +339,6 @@ export default function AdminPage() {
             placeholder="Raison du bannissement (optionnel)"
             value={banReason}
             onChange={(e) => setBanReason(e.target.value)}
-            sx={{
-              backgroundColor: 'rgba(255,255,255,0.05)',
-              borderRadius: 1,
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                '&:hover fieldset': { borderColor: '#ef4444' },
-                '&.Mui-focused fieldset': { borderColor: '#ef4444' },
-              },
-            }}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>

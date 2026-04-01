@@ -23,13 +23,19 @@ import {
   fetchPublicTournaments,
 } from '../../../services/tournois';
 import { Equipe, Tournoi } from '../../../types';
+import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 
 interface MemberCardProps {
   member: Equipe['members'][number];
   isResponsable: boolean;
+  isCurrentUser: boolean;
 }
 
-const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
+const MemberCard: React.FC<MemberCardProps> = ({
+  member,
+  isResponsable,
+  isCurrentUser,
+}) => {
   const navigate = useNavigate();
 
   const normalizeAvatarUrl = (avatar?: string) => {
@@ -45,8 +51,18 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
 
   return (
     <Paper
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/players/${member.id}`)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          navigate(`/players/${member.id}`);
+        }
+      }}
       sx={{
         p: 3,
+        minHeight: 260,
         borderRadius: 2,
         backgroundColor: '#1a2540',
         border: '1px solid rgba(255,255,255,0.10)',
@@ -55,6 +71,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
         alignItems: 'center',
         textAlign: 'center',
         transition: 'all 0.3s ease',
+        cursor: 'pointer',
         '&:hover': {
           borderColor: isResponsable ? '#e8822a' : 'rgba(255,255,255,0.25)',
           backgroundColor: 'rgba(26, 37, 64, 0.8)',
@@ -67,8 +84,8 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
         src={normalizeAvatarUrl(member.profileImageUrl || member.profileImage)}
         alt={member.tag}
         sx={{
-          width: 80,
-          height: 80,
+          width: 84,
+          height: 84,
           mb: 1.5,
           border: '3px solid rgba(255,255,255,0.15)',
           transition: 'transform 0.3s ease',
@@ -79,17 +96,25 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
         variant="h6"
         fontWeight={700}
         color="white"
-        onClick={() => {
-          navigate(`/players/${member.id}`);
-        }}
         sx={{
-          cursor: 'pointer',
-          '&:hover': { color: '#e8822a' },
           mb: 0.5,
         }}
       >
         {member.tag}
       </Typography>
+
+      {isCurrentUser && (
+        <Chip
+          label="Moi"
+          size="small"
+          sx={{
+            bgcolor: 'rgba(59,130,246,0.16)',
+            color: '#93c5fd',
+            fontWeight: 700,
+            mb: 1,
+          }}
+        />
+      )}
 
       <Chip
         label={
@@ -104,22 +129,22 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
           fontSize: 11,
           color: 'white',
           borderColor: 'rgba(255,255,255,0.25)',
+          mb: 1,
         }}
       />
 
-      {isResponsable && (
-        <Chip
-          label="Responsable"
-          size="small"
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            bgcolor: '#e8822a',
-            color: 'white',
-            mt: 1,
-          }}
-        />
-      )}
+      <Chip
+        label={isResponsable ? 'Responsable' : 'Membre'}
+        size="small"
+        sx={{
+          fontSize: 10,
+          fontWeight: 700,
+          bgcolor: isResponsable ? '#e8822a' : '#334155',
+          color: 'white',
+          mt: 1.5,
+          mb: 2,
+        }}
+      />
     </Paper>
   );
 };
@@ -130,6 +155,15 @@ export default function TeamDetails() {
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const currentUserId = (() => {
+    const token = getAuthenticatedUser()?.token;
+    if (!token) return undefined;
+    const payload = decodeJwtPayload(token);
+    if (typeof payload?.id === 'number') return payload.id;
+    const subAsNumber = Number(payload?.sub);
+    return Number.isFinite(subAsNumber) ? subAsNumber : undefined;
+  })();
 
   const [team, setTeam] = useState<Equipe | null>(null);
   const [teamTournaments, setTeamTournaments] = useState<Tournoi[]>([]);
@@ -432,74 +466,91 @@ export default function TeamDetails() {
           </CardContent>
         </Card>
 
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }} color="white">
-          Effectif de la Team
-        </Typography>
-
-        <Stack spacing={2} sx={{ mb: 4 }}>
-          {team.members.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              Cette équipe n'a plus de membre.
-            </Typography>
-          )}
-
-          {sortedMembers.map((member) => (
-            <MemberCard
-              key={member.id}
-              member={member}
-              isResponsable={member.isResponsable ?? false}
-            />
-          ))}
-        </Stack>
-
-        <Paper
+        <Box
           sx={{
-            p: 3,
-            borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.10)',
-            backgroundColor: '#1a2540',
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' },
+            gap: 3,
+            alignItems: 'start',
           }}
         >
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            sx={{ mb: 2 }}
-            color="white"
+          <Box>
+            <Typography
+              variant="h5"
+              fontWeight={700}
+              sx={{ mb: 2 }}
+              color="white"
+            >
+              Effectif de la Team
+            </Typography>
+
+            <Stack spacing={2}>
+              {team.members.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  Cette équipe n'a plus de membre.
+                </Typography>
+              )}
+
+              {sortedMembers.map((member) => (
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  isResponsable={member.isResponsable ?? false}
+                  isCurrentUser={member.id === currentUserId}
+                />
+              ))}
+            </Stack>
+          </Box>
+
+          <Paper
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              border: '1px solid rgba(255,255,255,0.10)',
+              backgroundColor: '#1a2540',
+            }}
           >
-            Historique des tournois
-          </Typography>
+            <Typography
+              variant="h5"
+              fontWeight={700}
+              sx={{ mb: 2 }}
+              color="white"
+            >
+              Historique des tournois
+            </Typography>
 
-          {loadingHistory ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-              <CircularProgress color="secondary" size={24} />
-            </Box>
-          ) : historyError ? (
-            <Alert severity="warning">{historyError}</Alert>
-          ) : (
-            <>
-              {renderTournamentSection(
-                'Tournois en cours',
-                inProgressTournaments,
-                'Aucun tournoi en cours actuellement.',
-                '#f59e0b',
-              )}
+            {loadingHistory ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                <CircularProgress color="secondary" size={24} />
+              </Box>
+            ) : historyError ? (
+              <Alert severity="warning">{historyError}</Alert>
+            ) : (
+              <>
+                {renderTournamentSection(
+                  'Tournois en cours',
+                  inProgressTournaments,
+                  'Aucun tournoi en cours actuellement.',
+                  '#f59e0b',
+                )}
 
-              {renderTournamentSection(
-                'Tournois à venir',
-                upcomingTournaments,
-                "Aucun tournoi à venir pour l'instant.",
-                '#3b82f6',
-              )}
+                {renderTournamentSection(
+                  'Tournois à venir',
+                  upcomingTournaments,
+                  "Aucun tournoi à venir pour l'instant.",
+                  '#3b82f6',
+                )}
 
-              {renderTournamentSection(
-                'Tournois passés',
-                pastTournaments,
-                'Aucun tournoi passé pour le moment.',
-                '#10b981',
-              )}
-            </>
-          )}
-        </Paper>
+                {renderTournamentSection(
+                  'Tournois passés',
+                  pastTournaments,
+                  'Aucun tournoi passé pour le moment.',
+                  '#10b981',
+                )}
+              </>
+            )}
+          </Paper>
+        </Box>
       </Container>
     </Box>
   );
