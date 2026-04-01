@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useContext } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -10,45 +10,70 @@ import {
   Stack,
   Typography,
   CircularProgress,
+  IconButton,
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import StarIcon from '@mui/icons-material/Star';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import { User } from '../../../types';
+import BuildIcon from '@mui/icons-material/Build';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { User, UserContextType } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
-import {
-  fetchTeamRegistrationsPublic,
-  TeamRegistrationItem,
-} from '../../../services/tournois';
+import { getAllEquipes } from '../../../services/teams';
+import BackButton from '../../../components/BoutonRetour';
+import { UserContext } from '../../../contexts/UserContext';
 
-interface TeamMember {
-  id: number;
+interface Player {
   tag: string;
+  id: number;
+  email?: string;
   specialty?: string;
+  profileImage?: string;
   profileImageUrl?: string;
+  admin?: boolean;
   isResponsable?: boolean;
+  password?: string;
 }
 
-interface Equipe {
-  id: number;
-  name: string;
-  membres: TeamMember[];
+interface TournamentRegistration {
+  tournoiId: number;
+  equipeId: number;
+  tournoi?: {
+    nom: string;
+    etat?: string;
+  };
 }
 
 const pageGradient =
-  'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
+  'linear-gradient(135deg, #0f172a 0%, #1a2540 50%, #0f172a 100%)';
 
-const capitalize = (s?: string) =>
-  s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const fetchTeamRegistrationsPublic = async (
+  teamId: number,
+): Promise<TournamentRegistration[]> => {
+  const token = getAuthenticatedUser()?.token || '';
+  const response = await fetch(`/api/teams/${teamId}/registrations`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to fetch registrations');
+  return response.json();
+};
+
+const capitalize = (str?: string): string => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
 
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [teamId, setTeamId] = useState<number | null>(null);
-  const [tournaments, setTournaments] = useState<TeamRegistrationItem[]>([]);
+  const [tournaments, setTournaments] = useState<TournamentRegistration[]>([]);
+  const { authenticatedUser } = useContext(UserContext) as UserContextType;
+
+  const isOwnProfile = authenticatedUser?.tag === user?.tag;
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return undefined;
@@ -58,49 +83,88 @@ export default function MemberDetails() {
   };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!id) return;
-      try {
-        const token = getAuthenticatedUser()?.token || '';
-        const response = await fetch(`/api/equipes`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error('Failed to fetch teams');
+    const fetchUserAndTeam = async () => {
+      if (!id || id === 'undefined') {
+        setLoading(false);
+        return;
+      }
 
-        const equipes: Equipe[] = await response.json();
-        let foundUser: TeamMember | null = null;
+      const decodedId = decodeURIComponent(id);
+      setLoading(true);
+
+      try {
+        const token =
+          authenticatedUser?.token || getAuthenticatedUser()?.token || '';
+
+        let players: Player[] = [];
+        try {
+          const playersResponse = await fetch('/api/auths/players', {
+            headers: { Authorization: token ? `Bearer ${token}` : '' }, // Format Bearer
+          });
+          if (playersResponse.ok) {
+            players = await playersResponse.json();
+          }
+        } catch (e) {
+          // Silently ignore player fetch error
+        }
+
+        const playerBase = players.find(
+          (p: Player) => p.tag === decodedId || String(p.id) === decodedId,
+        );
+
+        const equipes = await getAllEquipes().catch(() => []);
+        let foundUserInTeam: Player | null = null;
         let userTeamName = '';
         let foundTeamId: number | null = null;
 
         for (const equipe of equipes) {
-          const member = equipe.membres?.find((m) => m.id === Number(id));
+          const listJoueurs = (equipe.members || []) as Player[];
+          const member = listJoueurs.find(
+            (m: Player) => m.tag === decodedId || String(m.id) === decodedId,
+          );
           if (member) {
-            foundUser = member;
+            foundUserInTeam = member;
             userTeamName = equipe.name;
             foundTeamId = equipe.id;
             break;
           }
         }
 
-        if (foundUser) {
+        // 3. Assemble les données (priorité à playerBase, sinon les données de l'équipe)
+        if (playerBase || foundUserInTeam) {
+          const finalId = playerBase?.id || foundUserInTeam?.id || 0;
+          const finalTag = playerBase?.tag || foundUserInTeam?.tag || '';
+          const finalSpecialty =
+            playerBase?.specialty ||
+            foundUserInTeam?.specialty ||
+            'Non spécifiée';
+
           setUser({
-            id: foundUser.id,
-            tag: foundUser.tag,
-            specialty: foundUser.specialty || 'Non spécifiée',
-            team: userTeamName,
-            profileImage: foundUser.profileImageUrl || '/luffy.png',
-            isResponsable: foundUser.isResponsable || false,
+            id: finalId,
+            tag: finalTag,
+            email: playerBase?.email || '',
+            specialty: finalSpecialty,
+            team: userTeamName || 'Aucune équipe',
+            profileImage:
+              playerBase?.profileImage ||
+              playerBase?.profileImageUrl ||
+              foundUserInTeam?.profileImageUrl ||
+              '/luffy.png',
+            isResponsable: foundUserInTeam?.isResponsable || false,
+            admin: playerBase?.admin || false,
+            password: playerBase?.password, // Récupère le mot de passe s'il est là
           });
           setTeamId(foundTeamId);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Erreur globale lors de la récupération:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchUser();
-  }, [id]);
+
+    fetchUserAndTeam();
+  }, [id, authenticatedUser]);
 
   useEffect(() => {
     const loadTournaments = async () => {
@@ -142,6 +206,9 @@ export default function MemberDetails() {
           background: pageGradient,
         }}
       >
+        <Typography color="white">
+          Recherche du profil de {id ? decodeURIComponent(id) : ''}...
+        </Typography>
         <Paper
           sx={{
             p: 4,
@@ -190,34 +257,24 @@ export default function MemberDetails() {
         pb: 6,
       }}
     >
-      {/* ── HERO BANNER ─────────────────────────────────────────── */}
-      <Box
-        sx={{
-          position: 'relative',
-          pt: { xs: 6, md: 8 },
-          pb: { xs: 8, md: 10 },
-          overflow: 'hidden',
-        }}
-      >
-        {/* Orange glow */}
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            background:
-              'radial-gradient(ellipse 60% 50% at 50% 20%, rgba(232,130,42,0.08), transparent)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        <Container maxWidth="lg">
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={3}
-            alignItems="center"
+      <Container maxWidth="lg">
+        <BackButton />
+        <Stack spacing={4}>
+          <Box
+            sx={{
+              mb: 4,
+              p: 3,
+              borderRadius: 2,
+              border: '1px solid rgba(255,255,255,0.07)',
+              backgroundColor: '#111827',
+            }}
           >
-            {/* Avatar */}
-            <Box sx={{ position: 'relative' }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={3}
+              sx={{ position: 'relative' }}
+            >
               <Avatar
                 src={normalizeAvatarUrl(user.profileImage)}
                 alt={user.tag}
@@ -228,13 +285,124 @@ export default function MemberDetails() {
                   boxShadow: '0 0 30px rgba(232,130,42,0.3)',
                 }}
               />
-              {user.isResponsable && (
-                <Chip
-                  icon={
-                    <StarIcon sx={{ fontSize: 14, color: '#fff !important' }} />
-                  }
-                  label="Responsable"
-                  size="small"
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 0.5, display: 'block' }}
+                >
+                  Tag
+                </Typography>
+                <Typography
+                  variant="h3"
+                  fontWeight={700}
+                  color="#e8822a"
+                  sx={{ mb: 1 }}
+                >
+                  {user.tag}
+                </Typography>
+              </Box>
+              {isOwnProfile && (
+                <Stack direction="column" spacing={2}>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5, fontWeight: 'bold' }}
+                    >
+                      Mail
+                    </Typography>
+                    <Typography variant="body1" color="rgba(255,255,255,0.5)">
+                      {authenticatedUser?.email || user.email}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5, fontWeight: 'bold' }}
+                    >
+                      Mot de Passe
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body1" color="rgba(255,255,255,0.5)">
+                        {showPassword
+                          ? authenticatedUser?.password ||
+                            user.password ||
+                            '********'
+                          : '********'}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        sx={{ color: 'rgba(255,255,255,0.7)' }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </Stack>
+              )}
+            </Stack>
+          </Box>
+
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3}>
+            <Stack direction="column" spacing={2} sx={{ flex: 1 }}>
+              <Box
+                sx={{
+                  p: 2.5,
+                  borderRadius: 2,
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  backgroundColor: '#111827',
+                }}
+              >
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}
+                >
+                  <BuildIcon sx={{ color: '#e8822a', fontSize: 20 }} />
+                  <Typography variant="caption" color="text.secondary">
+                    Spécialité
+                  </Typography>
+                </Box>
+                <Typography variant="h6" color="white" fontWeight={600}>
+                  {user.specialty || 'Non spécifiée'}
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{
+                  p: 2.5,
+                  borderRadius: 2,
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  backgroundColor: '#111827',
+                }}
+              >
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}
+                >
+                  <GroupsIcon sx={{ color: '#9c27b0', fontSize: 20 }} />
+                  <Typography variant="caption" color="text.secondary">
+                    Équipe
+                  </Typography>
+                </Box>
+                <Typography variant="h6" color="white" fontWeight={600}>
+                  {user.team || 'Aucune équipe'}
+                </Typography>
+              </Box>
+            </Stack>
+
+            <Box sx={{ flex: 1 }}>
+              <Box
+                sx={{
+                  p: 2.5,
+                  borderRadius: 2,
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  backgroundColor: '#111827',
+                  minHeight: 200,
+                  position: 'relative',
+                }}
+              >
+                <Box
                   sx={{
                     position: 'absolute',
                     bottom: -8,
@@ -244,69 +412,33 @@ export default function MemberDetails() {
                     color: 'white',
                     fontWeight: 700,
                     fontSize: '0.7rem',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
                   }}
-                />
-              )}
-            </Box>
-
-            {/* Name & quick info */}
-            <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-              <Typography
-                variant="h3"
-                fontWeight={800}
-                sx={{
-                  fontFamily: '"Orbitron", sans-serif',
-                  color: '#e8822a',
-                  textShadow: '0 0 20px rgba(232,130,42,0.3)',
-                }}
-              >
-                {user.tag}
-              </Typography>
-
-              <Stack
-                direction="row"
-                spacing={1.5}
-                sx={{
-                  mt: 1.5,
-                  justifyContent: { xs: 'center', sm: 'flex-start' },
-                  flexWrap: 'wrap',
-                }}
-              >
-                <Chip
-                  label={capitalize(user.specialty) || 'Non spécifiée'}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    color: 'rgba(255,255,255,0.85)',
-                    borderColor: 'rgba(255,255,255,0.15)',
-                  }}
-                />
-                <Chip
-                  icon={
-                    <GroupsIcon
-                      sx={{ fontSize: 16, color: '#9c27b0 !important' }}
-                    />
-                  }
-                  label={user.team || 'Aucune équipe'}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    color: 'rgba(255,255,255,0.85)',
-                    borderColor: 'rgba(255,255,255,0.15)',
-                    cursor: user.team ? 'pointer' : 'default',
-                  }}
-                  onClick={
-                    user.team ? () => navigate('/equipes/mateam') : undefined
-                  }
-                />
-              </Stack>
+                >
+                  <EmojiEventsIcon sx={{ color: 'white', fontSize: 16 }} />
+                  <Typography variant="caption" fontWeight={700} color="white">
+                    Tournois & Résultats
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontStyle: 'italic', textAlign: 'center', mt: 4 }}
+                >
+                  Aucun résultat disponible pour le moment.
+                </Typography>
+              </Box>
             </Box>
           </Stack>
-        </Container>
-      </Box>
+        </Stack>
+      </Container>
 
       {/* ── STATS BAR ───────────────────────────────────────────── */}
-      <Container maxWidth="lg" sx={{ mt: -4 }}>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Paper
           elevation={0}
           sx={{

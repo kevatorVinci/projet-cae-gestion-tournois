@@ -13,17 +13,28 @@ import {
   Stack,
   TextField,
   Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+  Avatar,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
+import PersonIcon from '@mui/icons-material/Person';
 import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import { UserContext } from '../../../contexts/UserContext';
-import { Equipe, UserContextType } from '../../../types';
+import { Equipe, UserContextType, AuthenticatedUser } from '../../../types';
 import { decodeJwtPayload } from '../../../utils/session';
 
 const TeamsList = () => {
   const [query, setQuery] = useState('');
   const [teamsState, setTeamsState] = useState<Equipe[]>([]);
+
+  // State to store the list of players
+  const [playersState, setPlayersState] = useState<AuthenticatedUser[]>([]);
+
+  // State to know which tab is currently active ('teams' or 'players')
+  const [activeTab, setActiveTab] = useState<'teams' | 'players'>('teams');
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
@@ -33,10 +44,31 @@ const TeamsList = () => {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
 
   useEffect(() => {
-    const loadTeams = async () => {
+    /**
+     * Loads both teams and players from the backend API.
+     */
+    const loadData = async () => {
       try {
-        const data = await getAllEquipes();
-        setTeamsState(data);
+        // Loads the teams
+        const teamsData = await getAllEquipes();
+        setTeamsState(teamsData);
+
+        // Loads the players using the security token
+        const playersResponse = await fetch('/api/auths/players', {
+          headers: {
+            Authorization: authenticatedUser?.token || '',
+          },
+        });
+
+        if (playersResponse.ok) {
+          const playersData = await playersResponse.json();
+          setPlayersState(playersData);
+        } else {
+          console.error(
+            "Le serveur a refusé l'accès :",
+            playersResponse.status,
+          );
+        }
       } catch (err: unknown) {
         console.error('Erreur API :', err);
       } finally {
@@ -44,8 +76,8 @@ const TeamsList = () => {
       }
     };
 
-    loadTeams();
-  }, []);
+    loadData();
+  }, [authenticatedUser?.token]);
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -126,16 +158,52 @@ const TeamsList = () => {
     }
   };
 
+  const handleTabChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newValue: 'teams' | 'players' | null,
+  ) => {
+    if (newValue !== null) {
+      setActiveTab(newValue);
+      // We empty the search bar when changing tabs so it's clean
+      setQuery('');
+      setMessage(null);
+    }
+  };
+
+  // We filter and sort the teams based on the search bar AND availability
   const filteredTeams = useMemo(
     () =>
       [...teamsState]
         .filter((team) => team.name.toLowerCase().includes(normalizedQuery))
+        .sort((a, b) => {
+          // Check if teams are unavailable (0 members)
+          const aUnavailable = a.members.length === 0;
+          const bUnavailable = b.members.length === 0;
+
+          // If 'a' is empty but 'b' is not, 'a' goes to the bottom (return 1)
+          if (aUnavailable && !bUnavailable) return 1;
+          // If 'b' is empty but 'a' is not, 'b' goes to the bottom (return -1)
+          if (!aUnavailable && bUnavailable) return -1;
+
+          // If both have the same availability status, sort alphabetically
+          return a.name.localeCompare(b.name, 'fr', {
+            sensitivity: 'base',
+          });
+        }),
+    [normalizedQuery, teamsState],
+  );
+
+  // We filter the players based on the search bar
+  const filteredPlayers = useMemo(
+    () =>
+      [...playersState]
+        .filter((player) => player.tag?.toLowerCase().includes(normalizedQuery))
         .sort((a, b) =>
-          a.name.localeCompare(b.name, 'fr', {
+          (a.tag || '').localeCompare(b.tag || '', 'fr', {
             sensitivity: 'base',
           }),
         ),
-    [normalizedQuery, teamsState],
+    [normalizedQuery, playersState],
   );
 
   if (loading) {
@@ -194,6 +262,7 @@ const TeamsList = () => {
           </Typography>
         </Box>
 
+        {/* The Search and Filter bar */}
         <Box
           sx={{
             mb: 4,
@@ -208,24 +277,47 @@ const TeamsList = () => {
             flexWrap: 'wrap',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <GroupsIcon sx={{ color: '#e8822a', fontSize: 26 }} />
-            <Typography variant="h6" fontWeight={700} color="white">
-              Équipes
-              {teamsState.length > 0 && (
-                <Typography
-                  component="span"
-                  variant="body2"
-                  sx={{ ml: 1, color: 'text.secondary', fontWeight: 400 }}
-                >
-                  ({filteredTeams.length} / {teamsState.length})
-                </Typography>
-              )}
-            </Typography>
-          </Box>
+          {/* The Toggle Buttons (Équipes / Joueurs) */}
+          <ToggleButtonGroup
+            value={activeTab}
+            exclusive
+            onChange={handleTabChange}
+            aria-label="Sélection de la vue"
+            sx={{
+              backgroundColor: '#1a2540',
+              borderRadius: 2,
+              '& .MuiToggleButton-root': {
+                color: 'rgba(255,255,255,0.5)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                textTransform: 'none',
+                fontWeight: 'bold',
+                px: 3,
+                py: 1,
+                '&.Mui-selected': {
+                  color: 'white',
+                  backgroundColor: '#e8822a',
+                  '&:hover': {
+                    backgroundColor: '#c86e20',
+                  },
+                },
+              },
+            }}
+          >
+            <ToggleButton value="teams" aria-label="Voir les équipes">
+              <GroupsIcon sx={{ mr: 1 }} /> Équipes
+            </ToggleButton>
+            <ToggleButton value="players" aria-label="Voir les joueurs">
+              <PersonIcon sx={{ mr: 1 }} /> Joueurs
+            </ToggleButton>
+          </ToggleButtonGroup>
 
+          {/* The Search Input */}
           <TextField
-            placeholder="Rechercher par nom..."
+            placeholder={
+              activeTab === 'teams'
+                ? 'Rechercher par nom...'
+                : 'Rechercher par pseudo...'
+            }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             size="small"
@@ -257,132 +349,242 @@ const TeamsList = () => {
           </Alert>
         )}
 
-        {filteredTeams.length === 0 ? (
-          <Box
-            sx={{
-              textAlign: 'center',
-              py: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 1.5,
-            }}
-          >
-            <GroupsIcon
-              sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }}
-            />
-            <Typography color="text.secondary">
-              Aucune équipe trouvée.
-            </Typography>
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 2.5,
-            }}
-          >
-            {filteredTeams.map((team) =>
-              (() => {
-                const isOwnTeam = isCurrentUsersTeam(team);
-                const hasNoMembers = team.members.length === 0;
-                const isPostulerDisabled = isOwnTeam || hasNoMembers;
+        {/* 🏆 IF TEAMS TAB IS ACTIVE */}
+        {activeTab === 'teams' && (
+          <>
+            {filteredTeams.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 10 }}>
+                <GroupsIcon
+                  sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }}
+                />
+                <Typography color="text.secondary">
+                  Aucune équipe trouvée.
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                  gap: 2.5,
+                }}
+              >
+                {filteredTeams.map((team) =>
+                  (() => {
+                    const isOwnTeam = isCurrentUsersTeam(team);
+                    const hasNoMembers = team.members.length === 0;
+                    const isPostulerDisabled = isOwnTeam || hasNoMembers;
 
-                return (
+                    return (
+                      <Card
+                        key={team.id}
+                        sx={{
+                          borderRadius: 2,
+                          border: '1px solid rgba(96,165,250,0.28)',
+                          backgroundColor: '#111827',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          transition:
+                            'transform 0.2s ease, border-color 0.2s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            borderColor: '#60a5fa',
+                          },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            height: 3,
+                            background:
+                              'linear-gradient(90deg, #60a5fa, transparent)',
+                          }}
+                        />
+                        <CardContent sx={{ p: 2.5 }}>
+                          {/* ✨ TEAM IMAGE AND NAME ALIGNED TOGETHER ✨ */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              mb: 1.5,
+                            }}
+                          >
+                            {team.profileImage && (
+                              <Avatar
+                                src={`/${team.profileImage}`}
+                                alt={team.name}
+                                variant="rounded"
+                                sx={{
+                                  width: 50,
+                                  height: 50,
+                                  border: '1px solid rgba(255,255,255,0.2)',
+                                  borderRadius: 1.5,
+                                }}
+                              />
+                            )}
+                            <Typography
+                              variant="h6"
+                              fontWeight={700}
+                              color="white"
+                            >
+                              {team.name}
+                            </Typography>
+                          </Box>
+
+                          <Stack spacing={0.8} mb={2.5}>
+                            <Typography variant="body2" color="text.secondary">
+                              Nombre de personnes :{' '}
+                              <Box
+                                component="span"
+                                sx={{ color: '#e8822a', fontWeight: 700 }}
+                              >
+                                {team.members.length}
+                              </Box>
+                            </Typography>
+                          </Stack>
+
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 1.2,
+                            }}
+                          >
+                            <Button
+                              fullWidth
+                              variant="outlined"
+                              onClick={() => navigate(`/equipes/${team.id}`)}
+                            >
+                              Voir les détails
+                            </Button>
+                            <Button
+                              fullWidth
+                              variant="contained"
+                              onClick={() =>
+                                handlePostulerClick(team.id, team.name)
+                              }
+                              disabled={isPostulerDisabled}
+                              sx={{
+                                backgroundColor: '#e8822a',
+                                color: 'white',
+                                fontWeight: 700,
+                                '&.Mui-disabled': {
+                                  backgroundColor: 'rgba(255,255,255,0.15)',
+                                  color: 'rgba(255,255,255,0.5)',
+                                },
+                                '&:hover': {
+                                  backgroundColor: '#c86e20',
+                                  color: 'white',
+                                },
+                              }}
+                            >
+                              {isOwnTeam
+                                ? 'Votre équipe'
+                                : hasNoMembers
+                                  ? 'Équipe indisponible'
+                                  : 'Postuler'}
+                            </Button>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    );
+                  })(),
+                )}
+              </Box>
+            )}
+          </>
+        )}
+
+        {/* 👤 IF PLAYERS TAB IS ACTIVE */}
+        {activeTab === 'players' && (
+          <>
+            {filteredPlayers.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 10 }}>
+                <PersonIcon
+                  sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }}
+                />
+                <Typography color="text.secondary">
+                  Aucun joueur trouvé.
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: 2.5,
+                }}
+              >
+                {filteredPlayers.map((player) => (
                   <Card
-                    key={team.id}
+                    key={player.email} // We use email as the unique key
                     sx={{
                       borderRadius: 2,
-                      border: '1px solid rgba(96,165,250,0.28)',
+                      border: '1px solid rgba(255,255,255,0.07)',
                       backgroundColor: '#111827',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      transition: 'transform 0.2s ease, border-color 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      p: 2,
+                      transition: 'transform 0.2s ease',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        borderColor: '#60a5fa',
+                        transform: 'translateY(-2px)',
+                        borderColor: '#e8822a',
                       },
                     }}
                   >
-                    <Box
+                    <Avatar
+                      src={`/${player.profileImage}`}
+                      alt={player.tag}
                       sx={{
-                        height: 3,
-                        background:
-                          'linear-gradient(90deg, #60a5fa, transparent)',
+                        width: 56,
+                        height: 56,
+                        border: '2px solid #2a3b55',
+                        mr: 2,
                       }}
                     />
 
-                    <CardContent sx={{ p: 2.5 }}>
+                    <Box sx={{ flexGrow: 1 }}>
                       <Typography
-                        variant="h6"
+                        variant="subtitle1"
                         fontWeight={700}
                         color="white"
-                        mb={1.5}
                       >
-                        {team.name}
+                        {player.tag}
                       </Typography>
-
-                      <Stack spacing={0.8} mb={2.5}>
-                        <Typography variant="body2" color="text.secondary">
-                          Nombre de personnes :{' '}
-                          <Box
-                            component="span"
-                            sx={{ color: '#e8822a', fontWeight: 700 }}
-                          >
-                            {team.members.length}
-                          </Box>
-                        </Typography>
-                      </Stack>
-
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 1.2,
-                        }}
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                       >
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          onClick={() => navigate(`/equipes/${team.id}`)}
-                        >
-                          Voir les détails
-                        </Button>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          onClick={() =>
-                            handlePostulerClick(team.id, team.name)
-                          }
-                          disabled={isPostulerDisabled}
-                          sx={{
-                            backgroundColor: '#e8822a',
-                            color: 'white',
-                            fontWeight: 700,
-                            '&.Mui-disabled': {
-                              backgroundColor: 'rgba(255,255,255,0.15)',
-                              color: 'rgba(255,255,255,0.5)',
-                            },
-                            '&:hover': {
-                              backgroundColor: '#c86e20',
-                              color: 'white',
-                            },
-                          }}
-                        >
-                          {isOwnTeam
-                            ? 'Votre équipe'
-                            : hasNoMembers
-                              ? 'Équipe indisponible'
-                              : 'Postuler'}
-                        </Button>
-                      </Box>
-                    </CardContent>
+                        <Box component="span" sx={{ color: '#60a5fa' }}>
+                          {player.specialty}
+                        </Box>
+                      </Typography>
+                    </Box>
+
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={!player.tag}
+                      sx={{
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                      }}
+                      onClick={() => {
+                        if (player.tag) {
+                          navigate(
+                            `/players/${encodeURIComponent(player.tag)}`,
+                          );
+                        }
+                      }}
+                    >
+                      Voir le Profil
+                    </Button>
                   </Card>
-                );
-              })(),
+                ))}
+              </Box>
             )}
-          </Box>
+          </>
         )}
       </Container>
     </Box>

@@ -31,6 +31,12 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // State to track the current page of avatars (starts at 0)
+  const [imagePage, setImagePage] = useState(0);
+
+  /**
+   * Toggles the visibility of the password fields
+   */
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
@@ -58,17 +64,37 @@ export default function ProfilePage() {
     { name: 'guérisseur', icon: '❤️' },
   ];
 
-  const defaultImages = [
+  // The complete list of 40 avatars, matching the registration page
+  const allImages = [
+    // Page 1 (0 to 11) - Row 1
     'butcher.jpg',
+    'chat.jpg',
+    'chouine.jpg',
+    'crockmou.jpg',
+    'denji.jpg',
+    'dexter.jpg',
+    'djilsi.png',
+    'enfant.jpg',
     'eren.png',
     'erza.jpg',
     'femmecars.jpg',
     'flash.jpg',
+
+    // Page 1 continued (12 to 19) / start of page 2 (20 to 23) - Row 2
+    'fou.jpg',
     'garou.jpg',
+    'gazo.jpg',
+    'homer.jpg',
+    'isagi.jpg',
     'itadori.jpg',
     'jjk.jpg',
+    'joe.jpg',
     'kaido.png',
+    'lapin.jpg',
+    'lion.jpg',
     'lookism.jpg',
+
+    // Page 2 continued (24 to 35) - Row 3
     'luffy.png',
     'makima.jpg',
     'miles.jpg',
@@ -76,12 +102,53 @@ export default function ProfilePage() {
     'Pessi.jpg',
     'pevin.jpg',
     'pion.jpg',
+    'saitama.jpg',
+    'shigaraki.jpg',
+    'shrek.jpg',
     'spiderman2099.jpg',
     'tailong.jpg',
-    'crockmou.jpg',
+
+    // Page 2 continued (36 to 39) - Row 4
+    'tk.jpg',
+    'vini.jpg',
+    'yuichi.png',
+    'speed.jpg',
   ];
 
-  // 🧠 1. Calcul de la force du nouveau mot de passe
+  // Exactly 20 images per page to form a 5x4 grid
+  const imagesPerPage = 20;
+
+  /**
+   * Goes to the previous page of avatars.
+   */
+  const handlePrevPage = () => {
+    if (imagePage > 0) {
+      setImagePage(imagePage - 1);
+    }
+  };
+
+  /**
+   * Goes to the next page of avatars.
+   */
+  const handleNextPage = () => {
+    const maxPage = Math.ceil(allImages.length / imagesPerPage) - 1;
+    if (imagePage < maxPage) {
+      setImagePage(imagePage + 1);
+    }
+  };
+
+  // Cuts the big array to keep only the 20 images of the current page
+  const displayedImages = allImages.slice(
+    imagePage * imagesPerPage,
+    (imagePage + 1) * imagesPerPage,
+  );
+
+  /**
+   * Calculate the strength of the new password
+   * @param pwd The password string to evaluate
+   * @returns The strength score out of 5
+   */
+  // 🧠 1. Calculate the strength of the new password
   const calculateStrength = (pwd: string) => {
     let score = 0;
     if (!pwd) return score;
@@ -95,7 +162,6 @@ export default function ProfilePage() {
 
   const strengthScore = calculateStrength(newPassword);
 
-  // 🎨 2. Détermination des couleurs de la jauge
   let barColor = 'transparent';
   let strengthLabel = '';
   let barWidth = '0%';
@@ -116,12 +182,15 @@ export default function ProfilePage() {
     }
   }
 
-  // 🛡️ 3. Logique de blocage du bouton
+  // 3. Button blocking logic
+  // Checks if the user is currently trying to type a new password
   const isChangingPassword = newPassword.length > 0;
-  // Si on veut changer de mot de passe, il faut que le score soit à 5 ET que la confirmation corresponde
+
+  // If we want to change the password, the score must be 5 AND the confirmation must match
   const isPasswordValid =
     strengthScore === 5 && newPassword === confirmPassword;
-  // On peut sauvegarder SI : on ne change PAS de mot de passe OU ALORS on le change correctement (avec l'ancien tapé)
+
+  // We can save IF: we DO NOT change the password OR we change it correctly (with the old one typed)
   const canSubmit =
     !isChangingPassword ||
     (isChangingPassword && isPasswordValid && oldPassword.length > 0);
@@ -137,15 +206,28 @@ export default function ProfilePage() {
       return;
     }
 
-    const updatedInfo = {
+    // Creates the base object with user visual info
+    const updatedInfo: {
+      email?: string;
+      specialty: string;
+      profileImage: string;
+      oldPassword?: string;
+      newPassword?: string;
+    } = {
       email: authenticatedUser?.email,
       specialty: specialty,
       profileImage: profileImage,
-      oldPassword: oldPassword,
-      newPassword: newPassword,
     };
 
+    // ONLY adds passwords to the request if the user is changing them
+    // This prevents the Java server from returning an error for empty passwords
+    if (isChangingPassword) {
+      updatedInfo.oldPassword = oldPassword;
+      updatedInfo.newPassword = newPassword;
+    }
+
     try {
+      // Sends the update request to the backend
       const response = await fetch('/api/auths/update', {
         method: 'PUT',
         headers: {
@@ -157,12 +239,16 @@ export default function ProfilePage() {
 
       if (response.ok) {
         if (updateUser) {
+          // Updates the local context with the new visual info
           updateUser({ specialty: specialty, profileImage: profileImage });
         }
+        // Clears the password fields after a successful update
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        navigate('/');
+
+        // Redirects the user to the profile page
+        navigate('/profil');
       } else {
         setMessage({
           type: 'error',
@@ -208,7 +294,8 @@ export default function ProfilePage() {
           borderRadius: 4,
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
           width: '100%',
-          maxWidth: 600,
+          // ✨ Increased maxWidth from 600 to 660 to fit 5 large images per row
+          maxWidth: 660,
         }}
       >
         <BackButton />
@@ -242,41 +329,78 @@ export default function ProfilePage() {
               >
                 Choisissez votre avatar
               </Typography>
+
+              {/* 📸 The slider section for images */}
               <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: 'center',
-                  gap: 2,
-                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                 }}
               >
-                {defaultImages.map((img, index) => (
-                  <Box
-                    key={index}
-                    component="img"
-                    src={img}
-                    alt={`Avatar ${index}`}
-                    onClick={() => setProfileImage(img)}
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 2,
-                      cursor: 'pointer',
-                      border:
-                        profileImage === img
-                          ? '3px solid #e8822a'
-                          : '3px solid transparent',
-                      boxShadow:
-                        profileImage === img
-                          ? '0 0 15px rgba(232,130,42,0.4)'
-                          : 'none',
-                      transition: 'all 0.2s ease-in-out',
-                      objectFit: 'cover',
-                      opacity: profileImage === img ? 1 : 0.6,
-                      '&:hover': { transform: 'scale(1.05)', opacity: 1 },
-                    }}
-                  />
-                ))}
+                <IconButton
+                  onClick={handlePrevPage}
+                  disabled={imagePage === 0}
+                  sx={{
+                    color: imagePage === 0 ? 'rgba(255,255,255,0.2)' : 'white',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+                  }}
+                >
+                  {'<'}
+                </IconButton>
+
+                <Box
+                  sx={{
+                    // 🌟 Using CSS Grid to forcefully align exactly 5 images per row
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: 1.5, // Small gap to ensure they all fit perfectly
+                    justifyItems: 'center',
+                    flex: 1,
+                    mx: 1,
+                  }}
+                >
+                  {displayedImages.map((img) => (
+                    <Box
+                      // We use the image name as the key, not the index, to help React with pagination
+                      key={img}
+                      component="img"
+                      src={img}
+                      alt={`Avatar ${img}`}
+                      onClick={() => setProfileImage(img)}
+                      sx={{
+                        width: 82, // EXACT 82px as requested
+                        height: 82, // EXACT 82px as requested
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        border:
+                          profileImage === img
+                            ? '3px solid #ffffff' // White border of 3px for the selected avatar
+                            : '3px solid transparent', // Constant 3px border to avoid layout shift
+                        // 🌟 The grey filter logic is right here:
+                        opacity: profileImage === img ? 1 : 0.5,
+                        transition: 'all 0.2s ease-in-out',
+                        objectFit: 'cover',
+                        // ✨ Removes the grey filter and scales up slightly on hover
+                        '&:hover': { transform: 'scale(1.1)', opacity: 1 },
+                      }}
+                    />
+                  ))}
+                </Box>
+
+                <IconButton
+                  onClick={handleNextPage}
+                  disabled={(imagePage + 1) * imagesPerPage >= allImages.length}
+                  sx={{
+                    color:
+                      (imagePage + 1) * imagesPerPage >= allImages.length
+                        ? 'rgba(255,255,255,0.2)'
+                        : 'white',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+                  }}
+                >
+                  {'>'}
+                </IconButton>
               </Box>
             </Grid>
 
@@ -401,7 +525,7 @@ export default function ProfilePage() {
             </Grid>
           </Grid>
 
-          {/* 📊 4. La Jauge (affichée uniquement si l'utilisateur commence à taper un nouveau mot de passe) */}
+          {/* 📊 4. The Gauge (displayed only if the user starts typing a new password) */}
           {newPassword.length > 0 && (
             <Box sx={{ mb: 4, mt: 1 }}>
               <Box
@@ -490,7 +614,7 @@ export default function ProfilePage() {
             type="submit"
             variant="contained"
             fullWidth
-            disabled={!canSubmit} // 🛑 Bloque intelligemment le bouton
+            disabled={!canSubmit} // 🛑 Smartly blocks the button
             sx={{
               backgroundColor: canSubmit
                 ? '#e8822a'
@@ -503,7 +627,7 @@ export default function ProfilePage() {
               },
               padding: 1.5,
               fontSize: '1.1rem',
-              mt: newPassword.length > 0 ? 0 : 3, // Ajuste la marge si la jauge n'est pas affichée
+              mt: newPassword.length > 0 ? 0 : 3, // Adjusts the margin if the gauge is not displayed
             }}
           >
             Sauvegarder les modifications

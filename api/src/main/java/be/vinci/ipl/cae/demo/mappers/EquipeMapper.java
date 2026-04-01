@@ -21,24 +21,28 @@ public class EquipeMapper {
 
   /** Converts one equipe to the API public payload. */
   public EquipePublicDto toPublicDto(Equipe equipe, User currentUser) {
+    // Returns null if the team doesn't exist
     if (equipe == null) {
       return null;
     }
 
+    // Transforms the list of User entities into MembrePublicDto objects
     List<MembrePublicDto> membres =
-        equipe.getMembres().stream()
-            .map(
-                m ->
-                    new MembrePublicDto(
-                        m.getId(),
-                        m.getTag(),
-                        m.getSpecialty(),
-                        m.getProfileImageUrl(),
-                        equipeService.isUserResponsible(equipe, m)))
-            .toList();
+            equipe.getMembres().stream()
+                    .map(
+                            m ->
+                                    new MembrePublicDto(
+                                            m.getId(),
+                                            m.getTag(),
+                                            m.getSpecialty(),
+                                            m.getProfileImageUrl(),
+                                            equipeService.isUserResponsible(equipe, m)))
+                    .toList();
 
+    // Checks if the current user is a leader of this team
     boolean isResponsable =
-        currentUser != null && equipeService.isUserResponsible(equipe, currentUser);
-    return new EquipePublicDto(equipe.getId(), equipe.getName(), membres, isResponsable);
+            currentUser != null && equipeService.isUserResponsible(equipe, currentUser);
+
+    return new EquipePublicDto(equipe.getId(), equipe.getName(), equipe.getProfileImage(), membres, isResponsable);
   }
 }

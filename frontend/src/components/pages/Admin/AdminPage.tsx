@@ -13,8 +13,8 @@ import {
   Button,
   Avatar,
   Alert,
-  TextField, // ✨ NOUVEAU : On importe le champ de texte pour la recherche
-  InputAdornment, // ✨ NOUVEAU : Pour mettre une petite icône dans la barre
+  TextField,
+  InputAdornment,
   Dialog,
   DialogTitle,
   DialogContent,

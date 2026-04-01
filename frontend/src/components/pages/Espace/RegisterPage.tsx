@@ -43,6 +43,9 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // State to track the current page of avatars (starts at 0)
+  const [imagePage, setImagePage] = useState(0);
+
   useEffect(() => {
     getAllEquipes()
       .then((data) => setTeams(data))
@@ -50,11 +53,13 @@ export default function RegisterPage() {
       .finally(() => setLoadingTeams(false));
   }, []);
 
+  /**
+   * Toggles the visibility of the password input.
+   */
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
-  // 🧠 1. Calcul de la force du mot de passe
   const calculateStrength = (pwd: string) => {
     let score = 0;
     if (!pwd) return score;
@@ -68,22 +73,21 @@ export default function RegisterPage() {
 
   const strengthScore = calculateStrength(password);
 
-  // 🎨 2. Détermination du style de la jauge
   let barColor = 'transparent';
   let strengthLabel = '';
   let barWidth = '0%';
 
   if (password.length > 0) {
     if (strengthScore <= 2) {
-      barColor = '#ef4444'; // Rouge
+      barColor = '#ef4444';
       strengthLabel = 'Mot de passe faible ❌';
       barWidth = '33%';
     } else if (strengthScore === 3 || strengthScore === 4) {
-      barColor = '#f97316'; // Orange
+      barColor = '#f97316';
       strengthLabel = 'Mot de passe moyen ⚠️';
       barWidth = '66%';
     } else if (strengthScore === 5) {
-      barColor = '#22c55e'; // Vert
+      barColor = '#22c55e';
       strengthLabel = 'Mot de passe fort ✅';
       barWidth = '100%';
     }
@@ -99,17 +103,37 @@ export default function RegisterPage() {
     { name: 'Guérisseur', icon: '❤️' },
   ];
 
-  const defaultImages = [
+  // The complete list of 40 avatars, based on the file explorer view
+  const allImages = [
+    // Page 1 (0 to 11) - Row 1
     'butcher.jpg',
+    'chat.jpg',
+    'chouine.jpg',
+    'crockmou.jpg',
+    'denji.jpg',
+    'dexter.jpg',
+    'djilsi.png',
+    'enfant.jpg',
     'eren.png',
     'erza.jpg',
     'femmecars.jpg',
     'flash.jpg',
+
+    // Page 1 continued (12 to 19) / start of page 2 (20 to 23) - Row 2
+    'fou.jpg',
     'garou.jpg',
+    'gazo.jpg',
+    'homer.jpg',
+    'isagi.jpg',
     'itadori.jpg',
     'jjk.jpg',
+    'joe.jpg',
     'kaido.png',
+    'lapin.jpg',
+    'lion.jpg',
     'lookism.jpg',
+
+    // Page 2 continued (24 to 35) - Row 3
     'luffy.png',
     'makima.jpg',
     'miles.jpg',
@@ -117,17 +141,65 @@ export default function RegisterPage() {
     'Pessi.jpg',
     'pevin.jpg',
     'pion.jpg',
+    'saitama.jpg',
+    'shigaraki.jpg',
+    'shrek.jpg',
     'spiderman2099.jpg',
     'tailong.jpg',
-    'crockmou.jpg',
+
+    // Page 2 continued (36 to 39) - Row 4
+    'tk.jpg',
+    'vini.jpg',
+    'yuichi.png',
+    'speed.jpg',
   ];
+
+  // Exactly 20 images per page to form a 5x4 grid
+  const imagesPerPage = 20;
+
+  /**
+   * Goes to the previous page of avatars.
+   */
+  const handlePrevPage = () => {
+    if (imagePage > 0) {
+      setImagePage(imagePage - 1);
+    }
+  };
+
+  /**
+   * Goes to the next page of avatars.
+   */
+  const handleNextPage = () => {
+    const maxPage = Math.ceil(allImages.length / imagesPerPage) - 1;
+    if (imagePage < maxPage) {
+      setImagePage(imagePage + 1);
+    }
+  };
+
+  // Cuts the big array to keep only the 20 images of the current page
+  const displayedImages = allImages.slice(
+    imagePage * imagesPerPage,
+    (imagePage + 1) * imagesPerPage,
+  );
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
+    if (!email) {
+      setErrorMessage("Oups ! L'email est obligatoire pour s'inscrire. 📧");
+      return;
+    }
+
+    if (!tag) {
+      setErrorMessage(
+        'Hé ! Tu as oublié de choisir un super pseudo (Tag) ! 🦸',
+      );
+      return;
+    }
+
     if (!profileImage) {
-      setErrorMessage("N'oubliez pas de choisir un avatar !");
+      setErrorMessage("N'oublie pas de choisir ton plus bel avatar ! 🖼️");
       return;
     }
 
@@ -156,8 +228,12 @@ export default function RegisterPage() {
         }
 
         navigate('/login');
-      } else if (result.status === 401) {
-        setErrorMessage('Cette adresse email est déjà utilisée.');
+      } else if (
+        result.status === 401 ||
+        result.status === 409 ||
+        result.status === 400
+      ) {
+        setErrorMessage('Mince ! Cette adresse email est déjà utilisée. 😅');
       } else {
         setErrorMessage(
           "Erreur lors de l'inscription. Vérifiez vos informations.",
@@ -190,7 +266,8 @@ export default function RegisterPage() {
           borderRadius: 4,
           boxShadow: 2,
           width: '100%',
-          maxWidth: 600,
+          // ✨ Increased maxWidth from 600 to 660 to fit 5 large images per row perfectly
+          maxWidth: 660,
         }}
       >
         <BackButton />
@@ -243,7 +320,6 @@ export default function RegisterPage() {
             />
           </Box>
 
-          {/* 📊 3. L'affichage visuel de la barre de progression (Inséré sous le mot de passe) */}
           <Box sx={{ marginBottom: 3 }}>
             <Box
               sx={{
@@ -410,36 +486,78 @@ export default function RegisterPage() {
             >
               Choisissez votre avatar *
             </Typography>
+
+            {/* 📸 The slider section for images */}
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'center',
-                gap: 2,
-                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
               }}
             >
-              {defaultImages.map((img, index) => (
-                <Box
-                  key={index}
-                  component="img"
-                  src={img}
-                  alt={`Avatar ${index}`}
-                  onClick={() => setProfileImage(img)}
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                    border:
-                      profileImage === img
-                        ? '3px solid #e8822a'
-                        : '3px solid transparent',
-                    transition: 'all 0.2s ease-in-out',
-                    objectFit: 'cover',
-                    '&:hover': { transform: 'scale(1.1)' },
-                  }}
-                />
-              ))}
+              <IconButton
+                onClick={handlePrevPage}
+                disabled={imagePage === 0}
+                sx={{
+                  color: imagePage === 0 ? 'rgba(255,255,255,0.2)' : 'white',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+                }}
+              >
+                {'<'}
+              </IconButton>
+
+              <Box
+                sx={{
+                  // 🌟 Using CSS Grid to forcefully align exactly 5 images per row
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
+                  gap: 1.5, // Small gap to ensure they all fit perfectly
+                  justifyItems: 'center',
+                  flex: 1,
+                  mx: 1,
+                }}
+              >
+                {displayedImages.map((img) => (
+                  <Box
+                    // We use the image name as the key, not the index, to help React with pagination
+                    key={img}
+                    component="img"
+                    src={img}
+                    alt={`Avatar ${img}`}
+                    onClick={() => setProfileImage(img)}
+                    sx={{
+                      width: 82, // EXACT 82px as requested
+                      height: 82, // EXACT 82px as requested
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      border:
+                        profileImage === img
+                          ? '3px solid #ffffff' // White border of 3px for the selected avatar
+                          : '3px solid transparent', // Constant 3px border to avoid layout shift
+                      // 🌟 The grey filter logic is right here:
+                      opacity: profileImage === img ? 1 : 0.5,
+                      transition: 'all 0.2s ease-in-out',
+                      objectFit: 'cover',
+                      // ✨ Removes the grey filter and scales up slightly on hover
+                      '&:hover': { transform: 'scale(1.1)', opacity: 1 },
+                    }}
+                  />
+                ))}
+              </Box>
+
+              <IconButton
+                onClick={handleNextPage}
+                disabled={(imagePage + 1) * imagesPerPage >= allImages.length}
+                sx={{
+                  color:
+                    (imagePage + 1) * imagesPerPage >= allImages.length
+                      ? 'rgba(255,255,255,0.2)'
+                      : 'white',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+                }}
+              >
+                {'>'}
+              </IconButton>
             </Box>
           </Box>
 
@@ -447,7 +565,7 @@ export default function RegisterPage() {
             type="submit"
             variant="contained"
             fullWidth
-            disabled={strengthScore !== 5} // 🛑 Bloque le bouton si le mot de passe est faible
+            disabled={strengthScore !== 5}
             sx={{
               backgroundColor:
                 strengthScore === 5 ? '#e8822a' : 'rgba(255, 255, 255, 0.12)',

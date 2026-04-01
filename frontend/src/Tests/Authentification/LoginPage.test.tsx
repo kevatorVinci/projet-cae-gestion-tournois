@@ -84,7 +84,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
     expect(
-      await screen.findByText(/identifiants incorrects\./i),
+      await screen.findByText(/Informations incorrectes/i),
     ).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });

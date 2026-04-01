@@ -18,31 +18,47 @@ import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Entité représentant une équipe dans l'application. */
+/**
+ * Entity representing a team in the application.
+ */
 @Entity
 @Table(name = "equipes")
 @Data
 @NoArgsConstructor
 public class Equipe {
 
-  /** L'identifiant unique de l'équipe. */
+  /**
+   * The unique identifier of the team.
+   */
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /** Le nom de l'équipe, qui doit être unique et non vide. */
+  /**
+   * The name of the team, which must be unique and not blank.
+   */
   @Column(unique = true)
   @NotBlank
   private String name;
 
-  /** La liste des membres appartenant à cette équipe. */
+  // ✨ WE ADD THE IMAGE FIELD HERE ✨
+  /**
+   * The profile image of the team.
+   * Stores the file name of the image (e.g., "akatsuki.jpg").
+   */
+  @Column(name = "profile_image")
+  private String profileImage;
+
+  /**
+   * The list of members belonging to this team.
+   */
   @OneToMany(mappedBy = "equipe", fetch = FetchType.LAZY)
   @JsonManagedReference
   private List<User> membres = new ArrayList<>();
 
   /**
-   * Le membre désigné comme responsable principal de l'équipe. Relation stricte : 1 équipe maximum
-   * par chef.
+   * The member designated as the primary responsible (leader) of the team.
+   * Strict relationship: maximum 1 team per leader.
    */
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "primary_responsible_id", unique = true)
@@ -50,8 +66,8 @@ public class Equipe {
   private User responsablePrincipal;
 
   /**
-   * Le membre désigné comme responsable secondaire de l'équipe (optionnel). Relation stricte : 1
-   * équipe maximum par chef.
+   * The member designated as the secondary responsible of the team (optional).
+   * Strict relationship: maximum 1 team per leader.
    */
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "secondary_responsible_id", unique = true)
@@ -59,8 +75,9 @@ public class Equipe {
   private User responsableSecondaire;
 
   /**
-   * La liste des inscriptions de cette équipe à des tournois. OneToMany car 1 équipe peut
-   * s'inscrire à plusieurs tournois. mappedBy = "equipe" → la FK est dans InscriptionEquipeTournoi.
+   * The list of tournament registrations for this team.
+   * OneToMany because 1 team can register for multiple tournaments.
+   * mappedBy = "equipe" -> the Foreign Key is in InscriptionEquipeTournoi.
    */
   @OneToMany(mappedBy = "equipe", fetch = FetchType.LAZY)
   @JsonManagedReference("equipe-inscriptions")

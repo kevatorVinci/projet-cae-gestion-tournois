@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/** AuthController to handle user authentication. */
+/**
+ * AuthController to handle user authentication and profiles.
+ */
 @RestController
 @RequestMapping("/auths")
 public class AuthController {
@@ -58,6 +60,8 @@ public class AuthController {
   @PostMapping("/login")
   public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
     var existingUser = userService.readOneFromEmail(credentials.getEmail());
+
+    // Check if the user is banned before logging them in
     if (existingUser != null && existingUser.isBanned()) {
       String banMessage = "Ce compte est banni.";
       if (existingUser.getBanReason() != null && !existingUser.getBanReason().isBlank()) {
@@ -69,41 +73,42 @@ public class AuthController {
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
     if (user == null) {
       boolean emailExists = existingUser != null;
-      String errorMessage =
-          emailExists ? "Le mot de passe est incorrect." : "Cet email n'existe pas.";
+      String errorMessage = emailExists
+              ? "Le mot de passe est incorrect."
+              : "Cet email n'existe pas.";
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
   }
 
   /**
-   * Porte d'entrée pour modifier le profil.
+   * Entry point to update the user profile.
    *
-   * @param dto le colis envoyé par React
-   * @return le profil mis à jour avec un nouveau token
+   * @param dto the payload sent by React
+   * @return the updated profile with a new token
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody @Valid UpdateProfileDto dto) {
     AuthenticatedUser user =
-        userService.updateProfile(
-            dto.getEmail(),
-            dto.getSpecialty(),
-            dto.getProfileImage(),
-            dto.getOldPassword(),
-            dto.getNewPassword());
+            userService.updateProfile(
+                    dto.getEmail(),
+                    dto.getSpecialty(),
+                    dto.getProfileImage(),
+                    dto.getOldPassword(),
+                    dto.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+              HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
 
   /**
-   * Retourne la liste de tous les utilisateurs pour l'administration.
+   * Returns the list of all users for the administration panel.
    *
-   * @return la liste des utilisateurs authentifiés
+   * @return the list of authenticated users
    */
   @GetMapping("/users")
   @IsAdmin
@@ -112,9 +117,9 @@ public class AuthController {
   }
 
   /**
-   * Ajoute le rôle administrateur à un utilisateur.
+   * Adds the administrator role to a user.
    *
-   * @param email l'adresse email de l'utilisateur à promouvoir
+   * @param email the email address of the user to promote
    */
   @PutMapping("/addAdmin")
   @IsAdmin
@@ -123,9 +128,9 @@ public class AuthController {
   }
 
   /**
-   * Retire le rôle administrateur à un utilisateur.
+   * Removes the administrator role from a user.
    *
-   * @param email l'adresse email de l'utilisateur à rétrograder
+   * @param email the email address of the user to demote
    */
   @PutMapping("/removeAdmin")
   @IsAdmin
@@ -147,5 +152,16 @@ public class AuthController {
     }
     String reason = payload.get("reason");
     userService.banUser(email, reason);
+  }
+
+  /**
+   * Retrieves all users for the public directory.
+   * We reuse the admin method because it already filters out banned users and sorts them!
+   *
+   * @return the list of players
+   */
+  @GetMapping("/players")
+  public List<AuthenticatedUser> getAllPlayers() {
+    return userService.getAllUsersForAdmin();
   }
 }

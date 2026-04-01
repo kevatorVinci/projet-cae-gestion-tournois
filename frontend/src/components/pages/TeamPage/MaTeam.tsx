@@ -21,13 +21,18 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
-import { ExitToApp as LeaveIcon, EmojiEvents } from '@mui/icons-material';
+import {
+  ExitToApp as LeaveIcon,
+  EmojiEvents,
+  Edit as EditIcon,
+} from '@mui/icons-material';
 import {
   depromoteResponsable,
   getUserTeam,
   isCurrentUserResponsable,
   leaveEquipe,
   promoteResponsable,
+  updateTeamImage, // ✨ IMPORT NEW FUNCTION
 } from '../../../services/teams';
 import { Equipe } from '../../../types';
 import { useNavigate } from 'react-router-dom';
@@ -66,6 +71,18 @@ export function MyTeam() {
   const [registrationsError, setRegistrationsError] = useState<string | null>(
     null,
   );
+
+  // ✨ NEW STATE FOR IMAGE UPDATING
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const teamImages = [
+    'akatsuki.jpg',
+    'espada.jpg',
+    'fairytail.jpg',
+    'hunter.jpg',
+    'onepiece.jpg',
+  ];
+  const [selectedNewImage, setSelectedNewImage] = useState(teamImages[0]);
+  const [isUpdatingImage, setIsUpdatingImage] = useState(false);
 
   const currentUserId = (() => {
     const token = getAuthenticatedUser()?.token;
@@ -271,6 +288,27 @@ export function MyTeam() {
       );
     } finally {
       setMemberActionLoadingId(null);
+    }
+  };
+
+  const handleUpdateImage = async () => {
+    if (!team) return;
+    setIsUpdatingImage(true);
+    try {
+      await updateTeamImage(team.id, selectedNewImage);
+      await loadMyTeam(); // Refresh team info after update
+      setMessage("L'emblème de l'équipe a été mis à jour avec succès ! 🛡️");
+      setIsImageDialogOpen(false);
+    } catch (err: unknown) {
+      console.error('Erreur API :', err);
+      if (handleAuthFailure(err)) return;
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la mise à jour de l'image.",
+      );
+    } finally {
+      setIsUpdatingImage(false);
     }
   };
 
@@ -523,19 +561,62 @@ export function MyTeam() {
             gap: 2,
           }}
         >
-          <Box>
-            <Typography variant="overline" sx={{ opacity: 0.8 }}>
-              Membre de l'équipe
-            </Typography>
-            <Typography variant="h3" fontWeight={700}>
-              {team.name}
-            </Typography>
-            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-              <Typography variant="body2">
-                👥 {team.members.length} Membres
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            {/* 📸 TEAM IMAGE AND EDIT BUTTON */}
+            <Box sx={{ position: 'relative' }}>
+              {team.profileImage && (
+                <Avatar
+                  src={`/${team.profileImage}`}
+                  alt={team.name}
+                  variant="rounded"
+                  sx={{
+                    width: 90,
+                    height: 90,
+                    border: '3px solid #e8822a',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+                  }}
+                />
+              )}
+              {isResponsable && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => setIsImageDialogOpen(true)}
+                  sx={{
+                    position: 'absolute',
+                    bottom: -10,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    bgcolor: '#1a2540',
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    minWidth: 'auto',
+                    p: 0.5,
+                    borderRadius: 2,
+                    '&:hover': { bgcolor: '#e8822a' },
+                  }}
+                >
+                  <EditIcon sx={{ fontSize: 16 }} />
+                </Button>
+              )}
+            </Box>
+
+            <Box>
+              <Typography variant="overline" sx={{ opacity: 0.8 }}>
+                Membre de l'équipe
               </Typography>
-            </Stack>
+              <Typography variant="h3" fontWeight={700}>
+                {team.name}
+              </Typography>
+              <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                <Typography variant="body2">
+                  👥 {team.members.length} Membres
+                </Typography>
+              </Stack>
+            </Box>
           </Box>
+
           <Stack direction="row" spacing={1.5}>
             {isResponsable && (
               <>
@@ -789,6 +870,94 @@ export function MyTeam() {
           </Paper>
         </Box>
       </Container>
+
+      {/* ✨ DIALOG FOR UPDATING THE TEAM IMAGE ✨ */}
+      <Dialog
+        open={isImageDialogOpen}
+        onClose={() => !isUpdatingImage && setIsImageDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            bgcolor: '#1a2540',
+            color: 'white',
+            border: '1px solid rgba(255,255,255,0.12)',
+            p: 1,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ color: 'white', fontWeight: 700, textAlign: 'center' }}
+        >
+          Modifier l'emblème de l'équipe
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 2,
+              flexWrap: 'wrap',
+              mt: 2,
+            }}
+          >
+            {teamImages.map((img) => (
+              <Box
+                key={img}
+                component="img"
+                src={`/${img}`}
+                alt={`Emblème ${img}`}
+                onClick={() => setSelectedNewImage(img)}
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  border:
+                    selectedNewImage === img
+                      ? '3px solid #e8822a'
+                      : '3px solid transparent',
+                  opacity: selectedNewImage === img ? 1 : 0.5,
+                  transition: 'all 0.2s ease-in-out',
+                  objectFit: 'cover',
+                  '&:hover': { transform: 'scale(1.1)', opacity: 1 },
+                }}
+              />
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', mt: 2, pb: 2 }}>
+          <Button
+            onClick={() => setIsImageDialogOpen(false)}
+            disabled={isUpdatingImage}
+            sx={{
+              color: 'white',
+              borderColor: 'rgba(255,255,255,0.35)',
+              mr: 2,
+              '&:hover': { bgcolor: '#080b14' },
+            }}
+            variant="outlined"
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleUpdateImage}
+            disabled={isUpdatingImage || selectedNewImage === team.profileImage}
+            sx={{
+              bgcolor: '#e8822a',
+              color: 'white',
+              '&:hover': { bgcolor: '#c86e20' },
+              '&.Mui-disabled': {
+                bgcolor: 'rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.3)',
+              },
+            }}
+          >
+            {isUpdatingImage ? 'Modification...' : 'Sauvegarder'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={isSimpleLeaveDialogOpen}

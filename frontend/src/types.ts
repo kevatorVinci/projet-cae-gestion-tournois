@@ -1,6 +1,7 @@
 export interface Equipe {
   id: number;
   name: string;
+  profileImage?: string;
   responsable?: User;
   members: User[];
   isResponsable?: boolean;
