@@ -1,9 +1,17 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType, AuthenticatedUser } from '../../types';
 import MemberDetails from '../../components/pages/Member/MemberDetails';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: vi.fn(),
+  };
+});
 
 vi.mock('../../utils/session', () => ({
   getAuthenticatedUser: vi.fn(() => ({ token: 'fake-token' })),
@@ -23,7 +31,7 @@ vi.mock('../../services/teams', () => ({
       {
         id: 1,
         name: 'Straw Hat Crew',
-        membres: [
+        members: [
           {
             id: 1,
             tag: 'Luffy',
@@ -153,5 +161,22 @@ describe('MemberDetails Component', () => {
     });
 
     consoleSpy.mockRestore();
+  });
+
+  it('navigue vers le détail équipe quand on clique le bloc équipe', async () => {
+    const mockNavigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+
+    (global.fetch as Mock).mockResolvedValue({
+      ok: true,
+      json: async () => mockPlayersResponse,
+    });
+
+    renderComponent(undefined);
+
+    const teamLabel = await screen.findByText('Straw Hat Crew');
+    fireEvent.click(teamLabel);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/equipes/1');
   });
 });
