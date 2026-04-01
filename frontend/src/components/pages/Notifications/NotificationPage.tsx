@@ -193,6 +193,9 @@ export default function Notifications() {
     );
   };
 
+  const isAcceptedNotification = (message: string) =>
+    message.toLowerCase().startsWith('accepté :');
+
   const byTab =
     tab === 0
       ? notifications
@@ -572,8 +575,29 @@ export default function Notifications() {
                       {n.message}
                     </Typography>
 
-                    {(isJoinRequestNotification(n.message) || !n.estLue) && (
+                    {(isJoinRequestNotification(n.message) ||
+                      isAcceptedNotification(n.message) ||
+                      !n.estLue) && (
                       <Box sx={{ display: 'flex', gap: 2.5 }}>
+                        {isAcceptedNotification(n.message) && (
+                          <Typography
+                            variant="caption"
+                            onClick={() => navigate('/maTeam')}
+                            sx={{
+                              color: '#22c55e',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              letterSpacing: '0.02em',
+                              '&:hover': {
+                                textDecoration: 'underline',
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            Voir ma team
+                          </Typography>
+                        )}
+
                         {isDemandeResponsable && (
                           <Typography
                             variant="caption"
