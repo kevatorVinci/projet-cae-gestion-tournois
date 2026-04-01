@@ -68,10 +68,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (
-    m.startsWith('nouvelle demande :') ||
-    m.startsWith('demande envoyée :')
-  ) {
+  if (m.startsWith('nouvelle demande :') || m.startsWith('demande envoyée :')) {
     return {
       type: 'demande',
       color: '#3b82f6',
@@ -362,7 +359,9 @@ export default function Notifications() {
               if (selected === 'accepte') {
                 return (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#22c55e' }} />
+                    <CheckCircleOutlineIcon
+                      sx={{ fontSize: 18, color: '#22c55e' }}
+                    />
                     <span>Acceptées</span>
                   </Box>
                 );
@@ -371,7 +370,9 @@ export default function Notifications() {
               if (selected === 'refus') {
                 return (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CancelOutlinedIcon sx={{ fontSize: 18, color: '#ef4444' }} />
+                    <CancelOutlinedIcon
+                      sx={{ fontSize: 18, color: '#ef4444' }}
+                    />
                     <span>Refusées</span>
                   </Box>
                 );
@@ -419,7 +420,9 @@ export default function Notifications() {
 
             <MenuItem value="accepte">
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#22c55e' }} />
+                <CheckCircleOutlineIcon
+                  sx={{ fontSize: 18, color: '#22c55e' }}
+                />
                 <span>Acceptées</span>
               </Box>
             </MenuItem>
@@ -526,7 +529,11 @@ export default function Notifications() {
                       }}
                     >
                       <Box
-                        sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.75,
+                        }}
                       >
                         {meta.icon}
                         <Typography
@@ -555,7 +562,10 @@ export default function Notifications() {
                       variant="body2"
                       color="text.secondary"
                       sx={{
-                        mb: isJoinRequestNotification(n.message) || !n.estLue ? 1.5 : 0,
+                        mb:
+                          isJoinRequestNotification(n.message) || !n.estLue
+                            ? 1.5
+                            : 0,
                         lineHeight: 1.6,
                       }}
                     >

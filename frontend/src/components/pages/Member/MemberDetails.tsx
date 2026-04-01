@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -66,6 +66,7 @@ const capitalize = (str?: string): string => {
 
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -370,11 +371,32 @@ export default function MemberDetails() {
               </Box>
 
               <Box
+                role={teamId ? 'button' : undefined}
+                tabIndex={teamId ? 0 : undefined}
+                onClick={() => {
+                  if (teamId) {
+                    navigate(`/equipes/${teamId}`);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (teamId && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    navigate(`/equipes/${teamId}`);
+                  }
+                }}
                 sx={{
                   p: 2.5,
                   borderRadius: 2,
                   border: '1px solid rgba(255,255,255,0.07)',
                   backgroundColor: '#111827',
+                  cursor: teamId ? 'pointer' : 'default',
+                  transition: 'border-color 0.2s ease, transform 0.2s ease',
+                  '&:hover': teamId
+                    ? {
+                        borderColor: '#e8822a',
+                        transform: 'translateY(-2px)',
+                      }
+                    : undefined,
                 }}
               >
                 <Box

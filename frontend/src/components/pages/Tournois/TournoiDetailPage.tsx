@@ -26,18 +26,24 @@ import {
   fetchTeamRegistrations,
   registerTeamToTournament,
 } from '../../../services/tournois';
-import { getUserTeam, isCurrentUserResponsable } from '../../../services/teams';
+import {
+  getEquipeById,
+  getUserTeam,
+  isCurrentUserResponsable,
+} from '../../../services/teams';
 
 type EquipeLike = {
   id?: number;
   name?: string;
   nom?: string;
+  profileImage?: string;
 };
 
 type InscriptionTournoi = {
   etat?: string;
   equipeId?: number;
   equipeName?: string;
+  equipeProfileImage?: string;
   equipe?: EquipeLike;
 };
 
@@ -96,6 +102,20 @@ const resolveTeamName = (inscription: InscriptionTournoi, index: number) => {
   );
 };
 
+const resolveTeamImage = (inscription: InscriptionTournoi) => {
+  return inscription.equipeProfileImage || inscription.equipe?.profileImage;
+};
+
+const normalizeImageSrc = (image?: string) => {
+  if (!image) {
+    return undefined;
+  }
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    return image;
+  }
+  return image.startsWith('/') ? image : `/${image}`;
+};
+
 const resolveTeamId = (inscription: InscriptionTournoi) => {
   return inscription.equipeId || inscription.equipe?.id;
 };
@@ -138,6 +158,9 @@ const TournoiDetailPage = () => {
   const [acceptedInscriptions, setAcceptedInscriptions] = useState<
     InscriptionTournoi[]
   >([]);
+  const [teamImagesById, setTeamImagesById] = useState<Record<number, string>>(
+    {},
+  );
   const [isResponsable, setIsResponsable] = useState(false);
   const [responsableTeamId, setResponsableTeamId] = useState<number | null>(
     null,
@@ -211,6 +234,62 @@ const TournoiDetailPage = () => {
 
     load();
   }, [id]);
+
+  useEffect(() => {
+    const sourceTeams =
+      acceptedInscriptions.length > 0
+        ? acceptedInscriptions
+        : tournoi?.inscriptions || [];
+
+    const missingTeamIds = Array.from(
+      new Set(
+        sourceTeams
+          .filter((inscription) => !resolveTeamImage(inscription))
+          .map((inscription) => resolveTeamId(inscription))
+          .filter((teamId): teamId is number => typeof teamId === 'number')
+          .filter((teamId) => !teamImagesById[teamId]),
+      ),
+    );
+
+    if (missingTeamIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadMissingTeamImages = async () => {
+      const loadedEntries = await Promise.all(
+        missingTeamIds.map(async (teamId) => {
+          try {
+            const equipe = await getEquipeById(teamId);
+            return [teamId, equipe.profileImage || ''] as const;
+          } catch {
+            return [teamId, ''] as const;
+          }
+        }),
+      );
+
+      if (cancelled) {
+        return;
+      }
+
+      setTeamImagesById((current) => {
+        const next = { ...current };
+        loadedEntries.forEach(([teamId, profileImage]) => {
+          if (profileImage) {
+            next[teamId] = profileImage;
+          }
+        });
+        return next;
+      });
+    };
+
+    loadMissingTeamImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [acceptedInscriptions, tournoi, teamImagesById]);
 
   const teams = useMemo(() => {
     const sourceTeams =
@@ -632,6 +711,9 @@ const TournoiDetailPage = () => {
                   (() => {
                     const teamId = resolveTeamId(inscription);
                     const canNavigate = typeof teamId === 'number';
+                    const teamImage =
+                      resolveTeamImage(inscription) ||
+                      (canNavigate ? teamImagesById[teamId] : undefined);
 
                     return (
                       <Box
@@ -668,6 +750,7 @@ const TournoiDetailPage = () => {
                           alignItems="center"
                         >
                           <Avatar
+                            src={normalizeImageSrc(teamImage)}
                             sx={{
                               bgcolor: getAvatarColorFromName(
                                 resolveTeamName(inscription, index),

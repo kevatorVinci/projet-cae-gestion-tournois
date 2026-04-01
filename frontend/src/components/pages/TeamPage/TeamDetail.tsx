@@ -45,6 +45,15 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
 
   return (
     <Paper
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/players/${member.id}`)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          navigate(`/players/${member.id}`);
+        }
+      }}
       sx={{
         p: 3,
         borderRadius: 2,
@@ -55,6 +64,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isResponsable }) => {
         alignItems: 'center',
         textAlign: 'center',
         transition: 'all 0.3s ease',
+        cursor: 'pointer',
         '&:hover': {
           borderColor: isResponsable ? '#e8822a' : 'rgba(255,255,255,0.25)',
           backgroundColor: 'rgba(26, 37, 64, 0.8)',

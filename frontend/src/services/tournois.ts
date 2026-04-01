@@ -29,6 +29,7 @@ export interface TeamRegistrationItem {
 export interface AcceptedTournamentRegistration {
   equipeId: number;
   equipeName: string;
+  equipeProfileImage?: string;
   dateInscription?: string;
 }
 

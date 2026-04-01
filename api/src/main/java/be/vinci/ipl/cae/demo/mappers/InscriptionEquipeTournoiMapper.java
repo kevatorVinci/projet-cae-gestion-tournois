@@ -22,6 +22,7 @@ public class InscriptionEquipeTournoiMapper {
     return new TournoiEquipeInscriptionDto(
         inscription.getEquipe().getId(),
         inscription.getEquipe().getName(),
+      inscription.getEquipe().getProfileImage(),
         inscription.getDateInscription());
   }
 
