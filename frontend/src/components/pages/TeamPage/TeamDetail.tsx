@@ -96,12 +96,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
         variant="h6"
         fontWeight={700}
         color="white"
-        onClick={() => {
-          navigate(`/players/${member.id}`);
-        }}
         sx={{
-          cursor: 'pointer',
-          '&:hover': { color: '#e8822a' },
           mb: 0.5,
         }}
       >
@@ -109,16 +104,16 @@ const MemberCard: React.FC<MemberCardProps> = ({
       </Typography>
 
       {isCurrentUser && (
-        <Typography
-          variant="caption"
+        <Chip
+          label="Moi"
+          size="small"
           sx={{
-            color: '#3b82f6',
-            fontStyle: 'italic',
+            bgcolor: 'rgba(59,130,246,0.16)',
+            color: '#93c5fd',
+            fontWeight: 700,
             mb: 1,
           }}
-        >
-          (Vous)
-        </Typography>
+        />
       )}
 
       <Chip

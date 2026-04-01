@@ -159,7 +159,7 @@ export default function AdminPage() {
     <Box sx={{ padding: 4, backgroundColor: '#080b14', minHeight: '100vh' }}>
       <BackButton />
       <Typography variant="h4" color="white" mb={4} textAlign="center">
-        Gestion des Administrateurs 👑
+        Gestion des Administrateurs
       </Typography>
 
       {message && (

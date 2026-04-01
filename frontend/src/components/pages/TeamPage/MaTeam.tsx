@@ -683,8 +683,16 @@ export function MyTeam() {
           >
             {sortedMembers.map((member) => (
               <Paper
-                role="listitem"
                 key={member.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/players/${member.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    navigate(`/players/${member.id}`);
+                  }
+                }}
                 sx={{
                   p: 3,
                   borderRadius: 2,
@@ -695,6 +703,7 @@ export function MyTeam() {
                   alignItems: 'center',
                   textAlign: 'center',
                   transition: 'all 0.3s ease',
+                  cursor: 'pointer',
                   '&:hover': {
                     borderColor: member.isResponsable
                       ? '#e8822a'
@@ -721,12 +730,7 @@ export function MyTeam() {
                   variant="h6"
                   fontWeight={700}
                   color="white"
-                  onClick={() => {
-                    navigate(`/players/${member.id}`);
-                  }}
                   sx={{
-                    cursor: 'pointer',
-                    '&:hover': { color: '#e8822a' },
                     mb: 0.5,
                   }}
                 >
@@ -734,16 +738,16 @@ export function MyTeam() {
                 </Typography>
 
                 {member.id === currentUserId && (
-                  <Typography
-                    variant="caption"
+                  <Chip
+                    label="Moi"
+                    size="small"
                     sx={{
-                      color: '#3b82f6',
-                      fontStyle: 'italic',
+                      bgcolor: 'rgba(59,130,246,0.16)',
+                      color: '#93c5fd',
+                      fontWeight: 700,
                       mb: 1,
                     }}
-                  >
-                    (Vous)
-                  </Typography>
+                  />
                 )}
 
                 <Chip
