@@ -684,6 +684,7 @@ export function MyTeam() {
             {sortedMembers.map((member) => (
               <Paper
                 key={member.id}
+                role="listitem"
                 sx={{
                   p: 3,
                   borderRadius: 2,

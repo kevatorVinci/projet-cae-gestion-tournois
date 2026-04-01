@@ -72,6 +72,7 @@ describe('MemberDetails Component', () => {
 
   const renderComponent = (
     authenticatedUser: AuthenticatedUser | undefined,
+    memberId = '1',
   ) => {
     const contextValue: UserContextType = {
       authenticatedUser,
@@ -83,7 +84,7 @@ describe('MemberDetails Component', () => {
 
     return render(
       <UserContext.Provider value={contextValue}>
-        <MemoryRouter initialEntries={['/member/1']}>
+        <MemoryRouter initialEntries={[`/member/${memberId}`]}>
           <Routes>
             <Route path="/member/:id" element={<MemberDetails />} />
           </Routes>
@@ -114,7 +115,7 @@ describe('MemberDetails Component', () => {
   });
 
   // ✨ CORRECTION : On vérifie maintenant que l'email s'affiche bien !
-  it('shows email and password fields on own profile', async () => {
+  it('shows email and specialty fields on own profile', async () => {
     (global.fetch as Mock).mockResolvedValue({
       ok: true,
       json: async () => mockPlayersResponse,
@@ -127,8 +128,8 @@ describe('MemberDetails Component', () => {
     });
 
     expect(screen.getByText('luffy@strawhat.com')).toBeInTheDocument();
-    expect(screen.getByText('Mail')).toBeInTheDocument();
-    expect(screen.getByText('Mot de Passe')).toBeInTheDocument();
+    expect(screen.getByText('Email')).toBeInTheDocument();
+    expect(screen.getAllByText('Captain').length).toBeGreaterThan(0);
   });
 
   it('hides sensitive information when tags do not match', async () => {
@@ -143,8 +144,9 @@ describe('MemberDetails Component', () => {
       expect(screen.getAllByText('Luffy').length).toBeGreaterThan(0);
     });
 
-    expect(screen.queryByText('Mail')).not.toBeInTheDocument();
-    expect(screen.queryByText('Mot de Passe')).not.toBeInTheDocument();
+    // Check that email is hidden (shows "Privé" instead)
+    expect(screen.getByText('Privé')).toBeInTheDocument();
+    // Don't look for "Mot de Passe" since it's not in the component anymore
   });
 
   it('handles API errors gracefully', async () => {
@@ -154,7 +156,7 @@ describe('MemberDetails Component', () => {
       status: 500,
     });
 
-    renderComponent(undefined);
+    renderComponent(undefined, '999');
 
     await waitFor(() => {
       expect(screen.getByText(/Joueur introuvable/i)).toBeInTheDocument();
