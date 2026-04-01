@@ -12,9 +12,18 @@ import {
   Tabs,
   Tab,
   Alert,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { NotificationItem } from '../../../types';
 import {
   getCurrentUserIdFromToken,
@@ -23,13 +32,88 @@ import {
   markNotificationAsRead,
 } from '../../../services/notifications';
 
+type NotifType = 'demande' | 'accepte' | 'refus' | 'equipe' | 'bienvenue';
+
+interface NotifMeta {
+  type: NotifType;
+  color: string;
+  leftBar: string;
+  border: string;
+  icon: React.ReactNode;
+  label: string;
+}
+
+const getNotifMeta = (message: string): NotifMeta => {
+  const m = message.toLowerCase();
+
+  if (m.startsWith('accepté :')) {
+    return {
+      type: 'accepte',
+      color: '#22c55e',
+      leftBar: '#22c55e',
+      border: 'rgba(34,197,94,0.45)',
+      icon: <CheckCircleOutlineIcon sx={{ fontSize: 16, color: '#22c55e' }} />,
+      label: 'Accepté',
+    };
+  }
+
+  if (m.startsWith('refus :')) {
+    return {
+      type: 'refus',
+      color: '#ef4444',
+      leftBar: '#ef4444',
+      border: 'rgba(239,68,68,0.45)',
+      icon: <CancelOutlinedIcon sx={{ fontSize: 16, color: '#ef4444' }} />,
+      label: 'Refus',
+    };
+  }
+
+  if (
+    m.startsWith('nouvelle demande :') ||
+    m.startsWith('demande envoyée :')
+  ) {
+    return {
+      type: 'demande',
+      color: '#3b82f6',
+      leftBar: '#3b82f6',
+      border: 'rgba(59,130,246,0.45)',
+      icon: <GroupAddIcon sx={{ fontSize: 16, color: '#3b82f6' }} />,
+      label: 'Demande',
+    };
+  }
+
+  if (m.startsWith('équipe créée :')) {
+    return {
+      type: 'equipe',
+      color: '#a78bfa',
+      leftBar: '#a78bfa',
+      border: 'rgba(167,139,250,0.45)',
+      icon: <EmojiEventsIcon sx={{ fontSize: 16, color: '#a78bfa' }} />,
+      label: 'Équipe',
+    };
+  }
+
+  return {
+    type: 'bienvenue',
+    color: '#e8822a',
+    leftBar: '#e8822a',
+    border: 'rgba(232,130,42,0.45)',
+    icon: <InfoOutlinedIcon sx={{ fontSize: 16, color: '#e8822a' }} />,
+    label: 'Bienvenue',
+  };
+};
+
 export default function Notifications() {
   const navigate = useNavigate();
   const [tab, setTab] = useState(0);
+  const [typeFilter, setTypeFilter] = useState<
+    'tous' | 'demande' | 'accepte' | 'refus' | 'equipe'
+  >('tous');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
+
   const unreadCount = notifications.filter((n) => !n.estLue).length;
 
   const loadNotifications = async (targetUserId: number) => {
@@ -107,17 +191,22 @@ export default function Notifications() {
   const isJoinRequestNotification = (message: string) => {
     const normalized = message.toLowerCase();
     return (
-      normalized.includes('nouvelle demande') ||
-      normalized.includes('souhaite rejoindre')
+      normalized.startsWith('nouvelle demande :') ||
+      normalized.startsWith('demande envoyée :')
     );
   };
 
-  const filtered =
+  const byTab =
     tab === 0
       ? notifications
       : tab === 1
         ? notifications.filter((n) => !n.estLue)
         : notifications.filter((n) => n.estLue);
+
+  const filtered =
+    typeFilter === 'tous'
+      ? byTab
+      : byTab.filter((n) => getNotifMeta(n.message).type === typeFilter);
 
   return (
     <Box
@@ -178,6 +267,7 @@ export default function Notifications() {
               />
             )}
           </Box>
+
           <Button
             startIcon={<DoneAllIcon sx={{ fontSize: 16 }} />}
             size="small"
@@ -197,7 +287,7 @@ export default function Notifications() {
             bgcolor: '#111827',
             border: '1px solid rgba(255,255,255,0.07)',
             borderRadius: 2,
-            mb: 3,
+            mb: 2,
             px: 0.5,
           }}
         >
@@ -229,6 +319,127 @@ export default function Notifications() {
           </Tabs>
         </Box>
 
+        <FormControl
+          size="small"
+          sx={{
+            mb: 3,
+            minWidth: 220,
+            '& .MuiOutlinedInput-root': {
+              color: 'white',
+              '& fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+              '&:hover fieldset': { borderColor: 'rgba(232,130,42,0.5)' },
+              '&.Mui-focused fieldset': { borderColor: '#e8822a' },
+            },
+            '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.4)' },
+            '& .MuiInputLabel-root.Mui-focused': { color: '#e8822a' },
+            '& .MuiSelect-icon': { color: 'rgba(255,255,255,0.4)' },
+          }}
+        >
+          <InputLabel>Type</InputLabel>
+          <Select
+            value={typeFilter}
+            label="Type"
+            onChange={(e) =>
+              setTypeFilter(
+                e.target.value as
+                  | 'tous'
+                  | 'demande'
+                  | 'accepte'
+                  | 'refus'
+                  | 'equipe',
+              )
+            }
+            renderValue={(selected) => {
+              if (selected === 'demande') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <GroupAddIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
+                    <span>Demandes</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'accepte') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#22c55e' }} />
+                    <span>Acceptées</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'refus') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CancelOutlinedIcon sx={{ fontSize: 18, color: '#ef4444' }} />
+                    <span>Refusées</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'equipe') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmojiEventsIcon sx={{ fontSize: 18, color: '#a78bfa' }} />
+                    <span>Équipe</span>
+                  </Box>
+                );
+              }
+
+              return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <NotificationsNoneIcon
+                    sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }}
+                  />
+                  <span>Tous</span>
+                </Box>
+              );
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: { bgcolor: '#1a2540', color: 'white' },
+              },
+            }}
+          >
+            <MenuItem value="tous">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <NotificationsNoneIcon
+                  sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)' }}
+                />
+                <span>Tous</span>
+              </Box>
+            </MenuItem>
+
+            <MenuItem value="demande">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <GroupAddIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
+                <span>Demandes</span>
+              </Box>
+            </MenuItem>
+
+            <MenuItem value="accepte">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#22c55e' }} />
+                <span>Acceptées</span>
+              </Box>
+            </MenuItem>
+
+            <MenuItem value="refus">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CancelOutlinedIcon sx={{ fontSize: 18, color: '#ef4444' }} />
+                <span>Refusées</span>
+              </Box>
+            </MenuItem>
+
+            <MenuItem value="equipe">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <EmojiEventsIcon sx={{ fontSize: 18, color: '#a78bfa' }} />
+                <span>Équipe</span>
+              </Box>
+            </MenuItem>
+          </Select>
+        </FormControl>
+
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {loading && (
             <Alert severity="info">Chargement des notifications...</Alert>
@@ -256,6 +467,11 @@ export default function Notifications() {
 
           {!loading &&
             filtered.map((n) => {
+              const meta = getNotifMeta(n.message);
+              const isDemandeResponsable = n.message
+                .toLowerCase()
+                .startsWith('nouvelle demande :');
+
               return (
                 <Card
                   key={n.idNotification}
@@ -263,14 +479,12 @@ export default function Notifications() {
                     bgcolor: '#111827',
                     border: n.estLue
                       ? '1px solid rgba(255,255,255,0.07)'
-                      : '1px solid rgba(232,130,42,0.45)',
+                      : `1px solid ${meta.border}`,
                     borderRadius: 2,
                     position: 'relative',
                     overflow: 'hidden',
                     transition: 'border-color 0.2s',
-                    '&:hover': {
-                      borderColor: 'rgba(232,130,42,0.65)',
-                    },
+                    '&:hover': { borderColor: meta.border },
                   }}
                 >
                   <Box
@@ -280,7 +494,7 @@ export default function Notifications() {
                       top: 0,
                       bottom: 0,
                       width: 3,
-                      bgcolor: '#e8822a',
+                      bgcolor: meta.leftBar,
                       opacity: n.estLue ? 0.35 : 1,
                     }}
                   />
@@ -294,8 +508,8 @@ export default function Notifications() {
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        bgcolor: '#e8822a',
-                        boxShadow: '0 0 8px rgba(232,130,42,0.8)',
+                        bgcolor: meta.color,
+                        boxShadow: `0 0 8px ${meta.color}cc`,
                       }}
                     />
                   )}
@@ -311,15 +525,23 @@ export default function Notifications() {
                         mb: 0.5,
                       }}
                     >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 700,
-                          color: n.estLue ? 'rgba(255,255,255,0.6)' : 'white',
-                        }}
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}
                       >
-                        Notification
-                      </Typography>
+                        {meta.icon}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 700,
+                            color: n.estLue
+                              ? 'rgba(255,255,255,0.6)'
+                              : meta.color,
+                          }}
+                        >
+                          {meta.label}
+                        </Typography>
+                      </Box>
+
                       <Typography
                         variant="caption"
                         color="text.secondary"
@@ -333,10 +555,7 @@ export default function Notifications() {
                       variant="body2"
                       color="text.secondary"
                       sx={{
-                        mb:
-                          n.estLue && !isJoinRequestNotification(n.message)
-                            ? 0
-                            : 1.5,
+                        mb: isJoinRequestNotification(n.message) || !n.estLue ? 1.5 : 0,
                         lineHeight: 1.6,
                       }}
                     >
@@ -345,12 +564,12 @@ export default function Notifications() {
 
                     {(isJoinRequestNotification(n.message) || !n.estLue) && (
                       <Box sx={{ display: 'flex', gap: 2.5 }}>
-                        {isJoinRequestNotification(n.message) && (
+                        {isDemandeResponsable && (
                           <Typography
                             variant="caption"
                             onClick={() => navigate('/equipes/demande')}
                             sx={{
-                              color: '#e8822a',
+                              color: '#3b82f6',
                               cursor: 'pointer',
                               fontWeight: 600,
                               letterSpacing: '0.02em',
@@ -364,28 +583,29 @@ export default function Notifications() {
                           </Typography>
                         )}
 
-                        <Typography
-                          variant="caption"
-                          onClick={() =>
-                            markOneRead(
-                              n.idNotification ??
-                                (n as unknown as { id: number }).id,
-                            )
-                          }
-                          sx={{
-                            color: 'rgba(255,255,255,0.75)',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            letterSpacing: '0.02em',
-                            display: n.estLue ? 'none' : 'inline',
-                            '&:hover': {
-                              textDecoration: 'underline',
-                              opacity: 0.8,
-                            },
-                          }}
-                        >
-                          Marquer comme lu
-                        </Typography>
+                        {!n.estLue && (
+                          <Typography
+                            variant="caption"
+                            onClick={() =>
+                              markOneRead(
+                                n.idNotification ??
+                                  (n as unknown as { id: number }).id,
+                              )
+                            }
+                            sx={{
+                              color: 'rgba(255,255,255,0.75)',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              letterSpacing: '0.02em',
+                              '&:hover': {
+                                textDecoration: 'underline',
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            Marquer comme lu
+                          </Typography>
+                        )}
                       </Box>
                     )}
                   </CardContent>
