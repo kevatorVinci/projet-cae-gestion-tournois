@@ -300,7 +300,10 @@ const HomePage = () => {
                     variant="h5"
                     fontWeight={800}
                     color="white"
-                    sx={{ fontFamily: '"Orbitron", sans-serif', fontSize: '1.1rem' }}
+                    sx={{
+                      fontFamily: '"Orbitron", sans-serif',
+                      fontSize: '1.1rem',
+                    }}
                   >
                     En ce moment
                   </Typography>
@@ -341,7 +344,10 @@ const HomePage = () => {
                     gap: 2,
                     gridTemplateColumns: {
                       xs: '1fr',
-                      md: enCours.length === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+                      md:
+                        enCours.length === 1
+                          ? '1fr'
+                          : 'repeat(2, minmax(0, 1fr))',
                     },
                   }}
                 >
@@ -353,7 +359,8 @@ const HomePage = () => {
                         border: '1px solid rgba(232,130,42,0.18)',
                         borderLeft: '4px solid #e8822a',
                         borderRadius: 3,
-                        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                        transition:
+                          'transform 0.15s ease, box-shadow 0.15s ease',
                         '&:hover': {
                           transform: 'translateY(-2px)',
                           boxShadow: '0 8px 24px rgba(232,130,42,0.15)',
@@ -382,8 +389,12 @@ const HomePage = () => {
                               >
                                 {tournament.nom}
                               </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                Du {formatDate(tournament.dateDebut)} au {formatDate(tournament.dateFin)}
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Du {formatDate(tournament.dateDebut)} au{' '}
+                                {formatDate(tournament.dateFin)}
                               </Typography>
                             </Box>
 
@@ -421,7 +432,10 @@ const HomePage = () => {
                   variant="h5"
                   fontWeight={800}
                   color="white"
-                  sx={{ fontFamily: '"Orbitron", sans-serif', fontSize: '1.1rem' }}
+                  sx={{
+                    fontFamily: '"Orbitron", sans-serif',
+                    fontSize: '1.1rem',
+                  }}
                 >
                   Prochains tournois
                 </Typography>
@@ -464,7 +478,8 @@ const HomePage = () => {
                         border: '1px solid rgba(255,255,255,0.07)',
                         borderLeft: '4px solid #3b82f6',
                         borderRadius: 3,
-                        transition: 'transform 0.15s ease, border-color 0.15s ease',
+                        transition:
+                          'transform 0.15s ease, border-color 0.15s ease',
                         '&:hover': {
                           transform: 'translateY(-2px)',
                           borderColor: 'rgba(59,130,246,0.35)',
@@ -493,7 +508,10 @@ const HomePage = () => {
                               >
                                 {tournament.nom}
                               </Typography>
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
                                 Début : {formatDate(tournament.dateDebut)}
                               </Typography>
                               {tournament.nombresParticipantsMax && (
@@ -501,7 +519,8 @@ const HomePage = () => {
                                   variant="body2"
                                   sx={{ color: '#e8822a', mt: 0.5 }}
                                 >
-                                  👥 Max {tournament.nombresParticipantsMax} équipes
+                                  👥 Max {tournament.nombresParticipantsMax}{' '}
+                                  équipes
                                 </Typography>
                               )}
                             </Box>
