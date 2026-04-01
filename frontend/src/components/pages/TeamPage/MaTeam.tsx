@@ -684,15 +684,6 @@ export function MyTeam() {
             {sortedMembers.map((member) => (
               <Paper
                 key={member.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/players/${member.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    navigate(`/players/${member.id}`);
-                  }
-                }}
                 sx={{
                   p: 3,
                   borderRadius: 2,
@@ -703,7 +694,6 @@ export function MyTeam() {
                   alignItems: 'center',
                   textAlign: 'center',
                   transition: 'all 0.3s ease',
-                  cursor: 'pointer',
                   '&:hover': {
                     borderColor: member.isResponsable
                       ? '#e8822a'
@@ -779,6 +769,26 @@ export function MyTeam() {
                     mb: 2,
                   }}
                 />
+
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => navigate(`/players/${member.id}`)}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: 11,
+                    width: '100%',
+                    color: 'white',
+                    borderColor: 'rgba(255,255,255,0.35)',
+                    mb: 1,
+                    '&:hover': {
+                      bgcolor: '#080b14',
+                      borderColor: '#c86e20',
+                    },
+                  }}
+                >
+                  Voir details
+                </Button>
 
                 {isResponsable &&
                   member.id !== currentUserId &&
