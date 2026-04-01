@@ -20,6 +20,11 @@ import {
   Card,
   CardContent,
   LinearProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from '@mui/material';
 import {
   EmojiEvents,
@@ -105,6 +110,39 @@ const statusChip = (etat: string) => {
   );
 };
 
+const isClosedEtat = (etat?: string) => {
+  const normalized = (etat || '').toUpperCase();
+  return (
+    normalized === 'CLOTURE' ||
+    normalized === 'CLOTURÉ' ||
+    normalized === 'TERMINE' ||
+    normalized === 'TERMINÉ'
+  );
+};
+
+const isTerminatedEtat = (etat?: string) => {
+  const normalized = (etat || '').toUpperCase();
+  return normalized === 'TERMINE' || normalized === 'TERMINÉ';
+};
+
+type StatusFilter = 'ALL' | 'EN_COURS' | 'OUVERT' | 'TERMINE' | 'CLOTURE';
+
+const normalizeEtat = (etat?: string) => (etat || '').toUpperCase();
+
+const matchesStatusFilter = (etat: string, filter: StatusFilter) => {
+  const normalized = normalizeEtat(etat);
+
+  if (filter === 'ALL') return true;
+  if (filter === 'EN_COURS') return normalized === 'EN_COURS';
+  if (filter === 'OUVERT') return normalized === 'OUVERT';
+  if (filter === 'TERMINE') return isTerminatedEtat(normalized);
+  if (filter === 'CLOTURE') {
+    return normalized === 'CLOTURE' || normalized === 'CLOTURÉ';
+  }
+
+  return true;
+};
+
 export function TournoisResponsable() {
   const navigate = useNavigate();
   const token = getAuthenticatedUser()?.token;
@@ -119,6 +157,7 @@ export function TournoisResponsable() {
   const [pageLoading, setPageLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [tournoiCible, setTournoiCible] = useState<Tournoi | null>(null);
   const [registerWarningMessage, setRegisterWarningMessage] = useState<
@@ -166,9 +205,9 @@ export function TournoisResponsable() {
       const clotures: Tournoi[] = [];
 
       for (const t of allTournaments as Tournoi[]) {
-        if (mesTournoisIds.has(t.id)) continue;
-        if (t.etat === 'OUVERT') ouverts.push(t);
-        else clotures.push(t);
+        const etat = (t.etat || '').toUpperCase();
+        if (etat === 'OUVERT' && !mesTournoisIds.has(t.id)) ouverts.push(t);
+        if (isClosedEtat(etat)) clotures.push(t);
       }
 
       setTournoisOuverts(ouverts);
@@ -326,7 +365,7 @@ export function TournoisResponsable() {
                       ? 'Déjà inscrit'
                       : isOpen
                         ? 'Inscription ouverte'
-                        : 'Historique'
+                        : 'Clôturé'
                   }
                   size="small"
                   sx={{
@@ -388,35 +427,76 @@ export function TournoisResponsable() {
     () => [
       { label: 'Inscrits', value: mesInscriptions.length, icon: CheckCircle },
       { label: 'Ouverts', value: tournoisOuverts.length, icon: Stadium },
-      { label: 'Historique', value: tournoisClotures.length, icon: History },
+      { label: 'Clôturés', value: tournoisClotures.length, icon: History },
     ],
     [mesInscriptions.length, tournoisOuverts.length, tournoisClotures.length],
   );
 
   const normalizedSearch = search.trim().toLowerCase();
 
+  const mesTournoisIds = useMemo(
+    () => new Set(mesInscriptions.map((inscription) => inscription.tournoi.id)),
+    [mesInscriptions],
+  );
+
   const filteredMesInscriptions = useMemo(
     () =>
-      mesInscriptions.filter((inscription) =>
-        inscription.tournoi.nom.toLowerCase().includes(normalizedSearch),
+      mesInscriptions.filter(
+        (inscription) =>
+          !isClosedEtat(inscription.tournoi.etat) &&
+          matchesStatusFilter(inscription.tournoi.etat, statusFilter) &&
+          inscription.tournoi.nom.toLowerCase().includes(normalizedSearch),
       ),
-    [mesInscriptions, normalizedSearch],
+    [mesInscriptions, normalizedSearch, statusFilter],
   );
 
   const filteredTournoisOuverts = useMemo(
     () =>
-      tournoisOuverts.filter((tournoi) =>
-        tournoi.nom.toLowerCase().includes(normalizedSearch),
+      tournoisOuverts.filter(
+        (tournoi) =>
+          matchesStatusFilter(tournoi.etat, statusFilter) &&
+          tournoi.nom.toLowerCase().includes(normalizedSearch),
       ),
-    [tournoisOuverts, normalizedSearch],
+    [tournoisOuverts, normalizedSearch, statusFilter],
   );
 
   const filteredTournoisClotures = useMemo(
     () =>
-      tournoisClotures.filter((tournoi) =>
-        tournoi.nom.toLowerCase().includes(normalizedSearch),
+      tournoisClotures.filter(
+        (tournoi) =>
+          matchesStatusFilter(tournoi.etat, statusFilter) &&
+          tournoi.nom.toLowerCase().includes(normalizedSearch),
       ),
-    [tournoisClotures, normalizedSearch],
+    [tournoisClotures, normalizedSearch, statusFilter],
+  );
+
+  const sortedFilteredTournoisClotures = useMemo(
+    () =>
+      [...filteredTournoisClotures].sort((a, b) => {
+        const aParticipating = mesTournoisIds.has(a.id);
+        const bParticipating = mesTournoisIds.has(b.id);
+        const aTerminated = isTerminatedEtat(a.etat);
+        const bTerminated = isTerminatedEtat(b.etat);
+
+        const aRank = aTerminated
+          ? aParticipating
+            ? 2
+            : 3
+          : aParticipating
+            ? 0
+            : 1;
+        const bRank = bTerminated
+          ? bParticipating
+            ? 2
+            : 3
+          : bParticipating
+            ? 0
+            : 1;
+
+        if (aRank !== bRank) return aRank - bRank;
+        return a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' });
+      }),
+    [filteredTournoisClotures, mesTournoisIds],
   );
 
   const hasSearch = normalizedSearch !== '';
@@ -564,6 +644,46 @@ export function TournoisResponsable() {
                     ),
                   }}
                 />
+
+                <FormControl
+                  size="small"
+                  sx={{
+                    mt: 2,
+                    maxWidth: 280,
+                    minWidth: 220,
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'rgba(255,255,255,0.04)',
+                      color: 'white',
+                      borderRadius: 999,
+                      '& fieldset': {
+                        borderColor: 'rgba(255,255,255,0.10)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(232,130,42,0.45)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#e8822a',
+                      },
+                    },
+                  }}
+                >
+                  <InputLabel sx={{ color: 'rgba(255,255,255,0.75)' }}>
+                    Filtre statut
+                  </InputLabel>
+                  <Select
+                    label="Filtre statut"
+                    value={statusFilter}
+                    onChange={(event: SelectChangeEvent<StatusFilter>) =>
+                      setStatusFilter(event.target.value as StatusFilter)
+                    }
+                  >
+                    <MenuItem value="ALL">Tous</MenuItem>
+                    <MenuItem value="EN_COURS">En cours</MenuItem>
+                    <MenuItem value="OUVERT">Inscription ouverte</MenuItem>
+                    <MenuItem value="TERMINE">Terminé</MenuItem>
+                    <MenuItem value="CLOTURE">Clôturé</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
 
               <Box
@@ -668,7 +788,7 @@ export function TournoisResponsable() {
                 </Typography>
               </Box>
 
-              {mesInscriptions.length === 0 ? (
+              {filteredMesInscriptions.length === 0 ? (
                 <Paper
                   elevation={0}
                   sx={{
@@ -679,7 +799,8 @@ export function TournoisResponsable() {
                   }}
                 >
                   <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
-                    Votre équipe ne participe à aucun tournoi pour le moment.
+                    Votre équipe n&apos;a aucune inscription active pour le
+                    moment.
                   </Typography>
                 </Paper>
               ) : (
@@ -800,7 +921,7 @@ export function TournoisResponsable() {
                   variant="h5"
                   sx={{ color: 'white', fontWeight: 800 }}
                 >
-                  Historique
+                  Clôturés
                 </Typography>
               </Box>
 
@@ -815,27 +936,54 @@ export function TournoisResponsable() {
                   }}
                 >
                   <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
-                    Aucun historique disponible.
+                    Aucun tournoi clôturé disponible.
                   </Typography>
                 </Paper>
               ) : (
                 <Stack spacing={2}>
-                  {filteredTournoisClotures.map((tournoi) =>
-                    renderTournoiCard(
+                  {sortedFilteredTournoisClotures.map((tournoi) => {
+                    const isParticipating = mesTournoisIds.has(tournoi.id);
+                    const isTerminated = isTerminatedEtat(tournoi.etat);
+
+                    const chipLabel = isParticipating
+                      ? 'Equipe inscrite'
+                      : isTerminated
+                        ? 'Terminé'
+                        : 'Inscriptions fermées';
+
+                    const chipBgColor = isParticipating
+                      ? 'rgba(34,197,94,0.16)'
+                      : isTerminated
+                        ? 'rgba(148,163,184,0.15)'
+                        : 'rgba(255,255,255,0.08)';
+
+                    const chipTextColor = isParticipating
+                      ? '#86efac'
+                      : isTerminated
+                        ? '#cbd5e1'
+                        : '#e2e8f0';
+
+                    const chipBorder = isParticipating
+                      ? '1px solid rgba(34,197,94,0.18)'
+                      : isTerminated
+                        ? '1px solid rgba(148,163,184,0.28)'
+                        : '1px solid rgba(255,255,255,0.08)';
+
+                    return renderTournoiCard(
                       tournoi,
                       <Chip
-                        label="Inscriptions fermées"
+                        label={chipLabel}
                         sx={{
-                          bgcolor: 'rgba(255,255,255,0.08)',
-                          color: '#e2e8f0',
+                          bgcolor: chipBgColor,
+                          color: chipTextColor,
                           fontWeight: 800,
-                          border: '1px solid rgba(255,255,255,0.08)',
+                          border: chipBorder,
                           px: 0.5,
                         }}
                       />,
                       'closed',
-                    ),
-                  )}
+                    );
+                  })}
                 </Stack>
               )}
             </Box>
@@ -846,7 +994,7 @@ export function TournoisResponsable() {
           hasSearch &&
           filteredMesInscriptions.length === 0 &&
           filteredTournoisOuverts.length === 0 &&
-          filteredTournoisClotures.length === 0 && (
+          sortedFilteredTournoisClotures.length === 0 && (
             <Paper
               elevation={0}
               sx={{
