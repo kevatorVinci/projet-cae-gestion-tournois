@@ -254,7 +254,7 @@ const AdminTournamentsPage = () => {
               color: 'white',
             }}
           >
-            Gestion des Tournois ⚙️
+            Gestion des Tournois
           </Typography>
           <Typography variant="h6" color="text.secondary">
             Espace administrateur : création de tournois et modification des
@@ -326,7 +326,7 @@ const AdminTournamentsPage = () => {
             borderBottom="2px solid #2a3b55"
             pb={1}
           >
-            Liste des tournois ({sortedTournaments.length}) 🗂️
+            Liste des tournois ({sortedTournaments.length})
           </Typography>
 
           {loading && (
