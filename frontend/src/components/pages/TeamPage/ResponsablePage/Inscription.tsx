@@ -9,6 +9,8 @@ import {
   Button,
   Stack,
   Chip,
+  TextField,
+  InputAdornment,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -27,6 +29,7 @@ import {
   CheckCircle,
   History,
 } from '@mui/icons-material';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   fetchAcceptedTournamentRegistrations,
   fetchPublicTournaments,
@@ -115,9 +118,12 @@ export function TournoisResponsable() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [tournoiCible, setTournoiCible] = useState<Tournoi | null>(null);
-  const [registerWarningMessage, setRegisterWarningMessage] = useState<string | null>(null);
+  const [registerWarningMessage, setRegisterWarningMessage] = useState<
+    string | null
+  >(null);
 
   const loadData = useCallback(async () => {
     if (!token) {
@@ -168,7 +174,9 @@ export function TournoisResponsable() {
       setTournoisOuverts(ouverts);
       setTournoisClotures(clotures);
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Erreur de chargement.');
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Erreur de chargement.',
+      );
     } finally {
       setPageLoading(false);
     }
@@ -191,7 +199,9 @@ export function TournoisResponsable() {
       setFeedback(`Inscription réussie au tournoi : ${tournoiCible.nom} !`);
       await loadData();
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Erreur d'inscription.");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Erreur d'inscription.",
+      );
     } finally {
       setActionLoading(null);
       setIsRegisterModalOpen(false);
@@ -225,7 +235,8 @@ export function TournoisResponsable() {
           bgcolor: 'rgba(17,24,39,0.72)',
           backdropFilter: 'blur(12px)',
           boxShadow: '0 10px 30px rgba(0,0,0,0.20)',
-          transition: 'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+          transition:
+            'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
           '&:hover': {
             transform: 'translateY(-2px)',
             borderColor: isJoined
@@ -256,7 +267,14 @@ export function TournoisResponsable() {
             }}
           >
             <Box sx={{ minWidth: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.2,
+                  mb: 1.1,
+                }}
+              >
                 <Box
                   sx={{
                     width: 42,
@@ -269,7 +287,11 @@ export function TournoisResponsable() {
                       : isOpen
                         ? 'rgba(232,130,42,0.14)'
                         : 'rgba(255,255,255,0.06)',
-                    color: isJoined ? '#86efac' : isOpen ? '#fbbf24' : '#cbd5e1',
+                    color: isJoined
+                      ? '#86efac'
+                      : isOpen
+                        ? '#fbbf24'
+                        : '#cbd5e1',
                     flexShrink: 0,
                   }}
                 >
@@ -287,7 +309,10 @@ export function TournoisResponsable() {
                   >
                     {tournoi.nom}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.60)' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: 'rgba(255,255,255,0.60)' }}
+                  >
                     Début le {formatDate(tournoi.dateDebut)}
                   </Typography>
                 </Box>
@@ -296,7 +321,13 @@ export function TournoisResponsable() {
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                 {statusChip(tournoi.etat)}
                 <Chip
-                  label={isJoined ? 'Déjà inscrit' : isOpen ? 'Inscription ouverte' : 'Historique'}
+                  label={
+                    isJoined
+                      ? 'Déjà inscrit'
+                      : isOpen
+                        ? 'Inscription ouverte'
+                        : 'Historique'
+                  }
                   size="small"
                   sx={{
                     height: 26,
@@ -306,7 +337,11 @@ export function TournoisResponsable() {
                       : isOpen
                         ? 'rgba(232,130,42,0.10)'
                         : 'rgba(255,255,255,0.06)',
-                    color: isJoined ? '#86efac' : isOpen ? '#fdba74' : '#cbd5e1',
+                    color: isJoined
+                      ? '#86efac'
+                      : isOpen
+                        ? '#fdba74'
+                        : '#cbd5e1',
                     border: '1px solid rgba(255,255,255,0.08)',
                     fontWeight: 800,
                     fontSize: '0.72rem',
@@ -358,6 +393,34 @@ export function TournoisResponsable() {
     [mesInscriptions.length, tournoisOuverts.length, tournoisClotures.length],
   );
 
+  const normalizedSearch = search.trim().toLowerCase();
+
+  const filteredMesInscriptions = useMemo(
+    () =>
+      mesInscriptions.filter((inscription) =>
+        inscription.tournoi.nom.toLowerCase().includes(normalizedSearch),
+      ),
+    [mesInscriptions, normalizedSearch],
+  );
+
+  const filteredTournoisOuverts = useMemo(
+    () =>
+      tournoisOuverts.filter((tournoi) =>
+        tournoi.nom.toLowerCase().includes(normalizedSearch),
+      ),
+    [tournoisOuverts, normalizedSearch],
+  );
+
+  const filteredTournoisClotures = useMemo(
+    () =>
+      tournoisClotures.filter((tournoi) =>
+        tournoi.nom.toLowerCase().includes(normalizedSearch),
+      ),
+    [tournoisClotures, normalizedSearch],
+  );
+
+  const hasSearch = normalizedSearch !== '';
+
   return (
     <Box
       sx={{
@@ -368,8 +431,16 @@ export function TournoisResponsable() {
       }}
     >
       <Container maxWidth="xl">
-        {feedback && <Alert severity="success" sx={{ mb: 2 }}>{feedback}</Alert>}
-        {errorMessage && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
+        {feedback && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {feedback}
+          </Alert>
+        )}
+        {errorMessage && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
 
         <Paper
           elevation={0}
@@ -447,10 +518,52 @@ export function TournoisResponsable() {
                 </Typography>
                 <Typography
                   variant="body1"
-                  sx={{ mt: 1.2, color: 'rgba(255,255,255,0.68)', maxWidth: 720 }}
+                  sx={{
+                    mt: 1.2,
+                    color: 'rgba(255,255,255,0.68)',
+                    maxWidth: 720,
+                  }}
                 >
-                  Inscrivez votre équipe aux tournois ouverts et suivez l’historique de vos participations depuis un seul écran.
+                  Inscrivez votre équipe aux tournois ouverts et suivez
+                  l’historique de vos participations depuis un seul écran.
                 </Typography>
+
+                <TextField
+                  fullWidth
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Rechercher un tournoi"
+                  size="small"
+                  sx={{
+                    mt: 3,
+                    maxWidth: 520,
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'rgba(255,255,255,0.04)',
+                      color: 'white',
+                      borderRadius: 999,
+                      '& fieldset': {
+                        borderColor: 'rgba(255,255,255,0.10)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(232,130,42,0.45)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#e8822a',
+                      },
+                    },
+                    '& input': {
+                      py: 1.4,
+                      color: 'white',
+                    },
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: '#e8822a' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </Box>
 
               <Box
@@ -488,10 +601,16 @@ export function TournoisResponsable() {
                       >
                         <Icon sx={{ fontSize: 20 }} />
                       </Box>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'rgba(255,255,255,0.55)' }}
+                      >
                         {s.label}
                       </Typography>
-                      <Typography variant="h5" sx={{ color: 'white', fontWeight: 900, mt: 0.4 }}>
+                      <Typography
+                        variant="h5"
+                        sx={{ color: 'white', fontWeight: 900, mt: 0.4 }}
+                      >
                         {s.value}
                       </Typography>
                     </Paper>
@@ -537,9 +656,14 @@ export function TournoisResponsable() {
             }}
           >
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 2 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 2 }}
+              >
                 <CheckCircle sx={{ color: '#86efac' }} />
-                <Typography variant="h5" sx={{ color: 'white', fontWeight: 800 }}>
+                <Typography
+                  variant="h5"
+                  sx={{ color: 'white', fontWeight: 800 }}
+                >
                   Mes inscriptions
                 </Typography>
               </Box>
@@ -560,7 +684,7 @@ export function TournoisResponsable() {
                 </Paper>
               ) : (
                 <Stack spacing={2}>
-                  {mesInscriptions.map((inscription) =>
+                  {filteredMesInscriptions.map((inscription) =>
                     renderTournoiCard(
                       inscription.tournoi,
                       <Chip
@@ -581,9 +705,14 @@ export function TournoisResponsable() {
             </Box>
 
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 2 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 2 }}
+              >
                 <Stadium sx={{ color: '#fdba74' }} />
-                <Typography variant="h5" sx={{ color: 'white', fontWeight: 800 }}>
+                <Typography
+                  variant="h5"
+                  sx={{ color: 'white', fontWeight: 800 }}
+                >
                   Tournois ouverts
                 </Typography>
               </Box>
@@ -604,7 +733,7 @@ export function TournoisResponsable() {
                 </Paper>
               ) : (
                 <Stack spacing={2}>
-                  {tournoisOuverts.map((tournoi) =>
+                  {filteredTournoisOuverts.map((tournoi) =>
                     renderTournoiCard(
                       tournoi,
                       <Button
@@ -620,7 +749,8 @@ export function TournoisResponsable() {
                             fetchAcceptedTournamentRegistrations(tournoi.id)
                               .then((accepted) => {
                                 const remainingSlots =
-                                  tournoi.nombresParticipantsMax! - accepted.length;
+                                  tournoi.nombresParticipantsMax! -
+                                  accepted.length;
                                 if (remainingSlots <= 1) {
                                   setRegisterWarningMessage(null);
                                 } else {
@@ -662,9 +792,14 @@ export function TournoisResponsable() {
             </Box>
 
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 2 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 2 }}
+              >
                 <History sx={{ color: '#cbd5e1' }} />
-                <Typography variant="h5" sx={{ color: 'white', fontWeight: 800 }}>
+                <Typography
+                  variant="h5"
+                  sx={{ color: 'white', fontWeight: 800 }}
+                >
                   Historique
                 </Typography>
               </Box>
@@ -685,7 +820,7 @@ export function TournoisResponsable() {
                 </Paper>
               ) : (
                 <Stack spacing={2}>
-                  {tournoisClotures.map((tournoi) =>
+                  {filteredTournoisClotures.map((tournoi) =>
                     renderTournoiCard(
                       tournoi,
                       <Chip
@@ -706,6 +841,28 @@ export function TournoisResponsable() {
             </Box>
           </Box>
         )}
+
+        {!pageLoading &&
+          hasSearch &&
+          filteredMesInscriptions.length === 0 &&
+          filteredTournoisOuverts.length === 0 &&
+          filteredTournoisClotures.length === 0 && (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                bgcolor: 'rgba(17,24,39,0.72)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                mt: 3,
+                textAlign: 'center',
+              }}
+            >
+              <Typography sx={{ color: 'rgba(255,255,255,0.75)' }}>
+                Aucun tournoi trouvé pour cette recherche.
+              </Typography>
+            </Paper>
+          )}
       </Container>
 
       <Dialog
