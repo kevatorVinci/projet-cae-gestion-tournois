@@ -15,6 +15,11 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: './src/setupTests.ts',
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        './tests/**', // 👈 This targets only your root tests folder
+      ],
       coverage: {
         reporter: ['text', 'html'],
         thresholds: {
