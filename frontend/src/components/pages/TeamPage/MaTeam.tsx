@@ -297,8 +297,7 @@ export function MyTeam() {
     setIsUpdatingImage(true);
     try {
       await updateTeamImage(team.id, selectedNewImage);
-      await loadMyTeam(); // Refresh team info after update
-      setMessage("L'emblème de l'équipe a été mis à jour avec succès ! 🛡️");
+      await loadMyTeam();
       setIsImageDialogOpen(false);
     } catch (err: unknown) {
       console.error('Erreur API :', err);
