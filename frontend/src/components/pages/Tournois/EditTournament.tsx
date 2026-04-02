@@ -24,58 +24,42 @@ import BackButton from '../../BoutonRetour';
 import {
   fetchTournamentById,
   updateTournament,
+  publishTournament,
   NewTournamentPayload,
 } from '../../../services/tournois';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType } from '../../../types';
 
-/**
- * Page dedicated to editing an existing tournament.
- * It fetches the current data, pre-fills the form, and allows the admin to save changes.
- * Includes security to prevent selecting past dates.
- *
- * @return {JSX.Element} the tournament editing page
- */
 const EditTournamentPage = () => {
   const navigate = useNavigate();
-  // We get the ID from the URL (now it is /edit/:id)
   const { id } = useParams<{ id: string }>();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
 
-  // Form memory variables
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
   const [nombresParticipantsMax, setNombresParticipantsMax] = useState<
     number | ''
   >('');
-
   const [dateDebut, setDateDebut] = useState<Dayjs | null>(null);
   const [dateFin, setDateFin] = useState<Dayjs | null>(null);
   const [dateLimiteInscription, setDateLimiteInscription] =
     useState<Dayjs | null>(null);
-
-  // Status variables
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loadingData, setLoadingData] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✨ SÉCURITÉ : We calculate tomorrow's date to block the past
   const tomorrow = dayjs().add(1, 'day');
 
-  /**
-   * Function to load the tournament data when the page opens.
-   */
   useEffect(() => {
     const loadTournamentData = async () => {
       if (!id) return;
       try {
         setLoadingData(true);
         const data = await fetchTournamentById(id);
-
         setNom(data.nom);
         setDescription(data.description);
         setNombresParticipantsMax(data.nombresParticipantsMax);
-
         setDateDebut(dayjs(data.dateDebut));
         setDateFin(dayjs(data.dateFin));
         setDateLimiteInscription(dayjs(data.dateLimiteInscription));
@@ -85,54 +69,41 @@ const EditTournamentPage = () => {
         setLoadingData(false);
       }
     };
-
     loadTournamentData();
   }, [id]);
 
-  /**
-   * Function called when submitting the form to save changes.
-   *
-   * @param {FormEvent} e - the event
-   */
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const validateAndBuildPayload = (): NewTournamentPayload | null => {
     setError('');
     setSuccess('');
 
     if (!dateDebut || !dateFin || !dateLimiteInscription) {
       setError('Veuillez remplir toutes les dates du calendrier.');
-      return;
+      return null;
     }
 
     if (
       nombresParticipantsMax === '' ||
       !Number.isFinite(Number(nombresParticipantsMax))
     ) {
-      setError("Veuillez indiquer un nombre max d'équipes valide.");
-      return;
+      setError('Veuillez indiquer un nombre de places valide.');
+      return null;
     }
 
     if (dateDebut.isBefore(dateLimiteInscription, 'day')) {
       setError(
         "La date de début du tournoi doit être après la date limite d'inscription.",
       );
-      return;
+      return null;
     }
 
     if (dateFin.isBefore(dateDebut, 'day')) {
       setError(
         'La date de fin ne peut pas être avant la date de début du tournoi.',
       );
-      return;
+      return null;
     }
 
-    const token = authenticatedUser?.token;
-    if (!token || !id) {
-      setError("Vous devez être connecté en tant qu'administrateur.");
-      return;
-    }
-
-    const payload: NewTournamentPayload = {
+    return {
       nom,
       description,
       dateDebut: dateDebut.format('YYYY-MM-DD'),
@@ -140,13 +111,54 @@ const EditTournamentPage = () => {
       dateLimiteInscription: dateLimiteInscription.format('YYYY-MM-DD'),
       nombresParticipantsMax: Number(nombresParticipantsMax),
     };
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    const payload = validateAndBuildPayload();
+    if (!payload) return;
+
+    const token = authenticatedUser?.token;
+    if (!token || !id) {
+      setError("Vous devez être connecté en tant qu'administrateur.");
+      return;
+    }
 
     try {
+      setIsSubmitting(true);
       await updateTournament(id, payload, token);
       setSuccess('Le tournoi a été modifié avec succès !');
       setTimeout(() => navigate('/admin/tournaments'), 2000);
     } catch (err) {
       setError('Erreur lors de la modification du tournoi.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitAndPublish = async () => {
+    const payload = validateAndBuildPayload();
+    if (!payload) return;
+
+    const token = authenticatedUser?.token;
+    if (!token || !id) {
+      setError("Vous devez être connecté en tant qu'administrateur.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await updateTournament(id, payload, token);
+      await publishTournament(id, token);
+      setSuccess('Le tournoi a été modifié et publié avec succès !');
+      setTimeout(() => navigate('/admin/tournaments'), 2000);
+    } catch (err) {
+      setError(
+        'Erreur lors de la modification ou de la publication du tournoi.',
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -299,9 +311,32 @@ const EditTournamentPage = () => {
                 adapterLocale="fr"
               >
                 <Grid container spacing={3} mb={4} alignItems="center">
+                  {/* ✨ 1. Date de début */}
+                  <Grid item xs={12} sm={6}>
+                    <DatePicker
+                      label="Date de début"
+                      value={dateDebut}
+                      onChange={(val) => setDateDebut(val)}
+                      minDate={dateLimiteInscription || tomorrow}
+                      slotProps={datePickerSlotProps}
+                    />
+                  </Grid>
+
+                  {/* ✨ 2. Date de fin */}
+                  <Grid item xs={12} sm={6}>
+                    <DatePicker
+                      label="Date de fin"
+                      value={dateFin}
+                      onChange={(val) => setDateFin(val)}
+                      minDate={dateDebut || dateLimiteInscription || tomorrow}
+                      slotProps={datePickerSlotProps}
+                    />
+                  </Grid>
+
+                  {/* ✨ 3. Nombre de places */}
                   <Grid item xs={12} sm={6}>
                     <TextField
-                      label="Nombre max d'équipes"
+                      label="Nombre de places"
                       fullWidth
                       variant="outlined"
                       type="number"
@@ -323,8 +358,8 @@ const EditTournamentPage = () => {
                     />
                   </Grid>
 
+                  {/* ✨ 4. Date limite d'inscription */}
                   <Grid item xs={12} sm={6}>
-                    {/* ✨ Added minDate={tomorrow} back for security */}
                     <DatePicker
                       label="Date limite d'inscription"
                       value={dateLimiteInscription}
@@ -333,46 +368,52 @@ const EditTournamentPage = () => {
                       slotProps={datePickerSlotProps}
                     />
                   </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    {/* ✨ Secured to not be before deadline or tomorrow */}
-                    <DatePicker
-                      label="Date de début"
-                      value={dateDebut}
-                      onChange={(val) => setDateDebut(val)}
-                      minDate={dateLimiteInscription || tomorrow}
-                      slotProps={datePickerSlotProps}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    {/* ✨ Secured to not be before start date */}
-                    <DatePicker
-                      label="Date de fin"
-                      value={dateFin}
-                      onChange={(val) => setDateFin(val)}
-                      minDate={dateDebut || dateLimiteInscription || tomorrow}
-                      slotProps={datePickerSlotProps}
-                    />
-                  </Grid>
                 </Grid>
               </LocalizationProvider>
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
+              <Box
                 sx={{
-                  backgroundColor: '#e8822a',
-                  color: 'white',
-                  py: 1.5,
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                  '&:hover': { backgroundColor: '#c86e20' },
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                  gap: 1.5,
                 }}
               >
-                SAUVEGARDER LES MODIFICATIONS
-              </Button>
+                <Button
+                  type="submit"
+                  variant="outlined"
+                  disabled={isSubmitting}
+                  sx={{
+                    borderColor: 'rgba(255,255,255,0.35)',
+                    color: 'white',
+                    py: 1.5,
+                    fontWeight: 'bold',
+                    fontSize: '0.95rem',
+                    '&:hover': {
+                      borderColor: '#e8822a',
+                      backgroundColor: 'rgba(232,130,42,0.1)',
+                    },
+                  }}
+                >
+                  {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder'}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="contained"
+                  disabled={isSubmitting}
+                  onClick={() => void handleSubmitAndPublish()}
+                  sx={{
+                    backgroundColor: '#16a34a',
+                    color: 'white',
+                    py: 1.5,
+                    fontWeight: 'bold',
+                    fontSize: '0.95rem',
+                    '&:hover': { backgroundColor: '#15803d' },
+                  }}
+                >
+                  {isSubmitting ? 'Publication...' : 'Sauvegarder et publier'}
+                </Button>
+              </Box>
             </form>
           )}
         </Paper>
