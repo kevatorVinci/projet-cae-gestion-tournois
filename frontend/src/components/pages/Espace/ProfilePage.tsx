@@ -169,15 +169,15 @@ export default function ProfilePage() {
   if (newPassword.length > 0) {
     if (strengthScore <= 2) {
       barColor = '#ef4444';
-      strengthLabel = 'Mot de passe faible ❌';
+      strengthLabel = 'Mot de passe faible';
       barWidth = '33%';
     } else if (strengthScore === 3 || strengthScore === 4) {
       barColor = '#f97316';
-      strengthLabel = 'Mot de passe moyen ⚠️';
+      strengthLabel = 'Mot de passe moyen';
       barWidth = '66%';
     } else if (strengthScore === 5) {
       barColor = '#22c55e';
-      strengthLabel = 'Mot de passe fort ✅';
+      strengthLabel = 'Mot de passe fort';
       barWidth = '100%';
     }
   }

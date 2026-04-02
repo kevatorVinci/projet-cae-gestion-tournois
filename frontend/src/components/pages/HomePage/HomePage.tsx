@@ -13,6 +13,7 @@ import {
   CircularProgress,
   Stack,
 } from '@mui/material';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
 import backgroundImage from '../../../assets/images/background.png';
@@ -515,13 +516,21 @@ const HomePage = () => {
                                 Début : {formatDate(tournament.dateDebut)}
                               </Typography>
                               {tournament.nombresParticipantsMax && (
-                                <Typography
-                                  variant="body2"
-                                  sx={{ color: '#e8822a', mt: 0.5 }}
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5,
+                                    color: '#e8822a',
+                                    mt: 0.5,
+                                  }}
                                 >
-                                  👥 Max {tournament.nombresParticipantsMax}{' '}
-                                  équipes
-                                </Typography>
+                                  <GroupsIcon sx={{ fontSize: 18 }} />
+                                  <Typography variant="body2">
+                                    Max {tournament.nombresParticipantsMax}{' '}
+                                    équipes
+                                  </Typography>
+                                </Box>
                               )}
                             </Box>
 
