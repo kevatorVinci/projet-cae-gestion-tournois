@@ -496,9 +496,14 @@ const TournoiPage = () => {
                             {formatDate(tournament.dateLimiteInscription)}
                           </Typography>
                           {tournament.nombresParticipantsMax && (
-                            <Typography
-                              variant="body2"
-                              sx={{ color: '#60a5fa', mt: 0.5 }}
+                            <Box
+                              sx={{
+                                mt: 0.5,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.75,
+                                color: '#60a5fa',
+                              }}
                             >
                               <GroupsIcon sx={{ fontSize: 18 }} />
                               <Typography variant="body2">
