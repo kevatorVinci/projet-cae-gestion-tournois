@@ -75,7 +75,7 @@ const HomePage = () => {
   }, []);
 
   return (
-    <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ background: 'transparent', minHeight: '100vh' }}>
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <Box
         sx={{

@@ -119,7 +119,7 @@ const LoginPage = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: 'background.default',
+        backgroundColor: 'transparent',
         overflow: 'hidden',
       }}
     >

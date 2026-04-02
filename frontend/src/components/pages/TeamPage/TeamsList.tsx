@@ -214,7 +214,7 @@ const TeamsList = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: 'background.default',
+          background: 'transparent',
         }}
       >
         <CircularProgress color="secondary" />
@@ -227,7 +227,7 @@ const TeamsList = () => {
       sx={{
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
         py: 5,
-        backgroundColor: 'background.default',
+        background: 'transparent',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -316,7 +316,7 @@ const TeamsList = () => {
             placeholder={
               activeTab === 'teams'
                 ? 'Rechercher par nom...'
-                : 'Rechercher par pseudo...'
+                : 'Rechercher par tag...'
             }
             value={query}
             onChange={(e) => setQuery(e.target.value)}

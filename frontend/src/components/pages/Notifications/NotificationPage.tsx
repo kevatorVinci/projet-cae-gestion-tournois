@@ -24,15 +24,29 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SecurityIcon from '@mui/icons-material/Security';
+import EventIcon from '@mui/icons-material/Event';
 import { NotificationItem } from '../../../types';
+import { getAuthenticatedUser } from '../../../utils/session';
 import {
   getCurrentUserIdFromToken,
   getNotificationsByUser,
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from '../../../services/notifications';
+import {
+  fetchAllTournaments,
+  fetchPublicTournaments,
+} from '../../../services/tournois';
 
-type NotifType = 'demande' | 'accepte' | 'refus' | 'equipe' | 'bienvenue';
+type NotifType =
+  | 'demande'
+  | 'accepte'
+  | 'refus'
+  | 'equipe'
+  | 'bienvenue'
+  | 'admin'
+  | 'tournoi';
 
 interface NotifMeta {
   type: NotifType;
@@ -79,7 +93,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('équipe créée :')) {
+  if (m.startsWith('équipe créée :') || m.startsWith('équipe :')) {
     return {
       type: 'equipe',
       color: '#a78bfa',
@@ -87,6 +101,28 @@ const getNotifMeta = (message: string): NotifMeta => {
       border: 'rgba(167,139,250,0.45)',
       icon: <EmojiEventsIcon sx={{ fontSize: 16, color: '#a78bfa' }} />,
       label: 'Équipe',
+    };
+  }
+
+  if (m.startsWith('admin :')) {
+    return {
+      type: 'admin',
+      color: '#f59e0b',
+      leftBar: '#f59e0b',
+      border: 'rgba(245,158,11,0.45)',
+      icon: <SecurityIcon sx={{ fontSize: 16, color: '#f59e0b' }} />,
+      label: 'Admin',
+    };
+  }
+
+  if (m.startsWith('nouveau tournoi :')) {
+    return {
+      type: 'tournoi',
+      color: '#06b6d4',
+      leftBar: '#06b6d4',
+      border: 'rgba(6,182,212,0.45)',
+      icon: <EventIcon sx={{ fontSize: 16, color: '#06b6d4' }} />,
+      label: 'Tournoi',
     };
   }
 
@@ -102,9 +138,10 @@ const getNotifMeta = (message: string): NotifMeta => {
 
 export default function Notifications() {
   const navigate = useNavigate();
+  const isAdmin = Boolean(getAuthenticatedUser()?.admin);
   const [tab, setTab] = useState(0);
   const [typeFilter, setTypeFilter] = useState<
-    'tous' | 'demande' | 'accepte' | 'refus' | 'equipe'
+    'tous' | 'demande' | 'accepte' | 'refus' | 'equipe' | 'admin' | 'tournoi'
   >('tous');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +232,70 @@ export default function Notifications() {
 
   const isAcceptedNotification = (message: string) =>
     message.toLowerCase().startsWith('accepté :');
+
+  const isDraftTournamentNotification = (message: string) =>
+    message.toLowerCase().startsWith('admin : nouveau tournoi en brouillon');
+
+  const isPublishedTournamentNotification = (message: string) =>
+    message.toLowerCase().startsWith('nouveau tournoi :');
+
+  const extractTournamentName = (message: string) => {
+    const match = message.match(/'([^']+)'/);
+    return match?.[1] ?? null;
+  };
+
+  const redirectToTournamentFromNotification = async (message: string) => {
+    const tournoiName = extractTournamentName(message);
+    if (!tournoiName) {
+      setError('Impossible de trouver le tournoi lié à cette notification.');
+      return;
+    }
+
+    try {
+      const isDraft = isDraftTournamentNotification(message);
+      const isPublished = isPublishedTournamentNotification(message);
+      const currentUser = getAuthenticatedUser();
+
+      if (currentUser?.admin && currentUser.token) {
+        const allTournaments = await fetchAllTournaments(currentUser.token);
+        const target = allTournaments.find(
+          (t: { id: number; nom: string }) => t.nom === tournoiName,
+        );
+
+        if (!target) {
+          setError('Tournoi introuvable pour cette notification.');
+          return;
+        }
+
+        if (isDraft) {
+          navigate(`/admin/tournaments/edit/${target.id}`);
+          return;
+        }
+
+        if (isPublished) {
+          navigate(`/tournois/${target.id}`);
+          return;
+        }
+      }
+
+      const publicTournaments = await fetchPublicTournaments(
+        undefined,
+        tournoiName,
+      );
+      const target = publicTournaments.find(
+        (t: { id: number; nom: string }) => t.nom === tournoiName,
+      );
+
+      if (!target) {
+        setError('Tournoi public introuvable pour cette notification.');
+        return;
+      }
+
+      navigate(`/tournois/${target.id}`);
+    } catch {
+      setError('Impossible de rediriger vers ce tournoi pour le moment.');
+    }
+  };
 
   const byTab =
     tab === 0
@@ -346,7 +447,9 @@ export default function Notifications() {
                   | 'demande'
                   | 'accepte'
                   | 'refus'
-                  | 'equipe',
+                  | 'equipe'
+                  | 'admin'
+                  | 'tournoi',
               )
             }
             renderValue={(selected) => {
@@ -386,6 +489,24 @@ export default function Notifications() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <EmojiEventsIcon sx={{ fontSize: 18, color: '#a78bfa' }} />
                     <span>Équipe</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'admin' && isAdmin) {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SecurityIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                    <span>Admin</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'tournoi') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EventIcon sx={{ fontSize: 18, color: '#06b6d4' }} />
+                    <span>Tournoi</span>
                   </Box>
                 );
               }
@@ -443,6 +564,22 @@ export default function Notifications() {
                 <span>Équipe</span>
               </Box>
             </MenuItem>
+
+            {isAdmin && (
+              <MenuItem value="admin">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <SecurityIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                  <span>Admin</span>
+                </Box>
+              </MenuItem>
+            )}
+
+            <MenuItem value="tournoi">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <EventIcon sx={{ fontSize: 18, color: '#06b6d4' }} />
+                <span>Tournoi</span>
+              </Box>
+            </MenuItem>
           </Select>
         </FormControl>
 
@@ -477,6 +614,9 @@ export default function Notifications() {
               const isDemandeResponsable = n.message
                 .toLowerCase()
                 .startsWith('nouvelle demande :');
+              const isTournamentNotification =
+                isDraftTournamentNotification(n.message) ||
+                isPublishedTournamentNotification(n.message);
 
               return (
                 <Card
@@ -577,8 +717,30 @@ export default function Notifications() {
 
                     {(isJoinRequestNotification(n.message) ||
                       isAcceptedNotification(n.message) ||
+                      isTournamentNotification ||
                       !n.estLue) && (
                       <Box sx={{ display: 'flex', gap: 2.5 }}>
+                        {isTournamentNotification && (
+                          <Typography
+                            variant="caption"
+                            onClick={() =>
+                              redirectToTournamentFromNotification(n.message)
+                            }
+                            sx={{
+                              color: '#06b6d4',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              letterSpacing: '0.02em',
+                              '&:hover': {
+                                textDecoration: 'underline',
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            Voir le tournoi
+                          </Typography>
+                        )}
+
                         {isAcceptedNotification(n.message) && (
                           <Typography
                             variant="caption"

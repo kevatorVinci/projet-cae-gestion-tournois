@@ -34,6 +34,14 @@ import {
 export default function AdminPage() {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
 
+  const normalizeAvatarUrl = (avatar?: string) => {
+    if (!avatar) return '/luffy.png';
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return avatar;
+    }
+    return avatar.startsWith('/') ? avatar : `/${avatar}`;
+  };
+
   const [users, setUsers] = useState<AuthenticatedUser[]>([]);
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
@@ -156,7 +164,7 @@ export default function AdminPage() {
   });
 
   return (
-    <Box sx={{ padding: 4, backgroundColor: '#080b14', minHeight: '100vh' }}>
+    <Box sx={{ padding: 4, background: 'transparent', minHeight: '100vh' }}>
       <BackButton />
       <Typography variant="h4" color="white" mb={4} textAlign="center">
         Gestion des Administrateurs
@@ -223,8 +231,13 @@ export default function AdminPage() {
               >
                 <TableCell>
                   <Avatar
-                    src={`/${user.profileImage}`}
+                    src={normalizeAvatarUrl(user.profileImage)}
                     alt={user.tag}
+                    imgProps={{
+                      onError: (event) => {
+                        event.currentTarget.src = '/luffy.png';
+                      },
+                    }}
                     sx={{ border: '2px solid #e8822a' }}
                   />
                 </TableCell>

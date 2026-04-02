@@ -202,7 +202,7 @@ const EditTournamentPage = () => {
       sx={{
         minHeight: '100vh',
         py: 5,
-        backgroundColor: '#080b14',
+        background: 'transparent',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',

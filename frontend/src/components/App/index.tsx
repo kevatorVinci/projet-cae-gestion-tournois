@@ -27,6 +27,9 @@ import AdminTournamentsPage from '../pages/Tournois/AdminTournamentsPage';
 import CreateTournamentPage from '../pages/Tournois/CreateTournament';
 import EditTournamentPage from '../pages/Tournois/EditTournament';
 
+const appBlueGradient =
+  'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
+
 const App = () => (
   <Router
     future={{
@@ -34,7 +37,7 @@ const App = () => (
       v7_relativeSplatPath: true,
     }}
   >
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#080b14' }}>
+    <Box sx={{ minHeight: '100vh', background: appBlueGradient }}>
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />

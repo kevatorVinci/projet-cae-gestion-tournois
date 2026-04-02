@@ -12,7 +12,7 @@ export default function NonConnectePage() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#080b14',
+        background: 'transparent',
         px: 2,
         textAlign: 'center',
       }}

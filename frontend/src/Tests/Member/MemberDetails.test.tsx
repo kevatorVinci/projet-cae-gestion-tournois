@@ -144,9 +144,9 @@ describe('MemberDetails Component', () => {
       expect(screen.getAllByText('Luffy').length).toBeGreaterThan(0);
     });
 
-    // Check that email is hidden (shows "Privé" instead)
-    expect(screen.getByText('Privé')).toBeInTheDocument();
-    // Don't look for "Mot de Passe" since it's not in the component anymore
+    // Check that email is not displayed on public profile
+    expect(screen.queryByText('luffy@strawhat.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Email')).not.toBeInTheDocument();
   });
 
   it('handles API errors gracefully', async () => {

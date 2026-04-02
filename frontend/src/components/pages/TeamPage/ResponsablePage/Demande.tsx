@@ -169,7 +169,7 @@ export function DemandesAdhesion() {
       sx={{
         minHeight: 'calc(100vh - 64px)',
         py: 5,
-        backgroundColor: 'background.default',
+        background: 'transparent',
       }}
     >
       <Container maxWidth="md">

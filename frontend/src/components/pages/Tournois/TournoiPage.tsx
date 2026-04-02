@@ -25,7 +25,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 import SearchIcon from '@mui/icons-material/Search';
-import AddCircleOutline from '@mui/icons-material/AddCircleOutline';
+import PlayCircleOutline from '@mui/icons-material/PlayCircleOutline';
+import Event from '@mui/icons-material/Event';
 import History from '@mui/icons-material/History';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { Tournoi } from '../../../types';
@@ -158,7 +159,7 @@ const TournoiPage = () => {
       sx={{
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
         py: 5,
-        backgroundColor: 'background.default',
+        background: 'transparent',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -359,13 +360,13 @@ const TournoiPage = () => {
                     width: 36,
                     height: 36,
                     borderRadius: '50%',
-                    bgcolor: 'rgba(59,130,246,0.12)',
+                    bgcolor: 'rgba(232,130,42,0.12)',
                     display: 'grid',
                     placeItems: 'center',
-                    color: '#60a5fa',
+                    color: '#e8822a',
                   }}
                 >
-                  <SearchIcon sx={{ fontSize: 18 }} />
+                  <PlayCircleOutline sx={{ fontSize: 18 }} />
                 </Box>
                 <Typography variant="h6" color="white" fontWeight={800}>
                   Tournois en cours
@@ -425,9 +426,9 @@ const TournoiPage = () => {
                           label="En cours"
                           size="small"
                           sx={{
-                            bgcolor: 'rgba(59,130,246,0.12)',
-                            color: '#60a5fa',
-                            border: '1px solid rgba(59,130,246,0.25)',
+                            bgcolor: 'rgba(232,130,42,0.12)',
+                            color: '#e8822a',
+                            border: '1px solid rgba(232,130,42,0.25)',
                             fontWeight: 700,
                           }}
                         />
@@ -447,13 +448,13 @@ const TournoiPage = () => {
                     width: 36,
                     height: 36,
                     borderRadius: '50%',
-                    bgcolor: 'rgba(232,130,42,0.12)',
+                    bgcolor: 'rgba(59,130,246,0.12)',
                     display: 'grid',
                     placeItems: 'center',
-                    color: '#e8822a',
+                    color: '#60a5fa',
                   }}
                 >
-                  <AddCircleOutline sx={{ fontSize: 18 }} />
+                  <Event sx={{ fontSize: 18 }} />
                 </Box>
                 <Typography variant="h6" color="white" fontWeight={800}>
                   Tournois à venir
@@ -517,11 +518,11 @@ const TournoiPage = () => {
                           {tournament.nombresParticipantsMax && (
                             <Box
                               sx={{
+                                mt: 0.5,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 0.5,
-                                color: '#e8822a',
-                                mt: 0.5,
+                                gap: 0.75,
+                                color: '#60a5fa',
                               }}
                             >
                               <GroupsIcon sx={{ fontSize: 18 }} />
@@ -537,9 +538,9 @@ const TournoiPage = () => {
                           label="À venir"
                           size="small"
                           sx={{
-                            bgcolor: 'rgba(232,130,42,0.12)',
-                            color: '#e8822a',
-                            border: '1px solid rgba(232,130,42,0.25)',
+                            bgcolor: 'rgba(59,130,246,0.12)',
+                            color: '#60a5fa',
+                            border: '1px solid rgba(59,130,246,0.25)',
                             fontWeight: 700,
                           }}
                         />
