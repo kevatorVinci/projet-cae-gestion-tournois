@@ -95,12 +95,11 @@ const equipeSimulee = [
 describe('TeamsList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock the fetch for players endpoint
     global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(joueursSimules),
-      }),
+      } as unknown as Response),
     );
   });
 
