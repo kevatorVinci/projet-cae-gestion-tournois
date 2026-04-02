@@ -460,7 +460,6 @@ export default function MemberDetails() {
                     : 'Ce joueur ne fait actuellement partie d’aucune équipe.'}
                 </Typography>
               </Box>
-
             </Paper>
           </Box>
         </Stack>
