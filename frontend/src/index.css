@@ -1,4 +1,15 @@
-div#root {
+html,
+body,
+#root {
   width: 100%;
-  display: inline-block; /* avoid margins to collapse to avoid vertical scrollbar */
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%);
+}
+
+div#root {
+  display: block;
 }

@@ -12,7 +12,6 @@ import {
   Typography,
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
-import BuildIcon from '@mui/icons-material/Build';
 import PersonIcon from '@mui/icons-material/Person';
 import { User, UserContextType } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
@@ -207,6 +206,7 @@ export default function MemberDetails() {
       sx={{
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
         background: pageGradient,
+        pt: { xs: 2, sm: 3 },
         pb: 6,
       }}
     >
@@ -355,32 +355,6 @@ export default function MemberDetails() {
                 }}
               >
                 <Typography variant="body2" color="rgba(255,255,255,0.5)">
-                  Email
-                </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight={600}
-                  color="white"
-                  sx={{ textAlign: 'right' }}
-                >
-                  {isOwnProfile
-                    ? authenticatedUser?.email || user.email || '—'
-                    : 'Privé'}
-                </Typography>
-              </Box>
-              <Divider
-                sx={{ borderColor: 'rgba(255,255,255,0.06)', my: 1.5 }}
-              />
-
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 2,
-                }}
-              >
-                <Typography variant="body2" color="rgba(255,255,255,0.5)">
                   Spécialité
                 </Typography>
                 <Typography
@@ -487,31 +461,6 @@ export default function MemberDetails() {
                 </Typography>
               </Box>
 
-              <Divider
-                sx={{ borderColor: 'rgba(255,255,255,0.06)', my: 2.5 }}
-              />
-
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                }}
-              >
-                <BuildIcon sx={{ color: '#e8822a', fontSize: 20 }} />
-                <Box>
-                  <Typography variant="caption" color="rgba(255,255,255,0.5)">
-                    Spécialité
-                  </Typography>
-                  <Typography variant="body1" color="white" fontWeight={600}>
-                    {capitalize(user.specialty) || 'Non spécifiée'}
-                  </Typography>
-                </Box>
-              </Box>
             </Paper>
           </Box>
         </Stack>

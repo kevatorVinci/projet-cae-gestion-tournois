@@ -63,7 +63,7 @@ export function CreateEquipe() {
       sx={{
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
         py: 5,
-        backgroundColor: 'background.default',
+        background: 'transparent',
       }}
     >
       <Container maxWidth="sm" sx={{ mb: 1 }}>

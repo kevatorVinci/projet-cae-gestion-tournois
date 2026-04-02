@@ -255,7 +255,7 @@ export default function RegisterPage() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: 'background.default',
+        backgroundColor: 'transparent',
       }}
     >
       <Box

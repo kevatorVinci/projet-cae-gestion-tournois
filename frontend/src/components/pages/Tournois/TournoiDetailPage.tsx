@@ -327,7 +327,11 @@ const TournoiDetailPage = () => {
       setRegisterFeedback('Votre equipe est inscrite a ce tournoi.');
       setRegisterFeedbackIsError(false);
 
-      const refreshedAccepted = await fetchAcceptedInscriptions(id);
+      const [refreshedTournoi, refreshedAccepted] = await Promise.all([
+        fetchTournoiById(id),
+        fetchAcceptedInscriptions(id),
+      ]);
+      setTournoi(refreshedTournoi);
       setAcceptedInscriptions(refreshedAccepted);
     } catch (err: unknown) {
       setRegisterFeedback(
@@ -350,7 +354,7 @@ const TournoiDetailPage = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: 'background.default',
+          background: 'transparent',
         }}
       >
         <CircularProgress sx={{ color: '#e8822a' }} />
@@ -366,7 +370,7 @@ const TournoiDetailPage = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: 'background.default',
+          background: 'transparent',
           p: 3,
         }}
       >
@@ -380,7 +384,7 @@ const TournoiDetailPage = () => {
       sx={{
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
         py: 5,
-        backgroundColor: 'background.default',
+        background: 'transparent',
         position: 'relative',
         overflow: 'hidden',
       }}

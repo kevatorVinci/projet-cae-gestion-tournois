@@ -4,6 +4,7 @@ import {
   Alert,
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -51,18 +52,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
   return (
     <Paper
-      role="button"
-      tabIndex={0}
-      onClick={() => navigate(`/players/${member.id}`)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          navigate(`/players/${member.id}`);
-        }
-      }}
       sx={{
         p: 3,
-        minHeight: 260,
         borderRadius: 2,
         backgroundColor: '#1a2540',
         border: '1px solid rgba(255,255,255,0.10)',
@@ -71,7 +62,6 @@ const MemberCard: React.FC<MemberCardProps> = ({
         alignItems: 'center',
         textAlign: 'center',
         transition: 'all 0.3s ease',
-        cursor: 'pointer',
         '&:hover': {
           borderColor: isResponsable ? '#e8822a' : 'rgba(255,255,255,0.25)',
           backgroundColor: 'rgba(26, 37, 64, 0.8)',
@@ -84,8 +74,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
         src={normalizeAvatarUrl(member.profileImageUrl || member.profileImage)}
         alt={member.tag}
         sx={{
-          width: 84,
-          height: 84,
+          width: 80,
+          height: 80,
           mb: 1.5,
           border: '3px solid rgba(255,255,255,0.15)',
           transition: 'transform 0.3s ease',
@@ -145,6 +135,25 @@ const MemberCard: React.FC<MemberCardProps> = ({
           mb: 2,
         }}
       />
+
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={() => navigate(`/players/${member.id}`)}
+        sx={{
+          textTransform: 'none',
+          fontSize: 11,
+          width: '100%',
+          color: 'white',
+          borderColor: 'rgba(255,255,255,0.35)',
+          '&:hover': {
+            bgcolor: '#080b14',
+            borderColor: '#c86e20',
+          },
+        }}
+      >
+        Voir details
+      </Button>
     </Paper>
   );
 };
@@ -475,16 +484,19 @@ export default function TeamDetails() {
           }}
         >
           <Box>
-            <Typography
-              variant="h5"
-              fontWeight={700}
-              sx={{ mb: 2 }}
-              color="white"
+            <Box
+              role="list"
+              aria-label="team-members-list"
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
+                },
+                gap: 2,
+              }}
             >
-              Effectif de la Team
-            </Typography>
-
-            <Stack spacing={2}>
               {team.members.length === 0 && (
                 <Typography variant="body2" color="text.secondary">
                   Cette équipe n'a plus de membre.
@@ -499,7 +511,7 @@ export default function TeamDetails() {
                   isCurrentUser={member.id === currentUserId}
                 />
               ))}
-            </Stack>
+            </Box>
           </Box>
 
           <Paper

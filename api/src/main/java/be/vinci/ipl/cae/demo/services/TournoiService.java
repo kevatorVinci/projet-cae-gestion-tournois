@@ -2,7 +2,9 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
 import be.vinci.ipl.cae.demo.models.entities.Tournoi;
+import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
+import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -18,13 +20,19 @@ public class TournoiService {
 
   private final TournoiRepository tournoiRepository;
   private final InscriptionEquipeTournoiService inscriptionService;
+  private final NotificationService notificationService;
+  private final UserRepository userRepository;
 
   /** Creates the service with repositories and registration service. */
   public TournoiService(
       TournoiRepository tournoiRepository,
-      @Lazy InscriptionEquipeTournoiService inscriptionService) {
+      @Lazy InscriptionEquipeTournoiService inscriptionService,
+      NotificationService notificationService,
+      UserRepository userRepository) {
     this.tournoiRepository = tournoiRepository;
     this.inscriptionService = inscriptionService;
+    this.notificationService = notificationService;
+    this.userRepository = userRepository;
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -79,7 +87,17 @@ public class TournoiService {
       return null;
     }
     tournoi.setEtat("BROUILLON");
-    return tournoiRepository.save(tournoi);
+    Tournoi saved = tournoiRepository.save(tournoi);
+
+    // Notifier seulement les admins
+    Iterable<User> admins = userRepository.findAll();
+    for (User user : admins) {
+      if (user.isAdmin()) {
+        notificationService.notifierCreationTournoiBrouillon(user, saved.getNom());
+      }
+    }
+
+    return saved;
   }
 
   /** Updates a tournament only when it is still in BROUILLON state. */
@@ -121,7 +139,15 @@ public class TournoiService {
       return null;
     }
     tournoi.setEtat("OUVERT");
-    return tournoiRepository.save(tournoi);
+    Tournoi saved = tournoiRepository.save(tournoi);
+
+    // Notifier tous les utilisateurs de la publication
+    Iterable<User> users = userRepository.findAll();
+    for (User user : users) {
+      notificationService.notifierPublicationTournoi(user, saved.getNom());
+    }
+
+    return saved;
   }
 
   /**

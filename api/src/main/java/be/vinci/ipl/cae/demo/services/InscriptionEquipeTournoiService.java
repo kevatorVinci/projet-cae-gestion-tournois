@@ -99,7 +99,7 @@ public class InscriptionEquipeTournoiService {
     InscriptionEquipeTournoi saved = inscriptionRepository.save(inscription);
 
     String message =
-        "Inscription confirmée : votre équipe '"
+      "Équipe : inscription confirmée pour votre équipe '"
             + equipe.getName()
             + "' est inscrite au tournoi '"
             + tournoi.getNom()
