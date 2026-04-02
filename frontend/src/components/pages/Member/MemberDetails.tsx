@@ -346,6 +346,29 @@ export default function MemberDetails() {
                 sx={{ borderColor: 'rgba(255,255,255,0.06)', my: 1.5 }}
               />
 
+              {isOwnProfile && (
+                <>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="body2" color="rgba(255,255,255,0.5)">
+                      Email
+                    </Typography>
+                    <Typography variant="body1" fontWeight={600} color="white" sx={{ textAlign: 'right' }}>
+                      {user.email || '—'}
+                    </Typography>
+                  </Box>
+                  <Divider
+                    sx={{ borderColor: 'rgba(255,255,255,0.06)', my: 1.5 }}
+                  />
+                </>
+              )}
+
               <Box
                 sx={{
                   display: 'flex',
