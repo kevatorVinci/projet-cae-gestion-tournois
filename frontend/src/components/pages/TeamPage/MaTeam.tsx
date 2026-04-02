@@ -25,6 +25,7 @@ import {
   ExitToApp as LeaveIcon,
   EmojiEvents,
   Edit as EditIcon,
+  Groups as GroupsIcon,
 } from '@mui/icons-material';
 import {
   depromoteResponsable,
@@ -610,9 +611,12 @@ export function MyTeam() {
                 {team.name}
               </Typography>
               <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-                <Typography variant="body2">
-                  👥 {team.members.length} Membres
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <GroupsIcon sx={{ fontSize: 18 }} />
+                  <Typography variant="body2">
+                    {team.members.length} Membres
+                  </Typography>
+                </Box>
               </Stack>
             </Box>
           </Box>

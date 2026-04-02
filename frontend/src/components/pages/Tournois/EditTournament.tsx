@@ -11,6 +11,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -222,15 +223,20 @@ const EditTournamentPage = () => {
             margin: '0 auto',
           }}
         >
-          <Typography
-            variant="h4"
-            fontWeight={800}
-            mb={4}
-            color="white"
-            textAlign="center"
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              mb: 4,
+            }}
           >
-            Modifier le tournoi ✏️
-          </Typography>
+            <Typography variant="h4" fontWeight={800} color="white">
+              Modifier le tournoi
+            </Typography>
+            <EditIcon sx={{ fontSize: 32, color: '#e8822a' }} />
+          </Box>
 
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>

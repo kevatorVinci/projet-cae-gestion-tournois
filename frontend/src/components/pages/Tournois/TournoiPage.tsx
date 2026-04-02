@@ -28,6 +28,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import PlayCircleOutline from '@mui/icons-material/PlayCircleOutline';
 import Event from '@mui/icons-material/Event';
 import History from '@mui/icons-material/History';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { Tournoi } from '../../../types';
 import BackButton from '../../BoutonRetour';
 
@@ -499,9 +500,12 @@ const TournoiPage = () => {
                               variant="body2"
                               sx={{ color: '#60a5fa', mt: 0.5 }}
                             >
-                              👥 Max : {tournament.nombresParticipantsMax}{' '}
-                              équipes
-                            </Typography>
+                              <GroupsIcon sx={{ fontSize: 18 }} />
+                              <Typography variant="body2">
+                                Max : {tournament.nombresParticipantsMax}{' '}
+                                équipes
+                              </Typography>
+                            </Box>
                           )}
                         </Box>
 
@@ -737,13 +741,21 @@ const TournoiPage = () => {
                                   {formatDate(tournament.dateLimiteInscription)}
                                 </Typography>
                                 {tournament.nombresParticipantsMax && (
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ color: '#e8822a', mt: 0.5 }}
+                                  <Box
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 0.5,
+                                      color: '#e8822a',
+                                      mt: 0.5,
+                                    }}
                                   >
-                                    👥 Max : {tournament.nombresParticipantsMax}{' '}
-                                    équipes
-                                  </Typography>
+                                    <GroupsIcon sx={{ fontSize: 18 }} />
+                                    <Typography variant="body2">
+                                      Max : {tournament.nombresParticipantsMax}{' '}
+                                      équipes
+                                    </Typography>
+                                  </Box>
                                 )}
                               </>
                             )}

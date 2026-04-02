@@ -95,15 +95,11 @@ const equipeSimulee = [
 describe('TeamsList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock the fetch for players endpoint with a real Response instance.
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => {
-        return new Response(JSON.stringify(joueursSimules), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }),
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(joueursSimules),
+      } as unknown as Response),
     );
   });
 

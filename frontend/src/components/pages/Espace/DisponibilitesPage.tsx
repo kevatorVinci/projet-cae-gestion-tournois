@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import EventIcon from '@mui/icons-material/Event';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -108,9 +109,12 @@ const DisponibilitesPage = () => {
           Retour au profil
         </Button>
 
-        <Typography variant="h4" color="white" fontWeight={700} gutterBottom>
-          Mes Indisponibilités 📅
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <EventIcon sx={{ fontSize: 32, color: '#e8822a' }} />
+          <Typography variant="h4" color="white" fontWeight={700}>
+            Mes Indisponibilités
+          </Typography>
+        </Box>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
           Indique ici les périodes où tu ne pourras pas participer aux matchs.
         </Typography>
