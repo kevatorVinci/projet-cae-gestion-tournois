@@ -359,7 +359,12 @@ export default function MemberDetails() {
                     <Typography variant="body2" color="rgba(255,255,255,0.5)">
                       Email
                     </Typography>
-                    <Typography variant="body1" fontWeight={600} color="white" sx={{ textAlign: 'right' }}>
+                    <Typography
+                      variant="body1"
+                      fontWeight={600}
+                      color="white"
+                      sx={{ textAlign: 'right' }}
+                    >
                       {user.email || '—'}
                     </Typography>
                   </Box>
