@@ -391,8 +391,6 @@ describe('TeamsList', () => {
   });
 
   test("affiche une erreur si l'utilisateur est déjà dans une équipe", async () => {
-    // This test verifies that users already in a team get proper feedback
-    // when attempting to join another team
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
     vi.mocked(getAllEquipes).mockResolvedValueOnce(equipeSimulee);
 
@@ -412,18 +410,25 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    // Wait for teams to load
     await screen.findByText(/les tacticiens/i);
     await screen.findByText(/les gardiens/i);
 
-    // Verify that "Votre équipe" label is shown for the user's current team
-    expect(screen.getByText(/votre équipe/i)).toBeInTheDocument();
+    const tacticiensCard = screen
+      .getByText(/les tacticiens/i)
+      .closest('.MuiCard-root');
+    expect(tacticiensCard).not.toBeNull();
 
-    // Verify that Postuler button is available for other teams
-    const allButtons = screen.getAllByRole('button');
-    const postulerButton = allButtons.find((btn) =>
-      /postuler/i.test(btn.textContent || ''),
+    const postulerButton = within(tacticiensCard as HTMLElement).getByRole(
+      'button',
+      {
+        name: /postuler/i,
+      },
     );
-    expect(postulerButton).toBeDefined();
+
+    fireEvent.click(postulerButton);
+
+    expect(
+      await screen.findByText(/vous êtes déjà dans une équipe/i),
+    ).toBeInTheDocument();
   });
 });
