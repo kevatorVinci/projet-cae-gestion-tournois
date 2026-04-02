@@ -83,7 +83,7 @@ const getEtatColor = (etat: Tournoi['etat']) => {
     case 'OUVERT':
       return '#16a34a';
     case 'CLOTURE':
-      return '#0ea5e9';
+      return '#dc2626';
     case 'TERMINE':
       return '#64748b';
     case 'ANNULE':

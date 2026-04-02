@@ -47,9 +47,9 @@ const ETAT_STYLES: Record<Tournoi['etat'], EtatStyle> = {
   },
   CLOTURE: {
     label: 'Clôturé',
-    accent: '#0ea5e9',
-    chipBg: 'rgba(14,165,233,0.20)',
-    chipText: '#38bdf8',
+    accent: '#dc2626',
+    chipBg: 'rgba(220,38,38,0.20)',
+    chipText: '#f87171',
   },
   EN_COURS: {
     label: 'En cours',
