@@ -112,15 +112,24 @@ const TournoiPage = () => {
     load();
   }, [search, etatFilter]);
 
-const tournamentsByFilter = allTournaments
+  const tournamentsByFilter = allTournaments
     .filter((t) => {
       if (etatFilter === 'EN_COURS' && t.etat !== 'EN_COURS') return false;
-      if (etatFilter === 'A_VENIR' && t.etat !== 'OUVERT' && t.etat !== 'CLOTURE')
+      if (
+        etatFilter === 'A_VENIR' &&
+        t.etat !== 'OUVERT' &&
+        t.etat !== 'CLOTURE'
+      )
         return false;
-      if (etatFilter === 'PASSES' && t.etat !== 'TERMINE' && t.etat !== 'ANNULE')
+      if (
+        etatFilter === 'PASSES' &&
+        t.etat !== 'TERMINE' &&
+        t.etat !== 'ANNULE'
+      )
         return false;
 
-      if (dateDebut && t.dateDebut < dateDebut.format('YYYY-MM-DD')) return false;
+      if (dateDebut && t.dateDebut < dateDebut.format('YYYY-MM-DD'))
+        return false;
       if (dateFin && t.dateFin > dateFin.format('YYYY-MM-DD')) return false;
 
       return true;
@@ -129,10 +138,10 @@ const tournamentsByFilter = allTournaments
       const timeA = Date.parse(a.dateDebut) || 0;
       const timeB = Date.parse(b.dateDebut) || 0;
       const now = Date.now();
-      
+
       const distanceA = Math.abs(timeA - now);
       const distanceB = Math.abs(timeB - now);
-      
+
       return distanceA - distanceB;
     });
 

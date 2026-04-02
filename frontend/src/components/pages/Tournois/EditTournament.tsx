@@ -37,10 +37,13 @@ const EditTournamentPage = () => {
 
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
-  const [nombresParticipantsMax, setNombresParticipantsMax] = useState<number | ''>('');
+  const [nombresParticipantsMax, setNombresParticipantsMax] = useState<
+    number | ''
+  >('');
   const [dateDebut, setDateDebut] = useState<Dayjs | null>(null);
   const [dateFin, setDateFin] = useState<Dayjs | null>(null);
-  const [dateLimiteInscription, setDateLimiteInscription] = useState<Dayjs | null>(null);
+  const [dateLimiteInscription, setDateLimiteInscription] =
+    useState<Dayjs | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loadingData, setLoadingData] = useState(true);
@@ -78,18 +81,25 @@ const EditTournamentPage = () => {
       return null;
     }
 
-    if (nombresParticipantsMax === '' || !Number.isFinite(Number(nombresParticipantsMax))) {
-      setError("Veuillez indiquer un nombre de places valide.");
+    if (
+      nombresParticipantsMax === '' ||
+      !Number.isFinite(Number(nombresParticipantsMax))
+    ) {
+      setError('Veuillez indiquer un nombre de places valide.');
       return null;
     }
 
     if (dateDebut.isBefore(dateLimiteInscription, 'day')) {
-      setError("La date de début du tournoi doit être après la date limite d'inscription.");
+      setError(
+        "La date de début du tournoi doit être après la date limite d'inscription.",
+      );
       return null;
     }
 
     if (dateFin.isBefore(dateDebut, 'day')) {
-      setError('La date de fin ne peut pas être avant la date de début du tournoi.');
+      setError(
+        'La date de fin ne peut pas être avant la date de début du tournoi.',
+      );
       return null;
     }
 
@@ -144,7 +154,9 @@ const EditTournamentPage = () => {
       setSuccess('Le tournoi a été modifié et publié avec succès !');
       setTimeout(() => navigate('/admin/tournaments'), 2000);
     } catch (err) {
-      setError('Erreur lors de la modification ou de la publication du tournoi.');
+      setError(
+        'Erreur lors de la modification ou de la publication du tournoi.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -256,7 +268,11 @@ const EditTournamentPage = () => {
           ) : (
             <form onSubmit={handleSubmit}>
               <Box mb={3}>
-                <Typography variant="body2" mb={1} color="rgba(255,255,255,0.7)">
+                <Typography
+                  variant="body2"
+                  mb={1}
+                  color="rgba(255,255,255,0.7)"
+                >
                   Nom du tournoi
                 </Typography>
                 <TextField
@@ -271,7 +287,11 @@ const EditTournamentPage = () => {
               </Box>
 
               <Box mb={4}>
-                <Typography variant="body2" mb={1} color="rgba(255,255,255,0.7)">
+                <Typography
+                  variant="body2"
+                  mb={1}
+                  color="rgba(255,255,255,0.7)"
+                >
                   Description
                 </Typography>
                 <TextField
@@ -286,9 +306,11 @@ const EditTournamentPage = () => {
                 />
               </Box>
 
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="fr"
+              >
                 <Grid container spacing={3} mb={4} alignItems="center">
-                  
                   {/* ✨ 1. Date de début */}
                   <Grid item xs={12} sm={6}>
                     <DatePicker
@@ -321,7 +343,9 @@ const EditTournamentPage = () => {
                       value={nombresParticipantsMax}
                       onChange={(e) => {
                         const value = e.target.value;
-                        setNombresParticipantsMax(value === '' ? '' : Number(value));
+                        setNombresParticipantsMax(
+                          value === '' ? '' : Number(value),
+                        );
                       }}
                       required
                       sx={{
@@ -344,7 +368,6 @@ const EditTournamentPage = () => {
                       slotProps={datePickerSlotProps}
                     />
                   </Grid>
-
                 </Grid>
               </LocalizationProvider>
 
