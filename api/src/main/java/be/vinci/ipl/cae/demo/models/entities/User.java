@@ -15,9 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Entité représentant un utilisateur.
- */
+/** Entité représentant un utilisateur. */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -52,6 +50,12 @@ public class User {
 
   @Column(nullable = false)
   private boolean admin = false;
+
+  @Column(nullable = false)
+  private boolean banned = false;
+
+  @Column(nullable = true)
+  private String banReason;
 
   private LocalDateTime dateCreationProfil;
 

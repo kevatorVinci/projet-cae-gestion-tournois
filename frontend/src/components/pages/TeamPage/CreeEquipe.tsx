@@ -22,6 +22,17 @@ export function CreateEquipe() {
   const navigate = useNavigate();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
 
+  const teamImages = [
+    'akatsuki.jpg',
+    'espada.jpg',
+    'fairytail.jpg',
+    'hunter.jpg',
+    'onepiece.jpg',
+  ];
+
+  // State to track the selected image (defaults to the first one)
+  const [profileImage, setProfileImage] = useState(teamImages[0]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -34,7 +45,7 @@ export function CreateEquipe() {
     setLoading(true);
 
     try {
-      await createEquipe(teamName);
+      await createEquipe(teamName, profileImage);
       navigate('/maTeam');
     } catch (err) {
       setError(
@@ -52,7 +63,7 @@ export function CreateEquipe() {
       sx={{
         minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
         py: 5,
-        backgroundColor: 'background.default',
+        background: 'transparent',
       }}
     >
       <Container maxWidth="sm" sx={{ mb: 1 }}>
@@ -87,7 +98,62 @@ export function CreateEquipe() {
                 onChange={(e) => setTeamName(e.target.value)}
                 required
                 disabled={loading}
+                sx={{
+                  input: { color: 'white' },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.4)',
+                    },
+                    '&.Mui-focused fieldset': { borderColor: '#e8822a' },
+                  },
+                  '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
+                }}
               />
+
+              {/* 📸 Team Image Selector */}
+              <Box>
+                <Typography
+                  variant="body2"
+                  color="rgba(255, 255, 255, 0.7)"
+                  textAlign="center"
+                  mb={1.5}
+                >
+                  Emblème de l'équipe *
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: 2,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  {teamImages.map((img) => (
+                    <Box
+                      key={img}
+                      component="img"
+                      src={`/${img}`}
+                      alt={`Emblème ${img}`}
+                      onClick={() => setProfileImage(img)}
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        border:
+                          profileImage === img
+                            ? '3px solid #ffffff'
+                            : '3px solid transparent',
+                        opacity: profileImage === img ? 1 : 0.5,
+                        transition: 'all 0.2s ease-in-out',
+                        objectFit: 'cover',
+                        '&:hover': { transform: 'scale(1.1)', opacity: 1 },
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
 
               <Button
                 type="submit"
@@ -96,8 +162,14 @@ export function CreateEquipe() {
                 disabled={loading || !teamName.trim()}
                 sx={{
                   bgcolor: '#e8822a',
+                  color: 'white',
                   py: 1.5,
+                  fontWeight: 'bold',
                   '&:hover': { bgcolor: '#c86e20' },
+                  '&.Mui-disabled': {
+                    bgcolor: 'rgba(255,255,255,0.1)',
+                    color: 'rgba(255,255,255,0.3)',
+                  },
                 }}
               >
                 {loading ? 'Création en cours...' : "Fonder l'équipe"}

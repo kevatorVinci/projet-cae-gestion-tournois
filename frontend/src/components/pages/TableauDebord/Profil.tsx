@@ -27,6 +27,14 @@ const Profile = () => {
   const [hasTeam, setHasTeam] = useState(false);
   const [team, setTeam] = useState<Equipe | null>(null);
 
+  const normalizeAvatarUrl = (avatar?: string) => {
+    if (!avatar) return undefined;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return avatar;
+    }
+    return avatar.startsWith('/') ? avatar : `/${avatar}`;
+  };
+
   useEffect(() => {
     if (authenticatedUser) {
       getUserTeam()
@@ -45,10 +53,13 @@ const Profile = () => {
   }, [authenticatedUser]);
 
   const userTag = authenticatedUser?.tag || 'Joueur';
-  const userRole = authenticatedUser?.specialty || 'Rôle non défini';
+  const rawSpecialty = authenticatedUser?.specialty || '';
+  const userRole = rawSpecialty
+    ? rawSpecialty.charAt(0).toUpperCase() + rawSpecialty.slice(1)
+    : 'Rôle non défini';
   const userEmail = authenticatedUser?.email || 'Email non disponible';
   const userAvatar =
-    authenticatedUser?.profileImage ||
+    normalizeAvatarUrl(authenticatedUser?.profileImage) ||
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${userTag}`;
 
   return (
@@ -58,7 +69,7 @@ const Profile = () => {
         py: 5,
         position: 'relative',
         overflow: 'hidden',
-        backgroundColor: 'background.default',
+        background: 'transparent',
       }}
     >
       {/* Dégradé bleu nuit en haut à la place du background image */}
@@ -150,6 +161,11 @@ const Profile = () => {
           <Stack direction="row" spacing={3} alignItems="center">
             <Avatar
               src={userAvatar}
+              imgProps={{
+                onError: (event) => {
+                  event.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userTag}`;
+                },
+              }}
               sx={{ width: 80, height: 80, border: '2px solid #e8822a' }}
             />
             <Box>

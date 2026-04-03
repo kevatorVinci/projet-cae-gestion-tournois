@@ -8,16 +8,27 @@ import TeamDetails from '../pages/TeamPage/TeamDetail';
 import Profile from '../pages/TableauDebord/Profil';
 import { CreateEquipe } from '../pages/TeamPage/CreeEquipe';
 import { MyTeam } from '../pages/TeamPage/MaTeam';
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import ProfilePage from '../pages/ProfilePage';
-import AdminPage from '../pages/AdminPage';
+import LoginPage from '../pages/ConnectionPage/LoginPage';
+import RegisterPage from '../pages/Espace/RegisterPage';
+import ProfilePage from '../pages/Espace/ProfilePage';
+import AdminPage from '../pages/Admin/AdminPage';
 import { DemandesAdhesion } from '../pages/TeamPage/ResponsablePage/Demande';
-import DisponibilitesPage from '../pages/DisponibilitesPage';
+import { TournoisResponsable } from '../pages/TeamPage/ResponsablePage/Inscription';
+import DisponibilitesPage from '../pages/Espace/DisponibilitesPage';
 import ProtectedRoute from '../routes/ProtectedRoute';
 import AdminRoute from '../routes/AdminRoute';
+import ResponsableRoute from '../routes/ResponsableRoute';
 import NonConnectePage from '../pages/PasAcces/NonConnectePage';
 import InterditPage from '../pages/PasAcces/InterditPage';
+import MemberDetails from '../pages/Member/MemberDetails';
+import TournoiPage from '../pages/Tournois/TournoiPage';
+import TournoiDetailPage from '../pages/Tournois/TournoiDetailPage';
+import AdminTournamentsPage from '../pages/Tournois/AdminTournamentsPage';
+import CreateTournamentPage from '../pages/Tournois/CreateTournament';
+import EditTournamentPage from '../pages/Tournois/EditTournament';
+
+const appBlueGradient =
+  'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
 
 const App = () => (
   <Router
@@ -26,7 +37,7 @@ const App = () => (
       v7_relativeSplatPath: true,
     }}
   >
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#080b14' }}>
+    <Box sx={{ minHeight: '100vh', background: appBlueGradient }}>
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -39,6 +50,8 @@ const App = () => (
           }
         />
         <Route path="/equipes" element={<TeamsList />} />
+        <Route path="/tournois" element={<TournoiPage />} />
+        <Route path="/tournois/:id" element={<TournoiDetailPage />} />
         <Route
           path="/equipes/creer"
           element={
@@ -50,9 +63,17 @@ const App = () => (
         <Route
           path="/equipes/demande"
           element={
-            <ProtectedRoute>
+            <ResponsableRoute>
               <DemandesAdhesion />
-            </ProtectedRoute>
+            </ResponsableRoute>
+          }
+        />
+        <Route
+          path="/tournois/gestion"
+          element={
+            <ResponsableRoute>
+              <TournoisResponsable />
+            </ResponsableRoute>
           }
         />
         <Route path="/equipes/:id" element={<TeamDetails />} />
@@ -83,6 +104,31 @@ const App = () => (
           }
         />
         <Route
+          path="/admin/tournaments/create"
+          element={
+            <AdminRoute>
+              <CreateTournamentPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tournaments/edit/:id"
+          element={
+            <AdminRoute>
+              <EditTournamentPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tournaments"
+          element={
+            <AdminRoute>
+              <AdminTournamentsPage />
+            </AdminRoute>
+          }
+        />
+
+        <Route
           path="/admin"
           element={
             <AdminRoute>
@@ -100,6 +146,7 @@ const App = () => (
         />
         <Route path="/pas-acces/non-connecte" element={<NonConnectePage />} />
         <Route path="/pas-acces/interdit" element={<InterditPage />} />
+        <Route path="/players/:id" element={<MemberDetails />} />
       </Routes>
     </Box>
   </Router>

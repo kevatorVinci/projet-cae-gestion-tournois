@@ -5,60 +5,40 @@ import {
   Typography,
   Card,
   CardContent,
+  CardActionArea,
+  Chip,
   Button,
   Box,
   Alert,
+  CircularProgress,
+  Stack,
 } from '@mui/material';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { UserContext } from '../../../contexts/UserContext';
-import { UserContextType } from '../../../types';
+import { UserContextType, Tournoi } from '../../../types';
 import backgroundImage from '../../../assets/images/background.png';
 import {
   getCurrentUserIdFromToken,
   getUnreadNotificationsByUser,
 } from '../../../services/notifications';
 
-const tournamentsEnCours = [
-  {
-    id: 1,
-    name: "Championnat d'Hiver 2025",
-    startDate: '10 Déc 2025',
-    endDate: '20 Déc 2025',
-  },
-];
-
-const tournamentsAVenir = [
-  {
-    id: 2,
-    name: 'Coupe de Printemps 2026',
-    startDate: '15 Mars 2026',
-    teamsCount: 4,
-    teamsMax: 16,
-  },
-  {
-    id: 3,
-    name: 'Tournoi des Recrues',
-    startDate: '10 Avril 2026',
-    teamsCount: 14,
-    teamsMax: 16,
-  },
-  {
-    id: 4,
-    name: 'Summer Clash',
-    startDate: '20 Juillet 2026',
-    teamsCount: 4,
-    teamsMax: 16,
-  },
-];
-
-const tournamentsPassés = [
-  { id: 5, name: "Coupe d'Automne 2025", winner: 'SkyWalkers' },
-  { id: 6, name: 'Édition Spéciale Halloween', winner: 'Phoenix Rising' },
-];
+const formatDate = (dateValue: string) => {
+  const parsedDate = new Date(dateValue);
+  if (Number.isNaN(parsedDate.getTime())) return dateValue;
+  return parsedDate.toLocaleDateString('fr-BE');
+};
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [allTournaments, setAllTournaments] = useState<Tournoi[]>([]);
+  const [loadingTournois, setLoadingTournois] = useState(true);
+
+  const enCours = allTournaments.filter((t) => t.etat === 'EN_COURS');
+  const aVenir = allTournaments
+    .filter((t) => t.etat === 'OUVERT' || t.etat === 'CLOTURE')
+    .slice(0, 3);
 
   useEffect(() => {
     const loadUnreadCount = async () => {
@@ -66,7 +46,6 @@ const HomePage = () => {
         setUnreadCount(0);
         return;
       }
-
       try {
         const userId = getCurrentUserIdFromToken();
         const unread = await getUnreadNotificationsByUser(userId);
@@ -75,24 +54,39 @@ const HomePage = () => {
         setUnreadCount(0);
       }
     };
-
     loadUnreadCount();
   }, [authenticatedUser]);
 
+  useEffect(() => {
+    const loadTournois = async () => {
+      setLoadingTournois(true);
+      try {
+        const response = await fetch('/api/tournois/');
+        if (!response.ok) throw new Error('Failed to fetch');
+        const data: Tournoi[] = await response.json();
+        setAllTournaments(data);
+      } catch {
+        setAllTournaments([]);
+      } finally {
+        setLoadingTournois(false);
+      }
+    };
+    loadTournois();
+  }, []);
+
   return (
-    <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>
-      {/* ── HERO ────────────────────────────────────────────────────── */}
+    <Box sx={{ background: 'transparent', minHeight: '100vh' }}>
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
       <Box
         sx={{
           position: 'relative',
-          height: { xs: 340, md: 440 },
+          height: { xs: 380, md: 500 },
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
         }}
       >
-        {/* Background image assombri */}
         <Box
           component="img"
           src={backgroundImage}
@@ -103,77 +97,159 @@ const HomePage = () => {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            filter: 'brightness(0.25)',
+            filter: 'brightness(0.2)',
           }}
         />
-        {/* Dégradé bas pour transition douce */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,130,42,0.12), transparent)',
+          }}
+        />
         <Box
           sx={{
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
-            height: 140,
+            height: 180,
             background: 'linear-gradient(to bottom, transparent, #080b14)',
             zIndex: 1,
           }}
         />
 
-        {/* Contenu hero — exactement le même que l'original */}
         <Box
           sx={{ position: 'relative', zIndex: 2, textAlign: 'center', px: 3 }}
         >
-          <Typography variant="h2" component="h1" gutterBottom>
+          <Typography
+            variant="h2"
+            component="h1"
+            gutterBottom
+            sx={{
+              fontFamily: '"Orbitron", sans-serif',
+              fontWeight: 800,
+              fontSize: { xs: '2rem', md: '3.2rem' },
+              letterSpacing: '0.02em',
+            }}
+          >
             Where Genius Meets Battle
           </Typography>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
+          {authenticatedUser && (
+            <Typography
+              variant="h6"
+              sx={{
+                color: '#e8822a',
+                fontWeight: 700,
+                mb: 0.5,
+              }}
+            >
+              Bienvenue
+              {authenticatedUser.tag ? `, ${authenticatedUser.tag}` : ''} 👋
+            </Typography>
+          )}
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            gutterBottom
+            sx={{ maxWidth: 560, mx: 'auto', lineHeight: 1.6 }}
+          >
             {authenticatedUser
               ? "Rejoins les tournois et domine l'arène."
               : "Rejoins la plateforme e-sport de Vinci Arena. Forme ta team, inscris-toi aux tournois, domine l'arène."}
           </Typography>
           {!authenticatedUser && (
-            <div
-              style={{
+            <Box
+              sx={{
                 display: 'flex',
-                gap: '16px',
+                gap: 2,
                 justifyContent: 'center',
-                marginTop: '24px',
+                mt: 3,
               }}
             >
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/login')}
+                sx={{ px: 4 }}
+              >
+                Se connecter
+              </Button>
               <Button
                 variant="contained"
                 size="large"
                 onClick={() => navigate('/register')}
                 sx={{
                   backgroundColor: '#e8822a',
-                  color: '#ffffff',
+                  color: '#fff',
+                  fontWeight: 700,
+                  px: 4,
                   '&:hover': { backgroundColor: '#c86e20' },
                 }}
               >
                 S&apos;inscrire
               </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => navigate('/login')}
-              >
-                Se connecter
-              </Button>
-            </div>
+            </Box>
           )}
         </Box>
       </Box>
 
-      {/* ── SECTION TOURNOIS ─────────────────────────────────────────── */}
-      <Container component="main" sx={{ mt: 4, mb: 4 }} maxWidth="lg">
-        <Typography variant="h4" component="h2" gutterBottom align="center">
-          Bienvenue sur VinciArena
-        </Typography>
+      {/* ── STATS STRIP ──────────────────────────────────────────────── */}
+      {!loadingTournois && (
+        <Box
+          sx={{
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            backgroundColor: 'rgba(255,255,255,0.02)',
+          }}
+        >
+          <Container maxWidth="lg">
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: { xs: 4, md: 10 },
+                py: 3,
+                flexWrap: 'wrap',
+              }}
+            >
+              {[
+                { label: 'Tournois en cours', value: enCours.length },
+                { label: 'Prochains tournois', value: aVenir.length },
+                {
+                  label: 'Total tournois',
+                  value: allTournaments.length,
+                },
+              ].map((stat) => (
+                <Box key={stat.label} sx={{ textAlign: 'center' }}>
+                  <Typography
+                    variant="h4"
+                    fontWeight={800}
+                    sx={{ color: '#e8822a', lineHeight: 1 }}
+                  >
+                    {stat.value}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ textTransform: 'uppercase', letterSpacing: '0.08em' }}
+                  >
+                    {stat.label}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Container>
+        </Box>
+      )}
 
+      {/* ── CONTENU ──────────────────────────────────────────────────── */}
+      <Container component="main" sx={{ mt: 6, mb: 8 }} maxWidth="lg">
         {authenticatedUser && unreadCount > 0 && (
           <Alert
             severity="error"
-            sx={{ mb: 3, cursor: 'pointer' }}
+            sx={{ mb: 4, cursor: 'pointer' }}
             onClick={() => navigate('/notifications')}
           >
             Vous avez {unreadCount} notification{unreadCount > 1 ? 's' : ''} non
@@ -181,81 +257,303 @@ const HomePage = () => {
           </Alert>
         )}
 
-        <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
-          <div style={{ flex: 1 }}>
-            <Typography variant="h6" gutterBottom>
-              Tournoi en cours
-            </Typography>
-            {tournamentsEnCours.map((tournament) => (
-              <Card
-                key={tournament.id}
+        {loadingTournois ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress sx={{ color: '#e8822a' }} />
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', xl: '1.15fr 0.85fr' },
+              gap: 4,
+              alignItems: 'start',
+            }}
+          >
+            <Box>
+              <Box
                 sx={{
-                  cursor: 'pointer',
-                  mb: 2,
-                  borderLeft: '3px solid #e8822a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 3,
+                  gap: 2,
+                  flexWrap: 'wrap',
                 }}
-                onClick={() => navigate(`/tournaments/${tournament.id}`)}
               >
-                <CardContent>
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    {tournament.name}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: '#e8822a',
+                      boxShadow: '0 0 0 0 rgba(232,130,42,0.6)',
+                      animation: 'pulse 2s infinite',
+                      '@keyframes pulse': {
+                        '0%': { boxShadow: '0 0 0 0 rgba(232,130,42,0.6)' },
+                        '70%': { boxShadow: '0 0 0 8px rgba(232,130,42,0)' },
+                        '100%': { boxShadow: '0 0 0 0 rgba(232,130,42,0)' },
+                      },
+                    }}
+                  />
+                  <Typography
+                    variant="h5"
+                    fontWeight={800}
+                    color="white"
+                    sx={{
+                      fontFamily: '"Orbitron", sans-serif',
+                      fontSize: '1.1rem',
+                    }}
+                  >
+                    En ce moment
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Du {tournament.startDate} au {tournament.endDate}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </Box>
 
-          <div style={{ flex: 1 }}>
-            <Typography variant="h6" gutterBottom>
-              Tournoi à venir
-            </Typography>
-            {tournamentsAVenir.map((tournament) => (
-              <Card
-                key={tournament.id}
-                sx={{ cursor: 'pointer', mb: 2 }}
-                onClick={() => navigate(`/tournaments/${tournament.id}`)}
-              >
-                <CardContent>
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    {tournament.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Début : {tournament.startDate}
-                  </Typography>
-                  <Typography variant="body2" color="primary">
-                    👥 {tournament.teamsCount}/{tournament.teamsMax} Équipes
-                    inscrites
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                <Button
+                  variant="text"
+                  onClick={() => navigate('/tournois?etat=EN_COURS')}
+                  sx={{
+                    color: '#e8822a',
+                    fontWeight: 700,
+                    '&:hover': { backgroundColor: 'rgba(232,130,42,0.08)' },
+                  }}
+                >
+                  Voir tout →
+                </Button>
+              </Box>
 
-          <div style={{ flex: 1 }}>
-            <Typography variant="h6" gutterBottom>
-              Tournois passés
-            </Typography>
-            {tournamentsPassés.map((tournament) => (
-              <Card
-                key={tournament.id}
-                sx={{ cursor: 'pointer', mb: 2 }}
-                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+              {enCours.length === 0 ? (
+                <Box
+                  sx={{
+                    py: 4,
+                    px: 3,
+                    borderRadius: 2,
+                    border: '1px dashed rgba(255,255,255,0.1)',
+                    textAlign: 'center',
+                    bgcolor: 'rgba(255,255,255,0.02)',
+                  }}
+                >
+                  <Typography color="text.secondary">
+                    Aucun tournoi en cours pour le moment.
+                  </Typography>
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      md:
+                        enCours.length === 1
+                          ? '1fr'
+                          : 'repeat(2, minmax(0, 1fr))',
+                    },
+                  }}
+                >
+                  {enCours.map((tournament) => (
+                    <Card
+                      key={tournament.id}
+                      sx={{
+                        backgroundColor: '#0d1117',
+                        border: '1px solid rgba(232,130,42,0.18)',
+                        borderLeft: '4px solid #e8822a',
+                        borderRadius: 3,
+                        transition:
+                          'transform 0.15s ease, box-shadow 0.15s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 8px 24px rgba(232,130,42,0.15)',
+                        },
+                      }}
+                    >
+                      <CardActionArea
+                        onClick={() => navigate(`/tournois/${tournament.id}`)}
+                        sx={{ height: '100%' }}
+                      >
+                        <CardContent sx={{ p: 3 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              gap: 2,
+                            }}
+                          >
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography
+                                variant="subtitle1"
+                                fontWeight={800}
+                                color="white"
+                                sx={{ mb: 0.5 }}
+                              >
+                                {tournament.nom}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Du {formatDate(tournament.dateDebut)} au{' '}
+                                {formatDate(tournament.dateFin)}
+                              </Typography>
+                            </Box>
+
+                            <Chip
+                              label="En cours"
+                              size="small"
+                              sx={{
+                                bgcolor: 'rgba(232,130,42,0.12)',
+                                color: '#e8822a',
+                                border: '1px solid rgba(232,130,42,0.25)',
+                                fontWeight: 700,
+                              }}
+                            />
+                          </Box>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  ))}
+                </Box>
+              )}
+            </Box>
+
+            <Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 3,
+                  gap: 2,
+                  flexWrap: 'wrap',
+                }}
               >
-                <CardContent>
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    {tournament.name}
+                <Typography
+                  variant="h5"
+                  fontWeight={800}
+                  color="white"
+                  sx={{
+                    fontFamily: '"Orbitron", sans-serif',
+                    fontSize: '1.1rem',
+                  }}
+                >
+                  Prochains tournois
+                </Typography>
+
+                <Button
+                  variant="text"
+                  onClick={() => navigate('/tournois?etat=A_VENIR')}
+                  sx={{
+                    color: '#3b82f6',
+                    fontWeight: 700,
+                    '&:hover': { backgroundColor: 'rgba(59,130,246,0.08)' },
+                  }}
+                >
+                  Voir tout →
+                </Button>
+              </Box>
+
+              {aVenir.length === 0 ? (
+                <Box
+                  sx={{
+                    py: 4,
+                    px: 3,
+                    borderRadius: 2,
+                    border: '1px dashed rgba(255,255,255,0.1)',
+                    textAlign: 'center',
+                    bgcolor: 'rgba(255,255,255,0.02)',
+                  }}
+                >
+                  <Typography color="text.secondary">
+                    Aucun tournoi à venir pour le moment.
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    🏆 Vainqueur : {tournament.winner}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+                </Box>
+              ) : (
+                <Stack spacing={2}>
+                  {aVenir.map((tournament) => (
+                    <Card
+                      key={tournament.id}
+                      sx={{
+                        backgroundColor: '#111827',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        borderLeft: '4px solid #3b82f6',
+                        borderRadius: 3,
+                        transition:
+                          'transform 0.15s ease, border-color 0.15s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          borderColor: 'rgba(59,130,246,0.35)',
+                        },
+                      }}
+                    >
+                      <CardActionArea
+                        onClick={() => navigate(`/tournois/${tournament.id}`)}
+                        sx={{ height: '100%' }}
+                      >
+                        <CardContent sx={{ p: 2.5 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              gap: 2,
+                            }}
+                          >
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography
+                                variant="subtitle1"
+                                fontWeight={800}
+                                color="white"
+                                sx={{ mb: 0.5 }}
+                              >
+                                {tournament.nom}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Début : {formatDate(tournament.dateDebut)}
+                              </Typography>
+                              {tournament.nombresParticipantsMax && (
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5,
+                                    color: '#e8822a',
+                                    mt: 0.5,
+                                  }}
+                                >
+                                  <GroupsIcon sx={{ fontSize: 18 }} />
+                                  <Typography variant="body2">
+                                    Max {tournament.nombresParticipantsMax}{' '}
+                                    équipes
+                                  </Typography>
+                                </Box>
+                              )}
+                            </Box>
+
+                            <Chip
+                              label="À venir"
+                              size="small"
+                              sx={{
+                                bgcolor: 'rgba(59,130,246,0.12)',
+                                color: '#3b82f6',
+                                border: '1px solid rgba(59,130,246,0.25)',
+                                fontWeight: 700,
+                              }}
+                            />
+                          </Box>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </Box>
+          </Box>
+        )}
       </Container>
     </Box>
   );

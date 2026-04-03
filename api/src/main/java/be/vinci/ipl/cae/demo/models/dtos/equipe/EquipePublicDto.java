@@ -8,6 +8,6 @@ import java.util.List;
 public record EquipePublicDto(
         Long id,
         String name,
+        String profileImage,
         List<MembrePublicDto> membres,
-        @JsonProperty("isResponsable") boolean isResponsable) {
-}
+        @JsonProperty("isResponsable") boolean isResponsable) {}

@@ -124,6 +124,13 @@ public class NotificationService {
         user, "Équipe créée : tu es maintenant responsable de l'équipe '" + nomEquipe + "'.");
   }
 
+  /** Envoyée au membre quand un tournoi est créé. */
+  public void notifierCreationTournoi(User user, String nomTournoi) {
+    createNotification(
+        user,
+        "Nouveau tournoi : '" + nomTournoi + "' vient d'être créé. Consulte la liste des tournois !");
+  }
+
   /** Envoyée au membre quand sa demande est envoyée. */
   public void notifierDemandEnvoyee(User user, String nomEquipe) {
     createNotification(
@@ -156,5 +163,19 @@ public class NotificationService {
             + nomEquipe
             + "' a été refusée. Raison : "
             + raionAffichee);
+  }
+
+  /** Envoyée à l'admin quand un tournoi est créé en brouillon. */
+  public void notifierCreationTournoiBrouillon(User admin, String nomTournoi) {
+    createNotification(
+        admin,
+        "Admin : nouveau tournoi en brouillon '" + nomTournoi + "'. À publier quand prêt.");
+  }
+
+  /** Envoyée à tous les joueurs quand un tournoi est publié. */
+  public void notifierPublicationTournoi(User user, String nomTournoi) {
+    createNotification(
+        user,
+        "Nouveau tournoi : '" + nomTournoi + "' vient d'être publié. Inscris-toi maintenant !");
   }
 }

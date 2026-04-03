@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.entities.Equipe;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,8 +25,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 class UserServiceTest {
 
   @Mock private UserRepository userRepository;
+  @Mock private EquipeRepository equipeRepository;
   @Mock private BCryptPasswordEncoder passwordEncoder;
   @Mock private NotificationService notificationService;
+  @Mock private UserMapper userMapper;
 
   @InjectMocks private UserService userService;
 
@@ -42,12 +48,32 @@ class UserServiceTest {
     user.setTag("AliceTag");
     user.setSpecialty("tacticien");
     user.setProfileImageUrl("avatar1.png");
+    user.setCreationDate(LocalDate.of(2026, 1, 1));
 
     credentials = new Credentials();
     credentials.setEmail(EMAIL);
     credentials.setPassword(PASSWORD);
     credentials.setTag("AliceTag");
     credentials.setSpecialty("tacticien");
+
+    lenient()
+        .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
+        .thenAnswer(
+            invocation -> {
+              User source = invocation.getArgument(0);
+              String token = invocation.getArgument(1);
+              AuthenticatedUser dto = new AuthenticatedUser();
+              dto.setToken(token);
+              if (source != null) {
+                dto.setEmail(source.getEmail());
+                dto.setTag(source.getTag());
+                dto.setSpecialty(source.getSpecialty());
+                dto.setProfileImage(source.getProfileImageUrl());
+                dto.setAdmin(source.isAdmin());
+                dto.setBanned(source.isBanned());
+              }
+              return dto;
+            });
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -307,5 +333,138 @@ class UserServiceTest {
 
     assertNotNull(result.getToken());
     assertFalse(result.getToken().isBlank());
+  }
+
+  @Test
+  void banUser_utilisateurExistant_activeLeSoftBan() {
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.empty());
+
+    userService.banUser(EMAIL, null);
+
+    assertTrue(user.isBanned());
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void banUser_utilisateurInexistant_neFaitRien() {
+    when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
+
+    userService.banUser("inconnu@vinci.be", null);
+
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void banUser_responsablePrincipal_avecSecondaire_promeutLeSecondaire() {
+    User secondary = new User();
+    secondary.setId(2L);
+    secondary.setCreationDate(LocalDate.of(2026, 1, 2));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(user);
+    equipe.setResponsableSecondaire(secondary);
+    equipe.getMembres().add(user);
+    equipe.getMembres().add(secondary);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.of(equipe));
+
+    userService.banUser(EMAIL, null);
+
+    assertEquals(secondary, equipe.getResponsablePrincipal());
+    assertNull(equipe.getResponsableSecondaire());
+    assertTrue(user.isBanned());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void banUser_responsablePrincipalSansSecondaire_designeMembrePlusAncien() {
+    User oldest = new User();
+    oldest.setId(3L);
+    oldest.setCreationDate(LocalDate.of(2024, 2, 1));
+
+    User newest = new User();
+    newest.setId(4L);
+    newest.setCreationDate(LocalDate.of(2025, 5, 1));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(user);
+    equipe.getMembres().add(user);
+    equipe.getMembres().add(newest);
+    equipe.getMembres().add(oldest);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.of(equipe));
+
+    userService.banUser(EMAIL, null);
+
+    assertEquals(oldest, equipe.getResponsablePrincipal());
+    assertNull(equipe.getResponsableSecondaire());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
+  }
+
+  @Test
+  void banUser_responsableSecondaire_retirerRoleSecondaire() {
+    User principal = new User();
+    principal.setId(10L);
+    principal.setCreationDate(LocalDate.of(2025, 1, 1));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(principal);
+    equipe.setResponsableSecondaire(user);
+    equipe.getMembres().add(principal);
+    equipe.getMembres().add(user);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.of(equipe));
+
+    userService.banUser(EMAIL, null);
+
+    assertEquals(principal, equipe.getResponsablePrincipal());
+    assertNull(equipe.getResponsableSecondaire());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
+  }
+
+  @Test
+  void banUser_membreSimple_estRetireDeLEquipe() {
+    User principal = new User();
+    principal.setId(10L);
+    principal.setCreationDate(LocalDate.of(2025, 1, 1));
+
+    Equipe equipe = new Equipe();
+    equipe.setResponsablePrincipal(principal);
+    equipe.getMembres().add(principal);
+    equipe.getMembres().add(user);
+
+    user.setEquipe(equipe);
+
+    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+        .thenReturn(Optional.empty());
+
+    userService.banUser(EMAIL, null);
+
+    assertEquals(principal, equipe.getResponsablePrincipal());
+    assertFalse(equipe.getMembres().contains(user));
+    assertNull(user.getEquipe());
+    verify(equipeRepository).save(equipe);
   }
 }

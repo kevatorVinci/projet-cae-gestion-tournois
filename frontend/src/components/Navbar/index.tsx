@@ -33,6 +33,14 @@ const Navbar = () => {
 
   const [isAdminView, setIsAdminView] = useState(false);
 
+  const normalizeAvatarUrl = (avatar?: string) => {
+    if (!avatar) return '/luffy.png';
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return avatar;
+    }
+    return avatar.startsWith('/') ? avatar : `/${avatar}`;
+  };
+
   useEffect(() => {
     const refreshTeamStatus = () => {
       if (!authenticatedUser) {
@@ -131,7 +139,7 @@ const Navbar = () => {
             <Button color="inherit" onClick={() => navigate('/')}>
               Accueil
             </Button>
-            <Button color="inherit" onClick={() => navigate('/tournaments')}>
+            <Button color="inherit" onClick={() => navigate('/tournois')}>
               Tournois
             </Button>
             <Button color="inherit" onClick={() => navigate('/equipes')}>
@@ -241,7 +249,12 @@ const Navbar = () => {
             <IconButton onClick={() => navigate('/profil')} sx={{ p: 0 }}>
               <Avatar
                 alt="Profil du joueur"
-                src={authenticatedUser?.profileImage}
+                src={normalizeAvatarUrl(authenticatedUser?.profileImage)}
+                imgProps={{
+                  onError: (event) => {
+                    event.currentTarget.src = '/luffy.png';
+                  },
+                }}
                 sx={{
                   width: 45,
                   height: 45,

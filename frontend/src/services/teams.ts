@@ -12,6 +12,7 @@ type BackendMembre = {
 type BackendEquipe = {
   id: number;
   name: string;
+  profileImage?: string; // ✨ WE ADDED THE PROFILE IMAGE HERE
   membres: BackendMembre[];
   isResponsable: boolean;
 };
@@ -60,6 +61,7 @@ function mapEquipe(dto: BackendEquipe): Equipe {
   return {
     id: dto.id,
     name: dto.name,
+    profileImage: dto.profileImage,
     members,
     responsable: undefined,
     isResponsable: dto.isResponsable,
@@ -121,8 +123,10 @@ export async function getEquipeById(id: string | number): Promise<Equipe> {
   return mapEquipe(data);
 }
 
+// ✨ WE FIXED THE PARAMETERS HERE ✨
 export async function createEquipe(
   name: string,
+  profileImage: string, // We accept the image here
   userId?: number,
 ): Promise<Equipe> {
   const token = getRequiredAuthToken();
@@ -136,7 +140,8 @@ export async function createEquipe(
         'Content-Type': 'application/json',
         Authorization: token,
       },
-      body: JSON.stringify({ name }),
+      // ✨ We send both name and profileImage to Java
+      body: JSON.stringify({ name, profileImage }),
     },
   );
 
@@ -277,5 +282,27 @@ export async function getUserTeam(): Promise<Equipe | null> {
     return null;
   } catch {
     return null;
+  }
+}
+
+export async function updateTeamImage(
+  teamId: number,
+  newImage: string,
+): Promise<void> {
+  const token = getRequiredAuthToken();
+
+  const response = await fetch(`${API_BASE}/equipes/${teamId}/image`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token,
+    },
+    body: JSON.stringify({ profileImage: newImage }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await parseError(response, "Impossible de modifier l'image de l'équipe."),
+    );
   }
 }
