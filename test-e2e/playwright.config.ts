@@ -1,13 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
+  // Points to your tests directory
   testDir: './tests',
 
-  /* 1. Global timeout for each test (in milliseconds) */
-  timeout: 30000, // Sets a 60-second limit per test
+  /* Global timeout for each test */
+  timeout: 30000,
 
   expect: {
-    /* 2. Maximum time expect() should wait for a condition (e.g., toHaveURL) */
+    /* Maximum time expect() should wait for a condition */
     timeout: 10000,
   },
 
@@ -21,7 +22,7 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
 
-    /* 3. Navigation timeout (how long to wait for page.goto) */
+    /* Navigation timeout */
     navigationTimeout: 30000,
   },
 
@@ -32,13 +33,14 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    // Navigates to frontend folder and starts dev server
+    command: 'cd ../frontend && npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
     stderr: 'pipe',
 
-    /* 4. Increase startup timeout for the dev server */
-    timeout: 60000, // Gives the server 2 minutes to boot up
+    /* Startup timeout for the dev server */
+    timeout: 60000,
   },
 });
