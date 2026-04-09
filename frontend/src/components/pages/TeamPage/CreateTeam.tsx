@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import BackButton from '../../../components/BoutonRetour/';
+import BackButton from '../../BackButton';
 import {
   Container,
   Typography,

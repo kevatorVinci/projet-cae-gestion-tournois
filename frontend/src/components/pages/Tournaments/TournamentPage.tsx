@@ -30,7 +30,7 @@ import Event from '@mui/icons-material/Event';
 import History from '@mui/icons-material/History';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { Tournoi } from '../../../types';
-import BackButton from '../../BoutonRetour';
+import BackButton from '../../BackButton';
 
 const fetchFilteredTournaments = async (nom?: string): Promise<Tournoi[]> => {
   const params = new URLSearchParams();

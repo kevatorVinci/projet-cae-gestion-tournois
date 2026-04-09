@@ -1,12 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import { DemandesAdhesion } from '../../components/pages/TeamPage/ResponsablePage/Demande';
+import { DemandesAdhesion } from '../../components/pages/TeamPage/ResponsablePage/Demand';
 import {
   getDemandesEnAttenteResponsable,
   accepterDemande,
   refuserDemande,
-} from '../../services/demande';
+} from '../../services/demand';
 import { DemandeDecisionResult } from '../../types';
 
 // FIXED PATH: From src/Tests/Team/ to src/services/ is only 2 levels up

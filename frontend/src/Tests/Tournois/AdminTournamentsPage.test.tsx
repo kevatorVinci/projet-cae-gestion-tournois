@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import AdminTournamentsPage from '../../components/pages/Tournois/AdminTournamentsPage';
+import AdminTournamentsPage from '../../components/pages/Tournaments/AdminTournamentsPage';
 import {
   fetchAllTournaments,
   publishTournament,
-} from '../../services/tournois';
+} from '../../services/tournaments';
 import {
   createAuthenticatedUser,
   createMockUserContext,

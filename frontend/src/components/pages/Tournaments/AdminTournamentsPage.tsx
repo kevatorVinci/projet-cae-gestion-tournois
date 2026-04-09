@@ -17,11 +17,11 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 
-import BackButton from '../../BoutonRetour';
+import BackButton from '../../BackButton';
 import {
   fetchAllTournaments,
   publishTournament,
-} from '../../../services/tournois';
+} from '../../../services/tournaments';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
 

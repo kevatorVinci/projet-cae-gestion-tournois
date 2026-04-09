@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import BackButton from '../../../../components/BoutonRetour';
+import BackButton from '../../../BackButton';
 import {
   Container,
   Typography,
@@ -22,7 +22,7 @@ import {
   accepterDemande,
   getDemandesEnAttenteResponsable,
   refuserDemande,
-} from '../../../../services/demande';
+} from '../../../../services/demand';
 
 type PendingDemandeView = {
   id: number;

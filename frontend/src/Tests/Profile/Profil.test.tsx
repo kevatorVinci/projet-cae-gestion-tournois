@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import Profile from '../../components/pages/TableauDebord/Profil';
+import Profile from '../../components/pages/Dashbord/Profile';
 import { UserContext } from '../../contexts/UserContext';
 import { getUserTeam } from '../../services/teams';
 

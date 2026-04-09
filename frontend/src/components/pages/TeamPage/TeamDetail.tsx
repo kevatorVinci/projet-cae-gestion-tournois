@@ -22,7 +22,7 @@ import { getEquipeById } from '../../../services/teams';
 import {
   fetchAcceptedTournamentRegistrations,
   fetchPublicTournaments,
-} from '../../../services/tournois';
+} from '../../../services/tournaments';
 import { Equipe, Tournoi } from '../../../types';
 import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 

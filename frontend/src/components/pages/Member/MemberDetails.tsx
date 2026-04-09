@@ -16,7 +16,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import { User, UserContextType } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import { getAllEquipes } from '../../../services/teams';
-import BackButton from '../../../components/BoutonRetour';
+import BackButton from '../../BackButton';
 import { UserContext } from '../../../contexts/UserContext';
 
 interface Player {

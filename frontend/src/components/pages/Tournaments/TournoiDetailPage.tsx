@@ -19,13 +19,13 @@ import {
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GroupsIcon from '@mui/icons-material/Groups';
-import BackButton from '../../BoutonRetour';
+import BackButton from '../../BackButton';
 import { Tournoi } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import {
   fetchTeamRegistrations,
   registerTeamToTournament,
-} from '../../../services/tournois';
+} from '../../../services/tournaments';
 import {
   getEquipeById,
   getUserTeam,

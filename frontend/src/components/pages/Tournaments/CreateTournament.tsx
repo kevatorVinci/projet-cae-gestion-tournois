@@ -16,12 +16,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/fr';
 dayjs.locale('fr');
-import BackButton from '../../BoutonRetour';
+import BackButton from '../../BackButton';
 import {
   createTournament,
   NewTournamentPayload,
   publishTournament,
-} from '../../../services/tournois';
+} from '../../../services/tournaments';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType } from '../../../types';
 

@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../../BoutonRetour';
+import BackButton from '../../../BackButton';
 import {
   Container,
   Typography,
@@ -41,7 +41,7 @@ import {
   fetchTeamRegistrations,
   registerTeamToTournament,
   TeamRegistrationItem,
-} from '../../../../services/tournois';
+} from '../../../../services/tournaments';
 import { getUserTeam } from '../../../../services/teams';
 import { getAuthenticatedUser } from '../../../../utils/session';
 

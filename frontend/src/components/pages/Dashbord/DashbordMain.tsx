@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType } from '../../../types';
 import { getUserTeam } from '../../../services/teams';
-import BackButton from '../../../components/BoutonRetour';
+import BackButton from '../../BackButton';
 
 const Profile = () => {
   const navigate = useNavigate();

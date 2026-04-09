@@ -41,7 +41,7 @@ import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 import {
   fetchTeamRegistrationsPublic,
   TeamRegistrationItem,
-} from '../../../services/tournois';
+} from '../../../services/tournaments';
 
 export function MyTeam() {
   const pageBlueGradient =

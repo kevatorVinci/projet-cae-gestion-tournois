@@ -30,7 +30,7 @@ import {
   addIndisponibilite,
   deleteIndisponibilite,
   Period,
-} from '../../../services/indisponibilites';
+} from '../../../services/unavailabilities';
 
 const DisponibilitesPage = () => {
   const navigate = useNavigate();
