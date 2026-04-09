@@ -160,7 +160,7 @@ const AdminTournamentsPage = () => {
 
   /**
    * We create a new list that contains ONLY the tournaments matching the filter.
-    * Logic updated: includes a dedicated CLOTURE filter.
+   * Logic updated: includes a dedicated CLOTURE filter.
    */
   const filteredTournaments = tournaments.filter((t) => {
     if (filter === 'Tous') return true;
