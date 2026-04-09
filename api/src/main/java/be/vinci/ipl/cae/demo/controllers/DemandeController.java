@@ -44,7 +44,7 @@ public class DemandeController {
       return demandeMapper.toDtos(demandeService.getDemandesEnAttentePourResponsable(currentUser));
     } catch (RuntimeException e) {
       handleDemandeException(e);
-      return List.of(); // jamais atteint mais requis par le compilateur
+      return List.of(); // unreachable, but required by the compiler
     }
   }
 
@@ -62,7 +62,7 @@ public class DemandeController {
 
   /** Accept a join demand (equipe responsible only). */
   @PostMapping("/{demandeId}/accepter")
-  @ResponseStatus(HttpStatus.NO_CONTENT) // ✅ plus de sérialisation User
+  @ResponseStatus(HttpStatus.NO_CONTENT) // no User serialization needed
   @IsResponsable
   public void accepterDemande(
       @PathVariable Long demandeId, @AuthenticationPrincipal User currentUser) {

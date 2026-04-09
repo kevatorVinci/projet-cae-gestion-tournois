@@ -15,7 +15,7 @@ public class Credentials {
   @Email(message = "Format d'email invalide")
   private String email;
 
-  // Regex : 8 caractères min, 1 majuscule, 1 minuscule, 1 chiffre, 1 caractère spécial
+  // Password policy: min 8 characters, 1 uppercase, 1 lowercase, 1 digit, 1 special character
   @NotBlank(message = "Le mot de passe est requis")
   @Pattern(
       regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$",
@@ -29,7 +29,7 @@ public class Credentials {
   private String profileImage;
   private String oldPassword;
 
-  // On applique la même règle stricte pour le changement de mot de passe
+  // Apply the same strict rule for password changes
   @Pattern(
       regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$",
       message = "Le nouveau mot de passe doit contenir au moins 8 caractères, "

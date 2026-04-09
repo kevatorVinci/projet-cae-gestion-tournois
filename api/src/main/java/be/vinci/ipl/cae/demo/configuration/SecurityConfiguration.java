@@ -29,11 +29,11 @@ public class SecurityConfiguration {
   }
 
   /**
-   * Configure les règles de sécurité du serveur (qui a le droit d'accéder à quoi).
+    * Configures server security rules (who can access which endpoints).
    *
-   * @param http l'objet de Spring Security qui permet de configurer le pare-feu
-   * @return SecurityFilterChain la chaîne de filtres prête à sécuriser l'application
-   * @throws Exception si une erreur survient pendant la configuration
+    * @param http Spring Security configuration object
+    * @return configured security filter chain
+    * @throws Exception if an error occurs during configuration
    */
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

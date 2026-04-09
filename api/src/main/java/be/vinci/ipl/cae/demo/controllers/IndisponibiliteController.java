@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Contrôleur pour gérer les appels liés aux indisponibilités. */
+/** Controller handling availability blackout periods. */
 @RestController
 @RequestMapping("/indisponibilites")
 public class IndisponibiliteController {
@@ -23,19 +23,19 @@ public class IndisponibiliteController {
   private final IndisponibiliteRepository indisponibiliteRepository;
 
   /**
-   * Constructeur du contrôleur.
+    * Builds the controller.
    *
-   * @param indisponibiliteRepository le dépôt des indisponibilités
+    * @param indisponibiliteRepository blackout-period repository
    */
   public IndisponibiliteController(IndisponibiliteRepository indisponibiliteRepository) {
     this.indisponibiliteRepository = indisponibiliteRepository;
   }
 
   /**
-   * Récupère la liste des indisponibilités du joueur connecté.
+    * Gets all blackout periods for the authenticated user.
    *
-   * @param currentUser le joueur connecté
-   * @return la liste des périodes
+    * @param currentUser authenticated user
+    * @return list of periods
    */
   @GetMapping
   public Iterable<Indisponibilite> getMesIndisponibilites(
@@ -45,11 +45,11 @@ public class IndisponibiliteController {
   }
 
   /**
-   * Enregistre une nouvelle période d'indisponibilité.
+    * Saves a new blackout period.
    *
-   * @param currentUser le joueur connecté
-   * @param indisponibilite la nouvelle période envoyée par React
-   * @return la période sauvegardée
+    * @param currentUser authenticated user
+    * @param indisponibilite new period sent by the frontend
+    * @return saved period
    */
   @PostMapping
   public Indisponibilite addIndisponibilite(
@@ -62,10 +62,10 @@ public class IndisponibiliteController {
   }
 
   /**
-   * Supprime une période d'indisponibilité grâce à son ID.
+    * Deletes a blackout period by ID.
    *
-   * @param id l'identifiant de la période
-   * @param currentUser le joueur connecté
+    * @param id period identifier
+    * @param currentUser authenticated user
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(

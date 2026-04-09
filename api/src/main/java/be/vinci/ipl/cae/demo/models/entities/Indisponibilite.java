@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Entité représentant une période d'indisponibilité d'un joueur. */
+/** Entity representing a player's unavailable time period. */
 @Entity
 @Table(name = "indisponibilites")
 @Getter
@@ -35,7 +35,7 @@ public class Indisponibilite {
   @NotNull
   private LocalDate dateFin;
 
-  // Lien avec le joueur (Un joueur peut avoir plusieurs indisponibilités)
+  // Link to the player (one player can have multiple unavailable periods)
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   @JsonIgnore

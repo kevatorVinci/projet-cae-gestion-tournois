@@ -41,7 +41,7 @@ public class InscriptionEquipeTournoiController {
     this.inscriptionMapper = inscriptionMapper;
   }
 
-  /** Retourne toutes les inscriptions d'un tournoi. Réservé aux admins. */
+  /** Returns all registrations for a tournament. Admin only. */
   @GetMapping("/{tournoiId}/inscriptions")
   @IsAdmin
   public Iterable<InscriptionEquipeTournoi> getAllByTournoi(@PathVariable Long tournoiId) {
@@ -52,7 +52,7 @@ public class InscriptionEquipeTournoiController {
     return inscriptions;
   }
 
-  /** Retourne les inscriptions visibles publiquement pour la page détail tournoi. */
+  /** Returns publicly visible registrations for the tournament details page. */
   @GetMapping("/{tournoiId}/inscriptions/accepted")
   public Iterable<TournoiEquipeInscriptionDto> getAcceptedByTournoi(@PathVariable Long tournoiId) {
     Iterable<InscriptionEquipeTournoi> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
@@ -62,7 +62,7 @@ public class InscriptionEquipeTournoiController {
     return inscriptionMapper.toTournoiEquipeInscriptionDtos(inscriptions);
   }
 
-  /** Retourne toutes les inscriptions d'une équipe. Accessible au responsable ou à un admin. */
+  /** Returns all registrations for one team. Accessible to responsible users or admins. */
   @GetMapping("/equipes/{equipeId}/inscriptions")
   @IsAdminOrResponsable
   public Iterable<EquipeTournamentRegistrationDto> getAllByEquipe(
@@ -76,7 +76,7 @@ public class InscriptionEquipeTournoiController {
     return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
   }
 
-  /** Retourne les inscriptions d'une équipe visibles publiquement (profil joueur). */
+  /** Returns publicly visible registrations for one team (player profile view). */
   @GetMapping("/equipes/{equipeId}/inscriptions/public")
   public Iterable<EquipeTournamentRegistrationDto> getPublicByEquipe(
       @PathVariable Long equipeId) {
@@ -87,7 +87,7 @@ public class InscriptionEquipeTournoiController {
     return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
   }
 
-  /** Inscrit une équipe à un tournoi. Réservé au responsable de l'équipe. */
+  /** Registers a team for a tournament. Reserved for the team's responsible user. */
   @PostMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @ResponseStatus(HttpStatus.CREATED)
   @IsResponsable

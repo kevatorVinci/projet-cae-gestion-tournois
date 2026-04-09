@@ -3,7 +3,7 @@ package be.vinci.ipl.cae.demo.models.dtos;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** DTO pour les réponses d'erreur. */
+/** DTO for error responses. */
 @Data
 @NoArgsConstructor
 public class ErrorResponse {

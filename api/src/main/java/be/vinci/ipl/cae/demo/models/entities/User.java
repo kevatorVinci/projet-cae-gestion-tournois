@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Entité représentant un utilisateur. */
+/** Entity representing a user. */
 @Getter
 @Setter
 @NoArgsConstructor

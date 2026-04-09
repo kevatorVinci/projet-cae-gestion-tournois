@@ -5,15 +5,15 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/** Dépôt pour gérer les indisponibilités dans la base de données. */
+/** Repository for managing unavailable periods in the database. */
 @Repository
 public interface IndisponibiliteRepository extends CrudRepository<Indisponibilite, Long> {
 
   /**
-   * Trouve toutes les indisponibilités d'un joueur précis.
+    * Finds all unavailable periods for a specific player.
    *
-   * @param user le joueur concerné
-   * @return la liste de ses indisponibilités
+    * @param user target player
+    * @return list of unavailable periods
    */
   Iterable<Indisponibilite> findByUser(User user);
 }

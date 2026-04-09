@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service gérant la logique métier des candidatures (demandes) pour rejoindre une équipe.
- * Centralise la création des requêtes, leur validation (acceptation ou refus), et l'application des
- * règles strictes (ex: vérification de l'absence d'équipe actuelle).
+ * Service handling the business logic of team join requests.
+ * Centralizes request creation, validation (accept/reject), and strict rule enforcement
+ * (for example, checking that the player is not already in a team).
  */
 @Service
 public class DemandeService {
@@ -26,11 +26,11 @@ public class DemandeService {
   private final NotificationService notificationService;
 
   /**
-   * Constructeur injectant les dépendances nécessaires au service.
+    * Builds the service with required dependencies.
    *
-   * @param demandeRepo Le repository gérant les demandes en base de données.
-   * @param userRepo Le repository gérant les utilisateurs.
-   * @param equipeRepo Le repository gérant les équipes.
+    * @param demandeRepo request repository
+    * @param userRepo user repository
+    * @param equipeRepo team repository
    */
   public DemandeService(
       DemandeRepository demandeRepo,
@@ -44,14 +44,14 @@ public class DemandeService {
   }
 
   /**
-   * Crée une nouvelle candidature pour un joueur souhaitant rejoindre une équipe. Vérifie
-   * automatiquement si le joueur possède déjà une équipe avant d'enregistrer la demande.
+    * Creates a new join request for a player who wants to join a team.
+    * Automatically checks whether the player already belongs to a team before saving the request.
    *
-   * @param membreId L'identifiant unique du joueur (User) qui postule.
-   * @param equipeId L'identifiant unique de l'équipe ciblée.
-   * @return L'objet Demande fraîchement créé et sauvegardé avec le statut EN_ATTENTE.
-   * @throws RuntimeException Si le joueur n'existe pas, si l'équipe n'existe pas, ou si le joueur
-   *     est déjà membre d'une équipe.
+    * @param membreId unique ID of the player applying
+    * @param equipeId unique ID of the target team
+    * @return newly created and saved request with EN_ATTENTE status
+    * @throws RuntimeException if the player does not exist, the team does not exist, or the player
+    *     already belongs to a team
    */
   public Demande creerDemande(Long membreId, Long equipeId) {
     User membre =
@@ -92,17 +92,17 @@ public class DemandeService {
   }
 
   /**
-   * Récupère la liste de toutes les candidatures n'ayant pas encore été traitées pour une équipe
-   * donnée. Idéal pour l'affichage sur le tableau de bord du responsable d'équipe.
+    * Gets all pending requests for a given team.
+    * Useful for the team responsible user's dashboard.
    *
-   * @param equipeId L'identifiant de l'équipe pour laquelle on cherche les candidatures.
-   * @return Une collection itérable contenant uniquement les demandes au statut EN_ATTENTE.
+    * @param equipeId team ID used to filter requests
+    * @return iterable collection containing only EN_ATTENTE requests
    */
   @Transactional
   public Iterable<Demande> getDemandesEnAttentePourEquipe(Long equipeId) {
     Equipe equipe = equipeRepo.findById(equipeId).orElse(null);
     if (equipe != null && !isEquipeEligibleForJoin(equipe)) {
-      // Nettoyage defensif: evite des notifications orphelines pour une equipe invalide.
+      // Defensive cleanup: avoid orphan notifications for an invalid team.
       demandeRepo.deleteByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
       return List.of();
     }
@@ -141,13 +141,13 @@ public class DemandeService {
   }
 
   /**
-   * Accepte officiellement la candidature d'un joueur. Modifie le statut de la demande, enregistre
-   * la date de traitement, et affecte immédiatement le joueur à sa nouvelle équipe dans la base de
-   * données.
+    * Officially accepts a player's request.
+    * Updates request status, stores processing date, and immediately assigns the player
+    * to the new team in the database.
    *
-   * @param demandeId L'identifiant de la demande à valider.
-   * @return La demande mise à jour avec le statut ACCEPTEE.
-   * @throws RuntimeException Si la demande spécifiée n'existe pas en base de données.
+    * @param demandeId ID of the request to validate
+    * @return updated request with ACCEPTEE status
+    * @throws RuntimeException if the specified request does not exist
    */
   @Transactional
   public Demande accepterDemande(Long demandeId, User currentUser) {
@@ -171,10 +171,10 @@ public class DemandeService {
     userRepo.save(user);
     equipeRepo.save(equipe);
 
-    // ✅ On sauvegarde D'ABORD la demande acceptée
+    // Save the accepted request FIRST
     Demande savedDemande = demandeRepo.save(demande);
 
-    // ✅ ENSUITE on supprime les autres demandes en attente de ce user
+    // THEN remove other pending requests for this user
     demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
 
     notificationService.notifierDemandeAcceptee(user, equipe.getName());
@@ -182,14 +182,13 @@ public class DemandeService {
   }
 
   /**
-   * Refuse la candidature d'un joueur en y attachant un motif de refus. Met à jour l'historique de
-   * la demande sans affecter l'équipe actuelle du joueur. Note : L'envoi de notification est
-   * actuellement désactivé.
+    * Rejects a player's request with a rejection reason.
+    * Updates request history without affecting the player's current team.
    *
-   * @param demandeId L'identifiant de la demande à rejeter.
-   * @param raison Le texte expliquant le motif du refus (ex: "Niveau insuffisant").
-   * @return La demande mise à jour avec le statut REFUSEE et son motif.
-   * @throws RuntimeException Si la demande spécifiée n'existe pas en base de données.
+    * @param demandeId ID of the request to reject
+    * @param raison text explaining the rejection reason (for example: "Insufficient level")
+    * @return updated request with REFUSEE status and reason
+    * @throws RuntimeException if the specified request does not exist
    */
   @Transactional
   public Demande refuserDemande(Long demandeId, String raison, User currentUser) {
@@ -208,13 +207,13 @@ public class DemandeService {
   }
 
   /**
-   * Récupère une demande et vérifie que l'utilisateur est responsable de l'équipe.
+    * Retrieves a request and verifies that the user is responsible for the team.
    *
-   * @param demandeId L'identifiant de la demande.
-   * @param currentUser L'utilisateur courant.
-   * @return La demande trouvée.
-   * @throws RuntimeException Si la demande n'existe pas.
-   * @throws SecurityException Si l'utilisateur n'est pas responsable.
+    * @param demandeId request ID
+    * @param currentUser current user
+    * @return matching request
+    * @throws RuntimeException if the request does not exist
+    * @throws SecurityException if the user is not responsible
    */
   private Demande getAndVerifyDemande(Long demandeId, User currentUser) {
     Demande demande =
@@ -226,24 +225,24 @@ public class DemandeService {
   }
 
   /**
-   * Vérifie que l'utilisateur courant est responsable (principal ou secondaire) de l'équipe.
+   * Verifies that the current user is a responsible member (primary or secondary) of the team.
    *
-   * @param equipe L'équipe à vérifier.
-   * @param currentUser L'utilisateur courant.
-   * @throws SecurityException Si l'utilisateur n'est pas responsable de l'équipe.
+   * @param equipe team to validate
+   * @param currentUser current user
+   * @throws SecurityException if the user is not responsible for the team
    */
   private void verifyUserIsResponsible(Equipe equipe, User currentUser) {
-    // 1. On vérifie si c'est le principal (en s'assurant qu'il existe)
+    // 1. Check whether the user is the primary responsible (if present)
     boolean isPrincipal =
         equipe.getResponsablePrincipal() != null
             && equipe.getResponsablePrincipal().getId().equals(currentUser.getId());
 
-    // 2. On vérifie si c'est le secondaire (en s'assurant qu'il n'est pas null !)
+    // 2. Check whether the user is the secondary responsible (if present)
     boolean isSecondaire =
         equipe.getResponsableSecondaire() != null
             && equipe.getResponsableSecondaire().getId().equals(currentUser.getId());
 
-    // 3. On applique la logique finale (Ni l'un, ET ni l'autre)
+    // 3. Apply final decision logic (neither primary nor secondary)
     if (!isPrincipal && !isSecondaire) {
       throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
     }

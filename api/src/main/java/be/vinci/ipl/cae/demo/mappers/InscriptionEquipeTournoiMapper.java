@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/** Mapper for tournoi inscription DTO conversions. */
+/** Mapper for tournament registration DTO conversions. */
 @Component
 public class InscriptionEquipeTournoiMapper {
 

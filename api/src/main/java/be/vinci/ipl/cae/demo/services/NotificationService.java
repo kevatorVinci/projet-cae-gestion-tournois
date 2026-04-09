@@ -21,7 +21,7 @@ public class NotificationService {
     this.notificationRepository = notificationRepository;
   }
 
-  // ─── Lecture ─────────────────────────────────────────────────────────────────
+  // Read operations
 
   /**
    * Gets all notifications for a user.
@@ -43,7 +43,7 @@ public class NotificationService {
     return notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
   }
 
-  // ─── Marquage ────────────────────────────────────────────────────────────────
+  // Mark operations
 
   /**
    * Marks one notification as read.
@@ -72,7 +72,7 @@ public class NotificationService {
     notificationRepository.saveAll(unread);
   }
 
-  // ─── Suppression ─────────────────────────────────────────────────────────────
+  // Delete operations
 
   /**
    * Deletes all notifications of a user.
@@ -92,7 +92,7 @@ public class NotificationService {
     notificationRepository.deleteById(idNotification);
   }
 
-  // ─── Création (méthode de base) ───────────────────────────────────────────────
+  // Create operation (base method)
 
   /**
    * Creates one notification message.
@@ -109,36 +109,36 @@ public class NotificationService {
     return notificationRepository.save(notification);
   }
 
-  // ─── Notifications métier (préfixes pour le front React) ─────────────────────
+  // Business notifications (prefixes used by the React frontend)
 
-  /** Envoyée au membre quand il crée son compte. */
+  /** Sent to a member when they create their account. */
   public void notifierCreationCompte(User user) {
     createNotification(
         user,
         "Bienvenue : ton compte a bien été créé. Rejoins ou crée une équipe pour commencer !");
   }
 
-  /** Envoyée au membre quand il crée une équipe. */
+  /** Sent to a member when they create a team. */
   public void notifierCreationEquipe(User user, String nomEquipe) {
     createNotification(
         user, "Équipe créée : tu es maintenant responsable de l'équipe '" + nomEquipe + "'.");
   }
 
-  /** Envoyée au membre quand un tournoi est créé. */
+  /** Sent to a member when a tournament is created. */
   public void notifierCreationTournoi(User user, String nomTournoi) {
     createNotification(
         user,
         "Nouveau tournoi : '" + nomTournoi + "' vient d'être créé. Consulte la liste des tournois !");
   }
 
-  /** Envoyée au membre quand sa demande est envoyée. */
+  /** Sent to a member when their request is submitted. */
   public void notifierDemandEnvoyee(User user, String nomEquipe) {
     createNotification(
         user,
         "Demande envoyée : ta candidature pour rejoindre '" + nomEquipe + "' est en attente.");
   }
 
-  /** Envoyée au responsable principal quand une nouvelle candidature est reçue. */
+  /** Sent to the primary responsible user when a new application is received. */
   public void notifierNouvelleDemandeResponsable(
       User responsable, String tagCandidat, String nomEquipe) {
     createNotification(
@@ -146,14 +146,14 @@ public class NotificationService {
         "Nouvelle demande : " + tagCandidat + " souhaite rejoindre l'équipe '" + nomEquipe + "'.");
   }
 
-  /** Envoyée au membre quand sa demande est acceptée. */
+  /** Sent to a member when their request is accepted. */
   public void notifierDemandeAcceptee(User user, String nomEquipe) {
     createNotification(
         user,
         "Accepté : ta demande pour rejoindre '" + nomEquipe + "' a été acceptée. Bienvenue !");
   }
 
-  /** Envoyée au membre quand sa demande est refusée. */
+  /** Sent to a member when their request is rejected. */
   public void notifierDemandeRefusee(User user, String nomEquipe, String raison) {
     String raionAffichee =
         (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
@@ -165,14 +165,14 @@ public class NotificationService {
             + raionAffichee);
   }
 
-  /** Envoyée à l'admin quand un tournoi est créé en brouillon. */
+  /** Sent to admins when a tournament is created in draft state. */
   public void notifierCreationTournoiBrouillon(User admin, String nomTournoi) {
     createNotification(
         admin,
         "Admin : nouveau tournoi en brouillon '" + nomTournoi + "'. À publier quand prêt.");
   }
 
-  /** Envoyée à tous les joueurs quand un tournoi est publié. */
+  /** Sent to all players when a tournament is published. */
   public void notifierPublicationTournoi(User user, String nomTournoi) {
     createNotification(
         user,

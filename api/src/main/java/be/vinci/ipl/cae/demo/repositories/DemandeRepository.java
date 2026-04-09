@@ -20,7 +20,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    */
   Iterable<Demande> findByEquipeId(Long equipeId);
 
-  //   🔍 Trouver toutes les candidatures envoyées par un joueur spécifique
+  // Find all requests submitted by a specific player
 
   /**
    * Find all demands sent by one member.

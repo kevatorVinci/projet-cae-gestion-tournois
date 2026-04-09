@@ -35,21 +35,21 @@ public class NotificationController {
     this.notificationMapper = notificationMapper;
   }
 
-  /** Toutes les notifications d'un membre (lues + non lues), les plus récentes en premier. */
+  /** All notifications for a member (read + unread), newest first. */
   @GetMapping("/users/{userId}")
   public ResponseEntity<List<NotificationDto>> getAll(
       @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationMapper.toDtos(notificationService.getByUser(userId)));
   }
 
-  /** Uniquement les notifications non lues d'un membre. */
+  /** Only unread notifications for a member. */
   @GetMapping("/users/{userId}/non-lues")
   public ResponseEntity<List<NotificationDto>> getUnread(
       @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationMapper.toDtos(notificationService.getUnread(userId)));
   }
 
-  /** Marque une notification spécifique comme lue. */
+  /** Marks a specific notification as read. */
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<NotificationDto> markAsRead(
       @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
@@ -57,7 +57,7 @@ public class NotificationController {
         notificationMapper.toDto(notificationService.markAsRead(idNotification)));
   }
 
-  /** Marque toutes les notifications d'un membre comme lues. */
+  /** Marks all notifications for a member as read. */
   @PatchMapping("/users/{userId}/tous-lues")
   public ResponseEntity<Void> markAllAsRead(
       @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {

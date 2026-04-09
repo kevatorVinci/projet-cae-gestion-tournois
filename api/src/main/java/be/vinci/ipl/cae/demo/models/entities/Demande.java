@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Entité représentant une demande pour rejoindre une équipe. */
+/** Entity representing a request to join a team. */
 @Data
 @NoArgsConstructor
 @Entity
@@ -29,17 +29,17 @@ public class Demande {
   @Column(nullable = false)
   private LocalDateTime dateDemande = LocalDateTime.now();
 
-  // 🔗 Clé étrangère vers l'utilisateur (le postulant)
+  // Foreign key to the applicant user
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "membre_id", nullable = false)
   private User membre;
 
-  // 🔗 Clé étrangère vers l'équipe ciblée
+  // Foreign key to the target team
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "equipe_id", nullable = false)
   private Equipe equipe;
 
-  // 🚦 Le statut de la demande (Choix strict)
+  // Request status (strict enum)
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private EtatDemande etat = EtatDemande.EN_ATTENTE;
@@ -50,7 +50,7 @@ public class Demande {
   @Column(nullable = true)
   private LocalDateTime dateTraitement;
 
-  /** Liste stricte des états possibles pour une demande. */
+  /** Strict list of possible states for a request. */
   public enum EtatDemande {
     EN_ATTENTE,
     ACCEPTEE,

@@ -37,7 +37,7 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Récupère toutes les inscriptions pour un tournoi donné.
+    * Gets all registrations for a given tournament.
    */
   public Iterable<InscriptionEquipeTournoi> getAllByTournoi(Long tournoiId) {
     Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
@@ -48,7 +48,7 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Récupère toutes les inscriptions d'une équipe spécifique.
+    * Gets all registrations for a specific team.
    */
   public Iterable<InscriptionEquipeTournoi> getAllByEquipe(Long equipeId) {
     Equipe equipe = equipeRepository.findById(equipeId).orElse(null);
@@ -59,17 +59,17 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Inscrit une équipe à un tournoi.
-   * L'inscription est directe et définitive si le tournoi est OUVERT.
+    * Registers a team in a tournament.
+    * Registration is immediate and final when the tournament is OUVERT.
    *
-   * @param tournoiId l'ID du tournoi
-   * @param equipeId l'ID de l'équipe
-   * @return l'inscription créée, ou null si l'action est interdite
+    * @param tournoiId tournament ID
+    * @param equipeId team ID
+    * @return created registration, or null if action is not allowed
    */
   public InscriptionEquipeTournoi register(Long tournoiId, Long equipeId) {
     Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
     if (tournoi == null || !"OUVERT".equals(tournoi.getEtat())) {
-      return null; // Le tournoi n'existe pas ou n'est plus ouvert aux inscriptions
+      return null; // Tournament does not exist or is no longer open for registrations
     }
 
     Equipe equipe = equipeRepository.findById(equipeId).orElse(null);
@@ -82,19 +82,19 @@ public class InscriptionEquipeTournoiService {
           "Une équipe doit avoir au moins 4 membres pour s'inscrire à un tournoi.");
     }
 
-    // On bloque si l'équipe est déjà inscrite
+    // Block when the team is already registered
     if (inscriptionRepository.findByTournoiAndEquipe(tournoi, equipe).isPresent()) {
       return null;
     }
 
-    // On crée l'inscription
+    // Create the registration
     InscriptionEquipeTournoi inscription = new InscriptionEquipeTournoi();
     inscription.setTournoi(tournoi);
     inscription.setEquipe(equipe);
     inscription.setDateInscription(LocalDate.now());
 
-    // (Note: Si ton entité InscriptionEquipeTournoi possède encore le champ 'etat',
-    // tu devrais le supprimer du fichier InscriptionEquipeTournoi.java)
+    // (Note: If InscriptionEquipeTournoi still has an 'etat' field,
+    // remove it from InscriptionEquipeTournoi.java)
 
     InscriptionEquipeTournoi saved = inscriptionRepository.save(inscription);
 
@@ -108,11 +108,11 @@ public class InscriptionEquipeTournoiService {
       notificationService.createNotification(membre, message);
     }
 
-    // ── Clôture automatique si le tournoi est plein ──
+    // Automatic closure when tournament reaches capacity
     if (tournoi.getNombresParticipantsMax() != null) {
       Collection<?> inscrits = (Collection<?>) inscriptionRepository.findByTournoi(tournoi);
       if (inscrits.size() >= tournoi.getNombresParticipantsMax()) {
-        tournoiService.closeRegistrations(tournoi.getId()); // Le tournoi passe en CLOTURE
+        tournoiService.closeRegistrations(tournoi.getId()); // Tournament moves to CLOTURE
       }
     }
 
@@ -120,11 +120,11 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Désinscrit une équipe d'un tournoi (supprime l'inscription en base de données).
-   * Autorisé uniquement quand le tournoi est encore OUVERT et avant la date limite.
+    * Unregisters a team from a tournament (deletes the registration row).
+    * Allowed only while the tournament is still OUVERT and before the deadline.
    *
-   * @param inscriptionId l'ID de l'inscription à supprimer
-   * @return true si la désinscription a réussi, false sinon
+    * @param inscriptionId registration ID to delete
+    * @return true if unregistration succeeded, false otherwise
    */
   public boolean unregister(Long inscriptionId) {
     InscriptionEquipeTournoi inscription =
@@ -138,15 +138,15 @@ public class InscriptionEquipeTournoiService {
       return false;
     }
 
-    // 3. Désinscription propre : on supprime physiquement la ligne
+    // Clean unregistration: physically delete the row
     inscriptionRepository.delete(inscription);
 
     return true;
   }
 
   /**
-   * Désinscrit une équipe d'un tournoi via la clé logique (tournoiId, equipeId).
-   * Autorisé uniquement quand le tournoi est encore OUVERT et avant la date limite.
+    * Unregisters a team from a tournament using the logical key (tournoiId, equipeId).
+    * Allowed only while the tournament is still OUVERT and before the deadline.
    */
   public boolean unregisterByTournoiAndEquipe(Long tournoiId, Long equipeId) {
     Tournoi tournoi = tournoiRepository.findById(tournoiId).orElse(null);
@@ -171,7 +171,7 @@ public class InscriptionEquipeTournoiService {
   }
 
   /**
-   * Récupère une inscription par son ID.
+    * Gets a registration by its ID.
    */
   public InscriptionEquipeTournoi getById(Long inscriptionId) {
     return inscriptionRepository.findById(inscriptionId).orElse(null);
@@ -192,7 +192,7 @@ public class InscriptionEquipeTournoiService {
     if (tournoi.getDateLimiteInscription() != null
         && tournoi.getDateLimiteInscription().isBefore(LocalDate.now())) {
       if (logIfDeadlinePassed) {
-        System.out.println("❌ Désinscription refusée : La date limite du tournoi est dépassée.");
+        System.out.println("Unregistration denied: tournament deadline has passed.");
       }
       return false;
     }

@@ -36,7 +36,7 @@ public class TournoiService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // REQUÊTES DE LECTURE
+  // READ QUERIES
   // ═══════════════════════════════════════════════════════════════════
 
   /** Returns all public tournaments excluding BROUILLON. */
@@ -78,7 +78,7 @@ public class TournoiService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // CRÉATION ET MODIFICATION (BROUILLON)
+  // CREATE AND UPDATE (BROUILLON)
   // ═══════════════════════════════════════════════════════════════════
 
   /** Creates a tournament in BROUILLON state if the name is unique. */
@@ -89,7 +89,7 @@ public class TournoiService {
     tournoi.setEtat("BROUILLON");
     Tournoi saved = tournoiRepository.save(tournoi);
 
-    // Notifier seulement les admins
+    // Notify admins only
     Iterable<User> admins = userRepository.findAll();
     for (User user : admins) {
       if (user.isAdmin()) {
@@ -129,7 +129,7 @@ public class TournoiService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // CYCLE DE VIE DU TOURNOI
+  // TOURNAMENT LIFECYCLE
   // ═══════════════════════════════════════════════════════════════════
 
   /** Publishes a tournament (BROUILLON -> OUVERT). */
@@ -141,7 +141,7 @@ public class TournoiService {
     tournoi.setEtat("OUVERT");
     Tournoi saved = tournoiRepository.save(tournoi);
 
-    // Notifier tous les utilisateurs de la publication
+    // Notify all users about publication
     Iterable<User> users = userRepository.findAll();
     for (User user : users) {
       notificationService.notifierPublicationTournoi(user, saved.getNom());
@@ -151,8 +151,8 @@ public class TournoiService {
   }
 
   /**
-   * Clôture manuelle par un Admin (OUVERT → CLOTURE).
-   * Nécessite un minimum de 2 équipes inscrites.
+    * Manual closure by an admin (OUVERT -> CLOTURE).
+    * Requires at least 2 registered teams.
    */
   public Tournoi closeRegistrations(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
@@ -160,11 +160,11 @@ public class TournoiService {
       return null;
     }
 
-    // On compte le nombre d'inscrits
+    // Count registered teams
     Iterable<InscriptionEquipeTournoi> inscrits = inscriptionService.getAllByTournoi(id);
     long count = countInscriptions(inscrits);
 
-    // Règle métier : 2 équipes minimum pour clôturer manuellement
+    // Business rule: at least 2 teams are required for manual closure
     if (count < 2) {
       return null;
     }
@@ -174,14 +174,14 @@ public class TournoiService {
   }
 
   /**
-   * Démarre le tournoi (CLOTURE → EN_COURS).
+    * Starts the tournament (CLOTURE -> EN_COURS).
    */
   public Tournoi start(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
     if (tournoi == null || !"CLOTURE".equals(tournoi.getEtat())) {
       return null;
     }
-    // Plus besoin de gérer les "EN_ATTENTE", on passe juste en cours !
+    // No need to manage "EN_ATTENTE" anymore, move directly to EN_COURS.
     tournoi.setEtat("EN_COURS");
     return tournoiRepository.save(tournoi);
   }
@@ -216,12 +216,12 @@ public class TournoiService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // TÂCHES AUTOMATIQUES (CRON)
+  // AUTOMATED TASKS (CRON)
   // ═══════════════════════════════════════════════════════════════════
 
   /**
-   * S'exécute automatiquement tous les jours à minuit.
-   * Vérifie les dates limites d'inscription des tournois ouverts.
+    * Runs automatically every day at midnight.
+    * Checks registration deadlines for open tournaments.
    */
   @Scheduled(cron = "0 0 0 * * *")
   public void verifierEtCloturerTournoisExpires() {
@@ -233,7 +233,7 @@ public class TournoiService {
     for (Tournoi tournoi : tousLesTournois) {
       if ("OUVERT".equals(tournoi.getEtat()) && tournoi.getDateLimiteInscription() != null) {
 
-        // Si la date limite est strictement dépassée
+        // If the registration deadline is strictly in the past
         if (tournoi.getDateLimiteInscription().isBefore(aujourdHui)) {
 
           Iterable<InscriptionEquipeTournoi> inscrits =
