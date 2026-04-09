@@ -31,7 +31,7 @@ public class DemandeMapper {
         demande.getRaisonRefus());
   }
 
-        /** Converts a collection of join requests into DTOs. */
+  /** Converts a collection of join requests into DTOs. */
   public List<DemandeDto> toDtos(Iterable<Demande> demandes) {
     List<DemandeDto> result = new ArrayList<>();
     for (Demande demande : demandes) {

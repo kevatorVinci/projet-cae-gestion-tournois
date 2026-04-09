@@ -52,10 +52,9 @@ public class NotificationService {
    * @return updated notification
    */
   public Notification markAsRead(Long idNotification) {
-    Notification n =
-        notificationRepository
-            .findById(idNotification)
-            .orElseThrow(() -> new RuntimeException("Notification introuvable"));
+    Notification n = notificationRepository
+        .findById(idNotification)
+        .orElseThrow(() -> new RuntimeException("Notification introuvable"));
     n.setEstLue(true);
     return notificationRepository.save(n);
   }
@@ -66,8 +65,7 @@ public class NotificationService {
    * @param userId user id
    */
   public void markAllAsRead(Long userId) {
-    List<Notification> unread =
-        notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
+    List<Notification> unread = notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
     unread.forEach(n -> n.setEstLue(true));
     notificationRepository.saveAll(unread);
   }
@@ -97,7 +95,7 @@ public class NotificationService {
   /**
    * Creates one notification message.
    *
-   * @param user recipient
+   * @param user    recipient
    * @param message notification text
    * @return persisted notification
    */
@@ -155,8 +153,7 @@ public class NotificationService {
 
   /** Sent to a member when their request is rejected. */
   public void notifierDemandeRefusee(User user, String nomEquipe, String raison) {
-    String raionAffichee =
-        (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
+    String raionAffichee = (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
     createNotification(
         user,
         "Refus : ta demande pour rejoindre '"

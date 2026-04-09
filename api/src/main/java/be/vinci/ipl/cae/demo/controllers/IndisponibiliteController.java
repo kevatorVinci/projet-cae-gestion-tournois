@@ -23,19 +23,19 @@ public class IndisponibiliteController {
   private final IndisponibiliteRepository indisponibiliteRepository;
 
   /**
-    * Builds the controller.
+   * Builds the controller.
    *
-    * @param indisponibiliteRepository blackout-period repository
+   * @param indisponibiliteRepository blackout-period repository
    */
   public IndisponibiliteController(IndisponibiliteRepository indisponibiliteRepository) {
     this.indisponibiliteRepository = indisponibiliteRepository;
   }
 
   /**
-    * Gets all blackout periods for the authenticated user.
+   * Gets all blackout periods for the authenticated user.
    *
-    * @param currentUser authenticated user
-    * @return list of periods
+   * @param currentUser authenticated user
+   * @return list of periods
    */
   @GetMapping
   public Iterable<Indisponibilite> getMesIndisponibilites(
@@ -45,11 +45,11 @@ public class IndisponibiliteController {
   }
 
   /**
-    * Saves a new blackout period.
+   * Saves a new blackout period.
    *
-    * @param currentUser authenticated user
-    * @param indisponibilite new period sent by the frontend
-    * @return saved period
+   * @param currentUser     authenticated user
+   * @param indisponibilite new period sent by the frontend
+   * @return saved period
    */
   @PostMapping
   public Indisponibilite addIndisponibilite(
@@ -62,23 +62,21 @@ public class IndisponibiliteController {
   }
 
   /**
-    * Deletes a blackout period by ID.
+   * Deletes a blackout period by ID.
    *
-    * @param id period identifier
-    * @param currentUser authenticated user
+   * @param id          period identifier
+   * @param currentUser authenticated user
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
       @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
 
-    Indisponibilite indisponibilite =
-        indisponibiliteRepository
-            .findById(id)
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+    Indisponibilite indisponibilite = indisponibiliteRepository
+        .findById(id)
+        .orElseThrow(
+            () -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
 
     if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
       throw new ResponseStatusException(

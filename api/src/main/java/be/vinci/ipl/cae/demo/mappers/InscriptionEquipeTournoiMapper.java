@@ -22,11 +22,13 @@ public class InscriptionEquipeTournoiMapper {
     return new TournoiEquipeInscriptionDto(
         inscription.getEquipe().getId(),
         inscription.getEquipe().getName(),
-      inscription.getEquipe().getProfileImage(),
+        inscription.getEquipe().getProfileImage(),
         inscription.getDateInscription());
   }
 
-        /** Converts multiple inscriptions to public tournament team inscription DTOs. */
+  /**
+   * Converts multiple inscriptions to public tournament team inscription DTOs.
+   */
   public List<TournoiEquipeInscriptionDto> toTournoiEquipeInscriptionDtos(
       Iterable<InscriptionEquipeTournoi> inscriptions) {
     List<TournoiEquipeInscriptionDto> result = new ArrayList<>();
@@ -57,7 +59,7 @@ public class InscriptionEquipeTournoiMapper {
         tournoi);
   }
 
-        /** Converts multiple inscriptions to team registration DTOs. */
+  /** Converts multiple inscriptions to team registration DTOs. */
   public List<EquipeTournamentRegistrationDto> toEquipeTournamentRegistrationDtos(
       Iterable<InscriptionEquipeTournoi> inscriptions) {
     List<EquipeTournamentRegistrationDto> result = new ArrayList<>();

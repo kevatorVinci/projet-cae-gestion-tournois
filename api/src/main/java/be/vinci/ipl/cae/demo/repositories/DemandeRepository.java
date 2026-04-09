@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repository for Demande (join requests) entities. Provides database access for managing team join
+ * Repository for Demande (join requests) entities. Provides database access for
+ * managing team join
  * requests.
  */
 @Repository
@@ -34,7 +35,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    * Find team demands by state.
    *
    * @param equipeId team id
-   * @param etat target state
+   * @param etat     target state
    * @return matching demands
    */
   Iterable<Demande> findByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
@@ -44,7 +45,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    *
    * @param membreId member id
    * @param equipeId team id
-   * @param etat target state
+   * @param etat     target state
    * @return true when a matching demand exists
    */
   boolean existsByMembreIdAndEquipeIdAndEtat(Long membreId, Long equipeId, EtatDemande etat);
@@ -53,7 +54,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    * Deletes team demands by state.
    *
    * @param equipeId team id
-   * @param etat state to delete
+   * @param etat     state to delete
    */
   void deleteByEquipeIdAndEtat(Long equipeId, EtatDemande etat);
 
@@ -61,7 +62,7 @@ public interface DemandeRepository extends JpaRepository<Demande, Long> {
    * Deletes member demands by state.
    *
    * @param membreId member id
-   * @param etat state to delete
+   * @param etat     state to delete
    */
   void deleteByMembreIdAndEtat(Long membreId, EtatDemande etat);
 }

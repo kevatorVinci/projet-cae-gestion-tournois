@@ -29,11 +29,11 @@ public class SecurityConfiguration {
   }
 
   /**
-    * Configures server security rules (who can access which endpoints).
+   * Configures server security rules (who can access which endpoints).
    *
-    * @param http Spring Security configuration object
-    * @return configured security filter chain
-    * @throws Exception if an error occurs during configuration
+   * @param http Spring Security configuration object
+   * @return configured security filter chain
+   * @throws Exception if an error occurs during configuration
    */
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -45,22 +45,20 @@ public class SecurityConfiguration {
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers("/auths/**")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/equipes/**")
-                    .permitAll()
-                  .requestMatchers(HttpMethod.GET, "/tournois/**")
-                  .permitAll()
-                    .requestMatchers("/indisponibilites", "/indisponibilites/**")
-                    .authenticated()
-                    .anyRequest()
-                    .authenticated())
+            auth -> auth.requestMatchers("/auths/**")
+                .permitAll()
+                .requestMatchers(HttpMethod.GET, "/equipes/**")
+                .permitAll()
+                .requestMatchers(HttpMethod.GET, "/tournois/**")
+                .permitAll()
+                .requestMatchers("/indisponibilites", "/indisponibilites/**")
+                .authenticated()
+                .anyRequest()
+                .authenticated())
         .addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(
-            ex ->
-                ex.authenticationEntryPoint(
-                    (request, response, authException) -> response.sendError(401, "Unauthorized")))
+            ex -> ex.authenticationEntryPoint(
+                (request, response, authException) -> response.sendError(401, "Unauthorized")))
         .build();
   }
 }

@@ -10,10 +10,10 @@ import org.springframework.stereotype.Repository;
 public interface IndisponibiliteRepository extends CrudRepository<Indisponibilite, Long> {
 
   /**
-    * Finds all unavailable periods for a specific player.
+   * Finds all unavailable periods for a specific player.
    *
-    * @param user target player
-    * @return list of unavailable periods
+   * @param user target player
+   * @return list of unavailable periods
    */
   Iterable<Indisponibilite> findByUser(User user);
 }

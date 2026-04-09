@@ -62,7 +62,10 @@ public class InscriptionEquipeTournoiController {
     return inscriptionMapper.toTournoiEquipeInscriptionDtos(inscriptions);
   }
 
-  /** Returns all registrations for one team. Accessible to responsible users or admins. */
+  /**
+   * Returns all registrations for one team. Accessible to responsible users or
+   * admins.
+   */
   @GetMapping("/equipes/{equipeId}/inscriptions")
   @IsAdminOrResponsable
   public Iterable<EquipeTournamentRegistrationDto> getAllByEquipe(
@@ -76,7 +79,9 @@ public class InscriptionEquipeTournoiController {
     return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
   }
 
-  /** Returns publicly visible registrations for one team (player profile view). */
+  /**
+   * Returns publicly visible registrations for one team (player profile view).
+   */
   @GetMapping("/equipes/{equipeId}/inscriptions/public")
   public Iterable<EquipeTournamentRegistrationDto> getPublicByEquipe(
       @PathVariable Long equipeId) {
@@ -87,7 +92,9 @@ public class InscriptionEquipeTournoiController {
     return inscriptionMapper.toEquipeTournamentRegistrationDtos(inscriptions);
   }
 
-  /** Registers a team for a tournament. Reserved for the team's responsible user. */
+  /**
+   * Registers a team for a tournament. Reserved for the team's responsible user.
+   */
   @PostMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @ResponseStatus(HttpStatus.CREATED)
   @IsResponsable
@@ -111,9 +118,11 @@ public class InscriptionEquipeTournoiController {
   }
 
   /**
-   * Unregisters a team from a tournament using the logical key (tournoiId, equipeId).
+   * Unregisters a team from a tournament using the logical key (tournoiId,
+   * equipeId).
    *
-   * <p>This endpoint is currently not used by the frontend application.
+   * <p>
+   * This endpoint is currently not used by the frontend application.
    */
   @DeleteMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @IsAdminOrResponsable
@@ -140,7 +149,8 @@ public class InscriptionEquipeTournoiController {
   /**
    * Unregisters a team from a tournament using the registration ID.
    *
-   * <p>This endpoint is currently not used by the frontend application.
+   * <p>
+   * This endpoint is currently not used by the frontend application.
    */
   @DeleteMapping("/inscriptions/{inscriptionId}")
   @IsAdminOrResponsable

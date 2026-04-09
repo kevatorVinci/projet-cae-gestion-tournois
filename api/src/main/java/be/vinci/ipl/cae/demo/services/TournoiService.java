@@ -151,8 +151,8 @@ public class TournoiService {
   }
 
   /**
-    * Manual closure by an admin (OUVERT -> CLOTURE).
-    * Requires at least 2 registered teams.
+   * Manual closure by an admin (OUVERT -> CLOTURE).
+   * Requires at least 2 registered teams.
    */
   public Tournoi closeRegistrations(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
@@ -174,7 +174,7 @@ public class TournoiService {
   }
 
   /**
-    * Starts the tournament (CLOTURE -> EN_COURS).
+   * Starts the tournament (CLOTURE -> EN_COURS).
    */
   public Tournoi start(Long id) {
     Tournoi tournoi = tournoiRepository.findById(id).orElse(null);
@@ -220,8 +220,8 @@ public class TournoiService {
   // ═══════════════════════════════════════════════════════════════════
 
   /**
-    * Runs automatically every day at midnight.
-    * Checks registration deadlines for open tournaments.
+   * Runs automatically every day at midnight.
+   * Checks registration deadlines for open tournaments.
    */
   @Scheduled(cron = "0 0 0 * * *")
   public void verifierEtCloturerTournoisExpires() {
@@ -236,8 +236,7 @@ public class TournoiService {
         // If the registration deadline is strictly in the past
         if (tournoi.getDateLimiteInscription().isBefore(aujourdHui)) {
 
-          Iterable<InscriptionEquipeTournoi> inscrits =
-              inscriptionService.getAllByTournoi(tournoi.getId());
+          Iterable<InscriptionEquipeTournoi> inscrits = inscriptionService.getAllByTournoi(tournoi.getId());
           long nbEquipes = countInscriptions(inscrits);
 
           if (nbEquipes >= 2) {
