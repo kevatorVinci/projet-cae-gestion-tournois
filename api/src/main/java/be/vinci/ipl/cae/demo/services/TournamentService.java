@@ -93,7 +93,7 @@ public class TournamentService {
     Iterable<User> admins = userRepository.findAll();
     for (User user : admins) {
       if (user.isAdmin()) {
-        notificationService.notifierCreationTournoiBrouillon(user, saved.getNom());
+        notificationService.notifyDraftTournamentCreation(user, saved.getNom());
       }
     }
 
@@ -144,7 +144,7 @@ public class TournamentService {
     // Notify all users about publication
     Iterable<User> users = userRepository.findAll();
     for (User user : users) {
-      notificationService.notifierPublicationTournoi(user, saved.getNom());
+      notificationService.notifyTournamentPublished(user, saved.getNom());
     }
 
     return saved;
@@ -224,7 +224,7 @@ public class TournamentService {
    * Checks registration deadlines for open tournaments.
    */
   @Scheduled(cron = "0 0 0 * * *")
-  public void verifierEtCloturerTournoisExpires() {
+  public void checkAndCloseExpiredTournaments() {
     System.out.println(" Vérification automatique des dates de tournois...");
     LocalDate aujourdHui = LocalDate.now();
 

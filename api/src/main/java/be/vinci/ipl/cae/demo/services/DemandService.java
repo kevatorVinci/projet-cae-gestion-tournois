@@ -56,7 +56,7 @@ public class DemandService {
    *                          exist, or the player
    *                          already belongs to a team
    */
-  public Demand creerDemande(Long membreId, Long equipeId) {
+  public Demand createJoinRequest(Long membreId, Long equipeId) {
     User membre = userRepo
         .findById(membreId)
         .orElseThrow(() -> new RuntimeException("Joueur introuvable"));
@@ -88,9 +88,9 @@ public class DemandService {
     demande.setEtat(EtatDemande.EN_ATTENTE);
 
     Demand savedDemande = demandeRepo.save(demande);
-    notificationService.notifierDemandEnvoyee(membre, equipe.getName());
+    notificationService.sendApplicationNotification(membre, equipe.getName());
     if (equipe.getResponsablePrincipal() != null) {
-      notificationService.notifierNouvelleDemandeResponsable(
+      notificationService.notifyNewRequestToManager(
           equipe.getResponsablePrincipal(), membre.getTag(), equipe.getName());
     }
     return savedDemande;
@@ -182,7 +182,7 @@ public class DemandService {
     // THEN remove other pending requests for this user
     demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
 
-    notificationService.notifierDemandeAcceptee(user, equipe.getName());
+    notificationService.notifyRequestAccepted(user, equipe.getName());
     return savedDemande;
   }
 
@@ -197,7 +197,7 @@ public class DemandService {
    * @throws RuntimeException if the specified request does not exist
    */
   @Transactional
-  public Demand refuserDemande(Long demandeId, String raison, User currentUser) {
+  public Demand rejectDemand(Long demandeId, String raison, User currentUser) {
     Demand demande = getAndVerifyDemande(demandeId, currentUser);
     String raisonNormalisee = (raison == null || raison.isBlank())
         ? "Aucune raison precisee."
@@ -208,7 +208,7 @@ public class DemandService {
     demande.setDateTraitement(LocalDateTime.now());
 
     Demand savedDemande = demandeRepo.save(demande);
-    notificationService.notifierDemandeRefusee(
+    notificationService.notifyRequestDenied(
         demande.getMembre(), demande.getEquipe().getName(), raisonNormalisee);
     return savedDemande;
   }

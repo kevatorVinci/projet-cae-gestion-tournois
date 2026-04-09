@@ -116,7 +116,7 @@ public class NotificationService {
   /**
    * Envoyée au membre quand il crée son compte.
    */
-  public void notifierCreationCompte(User user) {
+  public void notifyAccountCreation(User user) {
     createNotification(
         user,
         "Bienvenue : ton compte a bien été créé. Rejoins ou crée une équipe pour commencer !");
@@ -125,7 +125,7 @@ public class NotificationService {
   /**
    * Envoyée au membre quand il crée une équipe.
    */
-  public void notifierCreationEquipe(User user, String nomEquipe) {
+  public void notifyTeamCreation(User user, String nomEquipe) {
     createNotification(
         user, "Équipe créée : tu es maintenant responsable de l'équipe '" + nomEquipe + "'.");
   }
@@ -133,7 +133,7 @@ public class NotificationService {
   /**
    * Envoyée au membre quand sa demande est envoyée.
    */
-  public void notifierDemandEnvoyee(User user, String nomEquipe) {
+  public void sendApplicationNotification(User user, String nomEquipe) {
     createNotification(
         user,
         "Demande envoyée : ta candidature pour rejoindre '" + nomEquipe + "' est en attente.");
@@ -142,7 +142,7 @@ public class NotificationService {
   /**
    * Envoyée au responsable principal quand une nouvelle candidature est reçue.
    */
-  public void notifierNouvelleDemandeResponsable(
+  public void notifyNewRequestToManager(
       User responsable, String tagCandidat, String nomEquipe) {
     createNotification(
         responsable,
@@ -152,7 +152,7 @@ public class NotificationService {
   /**
    * Envoyée au membre quand sa demande est acceptée.
    */
-  public void notifierDemandeAcceptee(User user, String nomEquipe) {
+  public void notifyRequestAccepted(User user, String nomEquipe) {
     createNotification(
         user,
         "Accepté : ta demande pour rejoindre '" + nomEquipe + "' a été acceptée. Bienvenue !");
@@ -161,7 +161,7 @@ public class NotificationService {
   /**
    * Envoyée au membre quand sa demande est refusée.
    */
-  public void notifierDemandeRefusee(User user, String nomEquipe, String raison) {
+  public void notifyRequestDenied(User user, String nomEquipe, String raison) {
     String raionAffichee = (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
     createNotification(
         user,
@@ -174,7 +174,7 @@ public class NotificationService {
   /**
    * Sent to admins when a tournament is created in draft state.
    */
-  public void notifierCreationTournoiBrouillon(User admin, String nomTournoi) {
+  public void notifyDraftTournamentCreation(User admin, String nomTournoi) {
     createNotification(
         admin,
         "Admin : nouveau tournoi en brouillon '"
@@ -185,7 +185,7 @@ public class NotificationService {
   /**
    * Sent to all players when a tournament is published.
    */
-  public void notifierPublicationTournoi(User user, String nomTournoi) {
+  public void notifyTournamentPublished(User user, String nomTournoi) {
     createNotification(
         user,
         "Nouveau tournoi : '"

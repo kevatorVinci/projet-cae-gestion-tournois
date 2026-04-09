@@ -83,7 +83,7 @@ public class DemandController {
       @AuthenticationPrincipal User currentUser) {
     try {
       String raisonRefus = (body != null) ? body.get("raisonRefus") : null;
-      demandeService.refuserDemande(demandeId, raisonRefus, currentUser);
+      demandeService.rejectDemand(demandeId, raisonRefus, currentUser);
     } catch (RuntimeException e) {
       handleDemandeException(e);
     }

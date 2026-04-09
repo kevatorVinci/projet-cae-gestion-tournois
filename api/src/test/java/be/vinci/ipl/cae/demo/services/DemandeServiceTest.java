@@ -83,7 +83,7 @@ class DemandeServiceTest {
     when(equipeRepo.findById(10L)).thenReturn(Optional.of(equipe));
     when(demandeRepo.save(any())).thenReturn(demande);
 
-    Demand result = demandeService.creerDemande(2L, 10L);
+    Demand result = demandeService.createJoinRequest(2L, 10L);
 
     assertNotNull(result);
     assertEquals(EtatDemande.EN_ATTENTE, result.getEtat());
@@ -97,7 +97,7 @@ class DemandeServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(membre));
     when(equipeRepo.findById(10L)).thenReturn(Optional.of(equipe));
 
-    assertThrows(RuntimeException.class, () -> demandeService.creerDemande(2L, 10L));
+    assertThrows(RuntimeException.class, () -> demandeService.createJoinRequest(2L, 10L));
     verify(demandeRepo, never()).save(any());
   }
 
@@ -105,7 +105,7 @@ class DemandeServiceTest {
   void creerDemande_membreInexistant_throwsRuntime() {
     when(userRepo.findById(99L)).thenReturn(Optional.empty());
 
-    assertThrows(RuntimeException.class, () -> demandeService.creerDemande(99L, 10L));
+    assertThrows(RuntimeException.class, () -> demandeService.createJoinRequest(99L, 10L));
   }
 
   @Test
@@ -113,12 +113,13 @@ class DemandeServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(membre));
     when(equipeRepo.findById(99L)).thenReturn(Optional.empty());
 
-    assertThrows(RuntimeException.class, () -> demandeService.creerDemande(2L, 99L));
+    assertThrows(RuntimeException.class, () -> demandeService.createJoinRequest(2L, 99L));
   }
 
   @Test
   void creerDemande_equipeSansResponsable_throwsRuntime() {
-    // Règle : une team sans responsable ne peut plus accueillir de nouveaux membres (PrécisionsV1
+    // Règle : une team sans responsable ne peut plus accueillir de nouveaux membres
+    // (PrécisionsV1
     // p.2)
     equipe.setResponsablePrincipal(null);
     equipe.setResponsableSecondaire(null);
@@ -126,7 +127,7 @@ class DemandeServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(membre));
     when(equipeRepo.findById(10L)).thenReturn(Optional.of(equipe));
 
-    assertThrows(RuntimeException.class, () -> demandeService.creerDemande(2L, 10L));
+    assertThrows(RuntimeException.class, () -> demandeService.createJoinRequest(2L, 10L));
     verify(demandeRepo, never()).save(any());
   }
 
@@ -206,7 +207,8 @@ class DemandeServiceTest {
 
   @Test
   void accepterDemande_responsableSecondaire_OK() {
-    // Règle : responsable principal et secondaire ont les MÊMES droits (PrécisionsV1 p.1)
+    // Règle : responsable principal et secondaire ont les MÊMES droits
+    // (PrécisionsV1 p.1)
     User respSecondaire = new User();
     respSecondaire.setId(3L);
     equipe.setResponsableSecondaire(respSecondaire);
@@ -229,7 +231,7 @@ class DemandeServiceTest {
     when(demandeRepo.findById(100L)).thenReturn(Optional.of(demande));
     when(demandeRepo.save(any())).thenReturn(demande);
 
-    Demand result = demandeService.refuserDemande(100L, "Niveau insuffisant", responsable);
+    Demand result = demandeService.rejectDemand(100L, "Niveau insuffisant", responsable);
 
     assertEquals(EtatDemande.REFUSEE, result.getEtat());
     assertEquals("Niveau insuffisant", result.getRaisonRefus());
@@ -238,7 +240,8 @@ class DemandeServiceTest {
 
   @Test
   void refuserDemande_responsableSecondaire_OK() {
-    // Règle : responsable principal et secondaire ont les MÊMES droits (PrécisionsV1 p.1)
+    // Règle : responsable principal et secondaire ont les MÊMES droits
+    // (PrécisionsV1 p.1)
     User respSecondaire = new User();
     respSecondaire.setId(3L);
     equipe.setResponsableSecondaire(respSecondaire);
@@ -247,7 +250,7 @@ class DemandeServiceTest {
     when(demandeRepo.save(any())).thenReturn(demande);
 
     assertDoesNotThrow(
-        () -> demandeService.refuserDemande(100L, "Manque d'expérience", respSecondaire));
+        () -> demandeService.rejectDemand(100L, "Manque d'expérience", respSecondaire));
   }
 
   @Test
@@ -255,7 +258,7 @@ class DemandeServiceTest {
     when(demandeRepo.findById(100L)).thenReturn(Optional.of(demande));
 
     assertThrows(
-        SecurityException.class, () -> demandeService.refuserDemande(100L, "raison", membre));
+        SecurityException.class, () -> demandeService.rejectDemand(100L, "raison", membre));
   }
 
   @Test
@@ -263,7 +266,7 @@ class DemandeServiceTest {
     when(demandeRepo.findById(999L)).thenReturn(Optional.empty());
 
     assertThrows(
-        RuntimeException.class, () -> demandeService.refuserDemande(999L, "raison", responsable));
+        RuntimeException.class, () -> demandeService.rejectDemand(999L, "raison", responsable));
   }
 
   @Test
@@ -272,7 +275,7 @@ class DemandeServiceTest {
     when(demandeRepo.findById(100L)).thenReturn(Optional.of(demande));
     when(demandeRepo.save(any())).thenReturn(demande);
 
-    demandeService.refuserDemande(100L, "Raison", responsable);
+    demandeService.rejectDemand(100L, "Raison", responsable);
 
     assertNull(membre.getEquipe()); // le membre reste sans équipe
     verify(userRepo, never()).save(any());

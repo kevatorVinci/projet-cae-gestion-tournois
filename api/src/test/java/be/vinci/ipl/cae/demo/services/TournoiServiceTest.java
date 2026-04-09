@@ -75,7 +75,7 @@ class TournoiServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.getEtat()).isEqualTo("BROUILLON");
     // Seulement les 2 admins reçoivent la notif, pas Bob
-    verify(notificationService, times(2)).notifierCreationTournoiBrouillon(any(User.class), any());
+    verify(notificationService, times(2)).notifyDraftTournamentCreation(any(User.class), any());
   }
 
   @Test
@@ -87,7 +87,7 @@ class TournoiServiceTest {
 
     assertThat(result).isNull();
     verify(tournoiRepository, never()).save(any());
-    verify(notificationService, never()).notifierCreationTournoiBrouillon(any(User.class), any());
+    verify(notificationService, never()).notifyDraftTournamentCreation(any(User.class), any());
   }
 
   @Test
@@ -113,6 +113,6 @@ class TournoiServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.getEtat()).isEqualTo("OUVERT");
     // Les 3 utilisateurs reçoivent la notif (admins inclus)
-    verify(notificationService, times(3)).notifierPublicationTournoi(any(User.class), any());
+    verify(notificationService, times(3)).notifyTournamentPublished(any(User.class), any());
   }
 }

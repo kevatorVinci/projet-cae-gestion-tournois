@@ -162,7 +162,7 @@ public class UserService {
 
     // Persist user
     User savedUser = userRepository.save(user);
-    notificationService.notifierCreationCompte(savedUser);
+    notificationService.notifyAccountCreation(savedUser);
     return savedUser;
   }
 
@@ -303,7 +303,7 @@ public class UserService {
           .filter(member -> !member.isBanned())
           .min(
               Comparator.comparing(
-                      User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                  User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
                   .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
           .orElse(null);
 
