@@ -1,8 +1,16 @@
 package be.vinci.ipl.cae.demo.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -21,12 +29,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class EquipeServiceTest {
 
-  @Mock private TeamRepository equipeRepository;
-  @Mock private UserRepository userRepository;
-  @Mock private DemandService demandService;
-  @Mock private NotificationService notificationService;
+  @Mock
+  private TeamRepository equipeRepository;
+  @Mock
+  private UserRepository userRepository;
+  @Mock
+  private DemandService demandService;
+  @Mock
+  private NotificationService notificationService;
 
-  @InjectMocks private TeamService equipeService;
+  @InjectMocks
+  private TeamService equipeService;
 
   private User responsable;
   private User membre;
@@ -34,8 +47,8 @@ class EquipeServiceTest {
   private Team equipe;
 
   /**
-   * Sets up the initial data before each test.
-   * Initializes users and a default team.
+   * Sets up the initial data before each test. Initializes users and a default
+   * team.
    */
   @BeforeEach
   void setUp() {
@@ -110,17 +123,20 @@ class EquipeServiceTest {
 
   // ═══════════════════════════════════════════════════════════════════
   // creerEquipe
-  // Rule: the creator automatically becomes the primary responsible (Statement p.2)
+  // Rule: the creator automatically becomes the primary responsible (Statement
+  // p.2)
   // Rule: two teams cannot have the same name (ClarificationsV2 p.2)
   // Rule: a member can only belong to 1 team (Statement p.3)
   // ═══════════════════════════════════════════════════════════════════
 
   /**
-   * Tests if the creator correctly becomes the primary responsible when a team is created.
+   * Tests if the creator correctly becomes the primary responsible when a team is
+   * created.
    */
   @Test
   void creerEquipe_creator_becomesPrimaryResponsible() {
-    // Rule: when creating a team, the member automatically becomes the responsible (Statement p.2)
+    // Rule: when creating a team, the member automatically becomes the responsible
+    // (Statement p.2)
     User userSansEquipe = new User();
     userSansEquipe.setId(5L);
     userSansEquipe.setEquipe(null);
@@ -163,8 +179,8 @@ class EquipeServiceTest {
     // Rule: a member can only belong to 1 team at a time (Statement p.3)
     // ✨ FIX: Added "default.jpg" as the third parameter
     assertThrows(
-            IllegalStateException.class,
-            () -> equipeService.creerEquipe(responsable, "NouvelleEquipe", "default.jpg"));
+        IllegalStateException.class,
+        () -> equipeService.creerEquipe(responsable, "NouvelleEquipe", "default.jpg"));
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -258,7 +274,7 @@ class EquipeServiceTest {
     equipe.setResponsableSecondaire(membre);
 
     assertThrows(
-            IllegalStateException.class, () -> equipeService.promouvoirResponsable(responsable, 3L));
+        IllegalStateException.class, () -> equipeService.promouvoirResponsable(responsable, 3L));
   }
 
   /**
@@ -269,7 +285,7 @@ class EquipeServiceTest {
     equipe.setResponsableSecondaire(membre);
 
     assertThrows(
-            IllegalStateException.class, () -> equipeService.promouvoirResponsable(responsable, 2L));
+        IllegalStateException.class, () -> equipeService.promouvoirResponsable(responsable, 2L));
   }
 
   /**
@@ -278,7 +294,7 @@ class EquipeServiceTest {
   @Test
   void promouvoirResponsable_callerNotResponsible_throwsIllegalState() {
     assertThrows(
-            IllegalStateException.class, () -> equipeService.promouvoirResponsable(membre, 1L));
+        IllegalStateException.class, () -> equipeService.promouvoirResponsable(membre, 1L));
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -306,7 +322,7 @@ class EquipeServiceTest {
   void depromouvoirResponsable_lastResponsible_throwsIllegalState() {
     // Rule: there must always be at least 1 responsible (ClarificationsV1 p.1)
     assertThrows(
-            IllegalStateException.class, () -> equipeService.depromouvoirResponsable(responsable, 1L));
+        IllegalStateException.class, () -> equipeService.depromouvoirResponsable(responsable, 1L));
   }
 
   /**
@@ -315,7 +331,7 @@ class EquipeServiceTest {
   @Test
   void depromouvoirResponsable_targetNotResponsible_throwsIllegalState() {
     assertThrows(
-            IllegalStateException.class, () -> equipeService.depromouvoirResponsable(responsable, 2L));
+        IllegalStateException.class, () -> equipeService.depromouvoirResponsable(responsable, 2L));
   }
 
   /**
@@ -325,14 +341,15 @@ class EquipeServiceTest {
   void depromouvoirResponsable_callerNotResponsible_throwsIllegalState() {
     equipe.setResponsableSecondaire(responsable); // member is not responsible
     assertThrows(
-            IllegalStateException.class, () -> equipeService.depromouvoirResponsable(membre, 1L));
+        IllegalStateException.class, () -> equipeService.depromouvoirResponsable(membre, 1L));
   }
 
   // ═══════════════════════════════════════════════════════════════════
   // quitterEquipe
   // Rule: a team can NEVER be deleted (ClarificationsV1 p.2)
   // Rule: if responsible is the only member -> team emptied but KEPT
-  // Rule: if responsible leaves, must designate a replacement (ClarificationsV1 p.1)
+  // Rule: if responsible leaves, must designate a replacement (ClarificationsV1
+  // p.1)
   // Rule: there must always remain at least 1 responsible (ClarificationsV1 p.1)
   // ═══════════════════════════════════════════════════════════════════
 
@@ -350,7 +367,8 @@ class EquipeServiceTest {
   }
 
   /**
-   * Tests that when the last member leaves, the team is emptied but not deleted from the database.
+   * Tests that when the last member leaves, the team is emptied but not deleted
+   * from the database.
    */
   @Test
   void quitterEquipe_responsibleOnlyMember_teamEmptiedButNeverDeleted() {
@@ -367,7 +385,8 @@ class EquipeServiceTest {
   }
 
   /**
-   * Tests failure when a responsible tries to leave without appointing a replacement.
+   * Tests failure when a responsible tries to leave without appointing a
+   * replacement.
    */
   @Test
   void quitterEquipe_responsibleWithoutDesignatingReplacement_throwsIllegalState() {
@@ -380,7 +399,8 @@ class EquipeServiceTest {
    */
   @Test
   void quitterEquipe_responsibleDesignatesReplacement_OK() {
-    // Rule: can leave if they simultaneously designate a replacement (ClarificationsV1 p.1)
+    // Rule: can leave if they simultaneously designate a replacement
+    // (ClarificationsV1 p.1)
     equipeService.quitterEquipe(responsable, 2L);
 
     assertNull(responsable.getEquipe());
@@ -391,11 +411,13 @@ class EquipeServiceTest {
   }
 
   /**
-   * Tests success when a responsible leaves but another responsible is already present.
+   * Tests success when a responsible leaves but another responsible is already
+   * present.
    */
   @Test
   void quitterEquipe_responsibleWithTwoResponsibles_OK() {
-    // Rule: can give up their role if another responsible is already there (ClarificationsV1 p.1)
+    // Rule: can give up their role if another responsible is already there
+    // (ClarificationsV1 p.1)
     equipe.setResponsableSecondaire(membre);
 
     equipeService.quitterEquipe(responsable, null);
@@ -416,11 +438,12 @@ class EquipeServiceTest {
     userSansEquipe.setEquipe(null);
 
     assertThrows(
-            IllegalStateException.class, () -> equipeService.quitterEquipe(userSansEquipe, null));
+        IllegalStateException.class, () -> equipeService.quitterEquipe(userSansEquipe, null));
   }
 
   /**
-   * Tests that a user is correctly removed even if the relations are slightly desynchronized.
+   * Tests that a user is correctly removed even if the relations are slightly
+   * desynchronized.
    */
   @Test
   void quitterEquipe_memberWithDesynchronizedRelation_leavesAnyway() {
@@ -457,7 +480,8 @@ class EquipeServiceTest {
   }
 
   /**
-   * Tests that the team always has at least 1 responsible remaining after someone leaves.
+   * Tests that the team always has at least 1 responsible remaining after someone
+   * leaves.
    */
   @Test
   void quitterEquipe_teamAlways1ResponsibleAfterLeave() {
@@ -465,8 +489,12 @@ class EquipeServiceTest {
     equipeService.quitterEquipe(responsable, 2L);
 
     int nbResponsables = 0;
-    if (equipe.getResponsablePrincipal() != null) nbResponsables++;
-    if (equipe.getResponsableSecondaire() != null) nbResponsables++;
+    if (equipe.getResponsablePrincipal() != null) {
+      nbResponsables++;
+    }
+    if (equipe.getResponsableSecondaire() != null) {
+      nbResponsables++;
+    }
 
     assertTrue(nbResponsables >= 1);
   }

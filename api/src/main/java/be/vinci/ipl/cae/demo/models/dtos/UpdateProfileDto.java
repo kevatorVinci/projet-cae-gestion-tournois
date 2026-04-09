@@ -4,7 +4,9 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** DTO dedicated to profile updates. */
+/**
+ * DTO dedicated to profile updates.
+ */
 @Data
 @NoArgsConstructor
 public class UpdateProfileDto {

@@ -199,7 +199,9 @@ public class DemandService {
   @Transactional
   public Demand refuserDemande(Long demandeId, String raison, User currentUser) {
     Demand demande = getAndVerifyDemande(demandeId, currentUser);
-    String raisonNormalisee = (raison == null || raison.isBlank()) ? "Aucune raison precisee." : raison.trim();
+    String raisonNormalisee = (raison == null || raison.isBlank())
+        ? "Aucune raison precisee."
+        : raison.trim();
 
     demande.setEtat(EtatDemande.REFUSEE);
     demande.setRaisonRefus(raisonNormalisee);

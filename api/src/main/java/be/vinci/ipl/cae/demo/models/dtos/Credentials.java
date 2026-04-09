@@ -6,7 +6,9 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Credentials DTO. */
+/**
+ * Credentials DTO.
+ */
 @Data
 @NoArgsConstructor
 public class Credentials {

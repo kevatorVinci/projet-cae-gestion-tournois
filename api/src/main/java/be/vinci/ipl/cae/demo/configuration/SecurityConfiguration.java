@@ -11,7 +11,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/** SecurityConfiguration to handle security configuration. */
+/**
+ * SecurityConfiguration to handle security configuration.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity()

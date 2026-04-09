@@ -12,7 +12,9 @@ import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Notification entity linked to a user account. */
+/**
+ * Notification entity linked to a user account.
+ */
 @Entity
 @Table(name = "notification")
 @Data

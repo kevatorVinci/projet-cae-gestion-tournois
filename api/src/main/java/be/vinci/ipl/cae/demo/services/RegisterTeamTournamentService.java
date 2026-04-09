@@ -132,7 +132,9 @@ public class RegisterTeamTournamentService {
    * @return true if unregistration succeeded, false otherwise
    */
   public boolean unregister(Long inscriptionId) {
-    RegistrationTeamTournament inscription = inscriptionRepository.findById(inscriptionId).orElse(null);
+    RegistrationTeamTournament inscription = inscriptionRepository
+        .findById(inscriptionId)
+        .orElse(null);
     if (inscription == null) {
       return false;
     }
@@ -160,7 +162,9 @@ public class RegisterTeamTournamentService {
       return false;
     }
 
-    RegistrationTeamTournament inscription = inscriptionRepository.findByTournoiAndEquipe(tournoi, equipe).orElse(null);
+    RegistrationTeamTournament inscription = inscriptionRepository
+        .findByTournoiAndEquipe(tournoi, equipe)
+        .orElse(null);
     if (inscription == null) {
       return false;
     }

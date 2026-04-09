@@ -231,7 +231,8 @@ public class TournamentService {
     Iterable<Tournament> tousLesTournois = tournoiRepository.findAll();
 
     for (Tournament tournoi : tousLesTournois) {
-      if ("OUVERT".equals(tournoi.getEtat()) && tournoi.getDateLimiteInscription() != null) {
+      if ("OUVERT".equals(tournoi.getEtat())
+          && tournoi.getDateLimiteInscription() != null) {
 
         // If the registration deadline is strictly in the past
         if (tournoi.getDateLimiteInscription().isBefore(aujourdHui)) {

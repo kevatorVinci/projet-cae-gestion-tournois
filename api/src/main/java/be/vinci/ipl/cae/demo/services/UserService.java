@@ -16,7 +16,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Service for user authentication and profile management. */
+/**
+ * Service for user authentication and profile management.
+ */
 @Service
 public class UserService {
 
@@ -301,7 +303,7 @@ public class UserService {
           .filter(member -> !member.isBanned())
           .min(
               Comparator.comparing(
-                  User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                      User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
                   .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
           .orElse(null);
 

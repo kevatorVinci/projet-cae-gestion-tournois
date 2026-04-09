@@ -1,8 +1,18 @@
 package be.vinci.ipl.cae.demo.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
@@ -24,20 +34,23 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-  @Mock private UserRepository userRepository;
-  @Mock private TeamRepository equipeRepository;
-  @Mock private BCryptPasswordEncoder passwordEncoder;
-  @Mock private NotificationService notificationService;
-  @Mock private UserMapper userMapper;
-
-  @InjectMocks private UserService userService;
-
-  private User user;
-  private Credentials credentials;
-
   private static final String EMAIL = "alice@vinci.be";
   private static final String PASSWORD = "password123";
   private static final String HASHED = "$2a$10$hashedpassword";
+  @Mock
+  private UserRepository userRepository;
+  @Mock
+  private TeamRepository equipeRepository;
+  @Mock
+  private BCryptPasswordEncoder passwordEncoder;
+  @Mock
+  private NotificationService notificationService;
+  @Mock
+  private UserMapper userMapper;
+  @InjectMocks
+  private UserService userService;
+  private User user;
+  private Credentials credentials;
 
   @BeforeEach
   void setUp() {

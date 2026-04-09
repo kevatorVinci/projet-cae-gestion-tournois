@@ -38,7 +38,8 @@ public class TeamMapper {
         .toList();
 
     // Checks if the current user is a leader of this team
-    boolean isResponsable = currentUser != null && equipeService.isUserResponsible(equipe, currentUser);
+    boolean isResponsable = currentUser != null
+        && equipeService.isUserResponsible(equipe, currentUser);
 
     return new TeamPublicDto(
         equipe.getId(),

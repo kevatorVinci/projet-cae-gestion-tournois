@@ -15,7 +15,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Entity representing a user. */
+/**
+ * Entity representing a user.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,7 +61,9 @@ public class User {
 
   private LocalDateTime dateCreationProfil;
 
-  /** Team membership relation. */
+  /**
+   * Team membership relation.
+   */
   @ManyToOne
   @JoinColumn(name = "equipe_id")
   @JsonBackReference

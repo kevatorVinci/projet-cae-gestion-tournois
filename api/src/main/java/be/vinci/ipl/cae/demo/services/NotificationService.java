@@ -6,7 +6,9 @@ import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
-/** Service layer for notification retrieval, creation and state updates. */
+/**
+ * Service layer for notification retrieval, creation and state updates.
+ */
 @Service
 public class NotificationService {
 
@@ -21,7 +23,7 @@ public class NotificationService {
     this.notificationRepository = notificationRepository;
   }
 
-  // Read operations
+  // ─── Lecture ─────────────────────────────────────────────────────────────────
 
   /**
    * Gets all notifications for a user.
@@ -40,10 +42,11 @@ public class NotificationService {
    * @return unread notifications
    */
   public List<Notification> getUnread(Long userId) {
-    return notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
+    return notificationRepository
+        .findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
   }
 
-  // Mark operations
+  // ─── Marquage ────────────────────────────────────────────────────────────────
 
   /**
    * Marks one notification as read.
@@ -70,7 +73,7 @@ public class NotificationService {
     notificationRepository.saveAll(unread);
   }
 
-  // Delete operations
+  // ─── Suppression ─────────────────────────────────────────────────────────────
 
   /**
    * Deletes all notifications of a user.
@@ -90,7 +93,8 @@ public class NotificationService {
     notificationRepository.deleteById(idNotification);
   }
 
-  // Create operation (base method)
+  // ─── Création (méthode de base)
+  // ───────────────────────────────────────────────
 
   /**
    * Creates one notification message.
@@ -107,56 +111,56 @@ public class NotificationService {
     return notificationRepository.save(notification);
   }
 
-  // Business notifications (prefixes used by the React frontend)
+  // ─── Notifications métier (préfixes pour le front React) ─────────────────────
 
-  /** Sent to a member when they create their account. */
+  /**
+   * Envoyée au membre quand il crée son compte.
+   */
   public void notifierCreationCompte(User user) {
     createNotification(
         user,
         "Bienvenue : ton compte a bien été créé. Rejoins ou crée une équipe pour commencer !");
   }
 
-  /** Sent to a member when they create a team. */
+  /**
+   * Envoyée au membre quand il crée une équipe.
+   */
   public void notifierCreationEquipe(User user, String nomEquipe) {
     createNotification(
         user, "Équipe créée : tu es maintenant responsable de l'équipe '" + nomEquipe + "'.");
   }
 
-  /** Sent to a member when a tournament is created. */
-  public void notifierCreationTournoi(User user, String nomTournoi) {
-    createNotification(
-        user,
-        "Nouveau tournoi : '" + nomTournoi
-            + "' vient d'être créé. Consulte la liste des tournois !");
-  }
-
-  /** Sent to a member when their request is submitted. */
+  /**
+   * Envoyée au membre quand sa demande est envoyée.
+   */
   public void notifierDemandEnvoyee(User user, String nomEquipe) {
     createNotification(
         user,
         "Demande envoyée : ta candidature pour rejoindre '" + nomEquipe + "' est en attente.");
   }
 
-  /** Sent to the primary responsible user when a new application is received. */
+  /**
+   * Envoyée au responsable principal quand une nouvelle candidature est reçue.
+   */
   public void notifierNouvelleDemandeResponsable(
       User responsable, String tagCandidat, String nomEquipe) {
     createNotification(
         responsable,
-        "Nouvelle demande : "
-            + tagCandidat
-            + " souhaite rejoindre l'équipe '"
-            + nomEquipe
-            + "'.");
+        "Nouvelle demande : " + tagCandidat + " souhaite rejoindre l'équipe '" + nomEquipe + "'.");
   }
 
-  /** Sent to a member when their request is accepted. */
+  /**
+   * Envoyée au membre quand sa demande est acceptée.
+   */
   public void notifierDemandeAcceptee(User user, String nomEquipe) {
     createNotification(
         user,
         "Accepté : ta demande pour rejoindre '" + nomEquipe + "' a été acceptée. Bienvenue !");
   }
 
-  /** Sent to a member when their request is rejected. */
+  /**
+   * Envoyée au membre quand sa demande est refusée.
+   */
   public void notifierDemandeRefusee(User user, String nomEquipe, String raison) {
     String raionAffichee = (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
     createNotification(
@@ -167,17 +171,25 @@ public class NotificationService {
             + raionAffichee);
   }
 
-  /** Sent to admins when a tournament is created in draft state. */
+  /**
+   * Sent to admins when a tournament is created in draft state.
+   */
   public void notifierCreationTournoiBrouillon(User admin, String nomTournoi) {
     createNotification(
         admin,
-        "Admin : nouveau tournoi en brouillon '" + nomTournoi + "'. À publier quand prêt.");
+        "Admin : nouveau tournoi en brouillon '"
+            + nomTournoi
+            + "'. À publier quand prêt.");
   }
 
-  /** Sent to all players when a tournament is published. */
+  /**
+   * Sent to all players when a tournament is published.
+   */
   public void notifierPublicationTournoi(User user, String nomTournoi) {
     createNotification(
         user,
-        "Nouveau tournoi : '" + nomTournoi + "' vient d'être publié. Inscris-toi maintenant !");
+        "Nouveau tournoi : '"
+            + nomTournoi
+            + "' vient d'être publié. Inscris-toi maintenant !");
   }
 }
