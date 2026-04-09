@@ -63,5 +63,5 @@ public class User {
   @ManyToOne
   @JoinColumn(name = "equipe_id")
   @JsonBackReference
-  private Equipe equipe;
+  private Team equipe;
 }

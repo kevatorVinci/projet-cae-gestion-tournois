@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,17 +21,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class EquipeServiceTest {
 
-  @Mock private EquipeRepository equipeRepository;
+  @Mock private TeamRepository equipeRepository;
   @Mock private UserRepository userRepository;
-  @Mock private DemandeService demandService;
+  @Mock private DemandService demandService;
   @Mock private NotificationService notificationService;
 
-  @InjectMocks private EquipeService equipeService;
+  @InjectMocks private TeamService equipeService;
 
   private User responsable;
   private User membre;
   private User tiers;
-  private Equipe equipe;
+  private Team equipe;
 
   /**
    * Sets up the initial data before each test.
@@ -51,7 +51,7 @@ class EquipeServiceTest {
     tiers.setId(3L);
     tiers.setTag("GammaTag");
 
-    equipe = new Equipe();
+    equipe = new Team();
     equipe.setId(10L);
     equipe.setName("Les Invincibles");
     equipe.setResponsablePrincipal(responsable);
@@ -76,7 +76,7 @@ class EquipeServiceTest {
   void getAllEquipes_returnsAllTeams() {
     when(equipeRepository.findAll()).thenReturn(List.of(equipe));
 
-    Iterable<Equipe> result = equipeService.getAllEquipes();
+    Iterable<Team> result = equipeService.getAllEquipes();
 
     assertTrue(result.iterator().hasNext());
   }
@@ -92,7 +92,7 @@ class EquipeServiceTest {
   void getEquipeById_existingTeam_returnsTeam() {
     when(equipeRepository.findById(10L)).thenReturn(Optional.of(equipe));
 
-    Optional<Equipe> result = equipeService.getEquipeById(10L);
+    Optional<Team> result = equipeService.getEquipeById(10L);
 
     assertTrue(result.isPresent());
     assertEquals("Les Invincibles", result.get().getName());
@@ -130,7 +130,7 @@ class EquipeServiceTest {
     when(equipeRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
     // ✨ FIX: Added "default.jpg" as the third parameter
-    Equipe result = equipeService.creerEquipe(userSansEquipe, "NewTeam", "default.jpg");
+    Team result = equipeService.creerEquipe(userSansEquipe, "NewTeam", "default.jpg");
 
     assertNotNull(result);
     assertEquals("NewTeam", result.getName());

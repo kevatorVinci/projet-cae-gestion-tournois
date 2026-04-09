@@ -3,9 +3,9 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -26,7 +26,7 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
-  private final EquipeRepository equipeRepository;
+  private final TeamRepository equipeRepository;
   private final NotificationService notificationService;
   private final UserMapper userMapper;
 
@@ -40,7 +40,7 @@ public class UserService {
   public UserService(
       BCryptPasswordEncoder passwordEncoder,
       UserRepository userRepository,
-      EquipeRepository equipeRepository,
+      TeamRepository equipeRepository,
       NotificationService notificationService,
       UserMapper userMapper) {
     this.passwordEncoder = passwordEncoder;
@@ -262,7 +262,7 @@ public class UserService {
       return;
     }
 
-    Equipe equipe = equipeRepository
+    Team equipe = equipeRepository
         .findByResponsablePrincipalIdOrResponsableSecondaireId(user.getId(), user.getId())
         .orElse(user.getEquipe());
 

@@ -7,9 +7,9 @@ import static org.mockito.Mockito.*;
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 class UserServiceTest {
 
   @Mock private UserRepository userRepository;
-  @Mock private EquipeRepository equipeRepository;
+  @Mock private TeamRepository equipeRepository;
   @Mock private BCryptPasswordEncoder passwordEncoder;
   @Mock private NotificationService notificationService;
   @Mock private UserMapper userMapper;
@@ -362,7 +362,7 @@ class UserServiceTest {
     secondary.setId(2L);
     secondary.setCreationDate(LocalDate.of(2026, 1, 2));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(user);
     equipe.setResponsableSecondaire(secondary);
     equipe.getMembres().add(user);
@@ -395,7 +395,7 @@ class UserServiceTest {
     newest.setId(4L);
     newest.setCreationDate(LocalDate.of(2025, 5, 1));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(user);
     equipe.getMembres().add(user);
     equipe.getMembres().add(newest);
@@ -422,7 +422,7 @@ class UserServiceTest {
     principal.setId(10L);
     principal.setCreationDate(LocalDate.of(2025, 1, 1));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(principal);
     equipe.setResponsableSecondaire(user);
     equipe.getMembres().add(principal);
@@ -449,7 +449,7 @@ class UserServiceTest {
     principal.setId(10L);
     principal.setCreationDate(LocalDate.of(2025, 1, 1));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(principal);
     equipe.getMembres().add(principal);
     equipe.getMembres().add(user);

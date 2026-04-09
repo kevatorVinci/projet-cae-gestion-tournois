@@ -1,12 +1,12 @@
 package be.vinci.ipl.cae.demo.services;
 
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
-import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
-import be.vinci.ipl.cae.demo.models.entities.Tournoi;
+import be.vinci.ipl.cae.demo.models.entities.Team;
+import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
+import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
-import be.vinci.ipl.cae.demo.repositories.TournoiRepository;
+import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,33 +29,33 @@ class InscriptionEquipeTournoiServiceTest {
     @Mock
     private InscriptionEquipeTournoiRepository inscriptionRepository;
     @Mock
-    private TournoiRepository tournoiRepository;
+    private TournamentRepository tournoiRepository;
     @Mock
-    private EquipeRepository equipeRepository;
+    private TeamRepository equipeRepository;
     @Mock
-    private TournoiService tournoiService;
+    private TournamentService tournoiService;
     @Mock
     private NotificationService notificationService;
 
     @InjectMocks
-    private InscriptionEquipeTournoiService service;
+    private RegisterTeamTournamentService service;
 
     // ── helpers ──────────────────────────────────────────────────────
 
-    private Tournoi makeTournoi(Long id, String etat) {
-        Tournoi t = new Tournoi();
+    private Tournament makeTournoi(Long id, String etat) {
+        Tournament t = new Tournament();
         t.setId(id);
         t.setNom("Tournoi " + id);
         t.setEtat(etat);
         return t;
     }
 
-    private Equipe makeEquipe(Long id) {
+    private Team makeEquipe(Long id) {
         return makeEquipeWithMemberCount(id, 4);
     }
 
-    private Equipe makeEquipeWithMemberCount(Long id, int memberCount) {
-        Equipe e = new Equipe();
+    private Team makeEquipeWithMemberCount(Long id, int memberCount) {
+        Team e = new Team();
         e.setId(id);
         e.setName("Equipe " + id);
         for (int i = 0; i < memberCount; i++) {
@@ -68,8 +68,8 @@ class InscriptionEquipeTournoiServiceTest {
         return e;
     }
 
-    private InscriptionEquipeTournoi makeInscription(Tournoi tournoi, Equipe equipe) {
-        InscriptionEquipeTournoi i = new InscriptionEquipeTournoi();
+    private RegistrationTeamTournament makeInscription(Tournament tournoi, Team equipe) {
+        RegistrationTeamTournament i = new RegistrationTeamTournament();
         i.setTournoi(tournoi);
         i.setEquipe(equipe);
         i.setDateInscription(LocalDate.now());
@@ -87,12 +87,12 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne les inscriptions si le tournoi existe")
         void retourneInscriptions() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
-            InscriptionEquipeTournoi i = new InscriptionEquipeTournoi();
+            Tournament t = makeTournoi(1L, "OUVERT");
+            RegistrationTeamTournament i = new RegistrationTeamTournament();
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(inscriptionRepository.findByTournoi(t)).thenReturn(List.of(i));
 
-            Iterable<InscriptionEquipeTournoi> result = service.getAllByTournoi(1L);
+            Iterable<RegistrationTeamTournament> result = service.getAllByTournoi(1L);
 
             assertThat(result).containsExactly(i);
         }
@@ -102,7 +102,7 @@ class InscriptionEquipeTournoiServiceTest {
         void retourneNullSiTournoiInexistant() {
             when(tournoiRepository.findById(99L)).thenReturn(Optional.empty());
 
-            Iterable<InscriptionEquipeTournoi> result = service.getAllByTournoi(99L);
+            Iterable<RegistrationTeamTournament> result = service.getAllByTournoi(99L);
 
             assertThat(result).isNull();
         }
@@ -115,12 +115,12 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne les inscriptions si l'équipe existe")
         void retourneInscriptions() {
-            Equipe e = makeEquipe(1L);
-            InscriptionEquipeTournoi i = new InscriptionEquipeTournoi();
+            Team e = makeEquipe(1L);
+            RegistrationTeamTournament i = new RegistrationTeamTournament();
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByEquipe(e)).thenReturn(List.of(i));
 
-            Iterable<InscriptionEquipeTournoi> result = service.getAllByEquipe(1L);
+            Iterable<RegistrationTeamTournament> result = service.getAllByEquipe(1L);
 
             assertThat(result).containsExactly(i);
         }
@@ -130,7 +130,7 @@ class InscriptionEquipeTournoiServiceTest {
         void retourneNullSiEquipeInexistante() {
             when(equipeRepository.findById(99L)).thenReturn(Optional.empty());
 
-            Iterable<InscriptionEquipeTournoi> result = service.getAllByEquipe(99L);
+            Iterable<RegistrationTeamTournament> result = service.getAllByEquipe(99L);
 
             assertThat(result).isNull();
         }
@@ -143,10 +143,10 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne l'inscription si elle existe")
         void retourneInscription() {
-            InscriptionEquipeTournoi i = new InscriptionEquipeTournoi();
+            RegistrationTeamTournament i = new RegistrationTeamTournament();
             when(inscriptionRepository.findById(1L)).thenReturn(Optional.of(i));
 
-            InscriptionEquipeTournoi result = service.getById(1L);
+            RegistrationTeamTournament result = service.getById(1L);
 
             assertThat(result).isEqualTo(i);
         }
@@ -156,7 +156,7 @@ class InscriptionEquipeTournoiServiceTest {
         void retourneNullSiInexistant() {
             when(inscriptionRepository.findById(99L)).thenReturn(Optional.empty());
 
-            InscriptionEquipeTournoi result = service.getById(99L);
+            RegistrationTeamTournament result = service.getById(99L);
 
             assertThat(result).isNull();
         }
@@ -173,14 +173,14 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("inscrit l'équipe si le tournoi est OUVERT et l'équipe pas encore inscrite")
         void inscritAvecSucces() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
-            Equipe e = makeEquipe(1L);
+            Tournament t = makeTournoi(1L, "OUVERT");
+            Team e = makeEquipe(1L);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.empty());
             when(inscriptionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            InscriptionEquipeTournoi result = service.register(1L, 1L);
+            RegistrationTeamTournament result = service.register(1L, 1L);
 
             assertThat(result).isNotNull();
             assertThat(result.getTournoi()).isEqualTo(t);
@@ -192,8 +192,8 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne une erreur si l'équipe a moins de 4 membres")
         void erreurSiMoinsDeQuatreMembres() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
-            Equipe e = makeEquipeWithMemberCount(1L, 3);
+            Tournament t = makeTournoi(1L, "OUVERT");
+            Team e = makeEquipeWithMemberCount(1L, 3);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
 
@@ -211,10 +211,10 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne null si le tournoi n'est pas OUVERT")
         void retourneNullSiTournoiPasOuvert() {
-            Tournoi t = makeTournoi(1L, "CLOTURE");
+            Tournament t = makeTournoi(1L, "CLOTURE");
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
 
-            InscriptionEquipeTournoi result = service.register(1L, 1L);
+            RegistrationTeamTournament result = service.register(1L, 1L);
 
             assertThat(result).isNull();
             verify(inscriptionRepository, never()).save(any());
@@ -226,7 +226,7 @@ class InscriptionEquipeTournoiServiceTest {
         void retourneNullSiTournoiInexistant() {
             when(tournoiRepository.findById(99L)).thenReturn(Optional.empty());
 
-            InscriptionEquipeTournoi result = service.register(99L, 1L);
+            RegistrationTeamTournament result = service.register(99L, 1L);
 
             assertThat(result).isNull();
             verify(notificationService, never()).createNotification(any(User.class), anyString());
@@ -235,11 +235,11 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne null si l'équipe n'existe pas")
         void retourneNullSiEquipeInexistante() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(99L)).thenReturn(Optional.empty());
 
-            InscriptionEquipeTournoi result = service.register(1L, 99L);
+            RegistrationTeamTournament result = service.register(1L, 99L);
 
             assertThat(result).isNull();
             verify(notificationService, never()).createNotification(any(User.class), anyString());
@@ -248,14 +248,14 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne null si l'équipe est déjà inscrite")
         void retourneNullSiDejaInscrit() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
-            Equipe e = makeEquipe(1L);
+            Tournament t = makeTournoi(1L, "OUVERT");
+            Team e = makeEquipe(1L);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e))
                     .thenReturn(Optional.of(makeInscription(t, e)));
 
-            InscriptionEquipeTournoi result = service.register(1L, 1L);
+            RegistrationTeamTournament result = service.register(1L, 1L);
 
             assertThat(result).isNull();
             verify(inscriptionRepository, never()).save(any());
@@ -265,16 +265,16 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("clôture automatiquement le tournoi si le max de participants est atteint")
         void clotureAutoSiMax() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setNombresParticipantsMax(2);
-            Equipe e = makeEquipe(1L);
+            Team e = makeEquipe(1L);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.empty());
             when(inscriptionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             // Simule 2 inscrits après l'ajout (max atteint)
             when(inscriptionRepository.findByTournoi(t)).thenReturn(
-                    List.of(new InscriptionEquipeTournoi(), new InscriptionEquipeTournoi())
+                    List.of(new RegistrationTeamTournament(), new RegistrationTeamTournament())
             );
 
             service.register(1L, 1L);
@@ -285,15 +285,15 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("ne clôture pas si le max n'est pas encore atteint")
         void pasDeClotureAutoSiPasMax() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setNombresParticipantsMax(5);
-            Equipe e = makeEquipe(1L);
+            Team e = makeEquipe(1L);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.empty());
             when(inscriptionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(inscriptionRepository.findByTournoi(t)).thenReturn(
-                    List.of(new InscriptionEquipeTournoi())
+                    List.of(new RegistrationTeamTournament())
             );
 
             service.register(1L, 1L);
@@ -304,9 +304,9 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("ne clôture pas si pas de max défini")
         void pasDeClotureAutoSiPasDeMax() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setNombresParticipantsMax(null);
-            Equipe e = makeEquipe(1L);
+            Team e = makeEquipe(1L);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.empty());
@@ -329,10 +329,10 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("désinscrit si tournoi OUVERT et date non dépassée")
         void desinscritAvecSucces() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setDateLimiteInscription(LocalDate.now().plusDays(5));
-            Equipe e = makeEquipe(1L);
-            InscriptionEquipeTournoi i = makeInscription(t, e);
+            Team e = makeEquipe(1L);
+            RegistrationTeamTournament i = makeInscription(t, e);
             when(inscriptionRepository.findById(1L)).thenReturn(Optional.of(i));
 
             boolean result = service.unregister(1L);
@@ -355,8 +355,8 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne false si le tournoi est CLOTURE")
         void retourneFalseSiCloture() {
-            Tournoi t = makeTournoi(1L, "CLOTURE");
-            InscriptionEquipeTournoi i = makeInscription(t, makeEquipe(1L));
+            Tournament t = makeTournoi(1L, "CLOTURE");
+            RegistrationTeamTournament i = makeInscription(t, makeEquipe(1L));
             when(inscriptionRepository.findById(1L)).thenReturn(Optional.of(i));
 
             boolean result = service.unregister(1L);
@@ -368,8 +368,8 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne false si le tournoi est EN_COURS")
         void retourneFalseSiEnCours() {
-            Tournoi t = makeTournoi(1L, "EN_COURS");
-            InscriptionEquipeTournoi i = makeInscription(t, makeEquipe(1L));
+            Tournament t = makeTournoi(1L, "EN_COURS");
+            RegistrationTeamTournament i = makeInscription(t, makeEquipe(1L));
             when(inscriptionRepository.findById(1L)).thenReturn(Optional.of(i));
 
             boolean result = service.unregister(1L);
@@ -380,9 +380,9 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne false si la date limite est dépassée")
         void retourneFalseSiDateLimiteDepassee() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setDateLimiteInscription(LocalDate.now().minusDays(1));
-            InscriptionEquipeTournoi i = makeInscription(t, makeEquipe(1L));
+            RegistrationTeamTournament i = makeInscription(t, makeEquipe(1L));
             when(inscriptionRepository.findById(1L)).thenReturn(Optional.of(i));
 
             boolean result = service.unregister(1L);
@@ -394,9 +394,9 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("désinscrit si pas de date limite définie")
         void desinscritSansDatelimite() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setDateLimiteInscription(null);
-            InscriptionEquipeTournoi i = makeInscription(t, makeEquipe(1L));
+            RegistrationTeamTournament i = makeInscription(t, makeEquipe(1L));
             when(inscriptionRepository.findById(1L)).thenReturn(Optional.of(i));
 
             boolean result = service.unregister(1L);
@@ -417,10 +417,10 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("désinscrit via la clé logique si conditions OK")
         void desinscritAvecSucces() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setDateLimiteInscription(LocalDate.now().plusDays(5));
-            Equipe e = makeEquipe(1L);
-            InscriptionEquipeTournoi i = makeInscription(t, e);
+            Team e = makeEquipe(1L);
+            RegistrationTeamTournament i = makeInscription(t, e);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.of(i));
@@ -456,8 +456,8 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne false si l'inscription n'existe pas")
         void retourneFalseSiInscriptionInexistante() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
-            Equipe e = makeEquipe(1L);
+            Tournament t = makeTournoi(1L, "OUVERT");
+            Team e = makeEquipe(1L);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.empty());
@@ -470,9 +470,9 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne false si le tournoi n'est pas OUVERT")
         void retourneFalseSiTournoiPasOuvert() {
-            Tournoi t = makeTournoi(1L, "CLOTURE");
-            Equipe e = makeEquipe(1L);
-            InscriptionEquipeTournoi i = makeInscription(t, e);
+            Tournament t = makeTournoi(1L, "CLOTURE");
+            Team e = makeEquipe(1L);
+            RegistrationTeamTournament i = makeInscription(t, e);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.of(i));
@@ -486,10 +486,10 @@ class InscriptionEquipeTournoiServiceTest {
         @Test
         @DisplayName("retourne false si la date limite est dépassée")
         void retourneFalseSiDateLimiteDepassee() {
-            Tournoi t = makeTournoi(1L, "OUVERT");
+            Tournament t = makeTournoi(1L, "OUVERT");
             t.setDateLimiteInscription(LocalDate.now().minusDays(1));
-            Equipe e = makeEquipe(1L);
-            InscriptionEquipeTournoi i = makeInscription(t, e);
+            Team e = makeEquipe(1L);
+            RegistrationTeamTournament i = makeInscription(t, e);
             when(tournoiRepository.findById(1L)).thenReturn(Optional.of(t));
             when(equipeRepository.findById(1L)).thenReturn(Optional.of(e));
             when(inscriptionRepository.findByTournoiAndEquipe(t, e)).thenReturn(Optional.of(i));

@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import be.vinci.ipl.cae.demo.models.entities.Demande;
-import be.vinci.ipl.cae.demo.models.entities.Demande.EtatDemande;
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Demand;
+import be.vinci.ipl.cae.demo.models.entities.Demand.EtatDemande;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.DemandeRepository;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.DemandRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,17 +24,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class DemandeServiceTest {
 
-  @Mock private DemandeRepository demandeRepo;
+  @Mock private DemandRepository demandeRepo;
   @Mock private UserRepository userRepo;
-  @Mock private EquipeRepository equipeRepo;
+  @Mock private TeamRepository equipeRepo;
   @Mock private NotificationService notificationService;
 
-  @InjectMocks private DemandeService demandeService;
+  @InjectMocks private DemandService demandeService;
 
   private User membre;
   private User responsable;
-  private Equipe equipe;
-  private Demande demande;
+  private Team equipe;
+  private Demand demande;
 
   @BeforeEach
   void setUp() {
@@ -45,13 +45,13 @@ class DemandeServiceTest {
     membre.setId(2L);
     membre.setEquipe(null); // pas encore dans une équipe
 
-    equipe = new Equipe();
+    equipe = new Team();
     equipe.setId(10L);
     equipe.setName("Les Invincibles");
     equipe.setResponsablePrincipal(responsable);
     equipe.setMembres(new ArrayList<>(List.of(responsable)));
 
-    demande = new Demande();
+    demande = new Demand();
     demande.setIdDemande(100L);
     demande.setMembre(membre);
     demande.setEquipe(equipe);
@@ -70,7 +70,7 @@ class DemandeServiceTest {
     when(equipeRepo.findById(10L)).thenReturn(Optional.of(equipe));
     when(demandeRepo.save(any())).thenReturn(demande);
 
-    Demande result = demandeService.creerDemande(2L, 10L);
+    Demand result = demandeService.creerDemande(2L, 10L);
 
     assertNotNull(result);
     assertEquals(EtatDemande.EN_ATTENTE, result.getEtat());
@@ -126,7 +126,7 @@ class DemandeServiceTest {
     when(demandeRepo.findByEquipeIdAndEtat(10L, EtatDemande.EN_ATTENTE))
         .thenReturn(List.of(demande));
 
-    Iterable<Demande> result = demandeService.getDemandesEnAttentePourEquipe(10L);
+    Iterable<Demand> result = demandeService.getDemandesEnAttentePourEquipe(10L);
 
     assertTrue(result.iterator().hasNext());
   }
@@ -135,7 +135,7 @@ class DemandeServiceTest {
   void getDemandesEnAttentePourEquipe_aucuneDemande_retourneVide() {
     when(demandeRepo.findByEquipeIdAndEtat(10L, EtatDemande.EN_ATTENTE)).thenReturn(List.of());
 
-    Iterable<Demande> result = demandeService.getDemandesEnAttentePourEquipe(10L);
+    Iterable<Demand> result = demandeService.getDemandesEnAttentePourEquipe(10L);
 
     assertFalse(result.iterator().hasNext());
   }
@@ -153,7 +153,7 @@ class DemandeServiceTest {
     when(equipeRepo.save(any())).thenReturn(equipe);
     when(demandeRepo.save(any())).thenReturn(demande);
 
-    Demande result = demandeService.accepterDemande(100L, responsable);
+    Demand result = demandeService.accepterDemande(100L, responsable);
 
     assertEquals(EtatDemande.ACCEPTEE, result.getEtat());
     assertNotNull(result.getDateTraitement());
@@ -216,7 +216,7 @@ class DemandeServiceTest {
     when(demandeRepo.findById(100L)).thenReturn(Optional.of(demande));
     when(demandeRepo.save(any())).thenReturn(demande);
 
-    Demande result = demandeService.refuserDemande(100L, "Niveau insuffisant", responsable);
+    Demand result = demandeService.refuserDemande(100L, "Niveau insuffisant", responsable);
 
     assertEquals(EtatDemande.REFUSEE, result.getEtat());
     assertEquals("Niveau insuffisant", result.getRaisonRefus());
