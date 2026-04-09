@@ -126,7 +126,8 @@ public class NotificationService {
   public void notifierCreationTournoi(User user, String nomTournoi) {
     createNotification(
         user,
-        "Nouveau tournoi : '" + nomTournoi + "' vient d'être créé. Consulte la liste des tournois !");
+        "Nouveau tournoi : '" + nomTournoi
+            + "' vient d'être créé. Consulte la liste des tournois !");
   }
 
   /** Sent to a member when their request is submitted. */
@@ -141,7 +142,11 @@ public class NotificationService {
       User responsable, String tagCandidat, String nomEquipe) {
     createNotification(
         responsable,
-        "Nouvelle demande : " + tagCandidat + " souhaite rejoindre l'équipe '" + nomEquipe + "'.");
+        "Nouvelle demande : "
+            + tagCandidat
+            + " souhaite rejoindre l'équipe '"
+            + nomEquipe
+            + "'.");
   }
 
   /** Sent to a member when their request is accepted. */

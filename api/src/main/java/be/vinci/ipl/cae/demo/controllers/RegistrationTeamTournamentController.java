@@ -4,13 +4,13 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.annotations.IsAdminOrResponsable;
 import be.vinci.ipl.cae.demo.annotations.IsResponsable;
 import be.vinci.ipl.cae.demo.mappers.RegisterTeamTournamentMapper;
-import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TeamTournamentRegistrationDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentTeamRegistrationDto;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.services.TeamService;
 import be.vinci.ipl.cae.demo.services.RegisterTeamTournamentService;
+import be.vinci.ipl.cae.demo.services.TeamService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -54,7 +54,8 @@ public class RegistrationTeamTournamentController {
 
   /** Returns publicly visible registrations for the tournament details page. */
   @GetMapping("/{tournoiId}/inscriptions/accepted")
-  public Iterable<TournamentTeamRegistrationDto> getAcceptedByTournoi(@PathVariable Long tournoiId) {
+  public Iterable<TournamentTeamRegistrationDto> getAcceptedByTournoi(
+      @PathVariable Long tournoiId) {
     Iterable<RegistrationTeamTournament> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
@@ -108,11 +109,13 @@ public class RegistrationTeamTournamentController {
     try {
       inscription = inscriptionService.register(tournoiId, equipeId);
     } catch (IllegalArgumentException ex) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
     if (inscription == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Tournament not found, not OUVERT, or team already registered");
+          HttpStatus.BAD_REQUEST,
+          "Tournament not found, not OUVERT, or team already registered");
     }
     return inscription;
   }

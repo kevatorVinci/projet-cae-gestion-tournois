@@ -17,7 +17,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // 2. Mock availability services
-vi.mock('../../services/indisponibilites', () => ({
+vi.mock('../../services/unavailabilities', () => ({
   getMesIndisponibilites: vi.fn(),
   addIndisponibilite: vi.fn(),
   deleteIndisponibilite: vi.fn(),

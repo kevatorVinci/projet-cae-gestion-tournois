@@ -91,7 +91,7 @@ describe('RegisterPage', () => {
     await fillForm();
 
     // Select an avatar
-    const avatars = screen.getAllByRole('img');
+    const avatars = screen.getAllByAltText(/avatar /i);
     fireEvent.click(avatars[0]);
 
     const form = screen
@@ -121,7 +121,7 @@ describe('RegisterPage', () => {
 
     await fillForm();
 
-    const avatars = screen.getAllByRole('img');
+    const avatars = screen.getAllByAltText(/avatar /i);
     fireEvent.click(avatars[0]);
 
     const form = screen

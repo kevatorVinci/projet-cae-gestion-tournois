@@ -1,8 +1,8 @@
 package be.vinci.ipl.cae.demo.mappers;
 
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TeamTournamentRegistrationDto;
-import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentTeamRegistrationDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentAbstractDto;
+import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentTeamRegistrationDto;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
 import java.util.ArrayList;
 import java.util.List;

@@ -57,13 +57,18 @@ public class DemandService {
    *                          already belongs to a team
    */
   public Demand creerDemande(Long membreId, Long equipeId) {
-    User membre = userRepo.findById(membreId).orElseThrow(() -> new RuntimeException("Joueur introuvable"));
-    Team equipe = equipeRepo.findById(equipeId).orElseThrow(() -> new RuntimeException("Équipe introuvable"));
+    User membre = userRepo
+        .findById(membreId)
+        .orElseThrow(() -> new RuntimeException("Joueur introuvable"));
+    Team equipe = equipeRepo
+        .findById(equipeId)
+        .orElseThrow(() -> new RuntimeException("Équipe introuvable"));
 
     if (membre.getEquipe() != null) {
       throw new RuntimeException("Vous avez déjà une équipe !");
     }
-    boolean hasNoResponsible = equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() == null;
+    boolean hasNoResponsible = equipe.getResponsablePrincipal() == null
+        && equipe.getResponsableSecondaire() == null;
     if (hasNoResponsible) {
       throw new RuntimeException("L'equipe n'a aucun responsable.");
     }

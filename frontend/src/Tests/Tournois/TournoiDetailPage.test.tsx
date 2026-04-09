@@ -22,7 +22,7 @@ vi.mock('../../services/teams', () => ({
   isCurrentUserResponsable: vi.fn(),
 }));
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
   fetchTeamRegistrations: vi.fn(),
   registerTeamToTournament: vi.fn(),
 }));

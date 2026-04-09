@@ -27,22 +27,24 @@ public class TeamMapper {
     }
 
     // Transforms the list of User entities into MembrePublicDto objects
-    List<MemberPublicDto> membres =
-            equipe.getMembres().stream()
-                    .map(
-                            m ->
-                                    new MemberPublicDto(
-                                            m.getId(),
-                                            m.getTag(),
-                                            m.getSpecialty(),
-                                            m.getProfileImageUrl(),
-                                            equipeService.isUserResponsible(equipe, m)))
-                    .toList();
+    List<MemberPublicDto> membres = equipe.getMembres().stream()
+        .map(
+            m -> new MemberPublicDto(
+                m.getId(),
+                m.getTag(),
+                m.getSpecialty(),
+                m.getProfileImageUrl(),
+                equipeService.isUserResponsible(equipe, m)))
+        .toList();
 
     // Checks if the current user is a leader of this team
-    boolean isResponsable =
-            currentUser != null && equipeService.isUserResponsible(equipe, currentUser);
+    boolean isResponsable = currentUser != null && equipeService.isUserResponsible(equipe, currentUser);
 
-    return new TeamPublicDto(equipe.getId(), equipe.getName(), equipe.getProfileImage(), membres, isResponsable);
+    return new TeamPublicDto(
+        equipe.getId(),
+        equipe.getName(),
+        equipe.getProfileImage(),
+        membres,
+        isResponsable);
   }
 }

@@ -66,7 +66,9 @@ public class UserService {
         .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
 
     if (user != null && user.getId() != null) {
-      tokenBuilder = tokenBuilder.withSubject(String.valueOf(user.getId())).withClaim("id", user.getId());
+      tokenBuilder = tokenBuilder
+          .withSubject(String.valueOf(user.getId()))
+          .withClaim("id", user.getId());
     }
 
     String token = tokenBuilder.sign(ALGORITHM);

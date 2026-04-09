@@ -34,7 +34,7 @@ vi.mock('../../services/teams', () => ({
   depromoteResponsable: vi.fn(),
 }));
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
   fetchTeamRegistrationsPublic: vi.fn(),
 }));
 

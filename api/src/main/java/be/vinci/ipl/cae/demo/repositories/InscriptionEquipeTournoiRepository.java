@@ -1,7 +1,7 @@
 package be.vinci.ipl.cae.demo.repositories;
 
-import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import java.util.List;
 import java.util.Optional;
@@ -29,13 +29,11 @@ public interface InscriptionEquipeTournoiRepository
    */
   List<RegistrationTeamTournament> findByEquipe(Team equipe);
 
-
-
   /**
    * Finds an existing registration for a team in a tournament.
    *
    * @param tournoi tournament entity
-   * @param equipe team entity
+   * @param equipe  team entity
    * @return optional registration if found
    */
   Optional<RegistrationTeamTournament> findByTournoiAndEquipe(Tournament tournoi, Team equipe);

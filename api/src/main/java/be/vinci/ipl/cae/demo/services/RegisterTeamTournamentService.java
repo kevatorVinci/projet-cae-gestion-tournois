@@ -1,10 +1,10 @@
 package be.vinci.ipl.cae.demo.services;
 
-import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
-import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -82,7 +82,8 @@ public class RegisterTeamTournamentService {
       return null;
     }
 
-    if (equipe.getMembres() == null || equipe.getMembres().size() < MIN_MEMBERS_FOR_REGISTRATION) {
+    if (equipe.getMembres() == null
+        || equipe.getMembres().size() < MIN_MEMBERS_FOR_REGISTRATION) {
       throw new IllegalArgumentException(
           "Une équipe doit avoir au moins 4 membres pour s'inscrire à un tournoi.");
     }

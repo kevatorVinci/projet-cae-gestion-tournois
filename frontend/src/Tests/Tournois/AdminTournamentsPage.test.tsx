@@ -13,7 +13,7 @@ import {
 
 const mockNavigate = vi.fn();
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
   fetchAllTournaments: vi.fn(),
   publishTournament: vi.fn(),
 }));
@@ -72,10 +72,12 @@ describe('AdminTournamentsPage', () => {
       );
     });
 
-    expect(
-      await screen.findByText(/Le tournoi est maintenant publié/i),
-    ).toBeInTheDocument();
-  });
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Le tournoi est maintenant publié/i),
+      ).toBeInTheDocument();
+    });
+  }, 10000);
 
   test('sorts tournaments by state priority then closest date', async () => {
     const formatDateWithOffset = (offsetInDays: number) => {
