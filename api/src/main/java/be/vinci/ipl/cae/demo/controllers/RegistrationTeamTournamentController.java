@@ -45,7 +45,8 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/{tournoiId}/inscriptions")
   @IsAdmin
   public Iterable<RegistrationTeamTournament> getAllByTournoi(@PathVariable Long tournoiId) {
-    Iterable<RegistrationTeamTournament> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
+    Iterable<RegistrationTeamTournament> inscriptions =
+        inscriptionService.getAllByTournoi(tournoiId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
@@ -56,7 +57,8 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/{tournoiId}/inscriptions/accepted")
   public Iterable<TournamentTeamRegistrationDto> getAcceptedByTournoi(
       @PathVariable Long tournoiId) {
-    Iterable<RegistrationTeamTournament> inscriptions = inscriptionService.getAllByTournoi(tournoiId);
+    Iterable<RegistrationTeamTournament> inscriptions =
+        inscriptionService.getAllByTournoi(tournoiId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
@@ -73,7 +75,8 @@ public class RegistrationTeamTournamentController {
       @PathVariable Long equipeId, @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
         equipeId, currentUser, "You can only view your own team registrations");
-    Iterable<RegistrationTeamTournament> inscriptions = inscriptionService.getAllByEquipe(equipeId);
+    Iterable<RegistrationTeamTournament> inscriptions =
+        inscriptionService.getAllByEquipe(equipeId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
@@ -86,7 +89,8 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/equipes/{equipeId}/inscriptions/public")
   public Iterable<TeamTournamentRegistrationDto> getPublicByEquipe(
       @PathVariable Long equipeId) {
-    Iterable<RegistrationTeamTournament> inscriptions = inscriptionService.getAllByEquipe(equipeId);
+    Iterable<RegistrationTeamTournament> inscriptions =
+        inscriptionService.getAllByEquipe(equipeId);
     if (inscriptions == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
@@ -124,8 +128,7 @@ public class RegistrationTeamTournamentController {
    * Unregisters a team from a tournament using the logical key (tournoiId,
    * equipeId).
    *
-   * <p>
-   * This endpoint is currently not used by the frontend application.
+    * This endpoint is currently not used by the frontend application.
    */
   @DeleteMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @IsAdminOrResponsable
@@ -152,8 +155,7 @@ public class RegistrationTeamTournamentController {
   /**
    * Unregisters a team from a tournament using the registration ID.
    *
-   * <p>
-   * This endpoint is currently not used by the frontend application.
+    * This endpoint is currently not used by the frontend application.
    */
   @DeleteMapping("/inscriptions/{inscriptionId}")
   @IsAdminOrResponsable

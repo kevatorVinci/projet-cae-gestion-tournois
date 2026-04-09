@@ -12,12 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service managing the business logic related to teams.
  *
- * <p>
  * This class encapsulates all possible operations on teams: creating a team
  * (with name uniqueness check), retrieving all teams, and retrieving a
  * team by its identifier.
  *
- * <p>
  * The service does not contain any direct database logic: it delegates to the
  * repository, making it easy to test via Mockito.
  */

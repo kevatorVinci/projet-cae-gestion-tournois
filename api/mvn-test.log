@@ -1,0 +1,96 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------< be.vinci.ipl.cae.demos:cae-exercices-demo >--------------
+[INFO] Building auths 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- jacoco:0.8.12:prepare-agent (default) @ cae-exercices-demo ---
+[INFO] argLine set to -javaagent:C:\\Users\\akato\\.m2\\repository\\org\\jacoco\\org.jacoco.agent\\0.8.12\\org.jacoco.agent-0.8.12-runtime.jar=destfile=C:\\Ecole\\CAE\\Project\\cae-group-35\\api\\target\\jacoco.exec
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ cae-exercices-demo ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ cae-exercices-demo ---
+[INFO] Changes detected - recompiling the module! :input tree
+[INFO] Compiling 58 source files with javac [debug release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ cae-exercices-demo ---
+[INFO] skip non existing resourceDirectory C:\Ecole\CAE\Project\cae-group-35\api\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ cae-exercices-demo ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 8 source files with javac [debug release 21] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ cae-exercices-demo ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running be.vinci.ipl.cae.demo.models.dtos.CredentialsTest
+15:44:42.945 [main] INFO org.hibernate.validator.internal.util.Version -- HV000001: Hibernate Validator 8.0.1.Final
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.009 s -- in be.vinci.ipl.cae.demo.models.dtos.CredentialsTest
+[INFO] Running be.vinci.ipl.cae.demo.services.DemandeServiceTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.035 s -- in be.vinci.ipl.cae.demo.services.DemandeServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.EquipeServiceTest
+[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.585 s -- in be.vinci.ipl.cae.demo.services.EquipeServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$UnregisterByTournoiAndEquipe
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.916 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$UnregisterByTournoiAndEquipe
+[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Unregister
+Unregistration denied: tournament deadline has passed.
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.082 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Unregister
+[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Register
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.173 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Register
+[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetById
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetById
+[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByEquipe
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.085 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByEquipe
+[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByTournoi
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByTournoi
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.393 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.NotificationServiceTest
+[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.426 s -- in be.vinci.ipl.cae.demo.services.NotificationServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.TournoiServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.133 s -- in be.vinci.ipl.cae.demo.services.TournoiServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.UserServiceTest
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.007 s <<< FAILURE! -- in be.vinci.ipl.cae.demo.services.UserServiceTest
+[ERROR] be.vinci.ipl.cae.demo.services.UserServiceTest -- Time elapsed: 0.007 s <<< ERROR!
+java.lang.NoClassDefFoundError: UserRepository
+	at java.base/java.lang.Class.getDeclaredFields0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredFields(Class.java:3545)
+	at java.base/java.lang.Class.getDeclaredFields(Class.java:2601)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+Caused by: java.lang.ClassNotFoundException: UserRepository
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:528)
+	... 4 more
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   UserServiceTest » NoClassDefFound UserRepository
+[INFO] 
+[ERROR] Tests run: 100, Failures: 0, Errors: 1, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  48.518 s
+[INFO] Finished at: 2026-04-09T15:44:55+02:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project cae-exercices-demo: 
+[ERROR] 
+[ERROR] Please refer to C:\Ecole\CAE\Project\cae-group-35\api\target\surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

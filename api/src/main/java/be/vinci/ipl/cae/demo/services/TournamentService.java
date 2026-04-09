@@ -237,7 +237,8 @@ public class TournamentService {
         // If the registration deadline is strictly in the past
         if (tournoi.getDateLimiteInscription().isBefore(aujourdHui)) {
 
-          Iterable<RegistrationTeamTournament> inscrits = inscriptionService.getAllByTournoi(tournoi.getId());
+          Iterable<RegistrationTeamTournament> inscrits =
+              inscriptionService.getAllByTournoi(tournoi.getId());
           long nbEquipes = countInscriptions(inscrits);
 
           if (nbEquipes >= 2) {
@@ -251,7 +252,8 @@ public class TournamentService {
                     + " annulé automatiquement (Moins de 2 joueurs).");
             tournoi.setEtat("ANNULE");
 
-            tournoi.setNom(tournoi.getNom() + " (Annulé : moins de 2 equipes inscrites)");
+            tournoi.setNom(
+                tournoi.getNom() + " (Annulé : moins de 2 equipes inscrites)");
           }
 
           tournoiRepository.save(tournoi);

@@ -68,7 +68,8 @@ public class NotificationService {
    * @param userId user id
    */
   public void markAllAsRead(Long userId) {
-    List<Notification> unread = notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
+    List<Notification> unread = notificationRepository
+        .findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
     unread.forEach(n -> n.setEstLue(true));
     notificationRepository.saveAll(unread);
   }
@@ -146,7 +147,11 @@ public class NotificationService {
       User responsable, String tagCandidat, String nomEquipe) {
     createNotification(
         responsable,
-        "Nouvelle demande : " + tagCandidat + " souhaite rejoindre l'équipe '" + nomEquipe + "'.");
+        "Nouvelle demande : "
+            + tagCandidat
+            + " souhaite rejoindre l'équipe '"
+            + nomEquipe
+            + "'.");
   }
 
   /**
@@ -162,7 +167,8 @@ public class NotificationService {
    * Envoyée au membre quand sa demande est refusée.
    */
   public void notifyRequestDenied(User user, String nomEquipe, String raison) {
-    String raionAffichee = (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
+    String raionAffichee =
+        (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
     createNotification(
         user,
         "Refus : ta demande pour rejoindre '"
@@ -177,9 +183,8 @@ public class NotificationService {
   public void notifyDraftTournamentCreation(User admin, String nomTournoi) {
     createNotification(
         admin,
-        "Admin : nouveau tournoi en brouillon '"
-            + nomTournoi
-            + "'. À publier quand prêt.");
+        "Admin : nouveau tournoi en brouillon '" + nomTournoi + "'."
+            + " À publier quand prêt.");
   }
 
   /**
