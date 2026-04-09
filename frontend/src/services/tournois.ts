@@ -34,7 +34,7 @@ export interface AcceptedTournamentRegistration {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 1. GESTION DES TOURNOIS (PUBLIC ET ADMIN)
+// 1. TOURNAMENT MANAGEMENT (PUBLIC AND ADMIN)
 // ═══════════════════════════════════════════════════════════════════
 
 export const fetchPublicTournaments = async (etat?: string, nom?: string) => {
@@ -109,10 +109,10 @@ export const updateTournament = async (
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// 2. CYCLE DE VIE DU TOURNOI (ADMIN SEULEMENT)
+// 2. TOURNAMENT LIFECYCLE (ADMIN ONLY)
 // ═══════════════════════════════════════════════════════════════════
 
-// Une fonction générique pour toutes les actions de statut (PATCH)
+// Generic function for all status actions (PATCH)
 const changeTournamentState = async (
   id: string | number,
   action: string,
@@ -152,11 +152,11 @@ export const cancelTournamentWithReason = (
 ) => changeTournamentState(id, 'cancel', token, { reason });
 
 // ═══════════════════════════════════════════════════════════════════
-// 3. INSCRIPTIONS (ÉQUIPES ET RESPONSABLES)
+// 3. REGISTRATIONS (TEAMS AND RESPONSIBLES)
 // ═══════════════════════════════════════════════════════════════════
 
 // /**
-//  * Récupère les inscriptions d'un tournoi (Admin)
+//  * Gets registrations for one tournament (admin)
 //  */
 export const fetchTournamentRegistrations = async (
   tournoiId: string | number,

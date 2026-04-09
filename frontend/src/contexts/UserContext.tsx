@@ -13,7 +13,7 @@ import {
   isTokenExpired,
 } from '../utils/session';
 
-// 1️⃣ On ajoute une action vide par défaut pour ne pas casser le site
+// 1) Add a default no-op action to avoid breaking the app
 const defaultUserContext: UserContextType = {
   authenticatedUser: undefined,
   registerUser: async () => {},
@@ -72,7 +72,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
             errorMessage = errorData.message;
           }
         } catch (e) {
-          // Si la réponse n'est pas JSON, garder le message par défaut
+          // If the response is not JSON, keep the default message
         }
         throw new Error(errorMessage);
       }
@@ -100,7 +100,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
   const updateUser = (updatedData: Partial<AuthenticatedUser>) => {
     if (authenticatedUser) {
-      // On prend l'ancien joueur, et on lui colle les nouvelles informations par-dessus
+      // Merge the previous user object with the new fields
       const newUserData = { ...authenticatedUser, ...updatedData };
 
       setAuthenticatedUser(newUserData);

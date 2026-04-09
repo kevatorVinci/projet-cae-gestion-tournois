@@ -51,7 +51,7 @@ export function DemandesAdhesion() {
     tag: string;
   } | null>(null);
 
-  // 2️⃣ États pour gérer la modale de refus
+  // 2) State used to manage the rejection modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [demandeRefusee, setDemandeRefusee] = useState<{
     id: number;
@@ -95,7 +95,7 @@ export function DemandesAdhesion() {
     loadDemandes();
   }, []);
 
-  // 🟢 Action : Accepter un joueur
+  // Accept action
   const handleOpenAcceptModal = (id: number, tag: string) => {
     setDemandeAcceptee({ id, tag });
     setIsAcceptModalOpen(true);
@@ -126,13 +126,13 @@ export function DemandesAdhesion() {
     }
   };
 
-  // 🔴 Action : Ouvrir la modale pour refuser
+  // Open reject modal action
   const handleOpenRefuseModal = (id: number, tag: string) => {
     setDemandeRefusee({ id, tag });
     setIsModalOpen(true);
   };
 
-  // 🔴 Action : Confirmer le refus
+  // Confirm reject action
   const handleConfirmRefusal = async () => {
     if (!motifRefus.trim()) {
       alert('Le motif du refus est obligatoire.');
@@ -184,7 +184,7 @@ export function DemandesAdhesion() {
           </Alert>
         )}
 
-        {/* --- EN-TÊTE DE LA PAGE --- */}
+        {/* --- PAGE HEADER --- */}
         <Box
           sx={{
             mb: 4,
@@ -221,7 +221,7 @@ export function DemandesAdhesion() {
           </Alert>
         )}
 
-        {/* --- LISTE DES DEMANDES --- */}
+        {/* --- REQUEST LIST --- */}
         {demandes.length === 0 ? (
           <Alert
             severity="info"
@@ -250,7 +250,7 @@ export function DemandesAdhesion() {
                   gap: 2,
                 }}
               >
-                {/* Infos du joueur */}
+                {/* Player information */}
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Avatar
                     src={demande.avatarUrl}
@@ -277,7 +277,7 @@ export function DemandesAdhesion() {
                   </Box>
                 </Stack>
 
-                {/* Boutons d'action */}
+                {/* Action buttons */}
                 <Stack direction="row" spacing={1.5}>
                   <Button
                     variant="contained"

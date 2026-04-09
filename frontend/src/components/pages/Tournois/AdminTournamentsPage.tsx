@@ -73,7 +73,7 @@ const ETAT_STYLES: Record<Tournoi['etat'], EtatStyle> = {
 
 /**
  * Admin version of the Tournaments page.
- * Lists all tournaments, allows filtering (including 'Clôturés'), and allows navigation to create/edit pages.
+ * Lists all tournaments, allows filtering (including closed tournaments), and allows navigation to create/edit pages.
  *
  * @return {JSX.Element} the admin tournament management page
  */
@@ -160,13 +160,13 @@ const AdminTournamentsPage = () => {
 
   /**
    * We create a new list that contains ONLY the tournaments matching the filter.
-   * ✨ LOGIC UPDATED: Added a specific filter for CLOTURE.
+    * Logic updated: includes a dedicated CLOTURE filter.
    */
   const filteredTournaments = tournaments.filter((t) => {
     if (filter === 'Tous') return true;
     if (filter === 'En attente de publication') return t.etat === 'BROUILLON';
     if (filter === 'À venir') return t.etat === 'OUVERT'; // Only open tournaments here now
-    if (filter === 'Clôturés') return t.etat === 'CLOTURE'; // ✨ The new specific filter!
+    if (filter === 'Clôturés') return t.etat === 'CLOTURE'; // Dedicated closed-tournaments filter
     if (filter === 'En cours') return t.etat === 'EN_COURS';
     if (filter === 'Passés') return t.etat === 'TERMINE' || t.etat === 'ANNULE';
     return true;

@@ -425,7 +425,7 @@ export default function TeamDetails() {
       }}
     >
       <Container maxWidth="lg" sx={{ mb: 1 }}>
-        {/* ✨ J'ai remplacé Paper par Card ici pour que ça matche bien avec CardContent ! */}
+        {/* Replaced Paper with Card here so it matches CardContent correctly */}
         <Card
           elevation={0}
           sx={{

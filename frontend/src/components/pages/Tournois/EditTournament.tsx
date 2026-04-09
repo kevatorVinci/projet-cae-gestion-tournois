@@ -311,7 +311,7 @@ const EditTournamentPage = () => {
                 adapterLocale="fr"
               >
                 <Grid container spacing={3} mb={4} alignItems="center">
-                  {/* ✨ 1. Date de début */}
+                  {/* 1. Start date */}
                   <Grid item xs={12} sm={6}>
                     <DatePicker
                       label="Date de début"
@@ -322,7 +322,7 @@ const EditTournamentPage = () => {
                     />
                   </Grid>
 
-                  {/* ✨ 2. Date de fin */}
+                  {/* 2. End date */}
                   <Grid item xs={12} sm={6}>
                     <DatePicker
                       label="Date de fin"
@@ -333,7 +333,7 @@ const EditTournamentPage = () => {
                     />
                   </Grid>
 
-                  {/* ✨ 3. Nombre de places */}
+                  {/* 3. Number of slots */}
                   <Grid item xs={12} sm={6}>
                     <TextField
                       label="Nombre de places"
@@ -358,7 +358,7 @@ const EditTournamentPage = () => {
                     />
                   </Grid>
 
-                  {/* ✨ 4. Date limite d'inscription */}
+                  {/* 4. Registration deadline */}
                   <Grid item xs={12} sm={6}>
                     <DatePicker
                       label="Date limite d'inscription"

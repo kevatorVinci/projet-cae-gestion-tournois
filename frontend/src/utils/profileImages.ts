@@ -5,7 +5,7 @@ import zoroImg from '../assets/images/imagesProfil/R.png';
 import flashImg from '../assets/images/imagesProfil/flash.jpg';
 import milesImg from '../assets/images/imagesProfil/miles.jpg';
 
-// Mapping des noms d'images vers les imports Vite
+// Map image file names to Vite imports
 export const profileImageMap: Record<string, string> = {
   'luffy.png': luffyImg,
   'Pessi.jpg': pessiImg,
@@ -14,7 +14,7 @@ export const profileImageMap: Record<string, string> = {
   'miles.jpg': milesImg,
 };
 
-// Mapping inverse : des imports vers les noms de fichiers
+// Reverse map: imports to file names
 export const reverseProfileImageMap: Record<string, string> = {
   [luffyImg]: 'luffy.png',
   [pessiImg]: 'Pessi.jpg',
@@ -23,13 +23,13 @@ export const reverseProfileImageMap: Record<string, string> = {
   [milesImg]: 'miles.jpg',
 };
 
-// Fonction pour obtenir l'URL de l'image depuis le nom du fichier
+// Helper to get the image URL from a file name
 export const getProfileImageUrl = (imageName: string | undefined): string => {
   if (!imageName) return '';
   return profileImageMap[imageName] || '';
 };
 
-// Fonction pour obtenir le nom du fichier depuis l'URL importée
+// Helper to get the file name from an imported image URL
 export const getProfileImageName = (imageUrl: string | undefined): string => {
   if (!imageUrl) return '';
   return reverseProfileImageMap[imageUrl] || '';

@@ -8,7 +8,7 @@ export interface Period {
 
 const API_BASE = '/api';
 
-// On utilise LA MÊME méthode que teams.ts pour le token !
+// Use the SAME token approach as teams.ts
 function getAuthHeaders(): HeadersInit {
   const user = getAuthenticatedUser();
   console.log('user:', user);
@@ -17,7 +17,7 @@ function getAuthHeaders(): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-// 1. Lire mes indisponibilités
+// 1. Read my unavailable periods
 export const getMesIndisponibilites = async (): Promise<Period[]> => {
   const response = await fetch(`${API_BASE}/indisponibilites`, {
     method: 'GET',
@@ -30,7 +30,7 @@ export const getMesIndisponibilites = async (): Promise<Period[]> => {
   return response.json();
 };
 
-// 2. Ajouter une indisponibilité
+// 2. Add an unavailable period
 export const addIndisponibilite = async (
   dateDebut: string,
   dateFin: string,
@@ -50,7 +50,7 @@ export const addIndisponibilite = async (
   return response.json();
 };
 
-// 3. Supprimer une indisponibilité
+// 3. Delete an unavailable period
 export const deleteIndisponibilite = async (id: number): Promise<void> => {
   const response = await fetch(`${API_BASE}/indisponibilites/${id}`, {
     method: 'DELETE',

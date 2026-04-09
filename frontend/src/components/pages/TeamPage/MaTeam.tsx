@@ -545,7 +545,7 @@ export function MyTeam() {
           </Alert>
         )}
 
-        {/* 1. BANNIÈRE HEAD */}
+        {/* 1. HEADER BANNER */}
         <Paper
           elevation={0}
           sx={{

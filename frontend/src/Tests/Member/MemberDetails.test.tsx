@@ -24,7 +24,7 @@ vi.mock('../../services/tournois', () => ({
   fetchTeamRegistrationsPublic: vi.fn(() => Promise.resolve([])),
 }));
 
-// On ajoute le mock pour getAllEquipes (utilisé par le nouveau composant)
+// Add a mock for getAllEquipes (used by the new component)
 vi.mock('../../services/teams', () => ({
   getAllEquipes: vi.fn(() =>
     Promise.resolve([
@@ -96,7 +96,7 @@ describe('MemberDetails Component', () => {
   it('renders loading state initially', () => {
     (global.fetch as Mock).mockReturnValue(new Promise(() => {}));
     renderComponent(undefined);
-    // ✨ CORRECTION : On attend maintenant la roue de chargement
+    // Expect the loading spinner
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
@@ -114,7 +114,7 @@ describe('MemberDetails Component', () => {
     });
   });
 
-  // ✨ CORRECTION : On vérifie maintenant que l'email s'affiche bien !
+  // Verify that email is correctly displayed
   it('shows email and specialty fields on own profile', async () => {
     (global.fetch as Mock).mockResolvedValue({
       ok: true,
@@ -165,7 +165,7 @@ describe('MemberDetails Component', () => {
     consoleSpy.mockRestore();
   });
 
-  it('navigue vers le détail équipe quand on clique le bloc équipe', async () => {
+  it('navigates to team detail when clicking the team block', async () => {
     const mockNavigate = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
 

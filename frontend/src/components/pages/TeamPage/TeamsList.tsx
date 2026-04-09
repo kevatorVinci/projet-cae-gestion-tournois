@@ -277,7 +277,7 @@ const TeamsList = () => {
             flexWrap: 'wrap',
           }}
         >
-          {/* The Toggle Buttons (Équipes / Joueurs) */}
+          {/* Toggle buttons (Teams / Players) */}
           <ToggleButtonGroup
             value={activeTab}
             exclusive

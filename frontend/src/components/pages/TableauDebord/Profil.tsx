@@ -72,7 +72,7 @@ const Profile = () => {
         background: 'transparent',
       }}
     >
-      {/* Dégradé bleu nuit en haut à la place du background image */}
+      {/* Midnight-blue gradient on top instead of a background image */}
       <Box
         sx={{
           position: 'absolute',
@@ -82,7 +82,7 @@ const Profile = () => {
           pointerEvents: 'none',
         }}
       />
-      {/* Grille SVG très subtile */}
+      {/* Very subtle SVG grid */}
       <Box
         component="svg"
         sx={{
@@ -116,7 +116,7 @@ const Profile = () => {
       </Box>
 
       <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
-        {/* 1. BANNIÈRE DE BIENVENUE */}
+        {/* 1. WELCOME BANNER */}
         <Paper
           elevation={0}
           sx={{
@@ -142,7 +142,7 @@ const Profile = () => {
           </Typography>
         </Paper>
 
-        {/* 2. CARTE PROFIL */}
+        {/* 2. PROFILE CARD */}
         <Paper
           variant="outlined"
           sx={{
@@ -184,7 +184,7 @@ const Profile = () => {
             </Box>
           </Stack>
 
-          {/* Les boutons d'action du profil ajoutés ici 👇 */}
+          {/* Profile action buttons */}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Button
               variant="contained"
@@ -220,10 +220,10 @@ const Profile = () => {
           </Stack>
         </Paper>
 
-        {/* 3. GRILLE DES ACTIONS (Créer / Rejoindre) */}
+        {/* 3. ACTION GRID (Create / Join) */}
         {!hasTeam && (
           <Grid container spacing={3}>
-            {/* CARTE CRÉER */}
+            {/* CREATE CARD */}
             <Grid item xs={12} md={6}>
               <Paper
                 variant="outlined"
