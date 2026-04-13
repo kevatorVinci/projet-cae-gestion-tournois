@@ -13,31 +13,31 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface InscriptionEquipeTournoiRepository
-    extends CrudRepository<RegistrationTeamTournament, Long> {
+        extends CrudRepository<RegistrationTeamTournament, Long> {
 
   /**
    * Finds all registrations for a given tournament.
    *
-   * @param tournoi tournament entity
+   * @param tournament tournament entity
    * @return list of tournament registrations
    */
-  List<RegistrationTeamTournament> findByTournoi(Tournament tournoi);
+  List<RegistrationTeamTournament> findByTournament(Tournament tournament);
 
   /**
    * Finds all registrations for a given team.
    *
-   * @param equipe team entity
+   * @param team team entity
    * @return list of team registrations
    */
-  List<RegistrationTeamTournament> findByEquipe(Team equipe);
+  List<RegistrationTeamTournament> findByTeam(Team team);
 
   /**
    * Finds an existing registration for a team in a tournament.
    *
-   * @param tournoi tournament entity
-   * @param equipe  team entity
+   * @param tournament tournament entity
+   * @param team  team entity
    * @return optional registration if found
    */
-  Optional<RegistrationTeamTournament> findByTournoiAndEquipe(
-      Tournament tournoi, Team equipe);
+  Optional<RegistrationTeamTournament> findByTournamentAndTeam(
+          Tournament tournament, Team team);
 }

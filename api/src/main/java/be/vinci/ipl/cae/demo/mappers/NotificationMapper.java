@@ -6,24 +6,21 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/** Mapper for notification DTO conversions. */
 @Component
 public class NotificationMapper {
 
-  /** Converts one notification entity to DTO. */
   public NotificationDto toDto(Notification notification) {
     if (notification == null) {
       return null;
     }
 
     return new NotificationDto(
-        notification.getIdNotification(),
-        notification.getMessage(),
-        notification.getDateEnvoi(),
-        notification.getEstLue());
+            notification.getId(),
+            notification.getMessage(),
+            notification.getSentDate(),
+            notification.getIsRead());
   }
 
-  /** Converts a list of notification entities to DTOs. */
   public List<NotificationDto> toDtos(Iterable<Notification> notifications) {
     List<NotificationDto> result = new ArrayList<>();
     for (Notification notification : notifications) {

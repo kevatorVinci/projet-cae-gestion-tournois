@@ -65,11 +65,11 @@ public class TournamentService {
     List<Tournament> results;
 
     if (hasStatus && hasName) {
-      results = tournamentRepository.findByEtatAndNomContainingIgnoreCase(status, name);
+      results = tournamentRepository.findByStatusAndNameContainingIgnoreCase(status, name);
     } else if (hasStatus) {
-      results = tournamentRepository.findByEtat(status);
+      results = tournamentRepository.findByStatus(status);
     } else if (hasName) {
-      results = tournamentRepository.findByNomContainingIgnoreCase(name);
+      results = tournamentRepository.findByNameContainingIgnoreCase(name);
     } else {
       results = StreamSupport.stream(
               tournamentRepository.findAll().spliterator(), false).toList();
@@ -84,7 +84,7 @@ public class TournamentService {
 
   /** Creates a tournament in BROUILLON state if the name is unique. */
   public Tournament create(Tournament tournament) {
-    if (tournamentRepository.findByNom(tournament.getName()).isPresent()) {
+    if (tournamentRepository.findByName(tournament.getName()).isPresent()) {
       return null;
     }
     // Set initial status to draft
@@ -165,8 +165,8 @@ public class TournamentService {
     }
 
     // Count registered teams
-    Iterable<RegistrationTeamTournament> registered = registrationService.getAllByTournoi(id);
-    long count = countInscriptions(registered);
+    Iterable<RegistrationTeamTournament> registered = registrationService.getAllByTournament(id);
+    long count = countRegistrations(registered);
 
     // Business rule: at least 2 teams are required for manual closure
     if (count < 2) {
@@ -212,9 +212,9 @@ public class TournamentService {
     tournament.setStatus("ANNULE");
 
     String sanitizedReason = (reason == null || reason.isBlank())
-            ? "raison non specifiee"
+            ? "unspecified reason"
             : reason.trim();
-    tournament.setName(tournament.getName() + " (Annulé : " + sanitizedReason + ")");
+    tournament.setName(tournament.getName() + " (Cancelled: " + sanitizedReason + ")");
 
     return tournamentRepository.save(tournament);
   }
@@ -229,7 +229,7 @@ public class TournamentService {
    */
   @Scheduled(cron = "0 0 0 * * *")
   public void checkAndCloseExpiredTournaments() {
-    System.out.println(" Vérification automatique des dates de tournois...");
+    System.out.println(" Automatic check of tournament dates...");
     LocalDate today = LocalDate.now();
 
     Iterable<Tournament> allTournaments = tournamentRepository.findAll();
@@ -242,22 +242,22 @@ public class TournamentService {
         if (tournament.getRegistrationDeadline().isBefore(today)) {
 
           Iterable<RegistrationTeamTournament> registered =
-                  registrationService.getAllByTournoi(tournament.getId());
-          long nbEquipes = countInscriptions(registered);
+                  registrationService.getAllByTournament(tournament.getId());
+          long teamCount = countRegistrations(registered);
 
-          if (nbEquipes >= 2) {
+          if (teamCount >= 2) {
             System.out.println(
-                    "✅ Tournoi " + tournament.getName()
-                            + " clôturé automatiquement (Date dépassée).");
+                    "✅ Tournament " + tournament.getName()
+                            + " automatically closed (Date passed).");
             tournament.setStatus("CLOTURE");
           } else {
             System.out.println(
-                    "❌ Tournoi " + tournament.getName()
-                            + " annulé automatiquement (Moins de 2 joueurs).");
+                    "❌ Tournament " + tournament.getName()
+                            + " automatically cancelled (Less than 2 registered teams).");
             tournament.setStatus("ANNULE");
 
             tournament.setName(
-                    tournament.getName() + " (Annulé : moins de 2 equipes inscrites)");
+                    tournament.getName() + " (Cancelled: less than 2 registered teams)");
           }
 
           tournamentRepository.save(tournament);
@@ -267,7 +267,7 @@ public class TournamentService {
   }
 
   /** Helper method to count non-null registrations */
-  private long countInscriptions(Iterable<RegistrationTeamTournament> registrations) {
+  private long countRegistrations(Iterable<RegistrationTeamTournament> registrations) {
     if (registrations == null) {
       return 0;
     }

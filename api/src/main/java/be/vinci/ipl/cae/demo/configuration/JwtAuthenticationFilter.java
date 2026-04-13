@@ -25,28 +25,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final UserService userService;
 
-  /**
-   * Constructor for JwtAuthenticationFilter.
-   *
-   * @param userService the injected UserService.
-   */
   public JwtAuthenticationFilter(UserService userService) {
     this.userService = userService;
   }
 
-  /**
-   * Filter to handle user authentication.
-   *
-   * @param request     the request.
-   * @param response    the response.
-   * @param filterChain the filter chain.
-   * @throws ServletException the servlet exception.
-   * @throws IOException      the IO exception.
-   */
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-      throws ServletException, IOException {
+          HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+          throws ServletException, IOException {
     String token = request.getHeader("Authorization");
     if (token != null) {
       if (token.startsWith("Bearer ")) {
@@ -60,11 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           if (user.isAdmin()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
           }
-          if (isResponsable(user)) {
+          if (isResponsible(user)) {
             authorities.add(new SimpleGrantedAuthority("ROLE_RESPONSABLE"));
           }
           UsernamePasswordAuthenticationToken authentication =
-              new UsernamePasswordAuthenticationToken(user, null, authorities);
+                  new UsernamePasswordAuthenticationToken(user, null, authorities);
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
@@ -73,14 +59,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private boolean isResponsable(User user) {
-    if (user == null || user.getEquipe() == null) {
+  private boolean isResponsible(User user) {
+    if (user == null || user.getTeam() == null) {
       return false;
     }
-    User principal = user.getEquipe().getResponsablePrincipal();
-    User secondaire = user.getEquipe().getResponsableSecondaire();
+    User primary = user.getTeam().getPrimaryResponsible();
+    User secondary = user.getTeam().getSecondaryResponsible();
     Long userId = user.getId();
-    return (principal != null && principal.getId().equals(userId))
-        || (secondaire != null && secondaire.getId().equals(userId));
+    return (primary != null && primary.getId().equals(userId))
+            || (secondary != null && secondary.getId().equals(userId));
   }
 }

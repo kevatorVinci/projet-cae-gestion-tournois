@@ -13,17 +13,17 @@ public interface TournamentRepository extends CrudRepository<Tournament, Long> {
   /**
    * Finds a tournament by its unique name.
    *
-   * @param nom tournament name
+   * @param name tournament name
    * @return optional tournament if found
    */
-  Optional<Tournament> findByNom(String nom);
+  Optional<Tournament> findByName(String name);
 
   /** Finds tournaments by exact state value. */
-  List<Tournament> findByEtat(String etat);
+  List<Tournament> findByStatus(String status);
 
   /** Finds tournaments whose names contain the given text, case-insensitive. */
-  List<Tournament> findByNomContainingIgnoreCase(String nom);
+  List<Tournament> findByNameContainingIgnoreCase(String name);
 
   /** Finds tournaments by state and name fragment, case-insensitive on name. */
-  List<Tournament> findByEtatAndNomContainingIgnoreCase(String etat, String nom);
+  List<Tournament> findByStatusAndNameContainingIgnoreCase(String status, String name);
 }
