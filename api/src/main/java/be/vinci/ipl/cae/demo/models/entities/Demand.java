@@ -52,7 +52,7 @@ public class Demand {
   private LocalDateTime processingDate;
 
   /** Strict list of possible states for a request. */
-  public enum DemandState { // 🇬🇧 Ancien : EtatDemande
+  public enum DemandState {
     PENDING,
     ACCEPTED,
     REJECTED
