@@ -3,9 +3,9 @@ package be.vinci.ipl.cae.demo.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.lenient;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -21,6 +21,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for TeamService using Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
 class EquipeServiceTest {
 
@@ -37,6 +40,9 @@ class EquipeServiceTest {
   private User responsible;
   private Team team;
 
+  /**
+   * Set up mock data before each test.
+   */
   @BeforeEach
   void setUp() {
     responsible = new User();
@@ -52,8 +58,11 @@ class EquipeServiceTest {
     responsible.setTeam(team);
   }
 
+  /**
+   * Tests successful team creation.
+   */
   @Test
-  void createTeam_OK() {
+  void createTeamOk() {
     User freeUser = new User();
     freeUser.setId(3L);
     freeUser.setTeam(null);
@@ -67,8 +76,11 @@ class EquipeServiceTest {
     assertNotNull(result);
   }
 
+  /**
+   * Tests that the team profile image can be updated by the responsible.
+   */
   @Test
-  void updateTeamImage_OK() {
+  void updateTeamImageOk() {
     when(userRepo.findById(1L)).thenReturn(Optional.of(responsible));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
 

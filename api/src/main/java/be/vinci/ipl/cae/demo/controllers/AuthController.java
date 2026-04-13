@@ -39,8 +39,8 @@ public class AuthController {
   /**
    * Register a new user.
    *
-   * @param credentials register payload
-   * @return authenticated user with token
+   * @param credentials register payload.
+   * @return authenticated user with token.
    */
   @PostMapping("/register")
   public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) {
@@ -54,8 +54,8 @@ public class AuthController {
   /**
    * Authenticate an existing user.
    *
-   * @param credentials login payload
-   * @return authenticated user with token
+   * @param credentials login payload.
+   * @return authenticated user with token.
    */
   @PostMapping("/login")
   public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
@@ -74,8 +74,8 @@ public class AuthController {
     if (user == null) {
       boolean emailExists = existingUser != null;
       String errorMessage = emailExists
-          ? "Le mot de passe est incorrect."
-          : "Cet email n'existe pas.";
+        ? "Le mot de passe est incorrect."
+        : "Cet email n'existe pas.";
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
@@ -84,23 +84,23 @@ public class AuthController {
   /**
    * Entry point to update the user profile.
    *
-   * @param dto the payload sent by React
-   * @return the updated profile with a new token
+   * @param dto the payload sent by React.
+   * @return the updated profile with a new token.
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody @Valid UpdateProfileDto dto) {
     AuthenticatedUser user =
-        userService.updateProfile(
-            dto.getEmail(),
-            dto.getSpecialty(),
-            dto.getProfileImage(),
-            dto.getOldPassword(),
-            dto.getNewPassword());
+      userService.updateProfile(
+        dto.getEmail(),
+        dto.getSpecialty(),
+        dto.getProfileImage(),
+        dto.getOldPassword(),
+        dto.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+        HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
@@ -108,7 +108,7 @@ public class AuthController {
   /**
    * Returns the list of all users for the administration panel.
    *
-   * @return the list of authenticated users
+   * @return the list of authenticated users.
    */
   @GetMapping("/users")
   @IsAdmin
@@ -119,7 +119,7 @@ public class AuthController {
   /**
    * Adds the administrator role to a user.
    *
-   * @param email the email address of the user to promote
+   * @param email the email address of the user to promote.
    */
   @PutMapping("/addAdmin")
   @IsAdmin
@@ -130,7 +130,7 @@ public class AuthController {
   /**
    * Removes the administrator role from a user.
    *
-   * @param email the email address of the user to demote
+   * @param email the email address of the user to demote.
    */
   @PutMapping("/removeAdmin")
   @IsAdmin
@@ -141,7 +141,7 @@ public class AuthController {
   /**
    * Bans a user from the platform.
    *
-   * @param payload a map containing the email of the user to ban
+   * @param payload a map containing the email of the user to ban.
    */
   @PostMapping("/ban")
   @IsAdmin
@@ -155,10 +155,9 @@ public class AuthController {
   }
 
   /**
-   * Retrieves all users for the public directory. We reuse the admin method because it already
-   * filters out banned users and sorts them!
+   * Retrieves all users for the public directory.
    *
-   * @return the list of players
+   * @return the list of players.
    */
   @GetMapping("/players")
   public List<AuthenticatedUser> getAllPlayers() {

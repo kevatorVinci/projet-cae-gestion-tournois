@@ -1,9 +1,10 @@
 package be.vinci.ipl.cae.demo.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,7 @@ import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for RegistrationTeamTournamentService using Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
 class RegistrationTeamTournamentServiceTest {
 
@@ -77,10 +82,16 @@ class RegistrationTeamTournamentServiceTest {
     return i;
   }
 
+  /**
+   * Tests for the getAllByTournament method.
+   */
   @Nested
   @DisplayName("getAllByTournament()")
   class GetAllByTournament {
 
+    /**
+     * Tests that registrations are correctly returned.
+     */
     @Test
     void returnsRegistrations() {
       Tournament t = makeTournament(1L, "OUVERT");
@@ -93,6 +104,9 @@ class RegistrationTeamTournamentServiceTest {
       assertThat(result).containsExactly(i);
     }
 
+    /**
+     * Tests that null is returned if the tournament does not exist.
+     */
     @Test
     void returnsNullIfTournamentDoesNotExist() {
       when(tournamentRepository.findById(99L)).thenReturn(Optional.empty());
@@ -103,10 +117,16 @@ class RegistrationTeamTournamentServiceTest {
     }
   }
 
+  /**
+   * Tests for the getAllByTeam method.
+   */
   @Nested
   @DisplayName("getAllByTeam()")
   class GetAllByTeam {
 
+    /**
+     * Tests that registrations are correctly returned for a team.
+     */
     @Test
     void returnsRegistrations() {
       Team e = makeTeam(1L);
@@ -120,10 +140,16 @@ class RegistrationTeamTournamentServiceTest {
     }
   }
 
+  /**
+   * Tests for the register method.
+   */
   @Nested
   @DisplayName("register()")
   class Register {
 
+    /**
+     * Tests a successful registration.
+     */
     @Test
     void registersWithSuccess() {
       Tournament t = makeTournament(1L, "OUVERT");
@@ -141,6 +167,9 @@ class RegistrationTeamTournamentServiceTest {
       verify(notificationService, times(4)).createNotification(any(User.class), anyString());
     }
 
+    /**
+     * Tests that registration fails if team has less than 4 members.
+     */
     @Test
     void errorIfLessThanFourMembers() {
       Tournament t = makeTournament(1L, "OUVERT");
@@ -148,12 +177,15 @@ class RegistrationTeamTournamentServiceTest {
       when(tournamentRepository.findById(1L)).thenReturn(Optional.of(t));
       when(teamRepository.findById(1L)).thenReturn(Optional.of(e));
 
-      org.junit.jupiter.api.Assertions.assertThrows(
-              IllegalArgumentException.class,
-              () -> service.register(1L, 1L)
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> service.register(1L, 1L)
       );
     }
 
+    /**
+     * Tests that registrations are closed when max participants are reached.
+     */
     @Test
     void autoClosesIfMaxReached() {
       Tournament t = makeTournament(1L, "OUVERT");
@@ -164,7 +196,7 @@ class RegistrationTeamTournamentServiceTest {
       when(registrationRepository.findByTournamentAndTeam(t, e)).thenReturn(Optional.empty());
       when(registrationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
       when(registrationRepository.findByTournament(t)).thenReturn(
-              List.of(new RegistrationTeamTournament(), new RegistrationTeamTournament())
+          List.of(new RegistrationTeamTournament(), new RegistrationTeamTournament())
       );
 
       service.register(1L, 1L);
@@ -173,10 +205,16 @@ class RegistrationTeamTournamentServiceTest {
     }
   }
 
+  /**
+   * Tests for the unregister method.
+   */
   @Nested
   @DisplayName("unregister()")
   class Unregister {
 
+    /**
+     * Tests successful unregistration.
+     */
     @Test
     void unregistersWithSuccess() {
       Tournament t = makeTournament(1L, "OUVERT");
@@ -191,6 +229,9 @@ class RegistrationTeamTournamentServiceTest {
       verify(registrationRepository).delete(i);
     }
 
+    /**
+     * Tests that unregistration fails if the deadline has passed.
+     */
     @Test
     void returnsFalseIfDeadlinePassed() {
       Tournament t = makeTournament(1L, "OUVERT");

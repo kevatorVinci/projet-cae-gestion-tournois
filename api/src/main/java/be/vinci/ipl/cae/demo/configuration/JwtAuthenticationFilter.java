@@ -25,14 +25,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final UserService userService;
 
+  /**
+   * Constructor for JwtAuthenticationFilter.
+   *
+   * @param userService the user service to inject.
+   */
   public JwtAuthenticationFilter(UserService userService) {
     this.userService = userService;
   }
 
   @Override
   protected void doFilterInternal(
-          HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-          throws ServletException, IOException {
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
     String token = request.getHeader("Authorization");
     if (token != null) {
       if (token.startsWith("Bearer ")) {
@@ -50,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authorities.add(new SimpleGrantedAuthority("ROLE_RESPONSABLE"));
           }
           UsernamePasswordAuthenticationToken authentication =
-                  new UsernamePasswordAuthenticationToken(user, null, authorities);
+              new UsernamePasswordAuthenticationToken(user, null, authorities);
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
@@ -67,6 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     User secondary = user.getTeam().getSecondaryResponsible();
     Long userId = user.getId();
     return (primary != null && primary.getId().equals(userId))
-            || (secondary != null && secondary.getId().equals(userId));
+        || (secondary != null && secondary.getId().equals(userId));
   }
 }

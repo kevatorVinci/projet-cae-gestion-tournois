@@ -25,7 +25,7 @@ public class MatchController {
    * Constructor.
    * Links our entry point (Controller) to our brain (Service).
    *
-   * @param matchService the injected match service
+   * @param matchService the injected match service.
    */
   public MatchController(MatchService matchService) {
     this.matchService = matchService;
@@ -35,11 +35,11 @@ public class MatchController {
    * Endpoint to generate the schedule for a specific tournament.
    * React will send a POST request here to start the match creation.
    *
-   * @param tournamentId the ID of the tournament from the URL
+   * @param tournamentId the ID of the tournament from the URL.
    */
   @PostMapping("/{tournamentId}/schedule")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("isAuthenticated()") // Checks if the user is logged in
+  @PreAuthorize("isAuthenticated()")
   public void generateSchedule(@PathVariable Long tournamentId) {
     // Ask the service to do the hard work of generating matches!
     matchService.generateTournamentSchedule(tournamentId);
@@ -49,8 +49,8 @@ public class MatchController {
    * Endpoint to retrieve all matches for a specific tournament.
    * React will send a GET request here to display the tournament bracket.
    *
-   * @param tournamentId the ID of the tournament from the URL
-   * @return a list of matches
+   * @param tournamentId the ID of the tournament from the URL.
+   * @return a list of matches.
    */
   @GetMapping("/{tournamentId}/matches")
   public List<Match> getMatches(@PathVariable Long tournamentId) {

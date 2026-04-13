@@ -19,6 +19,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for TournamentService using Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
 class TournamentServiceTest {
 
@@ -59,8 +62,11 @@ class TournamentServiceTest {
     return user;
   }
 
+  /**
+   * Tests that creating a tournament only notifies admin users.
+   */
   @Test
-  void create_notifiesOnlyAdmins() {
+  void createNotifiesOnlyAdmins() {
     Tournament tournament = makeTournament("Spring Cup 2026");
     User alice = makeAdmin(1L, "Alice");
     User bob = makeUser(2L, "Bob");
@@ -74,15 +80,17 @@ class TournamentServiceTest {
 
     assertThat(result).isNotNull();
     assertThat(result.getStatus()).isEqualTo("BROUILLON");
-    // Only the 2 admins receive the notification
     verify(notificationService, times(2)).notifyDraftTournamentCreation(any(User.class), any());
   }
 
+  /**
+   * Tests that no notification is sent if the tournament name is already used.
+   */
   @Test
-  void create_doesNotNotifyIfNameAlreadyUsed() {
+  void createDoesNotNotifyIfNameAlreadyUsed() {
     Tournament tournament = makeTournament("Spring Cup 2026");
     when(tournamentRepository.findByName("Spring Cup 2026"))
-            .thenReturn(Optional.of(makeTournament("Spring Cup 2026")));
+        .thenReturn(Optional.of(makeTournament("Spring Cup 2026")));
 
     Tournament result = service.create(tournament);
 
@@ -91,8 +99,11 @@ class TournamentServiceTest {
     verify(notificationService, never()).notifyDraftTournamentCreation(any(User.class), any());
   }
 
+  /**
+   * Tests that publishing a tournament notifies all users.
+   */
   @Test
-  void publish_notifiesAllUsers() {
+  void publishNotifiesAllUsers() {
     Tournament tournament = makeTournament("Spring Cup 2026");
     tournament.setId(1L);
     tournament.setStatus("BROUILLON");
@@ -104,7 +115,6 @@ class TournamentServiceTest {
     when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
     when(tournamentRepository.save(any())).thenAnswer(invocation -> {
       Tournament t = invocation.getArgument(0);
-      // 🇬🇧 Utilisation de OPEN au lieu de OUVERT
       assertThat(t.getStatus()).isEqualTo("OUVERT");
       return t;
     });
@@ -114,7 +124,6 @@ class TournamentServiceTest {
 
     assertThat(result).isNotNull();
     assertThat(result.getStatus()).isEqualTo("OUVERT");
-    // All 3 users receive the notification
     verify(notificationService, times(3)).notifyTournamentPublished(any(User.class), any());
   }
 }

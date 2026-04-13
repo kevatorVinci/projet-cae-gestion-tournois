@@ -1,11 +1,14 @@
 package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
-import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/** Repository for team operations. */
+import java.util.Optional;
+
+/**
+ * Repository for team operations.
+ */
 @Repository
 public interface TeamRepository extends CrudRepository<Team, Long> {
 
@@ -29,5 +32,5 @@ public interface TeamRepository extends CrudRepository<Team, Long> {
    * Finds the team where the given user is a responsible (primary or secondary).
    */
   Optional<Team> findByPrimaryResponsibleIdOrSecondaryResponsibleId(
-          Long primaryId, Long secondaryId);
+      Long primaryId, Long secondaryId);
 }

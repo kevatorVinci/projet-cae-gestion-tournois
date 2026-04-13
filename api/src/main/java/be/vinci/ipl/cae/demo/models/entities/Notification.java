@@ -35,6 +35,9 @@ public class Notification {
   @Column(name = "est_lue", nullable = false)
   private Boolean isRead = false;
 
+  /**
+   * The user who receives this notification.
+   */
   @ManyToOne
   @JoinColumn(name = "id_membre", nullable = false)
   private User user;

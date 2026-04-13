@@ -6,18 +6,31 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/** Mapper for user-facing authentication DTO conversions. */
+/**
+ * Mapper for user-facing authentication DTO conversions.
+ */
 @Component
 public class UserMapper {
 
-  /** Converts a user to authenticated payload and injects an already-generated token. */
+  /**
+   * Converts a user to authenticated payload and injects an already-generated token.
+   *
+   * @param user  the user entity.
+   * @param token the JWT token.
+   * @return the authenticated user DTO.
+   */
   public AuthenticatedUser toAuthenticatedUser(User user, String token) {
     AuthenticatedUser dto = toAuthenticatedUser(user);
     dto.setToken(token);
     return dto;
   }
 
-  /** Converts a user to authenticated payload without token. */
+  /**
+   * Converts a user to authenticated payload without token.
+   *
+   * @param user the user entity.
+   * @return the authenticated user DTO.
+   */
   public AuthenticatedUser toAuthenticatedUser(User user) {
     AuthenticatedUser dto = new AuthenticatedUser();
     if (user == null) {
@@ -34,11 +47,18 @@ public class UserMapper {
     return dto;
   }
 
-  /** Converts many user entities to authenticated payloads. */
+  /**
+   * Converts many user entities to authenticated payloads.
+   *
+   * @param users the list of users.
+   * @return a list of authenticated user DTOs.
+   */
   public List<AuthenticatedUser> toAuthenticatedUsers(Iterable<User> users) {
     List<AuthenticatedUser> result = new ArrayList<>();
-    for (User user : users) {
-      result.add(toAuthenticatedUser(user));
+    if (users != null) {
+      for (User user : users) {
+        result.add(toAuthenticatedUser(user));
+      }
     }
     return result;
   }

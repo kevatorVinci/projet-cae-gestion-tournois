@@ -29,6 +29,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for DemandService using Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
 class DemandServiceTest {
 
@@ -49,6 +52,9 @@ class DemandServiceTest {
   private Team team;
   private Demand demand;
 
+  /**
+   * Set up mock data before each test.
+   */
   @BeforeEach
   void setUp() {
     responsible = new User();
@@ -71,8 +77,11 @@ class DemandServiceTest {
     demand.setState(DemandState.PENDING);
   }
 
+  /**
+   * Tests creating a join request when the member has no team.
+   */
   @Test
-  void createJoinRequest_memberWithoutTeam_OK() {
+  void createJoinRequestMemberWithoutTeamOk() {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
     when(demandRepo.save(any())).thenReturn(demand);
@@ -84,8 +93,11 @@ class DemandServiceTest {
     verify(demandRepo).save(any());
   }
 
+  /**
+   * Tests that a member already in a team cannot create a request.
+   */
   @Test
-  void createJoinRequest_memberAlreadyInTeam_throwsRuntime() {
+  void createJoinRequestMemberAlreadyInTeamThrowsRuntime() {
     member.setTeam(team);
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
@@ -94,23 +106,32 @@ class DemandServiceTest {
     verify(demandRepo, never()).save(any());
   }
 
+  /**
+   * Tests creating a request for a non-existent member.
+   */
   @Test
-  void createJoinRequest_nonExistentMember_throwsRuntime() {
+  void createJoinRequestNonExistentMemberThrowsRuntime() {
     when(userRepo.findById(99L)).thenReturn(Optional.empty());
 
     assertThrows(RuntimeException.class, () -> demandService.createJoinRequest(99L, 10L));
   }
 
+  /**
+   * Tests creating a request for a non-existent team.
+   */
   @Test
-  void createJoinRequest_nonExistentTeam_throwsRuntime() {
+  void createJoinRequestNonExistentTeamThrowsRuntime() {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(99L)).thenReturn(Optional.empty());
 
     assertThrows(RuntimeException.class, () -> demandService.createJoinRequest(2L, 99L));
   }
 
+  /**
+   * Tests creating a request for a team without responsibles.
+   */
   @Test
-  void createJoinRequest_teamWithoutResponsible_throwsRuntime() {
+  void createJoinRequestTeamWithoutResponsibleThrowsRuntime() {
     team.setPrimaryResponsible(null);
     team.setSecondaryResponsible(null);
 
@@ -121,18 +142,24 @@ class DemandServiceTest {
     verify(demandRepo, never()).save(any());
   }
 
+  /**
+   * Tests retrieving pending requests for a team.
+   */
   @Test
-  void getPendingRequestsForTeam_returnsList() {
+  void getPendingRequestsForTeamReturnsList() {
     when(demandRepo.findByTeamIdAndState(10L, DemandState.PENDING))
-            .thenReturn(List.of(demand));
+        .thenReturn(List.of(demand));
 
     Iterable<Demand> result = demandService.getPendingRequestsForTeam(10L);
 
     assertTrue(result.iterator().hasNext());
   }
 
+  /**
+   * Tests behavior when no pending requests exist for a team.
+   */
   @Test
-  void getPendingRequestsForTeam_noDemands_returnsEmpty() {
+  void getPendingRequestsForTeamNoDemandsReturnsEmpty() {
     when(demandRepo.findByTeamIdAndState(10L, DemandState.PENDING)).thenReturn(List.of());
 
     Iterable<Demand> result = demandService.getPendingRequestsForTeam(10L);
@@ -140,8 +167,11 @@ class DemandServiceTest {
     assertFalse(result.iterator().hasNext());
   }
 
+  /**
+   * Tests successful demand acceptance by a responsible user.
+   */
   @Test
-  void acceptDemand_byResponsible_OK() {
+  void acceptDemandByResponsibleOk() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
     when(userRepo.save(any())).thenReturn(member);
     when(teamRepo.save(any())).thenReturn(team);
@@ -155,8 +185,11 @@ class DemandServiceTest {
     assertTrue(team.getMembers().contains(member));
   }
 
+  /**
+   * Verifies that the member is correctly saved into the team upon acceptance.
+   */
   @Test
-  void acceptDemand_memberAddedToTeam() {
+  void acceptDemandMemberAddedToTeam() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
     when(userRepo.save(any())).thenReturn(member);
     when(teamRepo.save(any())).thenReturn(team);
@@ -168,22 +201,31 @@ class DemandServiceTest {
     verify(teamRepo).save(team);
   }
 
+  /**
+   * Tests accepting a non-existent demand.
+   */
   @Test
-  void acceptDemand_nonExistentDemand_throwsRuntime() {
+  void acceptDemandNonExistentDemandThrowsRuntime() {
     when(demandRepo.findById(999L)).thenReturn(Optional.empty());
 
     assertThrows(RuntimeException.class, () -> demandService.acceptDemand(999L, responsible));
   }
 
+  /**
+   * Tests that a non-responsible user cannot accept a demand.
+   */
   @Test
-  void acceptDemand_nonResponsibleUser_throwsSecurity() {
+  void acceptDemandNonResponsibleUserThrowsSecurity() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
     assertThrows(SecurityException.class, () -> demandService.acceptDemand(100L, member));
   }
 
+  /**
+   * Tests that a secondary responsible can also accept a demand.
+   */
   @Test
-  void acceptDemand_secondaryResponsible_OK() {
+  void acceptDemandSecondaryResponsibleOk() {
     User secondaryResp = new User();
     secondaryResp.setId(3L);
     team.setSecondaryResponsible(secondaryResp);
@@ -196,8 +238,11 @@ class DemandServiceTest {
     assertDoesNotThrow(() -> demandService.acceptDemand(100L, secondaryResp));
   }
 
+  /**
+   * Tests successful demand rejection with a reason.
+   */
   @Test
-  void rejectDemand_withReason_OK() {
+  void rejectDemandWithReasonOk() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
     when(demandRepo.save(any())).thenReturn(demand);
 
@@ -208,8 +253,11 @@ class DemandServiceTest {
     assertNotNull(result.getProcessingDate());
   }
 
+  /**
+   * Tests that a secondary responsible can reject a demand.
+   */
   @Test
-  void rejectDemand_secondaryResponsible_OK() {
+  void rejectDemandSecondaryResponsibleOk() {
     User secondaryResp = new User();
     secondaryResp.setId(3L);
     team.setSecondaryResponsible(secondaryResp);
@@ -218,27 +266,36 @@ class DemandServiceTest {
     when(demandRepo.save(any())).thenReturn(demand);
 
     assertDoesNotThrow(
-            () -> demandService.rejectDemand(100L, "Lack of experience", secondaryResp));
+        () -> demandService.rejectDemand(100L, "Lack of experience", secondaryResp));
   }
 
+  /**
+   * Tests that a non-responsible user cannot reject a demand.
+   */
   @Test
-  void rejectDemand_nonResponsibleUser_throwsSecurity() {
+  void rejectDemandNonResponsibleUserThrowsSecurity() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
     assertThrows(
-            SecurityException.class, () -> demandService.rejectDemand(100L, "reason", member));
+        SecurityException.class, () -> demandService.rejectDemand(100L, "reason", member));
   }
 
+  /**
+   * Tests rejecting a non-existent demand.
+   */
   @Test
-  void rejectDemand_nonExistentDemand_throwsRuntime() {
+  void rejectDemandNonExistentDemandThrowsRuntime() {
     when(demandRepo.findById(999L)).thenReturn(Optional.empty());
 
     assertThrows(
-            RuntimeException.class, () -> demandService.rejectDemand(999L, "reason", responsible));
+        RuntimeException.class, () -> demandService.rejectDemand(999L, "reason", responsible));
   }
 
+  /**
+   * Verifies that a rejected member does not join the team.
+   */
   @Test
-  void rejectDemand_memberDoesNotJoinTeam() {
+  void rejectDemandMemberDoesNotJoinTeam() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
     when(demandRepo.save(any())).thenReturn(demand);
 

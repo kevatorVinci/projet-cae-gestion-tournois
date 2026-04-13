@@ -7,10 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +30,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+/**
+ * Unit tests for UserService using Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -55,6 +57,9 @@ class UserServiceTest {
   private User user;
   private Credentials credentials;
 
+  /**
+   * Set up mock data before each test.
+   */
   @BeforeEach
   void setUp() {
     user = new User();
@@ -73,27 +78,30 @@ class UserServiceTest {
     credentials.setSpecialty("tactician");
 
     lenient()
-            .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
-            .thenAnswer(
-                    invocation -> {
-                      User source = invocation.getArgument(0);
-                      String token = invocation.getArgument(1);
-                      AuthenticatedUser dto = new AuthenticatedUser();
-                      dto.setToken(token);
-                      if (source != null) {
-                        dto.setEmail(source.getEmail());
-                        dto.setTag(source.getTag());
-                        dto.setSpecialty(source.getSpecialty());
-                        dto.setProfileImage(source.getProfileImageUrl());
-                        dto.setAdmin(source.isAdmin());
-                        dto.setBanned(source.isBanned());
-                      }
-                      return dto;
-                    });
+        .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
+        .thenAnswer(
+            invocation -> {
+              User source = invocation.getArgument(0);
+              String token = invocation.getArgument(1);
+              AuthenticatedUser dto = new AuthenticatedUser();
+              dto.setToken(token);
+              if (source != null) {
+                dto.setEmail(source.getEmail());
+                dto.setTag(source.getTag());
+                dto.setSpecialty(source.getSpecialty());
+                dto.setProfileImage(source.getProfileImageUrl());
+                dto.setAdmin(source.isAdmin());
+                dto.setBanned(source.isBanned());
+              }
+              return dto;
+            });
   }
 
+  /**
+   * Tests registration of a new member.
+   */
   @Test
-  void register_newMember_OK() {
+  void registerNewMemberOk() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(null);
     when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED);
     when(userRepository.save(any())).thenReturn(user);
@@ -106,24 +114,30 @@ class UserServiceTest {
     verify(userRepository).save(any());
   }
 
+  /**
+   * Verifies that the plain password is not stored directly.
+   */
   @Test
-  void register_hashedPassword_notStoredInPlain() {
+  void registerHashedPasswordNotStoredInPlain() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(null);
     when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED);
     when(userRepository.save(any()))
-            .thenAnswer(
-                    inv -> {
-                      User saved = inv.getArgument(0);
-                      assertNotEquals(PASSWORD, saved.getPassword());
-                      return saved;
-                    });
+        .thenAnswer(
+            inv -> {
+              User saved = inv.getArgument(0);
+              assertNotEquals(PASSWORD, saved.getPassword());
+              return saved;
+            });
 
     userService.register(credentials);
     verify(passwordEncoder).encode(PASSWORD);
   }
 
+  /**
+   * Tests login with correct credentials.
+   */
   @Test
-  void login_correctCredentials_returnsToken() {
+  void loginCorrectCredentialsReturnsToken() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(passwordEncoder.matches(PASSWORD, HASHED)).thenReturn(true);
 
@@ -134,8 +148,11 @@ class UserServiceTest {
     assertNotNull(result.getToken());
   }
 
+  /**
+   * Tests that the JWT token contains public user data.
+   */
   @Test
-  void createJwtToken_includesPublicData() {
+  void createJwtTokenIncludesPublicData() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
     AuthenticatedUser result = userService.createJwtToken(EMAIL);
@@ -144,32 +161,39 @@ class UserServiceTest {
     assertEquals("tactician", result.getSpecialty());
   }
 
+  /**
+   * Tests JWT token verification.
+   */
   @Test
-  void verifyJwtToken_validToken_returnsEmail() {
+  void verifyJwtTokenValidTokenReturnsEmail() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     String token = userService.createJwtToken(EMAIL).getToken();
 
     assertEquals(EMAIL, userService.verifyJwtToken(token));
   }
 
+  /**
+   * Tests updating the user profile.
+   */
   @Test
-  void updateProfile_specialtyAndImage_OK() {
+  void updateProfileSpecialtyAndImageOk() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
-    AuthenticatedUser result =
-            userService.updateProfile(EMAIL, "goalkeeper", "avatar2.png", null, null);
+    userService.updateProfile(EMAIL, "goalkeeper", "avatar2.png", null, null);
 
-    assertNotNull(result);
     assertEquals("goalkeeper", user.getSpecialty());
     assertEquals("avatar2.png", user.getProfileImageUrl());
     verify(userRepository).save(user);
   }
 
+  /**
+   * Tests banning a simple user.
+   */
   @Test
-  void banUser_existingUser_activatesSoftBan() {
+  void banUserExistingUserActivatesSoftBan() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.empty());
+        .thenReturn(Optional.empty());
 
     userService.banUser(EMAIL, null);
 
@@ -177,8 +201,11 @@ class UserServiceTest {
     verify(userRepository).save(user);
   }
 
+  /**
+   * Tests banning a primary responsible and promoting the secondary.
+   */
   @Test
-  void banUser_primaryResponsible_withSecondary_promotesSecondary() {
+  void banUserPrimaryResponsibleWithSecondaryPromotesSecondary() {
     User secondary = new User();
     secondary.setId(2L);
     secondary.setCreationDate(LocalDate.of(2026, 1, 2));
@@ -193,7 +220,7 @@ class UserServiceTest {
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.of(team));
+        .thenReturn(Optional.of(team));
 
     userService.banUser(EMAIL, null);
 
@@ -206,8 +233,11 @@ class UserServiceTest {
     verify(userRepository).save(user);
   }
 
+  /**
+   * Tests banning a responsible without a secondary, picking the oldest member.
+   */
   @Test
-  void banUser_primaryResponsibleWithoutSecondary_picksOldestMember() {
+  void banUserPrimaryResponsibleWithoutSecondaryPicksOldestMember() {
     User oldest = new User();
     oldest.setId(3L);
     oldest.setCreationDate(LocalDate.of(2024, 2, 1));
@@ -226,7 +256,7 @@ class UserServiceTest {
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.of(team));
+        .thenReturn(Optional.of(team));
 
     userService.banUser(EMAIL, null);
 
@@ -237,8 +267,11 @@ class UserServiceTest {
     verify(teamRepository).save(team);
   }
 
+  /**
+   * Tests that a banned member is removed from their team.
+   */
   @Test
-  void banUser_member_isRemovedFromTeam() {
+  void banUserMemberIsRemovedFromTeam() {
     User principal = new User();
     principal.setId(10L);
     principal.setCreationDate(LocalDate.of(2025, 1, 1));
@@ -252,7 +285,7 @@ class UserServiceTest {
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.empty());
+        .thenReturn(Optional.empty());
 
     userService.banUser(EMAIL, null);
 

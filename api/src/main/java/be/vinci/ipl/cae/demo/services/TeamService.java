@@ -4,12 +4,11 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service managing the business logic related to teams.
@@ -17,20 +16,24 @@ import org.springframework.transaction.annotation.Transactional;
  * This class encapsulates all possible operations on teams: creating a team
  * (with name uniqueness check), retrieving all teams, and retrieving a
  * team by its identifier.
+ * </p>
  */
 @Service
 public class TeamService {
 
-  private final TeamRepository teamRepository; // 🇬🇧 Ancien : equipeRepository
+  private final TeamRepository teamRepository;
   private final UserRepository userRepository;
   private final DemandService demandService;
   private final NotificationService notificationService;
 
+  /**
+   * Constructor for TeamService.
+   */
   public TeamService(
-    TeamRepository teamRepository,
-    UserRepository userRepository,
-    DemandService demandService,
-    NotificationService notificationService) {
+      TeamRepository teamRepository,
+      UserRepository userRepository,
+      DemandService demandService,
+      NotificationService notificationService) {
     this.teamRepository = teamRepository;
     this.userRepository = userRepository;
     this.demandService = demandService;
@@ -42,7 +45,7 @@ public class TeamService {
    *
    * @return an Iterable containing all teams
    */
-  public Iterable<Team> getAllTeams() { // 🇬🇧 Ancien : getAllEquipes
+  public Iterable<Team> getAllTeams() {
     return teamRepository.findAll();
   }
 
@@ -51,8 +54,8 @@ public class TeamService {
    *
    * @return an Iterable containing the active teams
    */
-  public Iterable<Team> getActiveTeams() { // 🇬🇧 Ancien : getEquipesActives
-    return teamRepository.findByMembersIsNotEmpty(); // 🇬🇧 Ancien : findByMembresIsNotEmpty
+  public Iterable<Team> getActiveTeams() {
+    return teamRepository.findByMembersIsNotEmpty();
   }
 
   /**
@@ -61,7 +64,7 @@ public class TeamService {
    * @param id the team identifier
    * @return an Optional containing the team if it exists
    */
-  public Optional<Team> getTeamById(Long id) { // 🇬🇧 Ancien : getEquipeById
+  public Optional<Team> getTeamById(Long id) {
     return teamRepository.findById(id);
   }
 
@@ -110,14 +113,17 @@ public class TeamService {
 
     Long userId = user.getId();
     boolean isPrimary = team.getPrimaryResponsible() != null
-      && team.getPrimaryResponsible().getId().equals(userId);
+        && team.getPrimaryResponsible().getId().equals(userId);
 
     boolean isSecondary = team.getSecondaryResponsible() != null
-      && team.getSecondaryResponsible().getId().equals(userId);
+        && team.getSecondaryResponsible().getId().equals(userId);
 
     return isPrimary || isSecondary;
   }
 
+  /**
+   * Checks whether the current user is a team leader.
+   */
   public boolean isCurrentUserResponsible(User currentUser) {
     try {
       User persistedCurrentUser = loadPersistedUser(currentUser);
@@ -127,6 +133,9 @@ public class TeamService {
     }
   }
 
+  /**
+   * Promotes a team member to a responsible role.
+   */
   @Transactional
   public void promoteTeamMember(User currentUser, Long memberId) {
     User persistedCurrentUser = loadPersistedUser(currentUser);
@@ -149,6 +158,9 @@ public class TeamService {
     teamRepository.save(team);
   }
 
+  /**
+   * Removes a responsible role from a team member.
+   */
   @Transactional
   public void demoteTeamLeader(User currentUser, Long memberId) {
     User persistedCurrentUser = loadPersistedUser(currentUser);
@@ -169,10 +181,13 @@ public class TeamService {
     teamRepository.save(team);
   }
 
+  /**
+   * Allows a user to leave their team.
+   */
   @Transactional
   public void leaveTeam(User user, Long newResponsibleId) {
     User persistedUser = userRepository.findById(user.getId())
-      .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+        .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
 
     Team team = resolveCurrentUserTeam(persistedUser);
 
@@ -195,7 +210,7 @@ public class TeamService {
       boolean onlyResponsible = countResponsibles(team) == 1;
       if (onlyResponsible) {
         if (newResponsibleId == null) {
-          throw new IllegalStateException("You must designate a replacement before leaving the team.");
+          throw new IllegalStateException("You must designate a replacement.");
         }
 
         User newResponsible = findMemberInTeam(team, newResponsibleId);
@@ -226,10 +241,13 @@ public class TeamService {
     teamRepository.save(team);
   }
 
+  /**
+   * Updates the profile image of a team.
+   */
   @Transactional
   public void updateTeamImage(Long teamId, String imageName, User currentUser) {
     Team team = teamRepository.findById(teamId)
-      .orElseThrow(() -> new IllegalArgumentException("Team not found."));
+        .orElseThrow(() -> new IllegalArgumentException("Team not found."));
 
     User persistedUser = loadPersistedUser(currentUser);
 
@@ -256,7 +274,7 @@ public class TeamService {
 
     for (Team team : teamRepository.findAll()) {
       boolean isMember = team.getMembers().stream()
-        .anyMatch(member -> member.getId().equals(currentUser.getId()));
+          .anyMatch(member -> member.getId().equals(currentUser.getId()));
 
       if (isMember || isUserResponsible(team, currentUser)) {
         return team;
@@ -274,9 +292,9 @@ public class TeamService {
 
   private User findMemberInTeam(Team team, Long memberId) {
     return team.getMembers().stream()
-      .filter(member -> member.getId().equals(memberId))
-      .findFirst()
-      .orElseThrow(() -> new IllegalStateException("The member does not belong to the team."));
+        .filter(member -> member.getId().equals(memberId))
+        .findFirst()
+        .orElseThrow(() -> new IllegalStateException("The member does not belong to the team."));
   }
 
   private User loadPersistedUser(User currentUser) {
@@ -285,7 +303,7 @@ public class TeamService {
     }
 
     return userRepository.findById(currentUser.getId())
-      .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+        .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
   }
 
   private int countResponsibles(Team team) {
@@ -301,11 +319,11 @@ public class TeamService {
 
   private void removeResponsibleRole(Team team, Long userId) {
     if (team.getPrimaryResponsible() != null
-      && team.getPrimaryResponsible().getId().equals(userId)) {
+        && team.getPrimaryResponsible().getId().equals(userId)) {
       team.setPrimaryResponsible(null);
     }
     if (team.getSecondaryResponsible() != null
-      && team.getSecondaryResponsible().getId().equals(userId)) {
+        && team.getSecondaryResponsible().getId().equals(userId)) {
       team.setSecondaryResponsible(null);
     }
   }

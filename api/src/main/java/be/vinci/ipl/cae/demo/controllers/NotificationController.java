@@ -26,7 +26,7 @@ public class NotificationController {
   /**
    * Builds the notification controller.
    *
-   * @param notificationService notification business service
+   * @param notificationService notification business service.
    */
   public NotificationController(NotificationService notificationService) {
     this.notificationService = notificationService;
@@ -34,37 +34,53 @@ public class NotificationController {
 
   /**
    * Toutes les notifications d'un membre (lues + non lues), les plus récentes en premier.
+   *
+   * @param userId      the user ID.
+   * @param currentUser the authenticated user.
+   * @return list of all notifications.
    */
   @GetMapping("/users/{userId}")
   public ResponseEntity<List<Notification>> getAll(
-      @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.getByUser(userId));
   }
 
   /**
    * Uniquement les notifications non lues d'un membre.
+   *
+   * @param userId      the user ID.
+   * @param currentUser the authenticated user.
+   * @return list of unread notifications.
    */
   @GetMapping("/users/{userId}/non-lues")
   public ResponseEntity<List<Notification>> getUnread(
-      @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.getUnread(userId));
   }
 
   /**
    * Marque une notification spécifique comme lue.
+   *
+   * @param idNotification the notification ID.
+   * @param currentUser    the authenticated user.
+   * @return the updated notification.
    */
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<Notification> markAsRead(
-      @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
+    @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.markAsRead(idNotification));
   }
 
   /**
    * Marque toutes les notifications d'un membre comme lues.
+   *
+   * @param userId      the user ID.
+   * @param currentUser the authenticated user.
+   * @return no content.
    */
   @PatchMapping("/users/{userId}/tous-lues")
   public ResponseEntity<Void> markAllAsRead(
-      @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     notificationService.markAllAsRead(userId);
     return ResponseEntity.noContent().build();
   }

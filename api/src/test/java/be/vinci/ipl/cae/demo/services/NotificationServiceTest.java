@@ -23,6 +23,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for NotificationService using Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
 
@@ -35,6 +38,9 @@ class NotificationServiceTest {
   private User user;
   private Notification notification;
 
+  /**
+   * Set up mock data before each test.
+   */
   @BeforeEach
   void setUp() {
     user = new User();
@@ -48,10 +54,13 @@ class NotificationServiceTest {
     notification.setIsRead(false);
   }
 
+  /**
+   * Tests retrieving notifications for a user.
+   */
   @Test
-  void getByUser_returnsSortedList() {
+  void getByUserReturnsSortedList() {
     when(notificationRepository.findByUserIdOrderBySentDateDesc(1L))
-            .thenReturn(List.of(notification));
+        .thenReturn(List.of(notification));
 
     List<Notification> result = notificationService.getByUser(1L);
 
@@ -60,8 +69,11 @@ class NotificationServiceTest {
     verify(notificationRepository).findByUserIdOrderBySentDateDesc(1L);
   }
 
+  /**
+   * Tests retrieving notifications when the user has none.
+   */
   @Test
-  void getByUser_noNotifications_returnsEmptyList() {
+  void getByUserNoNotificationsReturnsEmptyList() {
     when(notificationRepository.findByUserIdOrderBySentDateDesc(1L)).thenReturn(List.of());
 
     List<Notification> result = notificationService.getByUser(1L);
@@ -69,10 +81,13 @@ class NotificationServiceTest {
     assertTrue(result.isEmpty());
   }
 
+  /**
+   * Tests retrieving only unread notifications.
+   */
   @Test
-  void getUnread_returnsOnlyUnread() {
+  void getUnreadReturnsOnlyUnread() {
     when(notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(1L, false))
-            .thenReturn(List.of(notification));
+        .thenReturn(List.of(notification));
 
     List<Notification> result = notificationService.getUnread(1L);
 
@@ -80,8 +95,11 @@ class NotificationServiceTest {
     assertFalse(result.get(0).getIsRead());
   }
 
+  /**
+   * Tests marking a specific notification as read.
+   */
   @Test
-  void markAsRead_notificationBecomesRead() {
+  void markAsReadNotificationBecomesRead() {
     when(notificationRepository.findById(100L)).thenReturn(Optional.of(notification));
     when(notificationRepository.save(any())).thenReturn(notification);
 
@@ -91,23 +109,29 @@ class NotificationServiceTest {
     verify(notificationRepository).save(notification);
   }
 
+  /**
+   * Tests marking a non-existent notification as read.
+   */
   @Test
-  void markAsRead_nonExistentNotification_throwsRuntime() {
+  void markAsReadNonExistentNotificationThrowsRuntime() {
     when(notificationRepository.findById(999L)).thenReturn(Optional.empty());
 
     assertThrows(RuntimeException.class, () -> notificationService.markAsRead(999L));
     verify(notificationRepository, never()).save(any());
   }
 
+  /**
+   * Tests marking all notifications as read for a user.
+   */
   @Test
-  void markAllAsRead_allNotificationsBecomeRead() {
+  void markAllAsReadAllNotificationsBecomeRead() {
     Notification n2 = new Notification();
     n2.setId(101L);
     n2.setUser(user);
     n2.setIsRead(false);
 
     when(notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(1L, false))
-            .thenReturn(List.of(notification, n2));
+        .thenReturn(List.of(notification, n2));
 
     notificationService.markAllAsRead(1L);
 
@@ -116,14 +140,20 @@ class NotificationServiceTest {
     verify(notificationRepository).saveAll(List.of(notification, n2));
   }
 
+  /**
+   * Tests deleting all notifications for a user.
+   */
   @Test
-  void deleteByUser_removesAllNotifications() {
+  void deleteByUserRemovesAllNotifications() {
     notificationService.deleteByUser(1L);
     verify(notificationRepository).deleteByUserId(1L);
   }
 
+  /**
+   * Tests creating a notification with correct field values.
+   */
   @Test
-  void createNotification_savesWithCorrectValues() {
+  void createNotificationSavesWithCorrectValues() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
     notificationService.createNotification(user, "My message");
@@ -138,8 +168,11 @@ class NotificationServiceTest {
     assertNotNull(saved.getSentDate());
   }
 
+  /**
+   * Tests the account creation notification message.
+   */
   @Test
-  void notifyAccountCreation_messageStartsWithWelcome() {
+  void notifyAccountCreationMessageStartsWithWelcome() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
     notificationService.notifyAccountCreation(user);
@@ -149,8 +182,11 @@ class NotificationServiceTest {
     assertTrue(captor.getValue().getMessage().startsWith("Welcome"));
   }
 
+  /**
+   * Tests the team creation notification message.
+   */
   @Test
-  void notifyTeamCreation_messageContainsTeamName() {
+  void notifyTeamCreationMessageContainsTeamName() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
     notificationService.notifyTeamCreation(user, "The Invincibles");
@@ -160,8 +196,11 @@ class NotificationServiceTest {
     assertTrue(captor.getValue().getMessage().contains("The Invincibles"));
   }
 
+  /**
+   * Tests the request accepted notification message.
+   */
   @Test
-  void notifyRequestAccepted_messageStartsWithAccepted() {
+  void notifyRequestAcceptedMessageStartsWithAccepted() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
     notificationService.notifyRequestAccepted(user, "The Invincibles");
@@ -171,8 +210,11 @@ class NotificationServiceTest {
     assertTrue(captor.getValue().getMessage().startsWith("Accepted"));
   }
 
+  /**
+   * Tests the request denied notification message with a reason.
+   */
   @Test
-  void notifyRequestDenied_withReason_showsReason() {
+  void notifyRequestDeniedWithReasonShowsReason() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
     notificationService.notifyRequestDenied(user, "The Invincibles", "Insufficient level");
@@ -184,8 +226,11 @@ class NotificationServiceTest {
     assertTrue(msg.contains("Insufficient level"));
   }
 
+  /**
+   * Tests the request denied notification message without a specific reason.
+   */
   @Test
-  void notifyRequestDenied_noReason_showsDefaultMsg() {
+  void notifyRequestDeniedNoReasonShowsDefaultMsg() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
     notificationService.notifyRequestDenied(user, "The Invincibles", null);
