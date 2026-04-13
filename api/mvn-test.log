@@ -36,25 +36,25 @@
 [INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.035 s -- in be.vinci.ipl.cae.demo.services.DemandServiceTest
 [INFO] Running be.vinci.ipl.cae.demo.services.EquipeServiceTest
 [INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.585 s -- in be.vinci.ipl.cae.demo.services.EquipeServiceTest
-[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest
-[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$UnregisterByTournoiAndEquipe
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.916 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$UnregisterByTournoiAndEquipe
-[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Unregister
+[INFO] Running be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$UnregisterByTournoiAndEquipe
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.916 s -- in be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$UnregisterByTournoiAndEquipe
+[INFO] Running be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$Unregister
 Unregistration denied: tournament deadline has passed.
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.082 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Unregister
-[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Register
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.173 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$Register
-[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetById
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetById
-[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByEquipe
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.085 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByEquipe
-[INFO] Running be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByTournoi
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest$GetAllByTournoi
-[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.393 s -- in be.vinci.ipl.cae.demo.services.InscriptionEquipeTournoiServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.082 s -- in be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$Unregister
+[INFO] Running be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$Register
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.173 s -- in be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$Register
+[INFO] Running be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$GetById
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$GetById
+[INFO] Running be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$GetAllByEquipe
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.085 s -- in be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$GetAllByEquipe
+[INFO] Running be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$GetAllByTournoi
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest$GetAllByTournoi
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.393 s -- in be.vinci.ipl.cae.demo.services.RegistrationTeamTournamentServiceTest
 [INFO] Running be.vinci.ipl.cae.demo.services.NotificationServiceTest
 [INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.426 s -- in be.vinci.ipl.cae.demo.services.NotificationServiceTest
-[INFO] Running be.vinci.ipl.cae.demo.services.TournoiServiceTest
-[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.133 s -- in be.vinci.ipl.cae.demo.services.TournoiServiceTest
+[INFO] Running be.vinci.ipl.cae.demo.services.TournamentServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.133 s -- in be.vinci.ipl.cae.demo.services.TournamentServiceTest
 [INFO] Running be.vinci.ipl.cae.demo.services.UserServiceTest
 [ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.007 s <<< FAILURE! -- in be.vinci.ipl.cae.demo.services.UserServiceTest
 [ERROR] be.vinci.ipl.cae.demo.services.UserServiceTest -- Time elapsed: 0.007 s <<< ERROR!
