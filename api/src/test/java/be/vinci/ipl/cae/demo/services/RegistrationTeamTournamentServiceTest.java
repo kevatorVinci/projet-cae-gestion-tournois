@@ -15,11 +15,9 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -151,8 +149,8 @@ class RegistrationTeamTournamentServiceTest {
       when(teamRepository.findById(1L)).thenReturn(Optional.of(e));
 
       org.junit.jupiter.api.Assertions.assertThrows(
-        IllegalArgumentException.class,
-        () -> service.register(1L, 1L)
+              IllegalArgumentException.class,
+              () -> service.register(1L, 1L)
       );
     }
 
@@ -166,7 +164,7 @@ class RegistrationTeamTournamentServiceTest {
       when(registrationRepository.findByTournamentAndTeam(t, e)).thenReturn(Optional.empty());
       when(registrationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
       when(registrationRepository.findByTournament(t)).thenReturn(
-        List.of(new RegistrationTeamTournament(), new RegistrationTeamTournament())
+              List.of(new RegistrationTeamTournament(), new RegistrationTeamTournament())
       );
 
       service.register(1L, 1L);

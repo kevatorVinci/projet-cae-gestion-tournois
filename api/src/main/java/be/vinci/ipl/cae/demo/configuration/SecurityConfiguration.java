@@ -41,26 +41,26 @@ public class SecurityConfiguration {
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
     return http.csrf(AbstractHttpConfigurer::disable)
-      .cors(AbstractHttpConfigurer::disable)
-      .httpBasic(AbstractHttpConfigurer::disable)
-      .formLogin(AbstractHttpConfigurer::disable)
-      .sessionManagement(
-        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .authorizeHttpRequests(
-        auth -> auth.requestMatchers("/auths/**")
-          .permitAll()
-          .requestMatchers(HttpMethod.GET, "/equipes/**")
-          .permitAll()
-          .requestMatchers(HttpMethod.GET, "/tournois/**")
-          .permitAll()
-          .requestMatchers("/indisponibilites", "/indisponibilites/**")
-          .authenticated()
-          .anyRequest()
-          .authenticated())
-      .addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-      .exceptionHandling(
-        ex -> ex.authenticationEntryPoint(
-          (request, response, authException) -> response.sendError(401, "Unauthorized")))
-      .build();
+        .cors(AbstractHttpConfigurer::disable)
+        .httpBasic(AbstractHttpConfigurer::disable)
+        .formLogin(AbstractHttpConfigurer::disable)
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(
+            auth -> auth.requestMatchers("/auths/**")
+                .permitAll()
+                .requestMatchers(HttpMethod.GET, "/equipes/**")
+                .permitAll()
+                .requestMatchers(HttpMethod.GET, "/tournois/**")
+                .permitAll()
+                .requestMatchers("/indisponibilites", "/indisponibilites/**")
+                .authenticated()
+                .anyRequest()
+                .authenticated())
+        .addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .exceptionHandling(
+            ex -> ex.authenticationEntryPoint(
+                (request, response, authException) -> response.sendError(401, "Unauthorized")))
+        .build();
   }
 }

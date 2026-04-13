@@ -19,11 +19,9 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.DemandRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -126,7 +124,7 @@ class DemandServiceTest {
   @Test
   void getPendingRequestsForTeam_returnsList() {
     when(demandRepo.findByTeamIdAndState(10L, DemandState.PENDING))
-      .thenReturn(List.of(demand));
+            .thenReturn(List.of(demand));
 
     Iterable<Demand> result = demandService.getPendingRequestsForTeam(10L);
 
@@ -220,7 +218,7 @@ class DemandServiceTest {
     when(demandRepo.save(any())).thenReturn(demand);
 
     assertDoesNotThrow(
-      () -> demandService.rejectDemand(100L, "Lack of experience", secondaryResp));
+            () -> demandService.rejectDemand(100L, "Lack of experience", secondaryResp));
   }
 
   @Test
@@ -228,7 +226,7 @@ class DemandServiceTest {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
     assertThrows(
-      SecurityException.class, () -> demandService.rejectDemand(100L, "reason", member));
+            SecurityException.class, () -> demandService.rejectDemand(100L, "reason", member));
   }
 
   @Test
@@ -236,7 +234,7 @@ class DemandServiceTest {
     when(demandRepo.findById(999L)).thenReturn(Optional.empty());
 
     assertThrows(
-      RuntimeException.class, () -> demandService.rejectDemand(999L, "reason", responsible));
+            RuntimeException.class, () -> demandService.rejectDemand(999L, "reason", responsible));
   }
 
   @Test

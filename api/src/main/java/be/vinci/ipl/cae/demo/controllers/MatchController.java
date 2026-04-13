@@ -2,9 +2,7 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.services.MatchService;
-
 import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

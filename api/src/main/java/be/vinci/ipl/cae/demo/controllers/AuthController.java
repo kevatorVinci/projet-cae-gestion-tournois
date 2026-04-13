@@ -6,10 +6,8 @@ import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
-
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -76,8 +74,8 @@ public class AuthController {
     if (user == null) {
       boolean emailExists = existingUser != null;
       String errorMessage = emailExists
-        ? "Le mot de passe est incorrect."
-        : "Cet email n'existe pas.";
+          ? "Le mot de passe est incorrect."
+          : "Cet email n'existe pas.";
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
@@ -93,16 +91,16 @@ public class AuthController {
   @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody @Valid UpdateProfileDto dto) {
     AuthenticatedUser user =
-      userService.updateProfile(
-        dto.getEmail(),
-        dto.getSpecialty(),
-        dto.getProfileImage(),
-        dto.getOldPassword(),
-        dto.getNewPassword());
+        userService.updateProfile(
+            dto.getEmail(),
+            dto.getSpecialty(),
+            dto.getProfileImage(),
+            dto.getOldPassword(),
+            dto.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }

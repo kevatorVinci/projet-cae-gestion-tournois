@@ -7,9 +7,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-
 import java.util.Set;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -70,6 +68,6 @@ class CredentialsTest {
 
     Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
     assertFalse(violations.isEmpty(),
-      "Le mot de passe sans caractère spécial devrait être rejeté.");
+        "Le mot de passe sans caractère spécial devrait être rejeté.");
   }
 }

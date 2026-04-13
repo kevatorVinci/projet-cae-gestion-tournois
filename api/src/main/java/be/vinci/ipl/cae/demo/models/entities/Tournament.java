@@ -15,17 +15,13 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entity representing a tournament lifecycle and its team registrations.
- */
+/** Entity representing a tournament lifecycle and its team registrations. */
 @Entity
 @Table(name = "tournois")
 @Data

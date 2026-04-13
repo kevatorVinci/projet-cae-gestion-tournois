@@ -11,11 +11,9 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

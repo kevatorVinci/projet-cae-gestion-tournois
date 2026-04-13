@@ -1,13 +1,10 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
 import java.io.Serializable;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Composite key for {@link RegistrationTeamTournament}.
- */
+/** Composite key for {@link RegistrationTeamTournament}. */
 @Data
 @NoArgsConstructor
 public class RegistrationTeamTournamentId implements Serializable {

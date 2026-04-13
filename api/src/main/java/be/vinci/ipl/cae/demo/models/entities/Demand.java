@@ -11,15 +11,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entity representing a request to join a team.
- */
+/** Entity representing a request to join a team. */
 @Data
 @NoArgsConstructor
 @Entity
@@ -55,9 +51,7 @@ public class Demand {
   @Column(name = "date_traitement", nullable = true)
   private LocalDateTime processingDate;
 
-  /**
-   * Strict list of possible states for a request.
-   */
+  /** Strict list of possible states for a request. */
   public enum DemandState {
     PENDING,
     ACCEPTED,

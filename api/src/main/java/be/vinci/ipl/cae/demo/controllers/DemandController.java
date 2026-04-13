@@ -5,10 +5,8 @@ import be.vinci.ipl.cae.demo.mappers.DemandMapper;
 import be.vinci.ipl.cae.demo.models.dtos.demand.DemandDto;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.DemandService;
-
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,9 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * REST controller for managing join demands.
- */
+/** REST controller for managing join demands. */
 @RestController
 @RequestMapping("/demands")
 public class DemandController {
@@ -57,7 +53,7 @@ public class DemandController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @IsResponsable
   public void acceptDemand(
-    @PathVariable Long demandId, @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long demandId, @AuthenticationPrincipal User currentUser) {
     try {
       demandService.acceptDemand(demandId, currentUser);
     } catch (RuntimeException e) {
@@ -69,9 +65,9 @@ public class DemandController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @IsResponsable
   public void rejectDemand(
-    @PathVariable Long demandId,
-    @RequestBody(required = false) Map<String, String> body,
-    @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long demandId,
+          @RequestBody(required = false) Map<String, String> body,
+          @AuthenticationPrincipal User currentUser) {
     try {
       String rejectionReason = (body != null) ? body.get("rejectionReason") : null;
       demandService.rejectDemand(demandId, rejectionReason, currentUser);

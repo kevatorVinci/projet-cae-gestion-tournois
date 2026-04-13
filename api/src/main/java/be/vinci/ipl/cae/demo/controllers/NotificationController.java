@@ -3,9 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.NotificationService;
-
 import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,7 +37,7 @@ public class NotificationController {
    */
   @GetMapping("/users/{userId}")
   public ResponseEntity<List<Notification>> getAll(
-    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.getByUser(userId));
   }
 
@@ -48,7 +46,7 @@ public class NotificationController {
    */
   @GetMapping("/users/{userId}/non-lues")
   public ResponseEntity<List<Notification>> getUnread(
-    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.getUnread(userId));
   }
 
@@ -57,7 +55,7 @@ public class NotificationController {
    */
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<Notification> markAsRead(
-    @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.markAsRead(idNotification));
   }
 
@@ -66,7 +64,7 @@ public class NotificationController {
    */
   @PatchMapping("/users/{userId}/tous-lues")
   public ResponseEntity<Void> markAllAsRead(
-    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     notificationService.markAllAsRead(userId);
     return ResponseEntity.noContent().build();
   }
