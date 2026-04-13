@@ -50,6 +50,36 @@ public class RegistrationTeamTournamentController {
   }
 
   /**
+   * Helper to fetch registrations and handle 404 for tournaments.
+   *
+   * @param tournamentId the tournament ID.
+   * @return the list of registrations.
+   */
+  private Iterable<RegistrationTeamTournament> fetchTournamentRegistrations(Long tournamentId) {
+    Iterable<RegistrationTeamTournament> registrations =
+            registrationService.getAllByTournament(tournamentId);
+    if (registrations == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
+    }
+    return registrations;
+  }
+
+  /**
+   * Helper to fetch registrations and handle 404 for teams.
+   *
+   * @param teamId the team ID.
+   * @return the list of registrations.
+   */
+  private Iterable<RegistrationTeamTournament> fetchTeamRegistrations(Long teamId) {
+    Iterable<RegistrationTeamTournament> registrations =
+            registrationService.getAllByTeam(teamId);
+    if (registrations == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
+    }
+    return registrations;
+  }
+
+  /**
    * Returns all registrations for a tournament. Admin only.
    *
    * @param tournamentId the ID of the tournament.
@@ -59,12 +89,7 @@ public class RegistrationTeamTournamentController {
   @IsAdmin
   public Iterable<RegistrationTeamTournament> getAllByTournament(
           @PathVariable("tournoiId") Long tournamentId) {
-    Iterable<RegistrationTeamTournament> registrations =
-            registrationService.getAllByTournament(tournamentId);
-    if (registrations == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
-    }
-    return registrations;
+    return fetchTournamentRegistrations(tournamentId);
   }
 
   /**
@@ -76,12 +101,8 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/{tournoiId}/inscriptions/accepted")
   public Iterable<TournamentTeamRegistrationDto> getAcceptedByTournament(
           @PathVariable("tournoiId") Long tournamentId) {
-    Iterable<RegistrationTeamTournament> registrations =
-            registrationService.getAllByTournament(tournamentId);
-    if (registrations == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
-    }
-    return registrationMapper.toTournoiEquipeInscriptionDtos(registrations);
+    return registrationMapper.toTournoiEquipeInscriptionDtos(
+            fetchTournamentRegistrations(tournamentId));
   }
 
   /**
@@ -98,12 +119,8 @@ public class RegistrationTeamTournamentController {
           @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
             teamId, currentUser, "You can only view your own team registrations");
-    Iterable<RegistrationTeamTournament> registrations =
-            registrationService.getAllByTeam(teamId);
-    if (registrations == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
-    }
-    return registrationMapper.toEquipeTournamentRegistrationDtos(registrations);
+    return registrationMapper.toEquipeTournamentRegistrationDtos(
+            fetchTeamRegistrations(teamId));
   }
 
   /**
@@ -115,12 +132,8 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/equipes/{equipeId}/inscriptions/public")
   public Iterable<TeamTournamentRegistrationDto> getPublicByTeam(
           @PathVariable("equipeId") Long teamId) {
-    Iterable<RegistrationTeamTournament> registrations =
-            registrationService.getAllByTeam(teamId);
-    if (registrations == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
-    }
-    return registrationMapper.toEquipeTournamentRegistrationDtos(registrations);
+    return registrationMapper.toEquipeTournamentRegistrationDtos(
+            fetchTeamRegistrations(teamId));
   }
 
   /**
