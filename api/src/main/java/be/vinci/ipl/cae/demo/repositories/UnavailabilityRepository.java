@@ -5,7 +5,9 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/** Repository for managing unavailable periods in the database. */
+/**
+ * Repository for managing unavailable periods in the database.
+ */
 @Repository
 public interface UnavailabilityRepository extends CrudRepository<Unavailability, Long> {
 

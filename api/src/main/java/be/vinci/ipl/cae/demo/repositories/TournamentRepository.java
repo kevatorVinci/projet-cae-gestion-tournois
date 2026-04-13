@@ -1,12 +1,16 @@
 package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
+
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/** Repository for tournament persistence operations. */
+/**
+ * Repository for tournament persistence operations.
+ */
 @Repository
 public interface TournamentRepository extends CrudRepository<Tournament, Long> {
 
@@ -18,12 +22,18 @@ public interface TournamentRepository extends CrudRepository<Tournament, Long> {
    */
   Optional<Tournament> findByName(String name);
 
-  /** Finds tournaments by exact state value. */
+  /**
+   * Finds tournaments by exact state value.
+   */
   List<Tournament> findByStatus(String status);
 
-  /** Finds tournaments whose names contain the given text, case-insensitive. */
+  /**
+   * Finds tournaments whose names contain the given text, case-insensitive.
+   */
   List<Tournament> findByNameContainingIgnoreCase(String name);
 
-  /** Finds tournaments by state and name fragment, case-insensitive on name. */
+  /**
+   * Finds tournaments by state and name fragment, case-insensitive on name.
+   */
   List<Tournament> findByStatusAndNameContainingIgnoreCase(String status, String name);
 }

@@ -2,8 +2,10 @@ package be.vinci.ipl.cae.demo.mappers;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,10 +17,10 @@ public class NotificationMapper {
     }
 
     return new NotificationDto(
-            notification.getId(),
-            notification.getMessage(),
-            notification.getSentDate(),
-            notification.getIsRead());
+      notification.getId(),
+      notification.getMessage(),
+      notification.getSentDate(),
+      notification.getIsRead());
   }
 
   public List<NotificationDto> toDtos(Iterable<Notification> notifications) {

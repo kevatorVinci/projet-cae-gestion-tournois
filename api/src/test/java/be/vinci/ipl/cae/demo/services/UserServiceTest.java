@@ -21,8 +21,10 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+
 import java.time.LocalDate;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,23 +75,23 @@ class UserServiceTest {
     credentials.setSpecialty("tactician");
 
     lenient()
-            .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
-            .thenAnswer(
-                    invocation -> {
-                      User source = invocation.getArgument(0);
-                      String token = invocation.getArgument(1);
-                      AuthenticatedUser dto = new AuthenticatedUser();
-                      dto.setToken(token);
-                      if (source != null) {
-                        dto.setEmail(source.getEmail());
-                        dto.setTag(source.getTag());
-                        dto.setSpecialty(source.getSpecialty());
-                        dto.setProfileImage(source.getProfileImageUrl());
-                        dto.setAdmin(source.isAdmin());
-                        dto.setBanned(source.isBanned());
-                      }
-                      return dto;
-                    });
+      .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
+      .thenAnswer(
+        invocation -> {
+          User source = invocation.getArgument(0);
+          String token = invocation.getArgument(1);
+          AuthenticatedUser dto = new AuthenticatedUser();
+          dto.setToken(token);
+          if (source != null) {
+            dto.setEmail(source.getEmail());
+            dto.setTag(source.getTag());
+            dto.setSpecialty(source.getSpecialty());
+            dto.setProfileImage(source.getProfileImageUrl());
+            dto.setAdmin(source.isAdmin());
+            dto.setBanned(source.isBanned());
+          }
+          return dto;
+        });
   }
 
   @Test
@@ -111,12 +113,12 @@ class UserServiceTest {
     when(userRepository.findByEmail(EMAIL)).thenReturn(null);
     when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED);
     when(userRepository.save(any()))
-            .thenAnswer(
-                    inv -> {
-                      User saved = inv.getArgument(0);
-                      assertNotEquals(PASSWORD, saved.getPassword());
-                      return saved;
-                    });
+      .thenAnswer(
+        inv -> {
+          User saved = inv.getArgument(0);
+          assertNotEquals(PASSWORD, saved.getPassword());
+          return saved;
+        });
 
     userService.register(credentials);
     verify(passwordEncoder).encode(PASSWORD);
@@ -157,7 +159,7 @@ class UserServiceTest {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
     AuthenticatedUser result =
-            userService.updateProfile(EMAIL, "goalkeeper", "avatar2.png", null, null);
+      userService.updateProfile(EMAIL, "goalkeeper", "avatar2.png", null, null);
 
     assertNotNull(result);
     assertEquals("goalkeeper", user.getSpecialty());
@@ -169,7 +171,7 @@ class UserServiceTest {
   void banUser_existingUser_activatesSoftBan() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.empty());
+      .thenReturn(Optional.empty());
 
     userService.banUser(EMAIL, null);
 
@@ -193,7 +195,7 @@ class UserServiceTest {
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.of(team));
+      .thenReturn(Optional.of(team));
 
     userService.banUser(EMAIL, null);
 
@@ -226,7 +228,7 @@ class UserServiceTest {
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.of(team));
+      .thenReturn(Optional.of(team));
 
     userService.banUser(EMAIL, null);
 
@@ -252,7 +254,7 @@ class UserServiceTest {
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
-            .thenReturn(Optional.empty());
+      .thenReturn(Optional.empty());
 
     userService.banUser(EMAIL, null);
 

@@ -4,14 +4,16 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service managing the business logic related to teams.
- *
+ * <p>
  * This class encapsulates all possible operations on teams: creating a team
  * (with name uniqueness check), retrieving all teams, and retrieving a
  * team by its identifier.
@@ -25,10 +27,10 @@ public class TeamService {
   private final NotificationService notificationService;
 
   public TeamService(
-          TeamRepository teamRepository,
-          UserRepository userRepository,
-          DemandService demandService,
-          NotificationService notificationService) {
+    TeamRepository teamRepository,
+    UserRepository userRepository,
+    DemandService demandService,
+    NotificationService notificationService) {
     this.teamRepository = teamRepository;
     this.userRepository = userRepository;
     this.demandService = demandService;
@@ -108,10 +110,10 @@ public class TeamService {
 
     Long userId = user.getId();
     boolean isPrimary = team.getPrimaryResponsible() != null
-            && team.getPrimaryResponsible().getId().equals(userId);
+      && team.getPrimaryResponsible().getId().equals(userId);
 
     boolean isSecondary = team.getSecondaryResponsible() != null
-            && team.getSecondaryResponsible().getId().equals(userId);
+      && team.getSecondaryResponsible().getId().equals(userId);
 
     return isPrimary || isSecondary;
   }
@@ -170,7 +172,7 @@ public class TeamService {
   @Transactional
   public void leaveTeam(User user, Long newResponsibleId) {
     User persistedUser = userRepository.findById(user.getId())
-            .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+      .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
 
     Team team = resolveCurrentUserTeam(persistedUser);
 
@@ -227,7 +229,7 @@ public class TeamService {
   @Transactional
   public void updateTeamImage(Long teamId, String imageName, User currentUser) {
     Team team = teamRepository.findById(teamId)
-            .orElseThrow(() -> new IllegalArgumentException("Team not found."));
+      .orElseThrow(() -> new IllegalArgumentException("Team not found."));
 
     User persistedUser = loadPersistedUser(currentUser);
 
@@ -254,7 +256,7 @@ public class TeamService {
 
     for (Team team : teamRepository.findAll()) {
       boolean isMember = team.getMembers().stream()
-              .anyMatch(member -> member.getId().equals(currentUser.getId()));
+        .anyMatch(member -> member.getId().equals(currentUser.getId()));
 
       if (isMember || isUserResponsible(team, currentUser)) {
         return team;
@@ -272,9 +274,9 @@ public class TeamService {
 
   private User findMemberInTeam(Team team, Long memberId) {
     return team.getMembers().stream()
-            .filter(member -> member.getId().equals(memberId))
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("The member does not belong to the team."));
+      .filter(member -> member.getId().equals(memberId))
+      .findFirst()
+      .orElseThrow(() -> new IllegalStateException("The member does not belong to the team."));
   }
 
   private User loadPersistedUser(User currentUser) {
@@ -283,7 +285,7 @@ public class TeamService {
     }
 
     return userRepository.findById(currentUser.getId())
-            .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+      .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
   }
 
   private int countResponsibles(Team team) {
@@ -299,11 +301,11 @@ public class TeamService {
 
   private void removeResponsibleRole(Team team, Long userId) {
     if (team.getPrimaryResponsible() != null
-            && team.getPrimaryResponsible().getId().equals(userId)) {
+      && team.getPrimaryResponsible().getId().equals(userId)) {
       team.setPrimaryResponsible(null);
     }
     if (team.getSecondaryResponsible() != null
-            && team.getSecondaryResponsible().getId().equals(userId)) {
+      && team.getSecondaryResponsible().getId().equals(userId)) {
       team.setSecondaryResponsible(null);
     }
   }

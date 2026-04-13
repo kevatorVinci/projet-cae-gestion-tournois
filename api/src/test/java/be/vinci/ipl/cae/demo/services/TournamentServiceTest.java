@@ -11,8 +11,10 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -82,7 +84,7 @@ class TournamentServiceTest {
   void create_doesNotNotifyIfNameAlreadyUsed() {
     Tournament tournament = makeTournament("Spring Cup 2026");
     when(tournamentRepository.findByName("Spring Cup 2026"))
-            .thenReturn(Optional.of(makeTournament("Spring Cup 2026")));
+      .thenReturn(Optional.of(makeTournament("Spring Cup 2026")));
 
     Tournament result = service.create(tournament);
 

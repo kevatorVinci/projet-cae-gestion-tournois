@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Controller handling availability blackout periods. */
+/**
+ * Controller handling availability blackout periods.
+ */
 @RestController
 @RequestMapping("/indisponibilites")
 public class UnavailabilityController {
@@ -39,7 +41,7 @@ public class UnavailabilityController {
    */
   @GetMapping
   public Iterable<Unavailability> getMesIndisponibilites(
-      @AuthenticationPrincipal User currentUser) {
+    @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
     return indisponibiliteRepository.findByUser(currentUser);
   }
@@ -53,8 +55,8 @@ public class UnavailabilityController {
    */
   @PostMapping
   public Unavailability addIndisponibilite(
-      @AuthenticationPrincipal User currentUser,
-      @RequestBody @Valid Unavailability indisponibilite) {
+    @AuthenticationPrincipal User currentUser,
+    @RequestBody @Valid Unavailability indisponibilite) {
     ensureAuthenticated(currentUser);
     indisponibilite.setUser(currentUser);
 
@@ -69,18 +71,18 @@ public class UnavailabilityController {
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
-      @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+    @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
 
     Unavailability indisponibilite = indisponibiliteRepository
-        .findById(id)
-        .orElseThrow(
-            () -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+      .findById(id)
+      .orElseThrow(
+        () -> new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
 
     if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
+        HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
     }
 
     indisponibiliteRepository.delete(indisponibilite);

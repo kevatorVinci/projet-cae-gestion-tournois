@@ -10,12 +10,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Entity representing a player's unavailable time period. */
+/**
+ * Entity representing a player's unavailable time period.
+ */
 @Entity
 @Table(name = "indisponibilites")
 @Getter

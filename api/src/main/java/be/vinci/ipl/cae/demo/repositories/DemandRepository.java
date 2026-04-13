@@ -32,7 +32,7 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Find team demands by state.
    *
    * @param teamId team id
-   * @param state     target state
+   * @param state  target state
    * @return matching demands
    */
   Iterable<Demand> findByTeamIdAndState(Long teamId, DemandState state); // 🇬🇧 Ancien : findByEquipeIdAndEtat
@@ -41,8 +41,8 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Checks if a pending demand already exists for a member and a team.
    *
    * @param memberId member id
-   * @param teamId team id
-   * @param state     target state
+   * @param teamId   team id
+   * @param state    target state
    * @return true when a matching demand exists
    */
   boolean existsByMemberIdAndTeamIdAndState(Long memberId, Long teamId, DemandState state); // 🇬🇧 Ancien : existsByMembreIdAndEquipeIdAndEtat
@@ -51,7 +51,7 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Deletes team demands by state.
    *
    * @param teamId team id
-   * @param state     state to delete
+   * @param state  state to delete
    */
   void deleteByTeamIdAndState(Long teamId, DemandState state); // 🇬🇧 Ancien : deleteByEquipeIdAndEtat
 
@@ -59,7 +59,7 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Deletes member demands by state.
    *
    * @param memberId member id
-   * @param state     state to delete
+   * @param state    state to delete
    */
   void deleteByMemberIdAndState(Long memberId, DemandState state); // 🇬🇧 Ancien : deleteByMembreIdAndEtat
 }

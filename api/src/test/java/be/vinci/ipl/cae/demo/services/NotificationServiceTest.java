@@ -13,8 +13,10 @@ import static org.mockito.Mockito.when;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
+
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +53,7 @@ class NotificationServiceTest {
   @Test
   void getByUser_returnsSortedList() {
     when(notificationRepository.findByUserIdOrderBySentDateDesc(1L))
-            .thenReturn(List.of(notification));
+      .thenReturn(List.of(notification));
 
     List<Notification> result = notificationService.getByUser(1L);
 
@@ -72,7 +74,7 @@ class NotificationServiceTest {
   @Test
   void getUnread_returnsOnlyUnread() {
     when(notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(1L, false))
-            .thenReturn(List.of(notification));
+      .thenReturn(List.of(notification));
 
     List<Notification> result = notificationService.getUnread(1L);
 
@@ -107,7 +109,7 @@ class NotificationServiceTest {
     n2.setIsRead(false);
 
     when(notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(1L, false))
-            .thenReturn(List.of(notification, n2));
+      .thenReturn(List.of(notification, n2));
 
     notificationService.markAllAsRead(1L);
 

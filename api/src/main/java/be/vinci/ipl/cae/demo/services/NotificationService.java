@@ -3,7 +3,9 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
+
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,13 +23,13 @@ public class NotificationService {
 
   public List<Notification> getUnread(Long userId) {
     return notificationRepository
-            .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
+      .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
   }
 
   public Notification markAsRead(Long notificationId) {
     Notification n = notificationRepository
-            .findById(notificationId)
-            .orElseThrow(() -> new RuntimeException("Notification not found"));
+      .findById(notificationId)
+      .orElseThrow(() -> new RuntimeException("Notification not found"));
 
     n.setIsRead(true);
     return notificationRepository.save(n);
@@ -35,7 +37,7 @@ public class NotificationService {
 
   public void markAllAsRead(Long userId) {
     List<Notification> unread = notificationRepository
-            .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
+      .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
 
     unread.forEach(n -> n.setIsRead(true));
     notificationRepository.saveAll(unread);
@@ -59,61 +61,61 @@ public class NotificationService {
 
   public void notifyAccountCreation(User user) {
     createNotification(
-            user,
-            "Welcome: your account has been created. Join or create a team to start!");
+      user,
+      "Welcome: your account has been created. Join or create a team to start!");
   }
 
   public void notifyTeamCreation(User user, String teamName) {
     createNotification(
-            user, "Team created: you are now the manager of team '" + teamName + "'.");
+      user, "Team created: you are now the manager of team '" + teamName + "'.");
   }
 
   public void sendApplicationNotification(User user, String teamName) {
     createNotification(
-            user,
-            "Application sent: your request to join '" + teamName + "' is pending.");
+      user,
+      "Application sent: your request to join '" + teamName + "' is pending.");
   }
 
   public void notifyNewRequestToManager(
-          User manager, String candidateTag, String teamName) {
+    User manager, String candidateTag, String teamName) {
     createNotification(
-            manager,
-            "New request: "
-                    + candidateTag
-                    + " wants to join the team '"
-                    + teamName
-                    + "'.");
+      manager,
+      "New request: "
+        + candidateTag
+        + " wants to join the team '"
+        + teamName
+        + "'.");
   }
 
   public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
-            user,
-            "Accepted: your request to join '" + teamName + "' has been accepted. Welcome!");
+      user,
+      "Accepted: your request to join '" + teamName + "' has been accepted. Welcome!");
   }
 
   public void notifyRequestDenied(User user, String teamName, String reason) {
     String displayedReason =
-            (reason == null || reason.isBlank()) ? "No reason provided." : reason;
+      (reason == null || reason.isBlank()) ? "No reason provided." : reason;
     createNotification(
-            user,
-            "Denied: your request to join '"
-                    + teamName
-                    + "' has been denied. Reason: "
-                    + displayedReason);
+      user,
+      "Denied: your request to join '"
+        + teamName
+        + "' has been denied. Reason: "
+        + displayedReason);
   }
 
   public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
-            admin,
-            "Admin: new draft tournament '" + tournamentName + "'."
-                    + " Publish when ready.");
+      admin,
+      "Admin: new draft tournament '" + tournamentName + "'."
+        + " Publish when ready.");
   }
 
   public void notifyTournamentPublished(User user, String tournamentName) {
     createNotification(
-            user,
-            "New tournament: '"
-                    + tournamentName
-                    + "' has just been published. Register now!");
+      user,
+      "New tournament: '"
+        + tournamentName
+        + "' has just been published. Register now!");
   }
 }

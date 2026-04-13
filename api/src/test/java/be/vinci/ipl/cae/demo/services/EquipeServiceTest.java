@@ -11,9 +11,11 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,7 +60,6 @@ class EquipeServiceTest {
     freeUser.setId(3L);
     freeUser.setTeam(null);
 
-    // On utilise lenient() pour que Mockito ne râle pas si le code s'arrête avant
     lenient().when(userRepo.findById(3L)).thenReturn(Optional.of(freeUser));
     lenient().when(teamRepo.findByName("NewTeam")).thenReturn(Optional.empty());
     lenient().when(teamRepo.save(any(Team.class))).thenReturn(team);

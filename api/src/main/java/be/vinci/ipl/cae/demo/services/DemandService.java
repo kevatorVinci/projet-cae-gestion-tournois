@@ -7,8 +7,10 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.DemandRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+
 import java.time.LocalDateTime;
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,16 +31,16 @@ public class DemandService {
   /**
    * Builds the service with required dependencies.
    *
-   * @param demandRepo request repository
-   * @param userRepo    user repository
-   * @param teamRepo  team repository
+   * @param demandRepo          request repository
+   * @param userRepo            user repository
+   * @param teamRepo            team repository
    * @param notificationService notification service
    */
   public DemandService(
-          DemandRepository demandRepo,
-          UserRepository userRepo,
-          TeamRepository teamRepo,
-          NotificationService notificationService) {
+    DemandRepository demandRepo,
+    UserRepository userRepo,
+    TeamRepository teamRepo,
+    NotificationService notificationService) {
     this.demandRepo = demandRepo;
     this.userRepo = userRepo;
     this.teamRepo = teamRepo;
@@ -51,20 +53,20 @@ public class DemandService {
    * saving the request.
    *
    * @param memberId unique ID of the player applying
-   * @param teamId unique ID of the target team
+   * @param teamId   unique ID of the target team
    * @return newly created and saved request with PENDING status
    * @throws RuntimeException if the player does not exist, the team does not
-   * exist, or the player
-   * already belongs to a team
+   *                          exist, or the player
+   *                          already belongs to a team
    */
   public Demand createJoinRequest(Long memberId, Long teamId) {
     User member = userRepo
-            .findById(memberId)
-            .orElseThrow(() -> new RuntimeException("Player not found"));
+      .findById(memberId)
+      .orElseThrow(() -> new RuntimeException("Player not found"));
 
     Team team = teamRepo
-            .findById(teamId)
-            .orElseThrow(() -> new RuntimeException("Team not found"));
+      .findById(teamId)
+      .orElseThrow(() -> new RuntimeException("Team not found"));
 
     // 🇬🇧 Updated to use getTeam()
     if (member.getTeam() != null) {
@@ -73,7 +75,7 @@ public class DemandService {
 
     // 🇬🇧 Updated to use English getters
     boolean hasNoResponsible = team.getPrimaryResponsible() == null
-            && team.getSecondaryResponsible() == null;
+      && team.getSecondaryResponsible() == null;
     if (hasNoResponsible) {
       throw new RuntimeException("The team has no responsible.");
     }
@@ -84,7 +86,7 @@ public class DemandService {
 
     // 🇬🇧 Updated repository method call and state
     if (demandRepo.existsByMemberIdAndTeamIdAndState(
-            memberId, teamId, DemandState.PENDING)) {
+      memberId, teamId, DemandState.PENDING)) {
       throw new RuntimeException("A pending request already exists for this team.");
     }
 
@@ -98,7 +100,7 @@ public class DemandService {
 
     if (team.getPrimaryResponsible() != null) {
       notificationService.notifyNewRequestToManager(
-              team.getPrimaryResponsible(), member.getTag(), team.getName());
+        team.getPrimaryResponsible(), member.getTag(), team.getName());
     }
     return savedDemand;
   }
@@ -148,9 +150,9 @@ public class DemandService {
     // the user is still configured as primary/secondary responsible.
     // 🇬🇧 Updated repository method
     team = teamRepo
-            .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
-                    currentUser.getId(), currentUser.getId())
-            .orElseThrow(() -> new SecurityException("You are not responsible for any team."));
+      .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
+        currentUser.getId(), currentUser.getId())
+      .orElseThrow(() -> new SecurityException("You are not responsible for any team."));
 
     return getPendingRequestsForTeam(team.getId());
   }
@@ -161,7 +163,7 @@ public class DemandService {
    * player
    * to the new team in the database.
    *
-   * @param demandId ID of the request to validate
+   * @param demandId    ID of the request to validate
    * @param currentUser the authenticated user processing the request
    * @return updated request with ACCEPTED status
    * @throws RuntimeException if the specified request does not exist
@@ -203,9 +205,9 @@ public class DemandService {
    * Rejects a player's request with a rejection reason.
    * Updates request history without affecting the player's current team.
    *
-   * @param demandId ID of the request to reject
-   * @param reason    text explaining the rejection reason (for example:
-   * "Insufficient level")
+   * @param demandId    ID of the request to reject
+   * @param reason      text explaining the rejection reason (for example:
+   *                    "Insufficient level")
    * @param currentUser the authenticated user processing the request
    * @return updated request with REJECTED status and reason
    * @throws RuntimeException if the specified request does not exist
@@ -214,8 +216,8 @@ public class DemandService {
   public Demand rejectDemand(Long demandId, String reason, User currentUser) {
     Demand demand = getAndVerifyDemand(demandId, currentUser);
     String normalizedReason = (reason == null || reason.isBlank())
-            ? "No specific reason provided." // 🇬🇧 Translated default reason
-            : reason.trim();
+      ? "No specific reason provided." // 🇬🇧 Translated default reason
+      : reason.trim();
 
     demand.setState(DemandState.REJECTED); // 🇬🇧 Ancien : setEtat(EtatDemande.REFUSEE)
     demand.setRejectionReason(normalizedReason); // 🇬🇧 Ancien : setRaisonRefus
@@ -223,14 +225,14 @@ public class DemandService {
 
     Demand savedDemand = demandRepo.save(demand);
     notificationService.notifyRequestDenied(
-            demand.getMember(), demand.getTeam().getName(), normalizedReason); // 🇬🇧 Ancien : getMembre, getEquipe
+      demand.getMember(), demand.getTeam().getName(), normalizedReason); // 🇬🇧 Ancien : getMembre, getEquipe
     return savedDemand;
   }
 
   /**
    * Retrieves a request and verifies that the user is responsible for the team.
    *
-   * @param demandId   request ID
+   * @param demandId    request ID
    * @param currentUser current user
    * @return matching request
    * @throws RuntimeException  if the request does not exist
@@ -238,8 +240,8 @@ public class DemandService {
    */
   private Demand getAndVerifyDemand(Long demandId, User currentUser) { // 🇬🇧 Ancien : getAndVerifyDemande
     Demand demand = demandRepo
-            .findById(demandId)
-            .orElseThrow(() -> new RuntimeException("Request not found"));
+      .findById(demandId)
+      .orElseThrow(() -> new RuntimeException("Request not found"));
     verifyUserIsResponsible(demand.getTeam(), currentUser); // 🇬🇧 Ancien : getEquipe
     return demand;
   }
@@ -248,7 +250,7 @@ public class DemandService {
    * Verifies that the current user is a responsible member (primary or secondary)
    * of the team.
    *
-   * @param team      team to validate
+   * @param team        team to validate
    * @param currentUser current user
    * @throws SecurityException if the user is not responsible for the team
    */
@@ -256,11 +258,11 @@ public class DemandService {
     // 🇬🇧 Updated to use English getters
     // 1. Check whether the user is the primary responsible (if present)
     boolean isPrimary = team.getPrimaryResponsible() != null
-            && team.getPrimaryResponsible().getId().equals(currentUser.getId());
+      && team.getPrimaryResponsible().getId().equals(currentUser.getId());
 
     // 2. Check whether the user is the secondary responsible (if present)
     boolean isSecondary = team.getSecondaryResponsible() != null
-            && team.getSecondaryResponsible().getId().equals(currentUser.getId());
+      && team.getSecondaryResponsible().getId().equals(currentUser.getId());
 
     // 3. Apply final decision logic (neither primary nor secondary)
     if (!isPrimary && !isSecondary) {

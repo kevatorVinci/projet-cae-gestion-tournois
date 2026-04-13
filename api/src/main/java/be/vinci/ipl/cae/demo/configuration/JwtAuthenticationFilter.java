@@ -6,9 +6,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,8 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-          HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-          throws ServletException, IOException {
+    HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    throws ServletException, IOException {
     String token = request.getHeader("Authorization");
     if (token != null) {
       if (token.startsWith("Bearer ")) {
@@ -50,7 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authorities.add(new SimpleGrantedAuthority("ROLE_RESPONSABLE"));
           }
           UsernamePasswordAuthenticationToken authentication =
-                  new UsernamePasswordAuthenticationToken(user, null, authorities);
+            new UsernamePasswordAuthenticationToken(user, null, authorities);
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
@@ -67,6 +69,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     User secondary = user.getTeam().getSecondaryResponsible();
     Long userId = user.getId();
     return (primary != null && primary.getId().equals(userId))
-            || (secondary != null && secondary.getId().equals(userId));
+      || (secondary != null && secondary.getId().equals(userId));
   }
 }

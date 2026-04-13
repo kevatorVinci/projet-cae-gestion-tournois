@@ -6,8 +6,10 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
+
 import java.time.LocalDate;
 import java.util.Collection;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,11 +27,11 @@ public class RegisterTeamTournamentService {
   private final NotificationService notificationService;
 
   public RegisterTeamTournamentService(
-          InscriptionEquipeTournoiRepository inscriptionRepository,
-          TournamentRepository tournamentRepository,
-          TeamRepository teamRepository,
-          TournamentService tournamentService,
-          NotificationService notificationService) {
+    InscriptionEquipeTournoiRepository inscriptionRepository,
+    TournamentRepository tournamentRepository,
+    TeamRepository teamRepository,
+    TournamentService tournamentService,
+    NotificationService notificationService) {
     this.inscriptionRepository = inscriptionRepository;
     this.tournamentRepository = tournamentRepository;
     this.teamRepository = teamRepository;
@@ -66,7 +68,7 @@ public class RegisterTeamTournamentService {
 
     if (team.getMembers() == null || team.getMembers().size() < MIN_MEMBERS_FOR_REGISTRATION) {
       throw new IllegalArgumentException(
-              "A team must have at least 4 members to register for a tournament.");
+        "A team must have at least 4 members to register for a tournament.");
     }
 
     if (inscriptionRepository.findByTournamentAndTeam(tournament, team).isPresent()) {
@@ -81,10 +83,10 @@ public class RegisterTeamTournamentService {
     RegistrationTeamTournament saved = inscriptionRepository.save(registration);
 
     String message = "Team: registration confirmed for your team '"
-            + team.getName()
-            + "' in the tournament '"
-            + tournament.getName()
-            + "'.";
+      + team.getName()
+      + "' in the tournament '"
+      + tournament.getName()
+      + "'.";
     for (var member : team.getMembers()) {
       notificationService.createNotification(member, message);
     }
@@ -101,8 +103,8 @@ public class RegisterTeamTournamentService {
 
   public boolean unregister(Long registrationId) {
     RegistrationTeamTournament registration = inscriptionRepository
-            .findById(registrationId)
-            .orElse(null);
+      .findById(registrationId)
+      .orElse(null);
     if (registration == null) {
       return false;
     }
@@ -125,8 +127,8 @@ public class RegisterTeamTournamentService {
     }
 
     RegistrationTeamTournament registration = inscriptionRepository
-            .findByTournamentAndTeam(tournament, team)
-            .orElse(null);
+      .findByTournamentAndTeam(tournament, team)
+      .orElse(null);
     if (registration == null) {
       return false;
     }
@@ -150,7 +152,7 @@ public class RegisterTeamTournamentService {
     }
 
     if (tournament.getRegistrationDeadline() != null
-            && tournament.getRegistrationDeadline().isBefore(LocalDate.now())) {
+      && tournament.getRegistrationDeadline().isBefore(LocalDate.now())) {
       if (logIfDeadlinePassed) {
         System.out.println("Unregistration denied: tournament deadline has passed.");
       }
