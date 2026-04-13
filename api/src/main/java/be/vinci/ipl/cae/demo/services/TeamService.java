@@ -4,36 +4,50 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-
 /**
  * Service managing the business logic related to teams.
- * <p>
- * This class encapsulates all possible operations on teams: creating a team
- * (with name uniqueness check), retrieving all teams, and retrieving a
- * team by its identifier.
- * </p>
  */
 @Service
 public class TeamService {
 
+  /**
+   * Repository for team data access.
+   */
   private final TeamRepository teamRepository;
+
+  /**
+   * Repository for user data access.
+   */
   private final UserRepository userRepository;
+
+  /**
+   * Service for handling join requests.
+   */
   private final DemandService demandService;
+
+  /**
+   * Service for sending notifications.
+   */
   private final NotificationService notificationService;
 
   /**
    * Constructor for TeamService.
+   *
+   * @param teamRepository      the team repository.
+   * @param userRepository      the user repository.
+   * @param demandService       the demand service.
+   * @param notificationService the notification service.
    */
   public TeamService(
-      TeamRepository teamRepository,
-      UserRepository userRepository,
-      DemandService demandService,
-      NotificationService notificationService) {
+          TeamRepository teamRepository,
+          UserRepository userRepository,
+          DemandService demandService,
+          NotificationService notificationService) {
     this.teamRepository = teamRepository;
     this.userRepository = userRepository;
     this.demandService = demandService;
@@ -43,7 +57,7 @@ public class TeamService {
   /**
    * Retrieves all existing teams.
    *
-   * @return an Iterable containing all teams
+   * @return an Iterable containing all teams.
    */
   public Iterable<Team> getAllTeams() {
     return teamRepository.findAll();
@@ -52,7 +66,7 @@ public class TeamService {
   /**
    * Retrieves only active teams (those with at least 1 member).
    *
-   * @return an Iterable containing the active teams
+   * @return an Iterable containing the active teams.
    */
   public Iterable<Team> getActiveTeams() {
     return teamRepository.findByMembersIsNotEmpty();
@@ -61,8 +75,8 @@ public class TeamService {
   /**
    * Retrieves a team by its identifier.
    *
-   * @param id the team identifier
-   * @return an Optional containing the team if it exists
+   * @param id the team identifier.
+   * @return an Optional containing the team if it exists.
    */
   public Optional<Team> getTeamById(Long id) {
     return teamRepository.findById(id);
@@ -70,6 +84,12 @@ public class TeamService {
 
   /**
    * Allows a user to create a team and become primary responsible.
+   *
+   * @param user         the user creating the team.
+   * @param teamName     the unique name of the team.
+   * @param profileImage the profile image URL or path.
+   * @return the saved team, or null if name already exists.
+   * @throws IllegalStateException if the user already belongs to a team.
    */
   public Team createTeam(User user, String teamName, String profileImage) {
     if (user.getTeam() != null) {
@@ -98,6 +118,9 @@ public class TeamService {
 
   /**
    * Allows a user to request joining an existing team.
+   *
+   * @param user   the user who wants to join.
+   * @param teamId the unique identifier of the team.
    */
   public void requestJoinTeam(User user, Long teamId) {
     demandService.createJoinRequest(user.getId(), teamId);
@@ -105,6 +128,10 @@ public class TeamService {
 
   /**
    * Checks whether the given user is one of the team responsibles.
+   *
+   * @param team the team to check.
+   * @param user the user to check.
+   * @return true if the user is a responsible, false otherwise.
    */
   public boolean isUserResponsible(Team team, User user) {
     if (team == null || user == null) {
@@ -113,21 +140,26 @@ public class TeamService {
 
     Long userId = user.getId();
     boolean isPrimary = team.getPrimaryResponsible() != null
-        && team.getPrimaryResponsible().getId().equals(userId);
+            && team.getPrimaryResponsible().getId().equals(userId);
 
     boolean isSecondary = team.getSecondaryResponsible() != null
-        && team.getSecondaryResponsible().getId().equals(userId);
+            && team.getSecondaryResponsible().getId().equals(userId);
 
     return isPrimary || isSecondary;
   }
 
   /**
    * Checks whether the current user is a team leader.
+   *
+   * @param currentUser the authenticated user.
+   * @return true if responsible, false otherwise.
    */
   public boolean isCurrentUserResponsible(User currentUser) {
     try {
       User persistedCurrentUser = loadPersistedUser(currentUser);
-      return isUserResponsible(resolveCurrentUserTeam(persistedCurrentUser), persistedCurrentUser);
+      // Ligne coupée en deux pour éviter de dépasser 100 caractères !
+      Team userTeam = resolveCurrentUserTeam(persistedCurrentUser);
+      return isUserResponsible(userTeam, persistedCurrentUser);
     } catch (IllegalStateException e) {
       return false;
     }
@@ -135,6 +167,10 @@ public class TeamService {
 
   /**
    * Promotes a team member to a responsible role.
+   *
+   * @param currentUser the authenticated user performing the action.
+   * @param memberId    the ID of the member to promote.
+   * @throws IllegalStateException if the user is already responsible or team is full.
    */
   @Transactional
   public void promoteTeamMember(User currentUser, Long memberId) {
@@ -160,6 +196,10 @@ public class TeamService {
 
   /**
    * Removes a responsible role from a team member.
+   *
+   * @param currentUser the authenticated user performing the action.
+   * @param memberId    the ID of the member to demote.
+   * @throws IllegalStateException if the member is not responsible or is the last one.
    */
   @Transactional
   public void demoteTeamLeader(User currentUser, Long memberId) {
@@ -183,11 +223,15 @@ public class TeamService {
 
   /**
    * Allows a user to leave their team.
+   *
+   * @param user             the user who wants to leave.
+   * @param newResponsibleId the ID of the new responsible if needed.
+   * @throws IllegalStateException if rules are violated during the process.
    */
   @Transactional
   public void leaveTeam(User user, Long newResponsibleId) {
     User persistedUser = userRepository.findById(user.getId())
-        .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+            .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
 
     Team team = resolveCurrentUserTeam(persistedUser);
 
@@ -243,11 +287,17 @@ public class TeamService {
 
   /**
    * Updates the profile image of a team.
+   *
+   * @param teamId      the unique identifier of the team.
+   * @param imageName   the name or URL of the new image.
+   * @param currentUser the authenticated user.
+   * @throws IllegalArgumentException if team is not found.
+   * @throws IllegalStateException    if user is not responsible.
    */
   @Transactional
   public void updateTeamImage(Long teamId, String imageName, User currentUser) {
     Team team = teamRepository.findById(teamId)
-        .orElseThrow(() -> new IllegalArgumentException("Team not found."));
+            .orElseThrow(() -> new IllegalArgumentException("Team not found."));
 
     User persistedUser = loadPersistedUser(currentUser);
 
@@ -259,10 +309,23 @@ public class TeamService {
     teamRepository.save(team);
   }
 
+  /**
+   * Internal method to ensure a team is found for the user.
+   *
+   * @param currentUser the user to check.
+   * @return the team associated with the user.
+   */
   private Team requireCurrentUserTeam(User currentUser) {
     return resolveCurrentUserTeam(currentUser);
   }
 
+  /**
+   * Logic to resolve which team the user currently belongs to.
+   *
+   * @param currentUser the user to check.
+   * @return the resolved team.
+   * @throws IllegalStateException if no team is found.
+   */
   private Team resolveCurrentUserTeam(User currentUser) {
     if (currentUser == null || currentUser.getId() == null) {
       throw new IllegalStateException("The member does not belong to any team.");
@@ -274,7 +337,7 @@ public class TeamService {
 
     for (Team team : teamRepository.findAll()) {
       boolean isMember = team.getMembers().stream()
-          .anyMatch(member -> member.getId().equals(currentUser.getId()));
+              .anyMatch(member -> member.getId().equals(currentUser.getId()));
 
       if (isMember || isUserResponsible(team, currentUser)) {
         return team;
@@ -284,28 +347,60 @@ public class TeamService {
     throw new IllegalStateException("The member does not belong to any team.");
   }
 
+  /**
+   * Verifies that the current user is a responsible for the given team.
+   *
+   * @param team        the team to verify.
+   * @param currentUser the user to check.
+   * @throws IllegalStateException if the user is not a responsible.
+   */
   private void verifyCurrentUserIsResponsible(Team team, User currentUser) {
     if (!isUserResponsible(team, currentUser)) {
       throw new IllegalStateException("Only a responsible can manage the responsibles.");
     }
   }
 
+  /**
+   * Finds a specific member within a team.
+   *
+   * @param team     the team to search.
+   * @param memberId the ID of the member to find.
+   * @return the found member.
+   * @throws IllegalStateException if member is not in the team.
+   */
   private User findMemberInTeam(Team team, Long memberId) {
     return team.getMembers().stream()
-        .filter(member -> member.getId().equals(memberId))
-        .findFirst()
-        .orElseThrow(() -> new IllegalStateException("The member does not belong to the team."));
+            .filter(member -> member.getId().equals(memberId))
+            .findFirst()
+            // Exception coupée en deux pour rester sous 100 caractères !
+            .orElseThrow(() -> new IllegalStateException(
+                    "The member does not belong to the team."));
   }
 
+  /**
+   * Loads the user from the database to ensure data freshness.
+   *
+   * @param currentUser the current user DTO or entity.
+   * @return the persisted user.
+   * @throws IllegalStateException if user is not found.
+   */
   private User loadPersistedUser(User currentUser) {
     if (currentUser == null || currentUser.getId() == null) {
       throw new IllegalStateException("The member does not belong to any team.");
     }
 
     return userRepository.findById(currentUser.getId())
-        .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+            // Exception coupée en deux pour rester sous 100 caractères !
+            .orElseThrow(() -> new IllegalStateException(
+                    "The member does not belong to any team."));
   }
 
+  /**
+   * Counts how many responsibles are currently set for a team.
+   *
+   * @param team the team to check.
+   * @return the count (0, 1, or 2).
+   */
   private int countResponsibles(Team team) {
     int count = 0;
     if (team.getPrimaryResponsible() != null) {
@@ -317,17 +412,28 @@ public class TeamService {
     return count;
   }
 
+  /**
+   * Internal helper to nullify a responsible slot based on user ID.
+   *
+   * @param team   the team to modify.
+   * @param userId the ID of the user to remove.
+   */
   private void removeResponsibleRole(Team team, Long userId) {
     if (team.getPrimaryResponsible() != null
-        && team.getPrimaryResponsible().getId().equals(userId)) {
+            && team.getPrimaryResponsible().getId().equals(userId)) {
       team.setPrimaryResponsible(null);
     }
     if (team.getSecondaryResponsible() != null
-        && team.getSecondaryResponsible().getId().equals(userId)) {
+            && team.getSecondaryResponsible().getId().equals(userId)) {
       team.setSecondaryResponsible(null);
     }
   }
 
+  /**
+   * Ensures the primary responsible slot is filled before the secondary.
+   *
+   * @param team the team to normalize.
+   */
   private void normalizeResponsibleSlots(Team team) {
     boolean hasPrimary = team.getPrimaryResponsible() != null;
     boolean hasSecondary = team.getSecondaryResponsible() != null;

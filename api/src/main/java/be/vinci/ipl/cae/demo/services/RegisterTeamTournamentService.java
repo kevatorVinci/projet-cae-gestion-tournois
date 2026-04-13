@@ -6,10 +6,9 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.Collection;
+import org.springframework.stereotype.Service;
 
 /**
  * Service managing all business logic related to team registrations for tournaments.
@@ -17,20 +16,51 @@ import java.util.Collection;
 @Service
 public class RegisterTeamTournamentService {
 
+  /**
+   * Minimum number of members required for a team to register.
+   */
   private static final int MIN_MEMBERS_FOR_REGISTRATION = 4;
 
+  /**
+   * Repository for managing registration persistence.
+   */
   private final InscriptionEquipeTournoiRepository inscriptionRepository;
+
+  /**
+   * Repository for managing tournament persistence.
+   */
   private final TournamentRepository tournamentRepository;
+
+  /**
+   * Repository for managing team persistence.
+   */
   private final TeamRepository teamRepository;
+
+  /**
+   * Service for tournament-related business logic.
+   */
   private final TournamentService tournamentService;
+
+  /**
+   * Service for sending notifications to users.
+   */
   private final NotificationService notificationService;
 
+  /**
+   * Constructor with dependency injection.
+   *
+   * @param inscriptionRepository the registration repository.
+   * @param tournamentRepository  the tournament repository.
+   * @param teamRepository         the team repository.
+   * @param tournamentService     the tournament service.
+   * @param notificationService    the notification service.
+   */
   public RegisterTeamTournamentService(
-      InscriptionEquipeTournoiRepository inscriptionRepository,
-      TournamentRepository tournamentRepository,
-      TeamRepository teamRepository,
-      TournamentService tournamentService,
-      NotificationService notificationService) {
+          InscriptionEquipeTournoiRepository inscriptionRepository,
+          TournamentRepository tournamentRepository,
+          TeamRepository teamRepository,
+          TournamentService tournamentService,
+          NotificationService notificationService) {
     this.inscriptionRepository = inscriptionRepository;
     this.tournamentRepository = tournamentRepository;
     this.teamRepository = teamRepository;
@@ -38,6 +68,12 @@ public class RegisterTeamTournamentService {
     this.notificationService = notificationService;
   }
 
+  /**
+   * Retrieves all registrations for a specific tournament.
+   *
+   * @param tournamentId the unique identifier of the tournament.
+   * @return an iterable of registrations, or null if tournament is not found.
+   */
   public Iterable<RegistrationTeamTournament> getAllByTournament(Long tournamentId) {
     Tournament tournament = tournamentRepository.findById(tournamentId).orElse(null);
     if (tournament == null) {
@@ -46,6 +82,12 @@ public class RegisterTeamTournamentService {
     return inscriptionRepository.findByTournament(tournament);
   }
 
+  /**
+   * Retrieves all registrations for a specific team.
+   *
+   * @param teamId the unique identifier of the team.
+   * @return an iterable of registrations, or null if team is not found.
+   */
   public Iterable<RegistrationTeamTournament> getAllByTeam(Long teamId) {
     Team team = teamRepository.findById(teamId).orElse(null);
     if (team == null) {
@@ -54,6 +96,14 @@ public class RegisterTeamTournamentService {
     return inscriptionRepository.findByTeam(team);
   }
 
+  /**
+   * Registers a team for a tournament if all criteria are met.
+   *
+   * @param tournamentId the unique identifier of the tournament.
+   * @param teamId       the unique identifier of the team.
+   * @return the saved registration entity, or null if registration is not possible.
+   * @throws IllegalArgumentException if the team has fewer than the required members.
+   */
   public RegistrationTeamTournament register(Long tournamentId, Long teamId) {
     Tournament tournament = tournamentRepository.findById(tournamentId).orElse(null);
     if (tournament == null || !"OUVERT".equals(tournament.getStatus())) {
@@ -67,7 +117,7 @@ public class RegisterTeamTournamentService {
 
     if (team.getMembers() == null || team.getMembers().size() < MIN_MEMBERS_FOR_REGISTRATION) {
       throw new IllegalArgumentException(
-          "A team must have at least 4 members to register for a tournament.");
+              "A team must have at least 4 members to register for a tournament.");
     }
 
     if (inscriptionRepository.findByTournamentAndTeam(tournament, team).isPresent()) {
@@ -82,10 +132,10 @@ public class RegisterTeamTournamentService {
     RegistrationTeamTournament saved = inscriptionRepository.save(registration);
 
     String message = "Team: registration confirmed for your team '"
-        + team.getName()
-        + "' in the tournament '"
-        + tournament.getName()
-        + "'.";
+            + team.getName()
+            + "' in the tournament '"
+            + tournament.getName()
+            + "'.";
     for (var member : team.getMembers()) {
       notificationService.createNotification(member, message);
     }
@@ -100,10 +150,16 @@ public class RegisterTeamTournamentService {
     return saved;
   }
 
+  /**
+   * Cancels a registration using its ID.
+   *
+   * @param registrationId the unique identifier of the registration.
+   * @return true if unregistration succeeded, false otherwise.
+   */
   public boolean unregister(Long registrationId) {
     RegistrationTeamTournament registration = inscriptionRepository
-        .findById(registrationId)
-        .orElse(null);
+            .findById(registrationId)
+            .orElse(null);
     if (registration == null) {
       return false;
     }
@@ -118,6 +174,13 @@ public class RegisterTeamTournamentService {
     return true;
   }
 
+  /**
+   * Cancels a registration for a specific tournament and team.
+   *
+   * @param tournamentId the unique identifier of the tournament.
+   * @param teamId       the unique identifier of the team.
+   * @return true if unregistration succeeded, false otherwise.
+   */
   public boolean unregisterByTournamentAndTeam(Long tournamentId, Long teamId) {
     Tournament tournament = tournamentRepository.findById(tournamentId).orElse(null);
     Team team = teamRepository.findById(teamId).orElse(null);
@@ -126,8 +189,8 @@ public class RegisterTeamTournamentService {
     }
 
     RegistrationTeamTournament registration = inscriptionRepository
-        .findByTournamentAndTeam(tournament, team)
-        .orElse(null);
+            .findByTournamentAndTeam(tournament, team)
+            .orElse(null);
     if (registration == null) {
       return false;
     }
@@ -141,20 +204,30 @@ public class RegisterTeamTournamentService {
     return true;
   }
 
+  /**
+   * Retrieves a registration by its ID.
+   *
+   * @param registrationId the unique identifier of the registration.
+   * @return the registration entity, or null if not found.
+   */
   public RegistrationTeamTournament getById(Long registrationId) {
     return inscriptionRepository.findById(registrationId).orElse(null);
   }
 
+  /**
+   * Checks if unregistration is currently permitted for a tournament.
+   *
+   * @param tournament             the tournament entity.
+   * @param logIfDeadlinePassed    whether to log a message if the deadline is over.
+   * @return true if unregistration is allowed, false otherwise.
+   */
   private boolean isUnregisterAllowed(Tournament tournament, boolean logIfDeadlinePassed) {
     if (!"OUVERT".equals(tournament.getStatus())) {
       return false;
     }
 
     if (tournament.getRegistrationDeadline() != null
-        && tournament.getRegistrationDeadline().isBefore(LocalDate.now())) {
-      if (logIfDeadlinePassed) {
-        System.out.println("Unregistration denied: tournament deadline has passed.");
-      }
+            && tournament.getRegistrationDeadline().isBefore(LocalDate.now())) {
       return false;
     }
 

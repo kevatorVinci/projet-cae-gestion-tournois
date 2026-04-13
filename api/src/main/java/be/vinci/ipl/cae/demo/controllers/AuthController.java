@@ -74,8 +74,8 @@ public class AuthController {
     if (user == null) {
       boolean emailExists = existingUser != null;
       String errorMessage = emailExists
-        ? "Le mot de passe est incorrect."
-        : "Cet email n'existe pas.";
+              ? "Le mot de passe est incorrect."
+              : "Cet email n'existe pas.";
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
@@ -91,16 +91,16 @@ public class AuthController {
   @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody @Valid UpdateProfileDto dto) {
     AuthenticatedUser user =
-      userService.updateProfile(
-        dto.getEmail(),
-        dto.getSpecialty(),
-        dto.getProfileImage(),
-        dto.getOldPassword(),
-        dto.getNewPassword());
+            userService.updateProfile(
+                    dto.getEmail(),
+                    dto.getSpecialty(),
+                    dto.getProfileImage(),
+                    dto.getOldPassword(),
+                    dto.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+              HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }

@@ -41,7 +41,7 @@ public class NotificationController {
    */
   @GetMapping("/users/{userId}")
   public ResponseEntity<List<Notification>> getAll(
-    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.getByUser(userId));
   }
 
@@ -54,7 +54,7 @@ public class NotificationController {
    */
   @GetMapping("/users/{userId}/non-lues")
   public ResponseEntity<List<Notification>> getUnread(
-    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.getUnread(userId));
   }
 
@@ -67,7 +67,7 @@ public class NotificationController {
    */
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<Notification> markAsRead(
-    @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long idNotification, @AuthenticationPrincipal User currentUser) {
     return ResponseEntity.ok(notificationService.markAsRead(idNotification));
   }
 
@@ -80,7 +80,7 @@ public class NotificationController {
    */
   @PatchMapping("/users/{userId}/tous-lues")
   public ResponseEntity<Void> markAllAsRead(
-    @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long userId, @AuthenticationPrincipal User currentUser) {
     notificationService.markAllAsRead(userId);
     return ResponseEntity.noContent().build();
   }

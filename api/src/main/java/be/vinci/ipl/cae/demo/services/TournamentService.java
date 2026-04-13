@@ -5,15 +5,14 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
 /**
  * Service managing all business logic related to tournaments.
@@ -21,9 +20,24 @@ import java.util.stream.StreamSupport;
 @Service
 public class TournamentService {
 
+  /**
+   * Repository for tournament data access.
+   */
   private final TournamentRepository tournamentRepository;
+
+  /**
+   * Service handling team registrations.
+   */
   private final RegisterTeamTournamentService registrationService;
+
+  /**
+   * Service for sending notifications to users.
+   */
   private final NotificationService notificationService;
+
+  /**
+   * Repository for user data access.
+   */
   private final UserRepository userRepository;
 
   /**
@@ -35,34 +49,29 @@ public class TournamentService {
    * @param userRepository       the repo for users.
    */
   public TournamentService(
-      TournamentRepository tournamentRepository,
-      @Lazy RegisterTeamTournamentService registrationService,
-      NotificationService notificationService,
-      UserRepository userRepository) {
+          TournamentRepository tournamentRepository,
+          @Lazy RegisterTeamTournamentService registrationService,
+          NotificationService notificationService,
+          UserRepository userRepository) {
     this.tournamentRepository = tournamentRepository;
     this.registrationService = registrationService;
     this.notificationService = notificationService;
     this.userRepository = userRepository;
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // READ QUERIES
-  // ═══════════════════════════════════════════════════════════════════
-
   /**
-   * Returns all public tournaments excluding BROUILLON.
+   * Returns all public tournaments excluding DRAFT (BROUILLON).
    *
    * @return a list of non-draft tournaments.
    */
   public Iterable<Tournament> getAllPublic() {
     return StreamSupport.stream(tournamentRepository.findAll().spliterator(), false)
-        // We filter out tournaments with the DRAFT ("BROUILLON") status
-        .filter(t -> !"BROUILLON".equals(t.getStatus()))
-        .toList();
+            .filter(t -> !"BROUILLON".equals(t.getStatus()))
+            .toList();
   }
 
   /**
-   * Returns all tournaments including BROUILLON.
+   * Returns all tournaments including drafts.
    *
    * @return all tournaments.
    */
@@ -101,15 +110,11 @@ public class TournamentService {
       results = tournamentRepository.findByNameContainingIgnoreCase(name);
     } else {
       results = StreamSupport.stream(
-          tournamentRepository.findAll().spliterator(), false).toList();
+              tournamentRepository.findAll().spliterator(), false).toList();
     }
 
     return results.stream().filter(t -> !"BROUILLON".equals(t.getStatus())).toList();
   }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // CREATE AND UPDATE (BROUILLON)
-  // ═══════════════════════════════════════════════════════════════════
 
   /**
    * Creates a tournament in BROUILLON state if the name is unique.
@@ -121,13 +126,11 @@ public class TournamentService {
     if (tournamentRepository.findByName(tournament.getName()).isPresent()) {
       return null;
     }
-    // Set initial status to draft
     tournament.setStatus("BROUILLON");
     Tournament saved = tournamentRepository.save(tournament);
 
-    // Notify admins only
-    Iterable<User> admins = userRepository.findAll();
-    for (User user : admins) {
+    Iterable<User> users = userRepository.findAll();
+    for (User user : users) {
       if (user.isAdmin()) {
         notificationService.notifyDraftTournamentCreation(user, saved.getName());
       }
@@ -149,7 +152,6 @@ public class TournamentService {
       return null;
     }
 
-    // Update fields if they are provided in the payload
     if (payload.getName() != null) {
       existing.setName(payload.getName());
     }
@@ -172,12 +174,8 @@ public class TournamentService {
     return tournamentRepository.save(existing);
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // TOURNAMENT LIFECYCLE
-  // ═══════════════════════════════════════════════════════════════════
-
   /**
-   * Publishes a tournament (BROUILLON -> OUVERT).
+   * Publishes a tournament (BROUILLON to OUVERT).
    *
    * @param id the tournament id.
    * @return the published tournament.
@@ -190,7 +188,6 @@ public class TournamentService {
     tournament.setStatus("OUVERT");
     Tournament saved = tournamentRepository.save(tournament);
 
-    // Notify all users about publication
     Iterable<User> users = userRepository.findAll();
     for (User user : users) {
       notificationService.notifyTournamentPublished(user, saved.getName());
@@ -200,8 +197,7 @@ public class TournamentService {
   }
 
   /**
-   * Manual closure by an admin (OUVERT -> CLOTURE).
-   * Requires at least 2 registered teams.
+   * Manual closure of registrations (OUVERT to CLOTURE).
    *
    * @param id the tournament id.
    * @return the closed tournament.
@@ -212,11 +208,9 @@ public class TournamentService {
       return null;
     }
 
-    // Count registered teams
     Iterable<RegistrationTeamTournament> registered = registrationService.getAllByTournament(id);
     long count = countRegistrations(registered);
 
-    // Business rule: at least 2 teams are required for manual closure
     if (count < 2) {
       return null;
     }
@@ -226,7 +220,7 @@ public class TournamentService {
   }
 
   /**
-   * Starts the tournament (CLOTURE -> EN_COURS).
+   * Starts the tournament (CLOTURE to EN_COURS).
    *
    * @param id the tournament id.
    * @return the started tournament.
@@ -236,13 +230,12 @@ public class TournamentService {
     if (tournament == null || !"CLOTURE".equals(tournament.getStatus())) {
       return null;
     }
-    // No need to manage "EN_ATTENTE" anymore, move directly to EN_COURS.
     tournament.setStatus("EN_COURS");
     return tournamentRepository.save(tournament);
   }
 
   /**
-   * Marks a tournament as finished (EN_COURS -> TERMINE).
+   * Marks a tournament as finished (EN_COURS to TERMINE).
    *
    * @param id the tournament id.
    * @return the finished tournament.
@@ -257,7 +250,7 @@ public class TournamentService {
   }
 
   /**
-   * Cancels a tournament and optionally appends a reason to its display name.
+   * Cancels a tournament and adds a reason to its name.
    *
    * @param id     the tournament id.
    * @param reason the reason for cancellation.
@@ -266,64 +259,46 @@ public class TournamentService {
   public Tournament cancel(Long id, String reason) {
     Tournament tournament = tournamentRepository.findById(id).orElse(null);
     if (tournament == null
-        || "TERMINE".equals(tournament.getStatus())
-        || "ANNULE".equals(tournament.getStatus())) {
+            || "TERMINE".equals(tournament.getStatus())
+            || "ANNULE".equals(tournament.getStatus())) {
       return null;
     }
 
     tournament.setStatus("ANNULE");
 
     String sanitizedReason = (reason == null || reason.isBlank())
-        ? "unspecified reason"
-        : reason.trim();
+            ? "unspecified reason"
+            : reason.trim();
     tournament.setName(tournament.getName() + " (Cancelled: " + sanitizedReason + ")");
 
     return tournamentRepository.save(tournament);
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // AUTOMATED TASKS (CRON)
-  // ═══════════════════════════════════════════════════════════════════
-
   /**
-   * Runs automatically every day at midnight.
-   * Checks registration deadlines for open tournaments.
+   * Daily task to check and close tournaments that reached their deadline.
    */
   @Scheduled(cron = "0 0 0 * * *")
   public void checkAndCloseExpiredTournaments() {
-    System.out.println(" Automatic check of tournament dates...");
     LocalDate today = LocalDate.now();
-
     Iterable<Tournament> allTournaments = tournamentRepository.findAll();
 
     for (Tournament tournament : allTournaments) {
       if ("OUVERT".equals(tournament.getStatus())
-          && tournament.getRegistrationDeadline() != null) {
+              && tournament.getRegistrationDeadline() != null
+              && tournament.getRegistrationDeadline().isBefore(today)) {
 
-        // If the registration deadline is strictly in the past
-        if (tournament.getRegistrationDeadline().isBefore(today)) {
+        Iterable<RegistrationTeamTournament> registered =
+                registrationService.getAllByTournament(tournament.getId());
+        long teamCount = countRegistrations(registered);
 
-          Iterable<RegistrationTeamTournament> registered =
-              registrationService.getAllByTournament(tournament.getId());
-          long teamCount = countRegistrations(registered);
-
-          if (teamCount >= 2) {
-            System.out.println(
-                "✅ Tournament " + tournament.getName()
-                    + " automatically closed (Date passed).");
-            tournament.setStatus("CLOTURE");
-          } else {
-            System.out.println(
-                "❌ Tournament " + tournament.getName()
-                    + " automatically cancelled (Less than 2 registered teams).");
-            tournament.setStatus("ANNULE");
-
-            tournament.setName(
-                tournament.getName() + " (Cancelled: less than 2 registered teams)");
-          }
-
-          tournamentRepository.save(tournament);
+        if (teamCount >= 2) {
+          tournament.setStatus("CLOTURE");
+        } else {
+          tournament.setStatus("ANNULE");
+          tournament.setName(
+                  tournament.getName() + " (Cancelled: less than 2 registered teams)");
         }
+        tournamentRepository.save(tournament);
       }
     }
   }
@@ -339,7 +314,7 @@ public class TournamentService {
       return 0;
     }
     return StreamSupport.stream(registrations.spliterator(), false)
-        .filter(Objects::nonNull)
-        .count();
+            .filter(Objects::nonNull)
+            .count();
   }
 }

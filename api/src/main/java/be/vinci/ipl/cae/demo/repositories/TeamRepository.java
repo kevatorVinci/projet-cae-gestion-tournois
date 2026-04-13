@@ -1,10 +1,9 @@
 package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 /**
  * Repository for team operations.
@@ -13,24 +12,35 @@ import java.util.Optional;
 public interface TeamRepository extends CrudRepository<Team, Long> {
 
   /**
-   * Find a team by name.
+   * Finds a team by its unique name.
+   *
+   * @param name the name of the team.
+   * @return an optional containing the team if found.
    */
   Optional<Team> findByName(String name);
 
   /**
-   * Returns teams with at least one member.
-   * 🇬🇧 On utilise "Members" car la variable dans Team.java s'appelle "members" !
+   * Returns teams that have at least one member.
+   *
+   * @return an iterable of teams with members.
    */
   Iterable<Team> findByMembersIsNotEmpty();
 
   /**
-   * Checks if a team name already exists.
+   * Checks if a team name already exists in the database.
+   *
+   * @param name the name to check.
+   * @return true if the name exists, false otherwise.
    */
   boolean existsByName(String name);
 
   /**
    * Finds the team where the given user is a responsible (primary or secondary).
+   *
+   * @param primaryId   the ID of the primary responsible.
+   * @param secondaryId the ID of the secondary responsible.
+   * @return an optional containing the team if found.
    */
   Optional<Team> findByPrimaryResponsibleIdOrSecondaryResponsibleId(
-      Long primaryId, Long secondaryId);
+          Long primaryId, Long secondaryId);
 }

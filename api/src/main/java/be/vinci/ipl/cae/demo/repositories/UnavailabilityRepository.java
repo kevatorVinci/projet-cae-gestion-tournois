@@ -14,8 +14,8 @@ public interface UnavailabilityRepository extends CrudRepository<Unavailability,
   /**
    * Finds all unavailable periods for a specific player.
    *
-   * @param user target player
-   * @return list of unavailable periods
+   * @param user the target player.
+   * @return an iterable of unavailable periods for that player.
    */
   Iterable<Unavailability> findByUser(User user);
 }

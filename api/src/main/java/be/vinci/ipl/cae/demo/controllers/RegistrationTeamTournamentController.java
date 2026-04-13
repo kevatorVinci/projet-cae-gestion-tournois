@@ -41,9 +41,9 @@ public class RegistrationTeamTournamentController {
    * @param registrationMapper  the mapper for registrations.
    */
   public RegistrationTeamTournamentController(
-    RegisterTeamTournamentService registrationService,
-    TeamService teamService,
-    RegisterTeamTournamentMapper registrationMapper) {
+          RegisterTeamTournamentService registrationService,
+          TeamService teamService,
+          RegisterTeamTournamentMapper registrationMapper) {
     this.registrationService = registrationService;
     this.teamService = teamService;
     this.registrationMapper = registrationMapper;
@@ -58,9 +58,9 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/{tournoiId}/inscriptions")
   @IsAdmin
   public Iterable<RegistrationTeamTournament> getAllByTournament(
-    @PathVariable("tournoiId") Long tournamentId) {
+          @PathVariable("tournoiId") Long tournamentId) {
     Iterable<RegistrationTeamTournament> registrations =
-      registrationService.getAllByTournament(tournamentId);
+            registrationService.getAllByTournament(tournamentId);
     if (registrations == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
@@ -75,9 +75,9 @@ public class RegistrationTeamTournamentController {
    */
   @GetMapping("/{tournoiId}/inscriptions/accepted")
   public Iterable<TournamentTeamRegistrationDto> getAcceptedByTournament(
-    @PathVariable("tournoiId") Long tournamentId) {
+          @PathVariable("tournoiId") Long tournamentId) {
     Iterable<RegistrationTeamTournament> registrations =
-      registrationService.getAllByTournament(tournamentId);
+            registrationService.getAllByTournament(tournamentId);
     if (registrations == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
     }
@@ -94,11 +94,12 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/equipes/{equipeId}/inscriptions")
   @IsAdminOrResponsable
   public Iterable<TeamTournamentRegistrationDto> getAllByTeam(
-    @PathVariable("equipeId") Long teamId, @AuthenticationPrincipal User currentUser) {
+          @PathVariable("equipeId") Long teamId,
+          @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-      teamId, currentUser, "You can only view your own team registrations");
+            teamId, currentUser, "You can only view your own team registrations");
     Iterable<RegistrationTeamTournament> registrations =
-      registrationService.getAllByTeam(teamId);
+            registrationService.getAllByTeam(teamId);
     if (registrations == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
@@ -113,9 +114,9 @@ public class RegistrationTeamTournamentController {
    */
   @GetMapping("/equipes/{equipeId}/inscriptions/public")
   public Iterable<TeamTournamentRegistrationDto> getPublicByTeam(
-    @PathVariable("equipeId") Long teamId) {
+          @PathVariable("equipeId") Long teamId) {
     Iterable<RegistrationTeamTournament> registrations =
-      registrationService.getAllByTeam(teamId);
+            registrationService.getAllByTeam(teamId);
     if (registrations == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
     }
@@ -134,31 +135,30 @@ public class RegistrationTeamTournamentController {
   @ResponseStatus(HttpStatus.CREATED)
   @IsResponsable
   public RegistrationTeamTournament register(
-    @PathVariable("tournoiId") Long tournamentId,
-    @PathVariable("equipeId") Long teamId,
-    @AuthenticationPrincipal User currentUser) {
+          @PathVariable("tournoiId") Long tournamentId,
+          @PathVariable("equipeId") Long teamId,
+          @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-      teamId, currentUser, "You can only register your own team");
+            teamId, currentUser, "You can only register your own team");
     RegistrationTeamTournament registration;
     try {
       registration = registrationService.register(tournamentId, teamId);
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+              HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
     if (registration == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST,
-        "Tournament not found, not OUVERT, or team already registered");
+              HttpStatus.BAD_REQUEST,
+              "Tournament not found, not OUVERT, or team already registered");
     }
     return registration;
   }
 
   /**
    * Unregisters a team from a tournament using the logical key.
-   * <p>
-   * This endpoint is currently not used by the frontend application.
-   * </p>
+   *
+   * <p>This endpoint is currently not used by the frontend application.
    *
    * @param tournamentId the ID of the tournament.
    * @param teamId       the ID of the team.
@@ -167,30 +167,30 @@ public class RegistrationTeamTournamentController {
   @DeleteMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @IsAdminOrResponsable
   public void unregisterByTournamentAndTeam(
-    @PathVariable("tournoiId") Long tournamentId,
-    @PathVariable("equipeId") Long teamId,
-    @AuthenticationPrincipal User currentUser) {
+          @PathVariable("tournoiId") Long tournamentId,
+          @PathVariable("equipeId") Long teamId,
+          @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
-        HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
+              HttpStatus.FORBIDDEN,
+              "A responsible cannot unregister a team from a tournament");
     }
 
     ensureCurrentUserResponsibleForTeam(
-      teamId, currentUser, "You can only unregister your own team");
+            teamId, currentUser, "You can only unregister your own team");
 
     boolean success = registrationService.unregisterByTournamentAndTeam(tournamentId, teamId);
     if (!success) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST,
-        "Registration not found, tournament is not OUVERT, or registration deadline passed");
+              HttpStatus.BAD_REQUEST,
+              "Registration not found, tournament not OUVERT, or deadline passed");
     }
   }
 
   /**
    * Unregisters a team from a tournament using the registration ID.
-   * <p>
-   * This endpoint is currently not used by the frontend application.
-   * </p>
+   *
+   * <p>This endpoint is currently not used by the frontend application.
    *
    * @param registrationId the ID of the registration.
    * @param currentUser    the current user.
@@ -198,22 +198,23 @@ public class RegistrationTeamTournamentController {
   @DeleteMapping("/inscriptions/{inscriptionId}")
   @IsAdminOrResponsable
   public void unregister(
-    @PathVariable("inscriptionId") Long registrationId,
-    @AuthenticationPrincipal User currentUser) {
+          @PathVariable("inscriptionId") Long registrationId,
+          @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
-        HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
+              HttpStatus.FORBIDDEN,
+              "A responsible cannot unregister a team from a tournament");
     }
     boolean success = registrationService.unregister(registrationId);
     if (!success) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST,
-        "Registration not found, tournament is not OUVERT, or registration deadline passed");
+              HttpStatus.BAD_REQUEST,
+              "Registration not found, tournament not OUVERT, or deadline passed");
     }
   }
 
   private void ensureCurrentUserResponsibleForTeam(
-    Long teamId, User currentUser, String forbiddenMessage) {
+          Long teamId, User currentUser, String forbiddenMessage) {
     if (currentUser.isAdmin()) {
       return;
     }

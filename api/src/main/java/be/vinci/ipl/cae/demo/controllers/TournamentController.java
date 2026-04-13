@@ -45,8 +45,8 @@ public class TournamentController {
    */
   @GetMapping("/")
   public Iterable<Tournament> getAllPublic(
-    @RequestParam(required = false) String etat,
-    @RequestParam(required = false) String nom) {
+          @RequestParam(required = false) String etat,
+          @RequestParam(required = false) String nom) {
     return tournoiService.getFiltered(etat, nom);
   }
 
@@ -70,8 +70,8 @@ public class TournamentController {
   @GetMapping("/{id}")
   public Tournament getOne(@PathVariable Long id) {
     return tournoiService
-      .getOne(id)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            .getOne(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
   /**
@@ -87,7 +87,7 @@ public class TournamentController {
     Tournament created = tournoiService.create(tournoi);
     if (created == null) {
       throw new ResponseStatusException(
-        HttpStatus.CONFLICT, "A tournament with this name already exists");
+              HttpStatus.CONFLICT, "A tournament with this name already exists");
     }
     return created;
   }
@@ -105,7 +105,7 @@ public class TournamentController {
     Tournament updated = tournoiService.update(id, payload);
     if (updated == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
     }
     return updated;
   }
@@ -122,7 +122,7 @@ public class TournamentController {
     Tournament tournoi = tournoiService.publish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
     }
     return tournoi;
   }
@@ -139,8 +139,8 @@ public class TournamentController {
     Tournament tournoi = tournoiService.closeRegistrations(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST,
-        "Tournament not found, not OUVERT, or not enough teams (minimum 2)");
+              HttpStatus.BAD_REQUEST,
+              "Tournament not found, not OUVERT, or not enough teams (minimum 2)");
     }
     return tournoi;
   }
@@ -157,7 +157,7 @@ public class TournamentController {
     Tournament tournoi = tournoiService.start(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, "Tournament not found or not in CLOTURE state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in CLOTURE state");
     }
     return tournoi;
   }
@@ -174,7 +174,7 @@ public class TournamentController {
     Tournament tournoi = tournoiService.finish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, "Tournament not found or not in EN_COURS state");
+              HttpStatus.BAD_REQUEST, "Tournament not found or not in EN_COURS state");
     }
     return tournoi;
   }
@@ -189,13 +189,13 @@ public class TournamentController {
   @PatchMapping("/{id}/cancel")
   @IsAdmin
   public Tournament cancel(
-    @PathVariable Long id,
-    @RequestBody(required = false) Map<String, String> payload) {
+          @PathVariable Long id,
+          @RequestBody(required = false) Map<String, String> payload) {
     String reason = payload == null ? null : payload.get("reason");
     Tournament tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {
       throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
+              HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
     }
     return tournoi;
   }

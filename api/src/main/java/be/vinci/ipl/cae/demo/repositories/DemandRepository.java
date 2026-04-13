@@ -6,60 +6,60 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repository for Demand (join requests) entities. Provides database access for
- * managing team join requests.
+ * Repository for Demand (join requests) entities.
+ * Provides database access for managing team join requests.
  */
 @Repository
 public interface DemandRepository extends JpaRepository<Demand, Long> {
 
   /**
-   * Find all demands for a team.
+   * Finds all demands associated with a specific team.
    *
-   * @param teamId team id
-   * @return demands for the team
+   * @param teamId the ID of the team.
+   * @return an iterable of demands for the team.
    */
-  Iterable<Demand> findByTeamId(Long teamId); // 🇬🇧 Ancien : findByEquipeId
+  Iterable<Demand> findByTeamId(Long teamId);
 
   /**
-   * Find all demands sent by one member.
+   * Finds all demands sent by a specific member.
    *
-   * @param memberId member id
-   * @return demands from that member
+   * @param memberId the ID of the member.
+   * @return an iterable of demands from that member.
    */
-  Iterable<Demand> findByMemberId(Long memberId); // 🇬🇧 Ancien : findByMembreId
+  Iterable<Demand> findByMemberId(Long memberId);
 
   /**
-   * Find team demands by state.
+   * Finds team demands filtered by their current state.
    *
-   * @param teamId team id
-   * @param state  target state
-   * @return matching demands
+   * @param teamId the ID of the team.
+   * @param state  the target state of the demands.
+   * @return an iterable of matching demands.
    */
-  Iterable<Demand> findByTeamIdAndState(Long teamId, DemandState state); // 🇬🇧 Ancien : findByEquipeIdAndEtat
+  Iterable<Demand> findByTeamIdAndState(Long teamId, DemandState state);
 
   /**
-   * Checks if a pending demand already exists for a member and a team.
+   * Checks if a pending demand already exists for a specific member and team.
    *
-   * @param memberId member id
-   * @param teamId   team id
-   * @param state    target state
-   * @return true when a matching demand exists
+   * @param memberId the ID of the member.
+   * @param teamId   the ID of the team.
+   * @param state    the state to check for.
+   * @return true if a matching demand exists, false otherwise.
    */
-  boolean existsByMemberIdAndTeamIdAndState(Long memberId, Long teamId, DemandState state); // 🇬🇧 Ancien : existsByMembreIdAndEquipeIdAndEtat
+  boolean existsByMemberIdAndTeamIdAndState(Long memberId, Long teamId, DemandState state);
 
   /**
-   * Deletes team demands by state.
+   * Deletes all demands of a team that match a specific state.
    *
-   * @param teamId team id
-   * @param state  state to delete
+   * @param teamId the ID of the team.
+   * @param state  the state of the demands to delete.
    */
-  void deleteByTeamIdAndState(Long teamId, DemandState state); // 🇬🇧 Ancien : deleteByEquipeIdAndEtat
+  void deleteByTeamIdAndState(Long teamId, DemandState state);
 
   /**
-   * Deletes member demands by state.
+   * Deletes all demands of a member that match a specific state.
    *
-   * @param memberId member id
-   * @param state    state to delete
+   * @param memberId the ID of the member.
+   * @param state    the state of the demands to delete.
    */
-  void deleteByMemberIdAndState(Long memberId, DemandState state); // 🇬🇧 Ancien : deleteByMembreIdAndEtat
+  void deleteByMemberIdAndState(Long memberId, DemandState state);
 }
