@@ -51,9 +51,9 @@ public class RegisterTeamTournamentService {
    *
    * @param inscriptionRepository the registration repository.
    * @param tournamentRepository  the tournament repository.
-   * @param teamRepository         the team repository.
+   * @param teamRepository        the team repository.
    * @param tournamentService     the tournament service.
-   * @param notificationService    the notification service.
+   * @param notificationService   the notification service.
    */
   public RegisterTeamTournamentService(
           InscriptionEquipeTournoiRepository inscriptionRepository,
@@ -165,7 +165,7 @@ public class RegisterTeamTournamentService {
     }
 
     Tournament tournament = registration.getTournament();
-    if (!isUnregisterAllowed(tournament, true)) {
+    if (!isUnregisterAllowed(tournament)) {
       return false;
     }
 
@@ -195,7 +195,7 @@ public class RegisterTeamTournamentService {
       return false;
     }
 
-    if (!isUnregisterAllowed(tournament, false)) {
+    if (!isUnregisterAllowed(tournament)) {
       return false;
     }
 
@@ -217,20 +217,12 @@ public class RegisterTeamTournamentService {
   /**
    * Checks if unregistration is currently permitted for a tournament.
    *
-   * @param tournament             the tournament entity.
-   * @param logIfDeadlinePassed    whether to log a message if the deadline is over.
+   * @param tournament the tournament entity.
    * @return true if unregistration is allowed, false otherwise.
    */
-  private boolean isUnregisterAllowed(Tournament tournament, boolean logIfDeadlinePassed) {
-    if (!"OUVERT".equals(tournament.getStatus())) {
-      return false;
-    }
-
-    if (tournament.getRegistrationDeadline() != null
-            && tournament.getRegistrationDeadline().isBefore(LocalDate.now())) {
-      return false;
-    }
-
-    return true;
+  private boolean isUnregisterAllowed(Tournament tournament) {
+    return "OUVERT".equals(tournament.getStatus())
+            && (tournament.getRegistrationDeadline() == null
+            || !tournament.getRegistrationDeadline().isBefore(LocalDate.now()));
   }
 }
