@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -13,11 +14,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class CaeApplication {
 
   /**
-   * Application bootstrap.
+   * Loads .env variables into system properties, then starts Spring.
    *
    * @param args startup args
    */
   public static void main(String[] args) {
+    Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+    dotenv.entries().forEach(entry ->
+        System.setProperty(entry.getKey(), entry.getValue())
+    );
     SpringApplication.run(CaeApplication.class, args);
   }
 }
