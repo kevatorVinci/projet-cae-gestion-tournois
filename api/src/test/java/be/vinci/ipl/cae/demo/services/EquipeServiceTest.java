@@ -60,6 +60,7 @@ class EquipeServiceTest {
     when(userRepo.findById(3L)).thenReturn(Optional.of(freeUser));
     when(teamRepo.findByName("NewTeam")).thenReturn(Optional.empty());
     when(teamRepo.save(any(Team.class))).thenReturn(team);
+    when(userRepo.save(any(User.class))).thenReturn(freeUser);
 
     Team result = teamService.createTeam(freeUser, "NewTeam", "img.png");
     assertNotNull(result);
