@@ -1,0 +1,10 @@
+package be.vinci.ipl.cae.demo.models.dtos.tournament;
+
+import java.time.LocalDate;
+
+/** Team registration DTO used by responsible/team-facing endpoints. */
+public record TeamTournamentRegistrationDto(
+    Long tournoiId,
+    Long equipeId,
+    LocalDate dateInscription,
+    TournamentAbstractDto tournoi) {}

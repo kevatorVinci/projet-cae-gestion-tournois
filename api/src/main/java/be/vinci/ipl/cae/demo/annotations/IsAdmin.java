@@ -6,8 +6,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.springframework.security.access.prepost.PreAuthorize;
 
-/** Restricts access to admin users only. */
+/**
+ * Restricts access to admin users only.
+ */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("hasRole('ADMIN')")
-public @interface IsAdmin {}
+public @interface IsAdmin {
+
+}

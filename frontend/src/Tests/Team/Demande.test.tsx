@@ -1,16 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
-import { DemandesAdhesion } from '../../components/pages/TeamPage/ResponsablePage/Demande';
+import { beforeEach, describe, test, expect, vi } from 'vitest';
+import { DemandesAdhesion } from '../../components/pages/TeamPage/ResponsablePage/Demand';
 import {
   getDemandesEnAttenteResponsable,
   accepterDemande,
   refuserDemande,
-} from '../../services/demande';
+} from '../../services/demand';
 import { DemandeDecisionResult } from '../../types';
 
 // FIXED PATH: From src/Tests/Team/ to src/services/ is only 2 levels up
-vi.mock('../../services/demande', () => ({
+vi.mock('../../services/demand', () => ({
   getDemandesEnAttenteResponsable: vi.fn(),
   accepterDemande: vi.fn(),
   refuserDemande: vi.fn(),
@@ -40,6 +40,15 @@ const mockDemandes = [
 ];
 
 describe('DemandesAdhesion', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getDemandesEnAttenteResponsable).mockResolvedValue(mockDemandes);
+    vi.mocked(accepterDemande).mockResolvedValue(
+      undefined as unknown as DemandeDecisionResult,
+    );
+    vi.mocked(refuserDemande).mockResolvedValue(undefined);
+  });
+
   test('displays pending join requests', async () => {
     vi.mocked(getDemandesEnAttenteResponsable).mockResolvedValueOnce(
       mockDemandes,

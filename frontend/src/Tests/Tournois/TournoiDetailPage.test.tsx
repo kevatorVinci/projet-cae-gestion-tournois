@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
-import TournoiDetailPage from '../../components/pages/Tournois/TournoiDetailPage';
+import TournoiDetailPage from '../../components/pages/Tournaments/TournoiDetailPage';
 import {
   getEquipeById,
   getUserTeam,
@@ -10,7 +10,7 @@ import {
 import {
   fetchTeamRegistrations,
   registerTeamToTournament,
-} from '../../services/tournois';
+} from '../../services/tournaments';
 
 vi.mock('../../utils/session', () => ({
   getAuthenticatedUser: vi.fn(() => undefined),
@@ -22,7 +22,7 @@ vi.mock('../../services/teams', () => ({
   isCurrentUserResponsable: vi.fn(),
 }));
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
   fetchTeamRegistrations: vi.fn(),
   registerTeamToTournament: vi.fn(),
 }));

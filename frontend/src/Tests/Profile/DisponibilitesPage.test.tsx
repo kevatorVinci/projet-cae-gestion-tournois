@@ -1,11 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import DisponibilitesPage from '../../components/pages/Espace/DisponibilitesPage';
+import DisponibilitesPage from '../../components/pages/MySpace/AvailabilitiesPage';
 import {
   getMesIndisponibilites,
   deleteIndisponibilite,
-} from '../../services/indisponibilites';
+} from '../../services/unavailabilities';
 
 // 1. Mock react-router-dom
 vi.mock('react-router-dom', async () => {
@@ -17,7 +17,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // 2. Mock availability services
-vi.mock('../../services/indisponibilites', () => ({
+vi.mock('../../services/unavailabilities', () => ({
   getMesIndisponibilites: vi.fn(),
   addIndisponibilite: vi.fn(),
   deleteIndisponibilite: vi.fn(),

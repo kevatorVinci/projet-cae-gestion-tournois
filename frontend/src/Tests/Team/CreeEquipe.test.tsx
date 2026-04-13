@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import { CreateEquipe } from '../../components/pages/TeamPage/CreeEquipe';
+import { CreateEquipe } from '../../components/pages/TeamPage/CreateTeam';
 import { UserContext } from '../../contexts/UserContext';
 import { createEquipe } from '../../services/teams';
 import { Equipe } from '../../types';

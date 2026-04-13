@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../../components/BoutonRetour';
+import BackButton from '../../BackButton';
 import {
   Box,
   Typography,
@@ -37,7 +37,7 @@ import {
 import {
   fetchAllTournaments,
   fetchPublicTournaments,
-} from '../../../services/tournois';
+} from '../../../services/tournaments';
 
 type NotifType =
   | 'demande'

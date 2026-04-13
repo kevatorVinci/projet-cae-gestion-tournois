@@ -23,7 +23,7 @@ public class NotificationMapper {
         notification.getEstLue());
   }
 
-        /** Converts a list of notification entities to DTOs. */
+  /** Converts a list of notification entities to DTOs. */
   public List<NotificationDto> toDtos(Iterable<Notification> notifications) {
     List<NotificationDto> result = new ArrayList<>();
     for (Notification notification : notifications) {

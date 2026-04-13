@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../../components/BoutonRetour';
+import BackButton from '../../BackButton';
 import {
   Alert,
   Box,
@@ -277,7 +277,7 @@ const TeamsList = () => {
             flexWrap: 'wrap',
           }}
         >
-          {/* The Toggle Buttons (Équipes / Joueurs) */}
+          {/* Toggle buttons (Teams / Players) */}
           <ToggleButtonGroup
             value={activeTab}
             exclusive

@@ -1,8 +1,14 @@
 package be.vinci.ipl.cae.demo.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -185,7 +191,7 @@ class NotificationServiceTest {
   void notifierCreationCompte_messageCommenceParBienvenue() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierCreationCompte(user);
+    notificationService.notifyAccountCreation(user);
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
@@ -200,7 +206,7 @@ class NotificationServiceTest {
   void notifierCreationEquipe_messageContientNomEquipe() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierCreationEquipe(user, "Les Invincibles");
+    notificationService.notifyTeamCreation(user, "Les Invincibles");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
@@ -215,7 +221,7 @@ class NotificationServiceTest {
   void notifierDemandEnvoyee_messageCommenceParDemande() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierDemandEnvoyee(user, "Les Invincibles");
+    notificationService.sendApplicationNotification(user, "Les Invincibles");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
@@ -231,7 +237,7 @@ class NotificationServiceTest {
   void notifierNouvelleDemandeResponsable_messageContientTagCandidat() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierNouvelleDemandeResponsable(user, "BobTag", "Les Invincibles");
+    notificationService.notifyNewRequestToManager(user, "BobTag", "Les Invincibles");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
@@ -248,7 +254,7 @@ class NotificationServiceTest {
   void notifierDemandeAcceptee_messageCommenceParAccepte() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierDemandeAcceptee(user, "Les Invincibles");
+    notificationService.notifyRequestAccepted(user, "Les Invincibles");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
@@ -264,7 +270,7 @@ class NotificationServiceTest {
   void notifierDemandeRefusee_messageCommenceParRefus() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierDemandeRefusee(user, "Les Invincibles", "Niveau insuffisant");
+    notificationService.notifyRequestDenied(user, "Les Invincibles", "Niveau insuffisant");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
@@ -278,7 +284,7 @@ class NotificationServiceTest {
     // Règle : si pas de raison → message par défaut affiché
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierDemandeRefusee(user, "Les Invincibles", null);
+    notificationService.notifyRequestDenied(user, "Les Invincibles", null);
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
@@ -289,7 +295,7 @@ class NotificationServiceTest {
   void notifierDemandeRefusee_raisonVide_afficheMsgDefaut() {
     when(notificationRepository.save(any())).thenReturn(notification);
 
-    notificationService.notifierDemandeRefusee(user, "Les Invincibles", "   ");
+    notificationService.notifyRequestDenied(user, "Les Invincibles", "   ");
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());

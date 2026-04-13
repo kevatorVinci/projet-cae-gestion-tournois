@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import Profile from '../../components/pages/TableauDebord/Profil';
+import Profile from '../../components/pages/Dashbord/Profile';
 import { UserContext } from '../../contexts/UserContext';
 import { getUserTeam } from '../../services/teams';
 
-// 1. Mock de react-router-dom
+// 1. Mock react-router-dom
 vi.mock('react-router-dom', async () => {
   const actual =
     await vi.importActual<typeof import('react-router-dom')>(
@@ -34,7 +34,7 @@ const mockTeam = {
   members: [],
 };
 
-// Helper pour wrapper le composant avec les providers nécessaires
+// Helper to wrap the component with required providers
 const renderProfile = (user = mockAuthenticatedUser) => {
   return render(
     <MemoryRouter>
@@ -59,7 +59,7 @@ describe('Profile', () => {
 
     renderProfile();
 
-    // Correction : Utilisation de getByRole pour cibler spécifiquement le nom dans la carte
+    // Use getByRole to specifically target the name in the profile card
     expect(
       screen.getByRole('heading', { name: /^pedrinho08$/i, level: 5 }),
     ).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe('Profile', () => {
     renderProfile();
 
     await waitFor(() => {
-      // Utilisation de queryByText car on s'attend à ce que l'élément soit ABSENT
+      // Use queryByText because the element is expected to be absent
       expect(screen.queryByText(/créer mon équipe/i)).toBeNull();
       expect(screen.queryByText(/chercher une équipe/i)).toBeNull();
     });

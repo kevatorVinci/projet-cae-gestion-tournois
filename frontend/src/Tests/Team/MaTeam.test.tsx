@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { beforeEach, describe, test, expect, vi } from 'vitest';
-import { MyTeam } from '../../components/pages/TeamPage/MaTeam';
+import { MyTeam } from '../../components/pages/TeamPage/MyTeam';
 import {
   getUserTeam,
   isCurrentUserResponsable,
@@ -15,7 +15,7 @@ import {
   depromoteResponsable,
   leaveEquipe,
 } from '../../services/teams';
-import { fetchTeamRegistrationsPublic } from '../../services/tournois';
+import { fetchTeamRegistrationsPublic } from '../../services/tournaments';
 import { getAuthenticatedUser, decodeJwtPayload } from '../../utils/session';
 
 vi.mock('react-router-dom', async () => {
@@ -34,7 +34,7 @@ vi.mock('../../services/teams', () => ({
   depromoteResponsable: vi.fn(),
 }));
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
   fetchTeamRegistrationsPublic: vi.fn(),
 }));
 

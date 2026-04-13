@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import TournoiPage from '../../components/pages/Tournois/TournoiPage';
+import TournoiPage from '../../components/pages/Tournaments/TournamentPage';
 
 const mockNavigate = vi.fn();
 

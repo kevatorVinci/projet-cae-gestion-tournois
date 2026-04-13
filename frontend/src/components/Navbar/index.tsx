@@ -130,10 +130,10 @@ const Navbar = () => {
           )}
         </Box>
 
-        {/* --- L'ESPACE QUI POUSSE TOUT LE RESTE À DROITE (Comme ton code original) --- */}
+        {/* --- Spacer that pushes the rest to the right (as in the original code) --- */}
         <Typography sx={{ flexGrow: 1 }} />
 
-        {/* --- LES ONGLETS (Alignés à droite) --- */}
+        {/* --- TABS (right-aligned) --- */}
         {!isAdminView ? (
           <>
             <Button color="inherit" onClick={() => navigate('/')}>
@@ -165,7 +165,7 @@ const Navbar = () => {
           </>
         )}
 
-        {/* --- LES BOUTONS DE PROFIL (Toujours à droite, collés aux onglets) --- */}
+        {/* --- PROFILE BUTTONS (always right-aligned, next to tabs) --- */}
         {!authenticatedUser ? (
           <>
             <Button color="inherit" onClick={() => navigate('/login')}>
@@ -265,7 +265,7 @@ const Navbar = () => {
               />
             </IconButton>
 
-            {/* Le bouton se déconnecter, toujours visible */}
+            {/* Sign-out button, always visible */}
             <Button
               variant="contained"
               onClick={handleLogout}

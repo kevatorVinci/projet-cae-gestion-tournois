@@ -1,15 +1,25 @@
 package be.vinci.ipl.cae.demo.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -24,20 +34,23 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-  @Mock private UserRepository userRepository;
-  @Mock private EquipeRepository equipeRepository;
-  @Mock private BCryptPasswordEncoder passwordEncoder;
-  @Mock private NotificationService notificationService;
-  @Mock private UserMapper userMapper;
-
-  @InjectMocks private UserService userService;
-
-  private User user;
-  private Credentials credentials;
-
   private static final String EMAIL = "alice@vinci.be";
   private static final String PASSWORD = "password123";
   private static final String HASHED = "$2a$10$hashedpassword";
+  @Mock
+  private UserRepository userRepository;
+  @Mock
+  private TeamRepository equipeRepository;
+  @Mock
+  private BCryptPasswordEncoder passwordEncoder;
+  @Mock
+  private NotificationService notificationService;
+  @Mock
+  private UserMapper userMapper;
+  @InjectMocks
+  private UserService userService;
+  private User user;
+  private Credentials credentials;
 
   @BeforeEach
   void setUp() {
@@ -362,7 +375,7 @@ class UserServiceTest {
     secondary.setId(2L);
     secondary.setCreationDate(LocalDate.of(2026, 1, 2));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(user);
     equipe.setResponsableSecondaire(secondary);
     equipe.getMembres().add(user);
@@ -395,7 +408,7 @@ class UserServiceTest {
     newest.setId(4L);
     newest.setCreationDate(LocalDate.of(2025, 5, 1));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(user);
     equipe.getMembres().add(user);
     equipe.getMembres().add(newest);
@@ -422,7 +435,7 @@ class UserServiceTest {
     principal.setId(10L);
     principal.setCreationDate(LocalDate.of(2025, 1, 1));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(principal);
     equipe.setResponsableSecondaire(user);
     equipe.getMembres().add(principal);
@@ -449,7 +462,7 @@ class UserServiceTest {
     principal.setId(10L);
     principal.setCreationDate(LocalDate.of(2025, 1, 1));
 
-    Equipe equipe = new Equipe();
+    Team equipe = new Team();
     equipe.setResponsablePrincipal(principal);
     equipe.getMembres().add(principal);
     equipe.getMembres().add(user);

@@ -11,7 +11,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/** SecurityConfiguration to handle security configuration. */
+/**
+ * SecurityConfiguration to handle security configuration.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity()
@@ -29,11 +31,11 @@ public class SecurityConfiguration {
   }
 
   /**
-   * Configure les règles de sécurité du serveur (qui a le droit d'accéder à quoi).
+   * Configures server security rules (who can access which endpoints).
    *
-   * @param http l'objet de Spring Security qui permet de configurer le pare-feu
-   * @return SecurityFilterChain la chaîne de filtres prête à sécuriser l'application
-   * @throws Exception si une erreur survient pendant la configuration
+   * @param http Spring Security configuration object
+   * @return configured security filter chain
+   * @throws Exception if an error occurs during configuration
    */
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -45,22 +47,20 @@ public class SecurityConfiguration {
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers("/auths/**")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/equipes/**")
-                    .permitAll()
-                  .requestMatchers(HttpMethod.GET, "/tournois/**")
-                  .permitAll()
-                    .requestMatchers("/indisponibilites", "/indisponibilites/**")
-                    .authenticated()
-                    .anyRequest()
-                    .authenticated())
+            auth -> auth.requestMatchers("/auths/**")
+                .permitAll()
+                .requestMatchers(HttpMethod.GET, "/equipes/**")
+                .permitAll()
+                .requestMatchers(HttpMethod.GET, "/tournois/**")
+                .permitAll()
+                .requestMatchers("/indisponibilites", "/indisponibilites/**")
+                .authenticated()
+                .anyRequest()
+                .authenticated())
         .addFilterBefore(this.jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(
-            ex ->
-                ex.authenticationEntryPoint(
-                    (request, response, authException) -> response.sendError(401, "Unauthorized")))
+            ex -> ex.authenticationEntryPoint(
+                (request, response, authException) -> response.sendError(401, "Unauthorized")))
         .build();
   }
 }

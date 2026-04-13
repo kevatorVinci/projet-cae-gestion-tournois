@@ -7,7 +7,7 @@ import {
   markNotificationAsRead,
 } from './notifications';
 
-// Création des mocks pour les utilitaires de session
+// Create mocks for session utilities
 const mockGetAuthenticatedUser = vi.fn();
 const mockDecodeJwtPayload = vi.fn();
 
@@ -19,20 +19,20 @@ vi.mock('../utils/session', () => ({
 describe('notifications service', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    // On stub le fetch global
+    // Stub global fetch
     vi.stubGlobal('fetch', vi.fn());
     mockGetAuthenticatedUser.mockReset();
     mockDecodeJwtPayload.mockReset();
   });
 
-  it('getCurrentUserIdFromToken retourne l id du payload', () => {
+  it('getCurrentUserIdFromToken returns the payload id', () => {
     mockGetAuthenticatedUser.mockReturnValue({ token: 'tkn' });
     mockDecodeJwtPayload.mockReturnValue({ id: 42 });
 
     expect(getCurrentUserIdFromToken()).toBe(42);
   });
 
-  it('getCurrentUserIdFromToken throw si session absente', () => {
+  it('getCurrentUserIdFromToken throws when session is missing', () => {
     mockGetAuthenticatedUser.mockReturnValue(undefined);
 
     expect(() => getCurrentUserIdFromToken()).toThrow(
@@ -40,7 +40,7 @@ describe('notifications service', () => {
     );
   });
 
-  it('getCurrentUserIdFromToken throw si payload sans id', () => {
+  it('getCurrentUserIdFromToken throws when payload has no id', () => {
     mockGetAuthenticatedUser.mockReturnValue({ token: 'tkn' });
     mockDecodeJwtPayload.mockReturnValue({});
 
@@ -49,7 +49,7 @@ describe('notifications service', () => {
     );
   });
 
-  it('getNotificationsByUser retourne les notifications', async () => {
+  it('getNotificationsByUser returns notifications', async () => {
     mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
     vi.mocked(fetch).mockResolvedValue(
       new Response(
@@ -60,7 +60,7 @@ describe('notifications service', () => {
 
     const result = await getNotificationsByUser(10);
 
-    // D'après tes logs, cette fonction n'envoie PAS "Bearer "
+    // According to current behavior, this function does NOT send "Bearer "
     expect(fetch).toHaveBeenCalledWith(
       '/api/notifications/users/10',
       expect.objectContaining({
@@ -70,7 +70,7 @@ describe('notifications service', () => {
     expect(result).toHaveLength(1);
   });
 
-  it('getUnreadNotificationsByUser retourne les notifications non lues', async () => {
+  it('getUnreadNotificationsByUser returns unread notifications', async () => {
     mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
     vi.mocked(fetch).mockResolvedValue(
       new Response(
@@ -81,7 +81,7 @@ describe('notifications service', () => {
 
     const result = await getUnreadNotificationsByUser(3);
 
-    // D'après tes logs, cette fonction n'envoie PAS "Bearer " non plus
+    // According to current behavior, this function does NOT send "Bearer " either
     expect(fetch).toHaveBeenCalledWith(
       '/api/notifications/users/3/non-lues',
       expect.objectContaining({
@@ -91,7 +91,7 @@ describe('notifications service', () => {
     expect(result[0].idNotification).toBe(2);
   });
 
-  it('getNotificationsByUser remonte le message d erreur backend', async () => {
+  it('getNotificationsByUser surfaces backend error message', async () => {
     mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ message: 'backend failed' }), {
@@ -103,13 +103,13 @@ describe('notifications service', () => {
     await expect(getNotificationsByUser(1)).rejects.toThrow(/backend failed/i);
   });
 
-  it('markNotificationAsRead envoie un PATCH auth', async () => {
+  it('markNotificationAsRead sends an authenticated PATCH', async () => {
     mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
     vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 204 }));
 
     await markNotificationAsRead(99);
 
-    // D'après tes logs précédents, cette fonction ENVOIE "Bearer "
+    // According to current behavior, this function DOES send "Bearer "
     expect(fetch).toHaveBeenCalledWith(
       '/api/notifications/99/lue',
       expect.objectContaining({
@@ -119,7 +119,7 @@ describe('notifications service', () => {
     );
   });
 
-  it('markAllNotificationsAsRead utilise le message fallback si body non json', async () => {
+  it('markAllNotificationsAsRead uses fallback message when body is not JSON', async () => {
     mockGetAuthenticatedUser.mockReturnValue({ token: 'secure' });
     vi.mocked(fetch).mockResolvedValue(
       new Response('server error', { status: 500 }),
