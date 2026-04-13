@@ -73,7 +73,6 @@ class TournamentServiceTest {
     Tournament result = service.create(tournament);
 
     assertThat(result).isNotNull();
-    // 🇬🇧 Utilisation de DRAFT au lieu de BROUILLON
     assertThat(result.getStatus()).isEqualTo("DRAFT");
     // Only the 2 admins receive the notification
     verify(notificationService, times(2)).notifyDraftTournamentCreation(any(User.class), any());
