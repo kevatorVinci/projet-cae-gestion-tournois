@@ -32,33 +32,37 @@ public class Tournament {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(unique = true)
+  @Column(name = "nom", unique = true)
   @NotBlank
-  private String nom;
+  private String name;
 
   private String description;
 
-  @NotNull private LocalDate dateDebut;
+  @Column(name = "date_debut")
+  @NotNull
+  private LocalDate startDate;
 
-  @NotNull private LocalDate dateFin;
+  @Column(name = "date_fin")
+  @NotNull
+  private LocalDate endDate;
 
-  @NotNull private LocalDate dateLimiteInscription;
+  @Column(name = "date_limite_inscription")
+  @NotNull
+  private LocalDate registrationDeadline;
 
-  // Pas d'enum → simple String, la validation se fait au niveau service
-  private String etat;
+  @Column(name = "etat")
+  private String status;
 
+  @Column(name = "nombres_participants_max")
   @Min(value = 2, message = "Un tournoi doit avoir au moins 2 équipes participantes.")
-  private Integer nombresParticipantsMax;
+  private Integer maxParticipants;
 
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "id_gagnant")
-  @JsonIgnoreProperties({"membres", "inscriptions",
-      "responsablePrincipal",
-      "responsableSecondaire"})
-  private Team gagnant;
+  @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
+  private Team winner;
 
-  @OneToMany(mappedBy = "tournoi", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "tournament", fetch = FetchType.LAZY)
   @JsonManagedReference("tournoi-inscriptions")
-  private List<RegistrationTeamTournament> inscriptions =
-      new ArrayList<>();
+  private List<RegistrationTeamTournament> registrations = new ArrayList<>();
 }

@@ -10,10 +10,8 @@ import lombok.NoArgsConstructor;
 public class RegistrationTeamTournamentId implements Serializable {
 
   // Same name as the @Id field in the entity
-  // Type = PK type of Tournoi (Long)
-  private Long tournoi;
+  private Long tournament; // 🇬🇧 Ancien nom : tournoi
 
   // Same name as the @Id field in the entity
-  // Type = PK type of Equipe (Long)
-  private Long equipe;
+  private Long team; // 🇬🇧 Ancien nom : equipe
 }

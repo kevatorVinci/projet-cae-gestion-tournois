@@ -1,6 +1,7 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -28,15 +29,14 @@ public class RegistrationTeamTournament {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_tournoi")
   @JsonBackReference("tournoi-inscriptions")
-  private Tournament tournoi;
+  private Tournament tournament;
 
   @Id
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_equipe")
   @JsonBackReference("equipe-inscriptions")
-  private Team equipe;
+  private Team team;
 
-  private LocalDate dateInscription;
-
-
+  @Column(name = "date_inscription")
+  private LocalDate registrationDate;
 }
