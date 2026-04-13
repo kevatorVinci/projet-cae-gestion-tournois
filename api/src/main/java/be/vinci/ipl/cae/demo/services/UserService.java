@@ -12,6 +12,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Date;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserService {
 
-  private static final String JWT_SECRET = "ilovemypizza!";
   private static final long LIFETIME_JWT = 24 * 60 * 60 * 1000;
-  private static final Algorithm ALGORITHM = Algorithm.HMAC256(JWT_SECRET);
 
+  private final Algorithm algorithm;
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
   private final TeamRepository equipeRepository;
@@ -35,16 +35,21 @@ public class UserService {
   /**
    * Builds the user service.
    *
+   * @param jwtSecret           JWT signing secret from configuration
    * @param passwordEncoder     encoder used for password hashing
    * @param userRepository      user repository
+   * @param equipeRepository    team repository
    * @param notificationService notification service
+   * @param userMapper          user mapper
    */
   public UserService(
+      @Value("${JWT_SECRET}") String jwtSecret,
       BCryptPasswordEncoder passwordEncoder,
       UserRepository userRepository,
       TeamRepository equipeRepository,
       NotificationService notificationService,
       UserMapper userMapper) {
+    this.algorithm = Algorithm.HMAC256(jwtSecret);
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.equipeRepository = equipeRepository;
@@ -73,7 +78,7 @@ public class UserService {
           .withClaim("id", user.getId());
     }
 
-    String token = tokenBuilder.sign(ALGORITHM);
+    String token = tokenBuilder.sign(algorithm);
     AuthenticatedUser authenticatedUser = userMapper.toAuthenticatedUser(user, token);
     if (authenticatedUser.getEmail() == null) {
       authenticatedUser.setEmail(email);
@@ -89,7 +94,7 @@ public class UserService {
    */
   public String verifyJwtToken(String token) {
     try {
-      return JWT.require(ALGORITHM).build().verify(token).getClaim("email").asString();
+      return JWT.require(algorithm).build().verify(token).getClaim("email").asString();
     } catch (Exception e) {
       return null;
     }
