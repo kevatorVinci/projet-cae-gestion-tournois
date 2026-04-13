@@ -73,7 +73,7 @@ class TournamentServiceTest {
     Tournament result = service.create(tournament);
 
     assertThat(result).isNotNull();
-    assertThat(result.getStatus()).isEqualTo("DRAFT");
+    assertThat(result.getStatus()).isEqualTo("BROUILLON");
     // Only the 2 admins receive the notification
     verify(notificationService, times(2)).notifyDraftTournamentCreation(any(User.class), any());
   }
@@ -95,7 +95,7 @@ class TournamentServiceTest {
   void publish_notifiesAllUsers() {
     Tournament tournament = makeTournament("Spring Cup 2026");
     tournament.setId(1L);
-    tournament.setStatus("DRAFT");
+    tournament.setStatus("BROUILLON");
 
     User alice = makeAdmin(1L, "Alice");
     User bob = makeUser(2L, "Bob");
@@ -105,7 +105,7 @@ class TournamentServiceTest {
     when(tournamentRepository.save(any())).thenAnswer(invocation -> {
       Tournament t = invocation.getArgument(0);
       // 🇬🇧 Utilisation de OPEN au lieu de OUVERT
-      assertThat(t.getStatus()).isEqualTo("OPEN");
+      assertThat(t.getStatus()).isEqualTo("OUVERT");
       return t;
     });
     when(userRepository.findAll()).thenReturn(List.of(alice, bob, charlie));
@@ -113,7 +113,7 @@ class TournamentServiceTest {
     Tournament result = service.publish(1L);
 
     assertThat(result).isNotNull();
-    assertThat(result.getStatus()).isEqualTo("OPEN");
+    assertThat(result.getStatus()).isEqualTo("OUVERT");
     // All 3 users receive the notification
     verify(notificationService, times(3)).notifyTournamentPublished(any(User.class), any());
   }

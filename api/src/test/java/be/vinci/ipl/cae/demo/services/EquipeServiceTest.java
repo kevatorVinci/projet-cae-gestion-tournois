@@ -40,12 +40,15 @@ class EquipeServiceTest {
   void setUp() {
     responsible = new User();
     responsible.setId(1L);
+    responsible.setTag("Alice");
 
     team = new Team();
     team.setId(10L);
     team.setName("Test Team");
     team.setPrimaryResponsible(responsible);
     team.setMembers(new ArrayList<>(List.of(responsible)));
+
+    responsible.setTeam(team);
   }
 
   @Test
@@ -54,10 +57,8 @@ class EquipeServiceTest {
     freeUser.setId(3L);
     freeUser.setTeam(null);
 
-    // On simule que l'utilisateur est trouvé en BD pour éviter le NullPointer
     when(userRepo.findById(3L)).thenReturn(Optional.of(freeUser));
     when(teamRepo.findByName("NewTeam")).thenReturn(Optional.empty());
-    // On simule le retour de l'équipe sauvegardée
     when(teamRepo.save(any(Team.class))).thenReturn(team);
 
     Team result = teamService.createTeam(freeUser, "NewTeam", "img.png");
@@ -66,7 +67,7 @@ class EquipeServiceTest {
 
   @Test
   void updateTeamImage_OK() {
-    // On simule que l'équipe existe en BD pour éviter le "Team not found"
+    when(userRepo.findById(1L)).thenReturn(Optional.of(responsible));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
 
     teamService.updateTeamImage(10L, "new_logo.jpg", responsible);
