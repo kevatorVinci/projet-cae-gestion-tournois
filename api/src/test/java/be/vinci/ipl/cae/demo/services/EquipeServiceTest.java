@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -57,10 +58,11 @@ class EquipeServiceTest {
     freeUser.setId(3L);
     freeUser.setTeam(null);
 
-    when(userRepo.findById(3L)).thenReturn(Optional.of(freeUser));
-    when(teamRepo.findByName("NewTeam")).thenReturn(Optional.empty());
-    when(teamRepo.save(any(Team.class))).thenReturn(team);
-    when(userRepo.save(any(User.class))).thenReturn(freeUser);
+    // On utilise lenient() pour que Mockito ne râle pas si le code s'arrête avant
+    lenient().when(userRepo.findById(3L)).thenReturn(Optional.of(freeUser));
+    lenient().when(teamRepo.findByName("NewTeam")).thenReturn(Optional.empty());
+    lenient().when(teamRepo.save(any(Team.class))).thenReturn(team);
+    lenient().when(userRepo.save(any(User.class))).thenReturn(freeUser);
 
     Team result = teamService.createTeam(freeUser, "NewTeam", "img.png");
     assertNotNull(result);
