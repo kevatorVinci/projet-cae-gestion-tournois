@@ -28,7 +28,7 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
-  private final TeamRepository equipeRepository;
+  private final TeamRepository teamRepository; // 🇬🇧 Ancien : equipeRepository
   private final NotificationService notificationService;
   private final UserMapper userMapper;
 
@@ -37,17 +37,19 @@ public class UserService {
    *
    * @param passwordEncoder     encoder used for password hashing
    * @param userRepository      user repository
+   * @param teamRepository      team repository
    * @param notificationService notification service
+   * @param userMapper          user mapper
    */
   public UserService(
-      BCryptPasswordEncoder passwordEncoder,
-      UserRepository userRepository,
-      TeamRepository equipeRepository,
-      NotificationService notificationService,
-      UserMapper userMapper) {
+          BCryptPasswordEncoder passwordEncoder,
+          UserRepository userRepository,
+          TeamRepository teamRepository,
+          NotificationService notificationService,
+          UserMapper userMapper) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
-    this.equipeRepository = equipeRepository;
+    this.teamRepository = teamRepository;
     this.notificationService = notificationService;
     this.userMapper = userMapper;
   }
@@ -62,15 +64,15 @@ public class UserService {
     User user = userRepository.findByEmail(email);
 
     var tokenBuilder = JWT.create()
-        .withIssuer("auth0")
-        .withClaim("email", email)
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
+            .withIssuer("auth0")
+            .withClaim("email", email)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
 
     if (user != null && user.getId() != null) {
       tokenBuilder = tokenBuilder
-          .withSubject(String.valueOf(user.getId()))
-          .withClaim("id", user.getId());
+              .withSubject(String.valueOf(user.getId()))
+              .withClaim("id", user.getId());
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
@@ -158,7 +160,9 @@ public class UserService {
 
     // Set current date/time as registration date
     user.setCreationDate(java.time.LocalDate.now());
-    user.setDateCreationProfil(LocalDateTime.now());
+
+    // 🇬🇧 Updated to the English setter from User.java
+    user.setProfileCreationDate(LocalDateTime.now());
 
     // Persist user
     User savedUser = userRepository.save(user);
@@ -177,7 +181,7 @@ public class UserService {
    * @return updated authenticated user payload or null
    */
   public AuthenticatedUser updateProfile(
-      String email, String specialty, String profileImage, String oldPassword, String newPassword) {
+          String email, String specialty, String profileImage, String oldPassword, String newPassword) {
     User user = userRepository.findByEmail(email);
 
     if (user != null) {
@@ -185,9 +189,9 @@ public class UserService {
       user.setProfileImageUrl(profileImage);
 
       if (oldPassword != null
-          && !oldPassword.isBlank()
-          && newPassword != null
-          && !newPassword.isBlank()) {
+              && !oldPassword.isBlank()
+              && newPassword != null
+              && !newPassword.isBlank()) {
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
           user.setPassword(passwordEncoder.encode(newPassword));
         } else {
@@ -266,56 +270,59 @@ public class UserService {
       return;
     }
 
-    Team equipe = equipeRepository
-        .findByResponsablePrincipalIdOrResponsableSecondaireId(user.getId(), user.getId())
-        .orElse(user.getEquipe());
+    // 🇬🇧 Updated repository call to match TeamRepository.java
+    Team team = teamRepository
+            .findByPrimaryResponsibleIdOrSecondaryResponsibleId(user.getId(), user.getId())
+            .orElse(user.getTeam());
 
-    if (equipe == null) {
+    if (team == null) {
       return;
     }
 
     Long bannedUserId = user.getId();
 
-    boolean wasPrincipal = equipe.getResponsablePrincipal() != null
-        && equipe.getResponsablePrincipal().getId().equals(bannedUserId);
-    boolean wasSecondaire = equipe.getResponsableSecondaire() != null
-        && equipe.getResponsableSecondaire().getId().equals(bannedUserId);
+    // 🇬🇧 Translated variables and getters
+    boolean wasPrimary = team.getPrimaryResponsible() != null
+            && team.getPrimaryResponsible().getId().equals(bannedUserId);
+    boolean wasSecondary = team.getSecondaryResponsible() != null
+            && team.getSecondaryResponsible().getId().equals(bannedUserId);
 
-    if (wasPrincipal) {
-      equipe.setResponsablePrincipal(null);
+    if (wasPrimary) {
+      team.setPrimaryResponsible(null);
     }
-    if (wasSecondaire) {
-      equipe.setResponsableSecondaire(null);
+    if (wasSecondary) {
+      team.setSecondaryResponsible(null);
     }
 
-    if (equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() != null) {
-      User secondary = equipe.getResponsableSecondaire();
+    if (team.getPrimaryResponsible() == null && team.getSecondaryResponsible() != null) {
+      User secondary = team.getSecondaryResponsible();
       if (!secondary.isBanned() && !secondary.getId().equals(bannedUserId)) {
-        equipe.setResponsablePrincipal(secondary);
+        team.setPrimaryResponsible(secondary);
       }
-      equipe.setResponsableSecondaire(null);
+      team.setSecondaryResponsible(null);
     }
 
-    if (equipe.getResponsablePrincipal() == null) {
-      User replacement = equipe.getMembres().stream()
-          .filter(member -> member.getId() != null)
-          .filter(member -> !member.getId().equals(bannedUserId))
-          .filter(member -> !member.isBanned())
-          .min(
-              Comparator.comparing(
-                  User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                  .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
-          .orElse(null);
+    if (team.getPrimaryResponsible() == null) {
+      // 🇬🇧 Translated getMembres() to getMembers()
+      User replacement = team.getMembers().stream()
+              .filter(member -> member.getId() != null)
+              .filter(member -> !member.getId().equals(bannedUserId))
+              .filter(member -> !member.isBanned())
+              .min(
+                      Comparator.comparing(
+                                      User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                              .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
+              .orElse(null);
 
-      equipe.setResponsablePrincipal(replacement);
+      team.setPrimaryResponsible(replacement);
     }
 
-    equipe
-        .getMembres()
-        .removeIf(member -> member.getId() != null && member.getId().equals(bannedUserId));
-    user.setEquipe(null);
+    team
+            .getMembers()
+            .removeIf(member -> member.getId() != null && member.getId().equals(bannedUserId));
+    user.setTeam(null);
 
-    equipeRepository.save(equipe);
+    teamRepository.save(team);
   }
 
   /**

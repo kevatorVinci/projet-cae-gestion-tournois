@@ -6,36 +6,33 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/** Mapper for join-request DTO conversions. */
 @Component
 public class DemandMapper {
 
-  /** Converts one join-request entity to its public DTO. */
-  public DemandDto toDto(Demand demande) {
-    if (demande == null) {
+  public DemandDto toDto(Demand demand) {
+    if (demand == null) {
       return null;
     }
 
     return new DemandDto(
-        demande.getIdDemande(),
-        demande.getMembre().getId(),
-        demande.getMembre().getEmail(),
-        demande.getMembre().getTag(),
-        demande.getMembre().getSpecialty(),
-        demande.getMembre().getProfileImageUrl(),
-        demande.getEquipe().getId(),
-        demande.getEquipe().getName(),
-        demande.getEtat(),
-        demande.getDateDemande(),
-        demande.getDateTraitement(),
-        demande.getRaisonRefus());
+            demand.getId(),
+            demand.getMember().getId(),
+            demand.getMember().getEmail(),
+            demand.getMember().getTag(),
+            demand.getMember().getSpecialty(),
+            demand.getMember().getProfileImageUrl(),
+            demand.getTeam().getId(),
+            demand.getTeam().getName(),
+            demand.getState(),
+            demand.getRequestDate(),
+            demand.getProcessingDate(),
+            demand.getRejectionReason());
   }
 
-  /** Converts a collection of join requests into DTOs. */
-  public List<DemandDto> toDtos(Iterable<Demand> demandes) {
+  public List<DemandDto> toDtos(Iterable<Demand> demands) {
     List<DemandDto> result = new ArrayList<>();
-    for (Demand demande : demandes) {
-      result.add(toDto(demande));
+    for (Demand demand : demands) {
+      result.add(toDto(demand));
     }
     return result;
   }

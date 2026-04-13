@@ -23,7 +23,7 @@ public class NotificationService {
     this.notificationRepository = notificationRepository;
   }
 
-  // ─── Lecture ─────────────────────────────────────────────────────────────────
+  // ─── Read ─────────────────────────────────────────────────────────────────
 
   /**
    * Gets all notifications for a user.
@@ -32,7 +32,8 @@ public class NotificationService {
    * @return notifications ordered by newest first
    */
   public List<Notification> getByUser(Long userId) {
-    return notificationRepository.findByUserIdOrderByDateEnvoiDesc(userId);
+    // We use the English method name here (sentDate instead of dateEnvoi)
+    return notificationRepository.findByUserIdOrderBySentDateDesc(userId);
   }
 
   /**
@@ -42,23 +43,26 @@ public class NotificationService {
    * @return unread notifications
    */
   public List<Notification> getUnread(Long userId) {
+    // We use the English method name here (isRead instead of estLue)
     return notificationRepository
-        .findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
+            .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
   }
 
-  // ─── Marquage ────────────────────────────────────────────────────────────────
+  // ─── Marking ────────────────────────────────────────────────────────────────
 
   /**
    * Marks one notification as read.
    *
-   * @param idNotification notification id
+   * @param notificationId notification id
    * @return updated notification
    */
-  public Notification markAsRead(Long idNotification) {
+  public Notification markAsRead(Long notificationId) {
     Notification n = notificationRepository
-        .findById(idNotification)
-        .orElseThrow(() -> new RuntimeException("Notification introuvable"));
-    n.setEstLue(true);
+            .findById(notificationId)
+            .orElseThrow(() -> new RuntimeException("Notification not found")); // Translated error
+
+    // Changing status to read
+    n.setRead(true);
     return notificationRepository.save(n);
   }
 
@@ -69,12 +73,14 @@ public class NotificationService {
    */
   public void markAllAsRead(Long userId) {
     List<Notification> unread = notificationRepository
-        .findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
-    unread.forEach(n -> n.setEstLue(true));
+            .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
+
+    // Mark every notification in the list as read
+    unread.forEach(n -> n.setRead(true));
     notificationRepository.saveAll(unread);
   }
 
-  // ─── Suppression ─────────────────────────────────────────────────────────────
+  // ─── Deletion ─────────────────────────────────────────────────────────────
 
   /**
    * Deletes all notifications of a user.
@@ -88,14 +94,13 @@ public class NotificationService {
   /**
    * Deletes one notification by id.
    *
-   * @param idNotification notification id
+   * @param notificationId notification id
    */
-  public void delete(Long idNotification) {
-    notificationRepository.deleteById(idNotification);
+  public void delete(Long notificationId) {
+    notificationRepository.deleteById(notificationId);
   }
 
-  // ─── Création (méthode de base)
-  // ───────────────────────────────────────────────
+  // ─── Creation (Base method) ───────────────────────────────────────────────
 
   /**
    * Creates one notification message.
@@ -108,93 +113,93 @@ public class NotificationService {
     Notification notification = new Notification();
     notification.setUser(user);
     notification.setMessage(message);
-    notification.setEstLue(false);
+    notification.setRead(false);
     return notificationRepository.save(notification);
   }
 
-  // ─── Notifications métier (préfixes pour le front React) ─────────────────────
+  // ─── Business Notifications (Prefixes for React frontend) ─────────────────────
 
   /**
-   * Envoyée au membre quand il crée son compte.
+   * Sent to the member when they create their account.
    */
   public void notifyAccountCreation(User user) {
     createNotification(
-        user,
-        "Bienvenue : ton compte a bien été créé. Rejoins ou crée une équipe pour commencer !");
+            user,
+            "Welcome: your account has been created. Join or create a team to start!");
   }
 
   /**
-   * Envoyée au membre quand il crée une équipe.
+   * Sent to the member when they create a team.
    */
-  public void notifyTeamCreation(User user, String nomEquipe) {
+  public void notifyTeamCreation(User user, String teamName) {
     createNotification(
-        user, "Équipe créée : tu es maintenant responsable de l'équipe '" + nomEquipe + "'.");
+            user, "Team created: you are now the manager of team '" + teamName + "'.");
   }
 
   /**
-   * Envoyée au membre quand sa demande est envoyée.
+   * Sent to the member when their application is sent.
    */
-  public void sendApplicationNotification(User user, String nomEquipe) {
+  public void sendApplicationNotification(User user, String teamName) {
     createNotification(
-        user,
-        "Demande envoyée : ta candidature pour rejoindre '" + nomEquipe + "' est en attente.");
+            user,
+            "Application sent: your request to join '" + teamName + "' is pending.");
   }
 
   /**
-   * Envoyée au responsable principal quand une nouvelle candidature est reçue.
+   * Sent to the primary manager when a new application is received.
    */
   public void notifyNewRequestToManager(
-      User responsable, String tagCandidat, String nomEquipe) {
+          User manager, String candidateTag, String teamName) {
     createNotification(
-        responsable,
-        "Nouvelle demande : "
-            + tagCandidat
-            + " souhaite rejoindre l'équipe '"
-            + nomEquipe
-            + "'.");
+            manager,
+            "New request: "
+                    + candidateTag
+                    + " wants to join the team '"
+                    + teamName
+                    + "'.");
   }
 
   /**
-   * Envoyée au membre quand sa demande est acceptée.
+   * Sent to the member when their application is accepted.
    */
-  public void notifyRequestAccepted(User user, String nomEquipe) {
+  public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
-        user,
-        "Accepté : ta demande pour rejoindre '" + nomEquipe + "' a été acceptée. Bienvenue !");
+            user,
+            "Accepted: your request to join '" + teamName + "' has been accepted. Welcome!");
   }
 
   /**
-   * Envoyée au membre quand sa demande est refusée.
+   * Sent to the member when their application is denied.
    */
-  public void notifyRequestDenied(User user, String nomEquipe, String raison) {
-    String raionAffichee =
-        (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
+  public void notifyRequestDenied(User user, String teamName, String reason) {
+    String displayedReason =
+            (reason == null || reason.isBlank()) ? "No reason provided." : reason;
     createNotification(
-        user,
-        "Refus : ta demande pour rejoindre '"
-            + nomEquipe
-            + "' a été refusée. Raison : "
-            + raionAffichee);
+            user,
+            "Denied: your request to join '"
+                    + teamName
+                    + "' has been denied. Reason: "
+                    + displayedReason);
   }
 
   /**
    * Sent to admins when a tournament is created in draft state.
    */
-  public void notifyDraftTournamentCreation(User admin, String nomTournoi) {
+  public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
-        admin,
-        "Admin : nouveau tournoi en brouillon '" + nomTournoi + "'."
-            + " À publier quand prêt.");
+            admin,
+            "Admin: new draft tournament '" + tournamentName + "'."
+                    + " Publish when ready.");
   }
 
   /**
    * Sent to all players when a tournament is published.
    */
-  public void notifyTournamentPublished(User user, String nomTournoi) {
+  public void notifyTournamentPublished(User user, String tournamentName) {
     createNotification(
-        user,
-        "Nouveau tournoi : '"
-            + nomTournoi
-            + "' vient d'être publié. Inscris-toi maintenant !");
+            user,
+            "New tournament: '"
+                    + tournamentName
+                    + "' has just been published. Register now!");
   }
 }

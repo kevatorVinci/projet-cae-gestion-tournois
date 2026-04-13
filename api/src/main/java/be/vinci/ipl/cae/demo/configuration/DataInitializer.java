@@ -17,18 +17,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/**
- * Initializes demo data on startup.
- */
 @Configuration
 public class DataInitializer {
 
-  /**
-   * Helper method to create a user.
-   */
-  private User makeUser(String email, String tag,
-      String spec, String date, boolean admin,
-      String pwd, String img) {
+  private User makeUser(String email, String tag, String spec, String date, boolean admin, String pwd, String img) {
     User u = new User();
     u.setEmail(email);
     u.setTag(tag);
@@ -40,58 +32,34 @@ public class DataInitializer {
     return u;
   }
 
-  /**
-   * Helper method to create a tournament.
-   */
-  private Tournament makeTournoi(String nom, String desc,
-      String debut, String fin, String limiteInscr,
-      String etat, int maxTeams) {
+  private Tournament makeTournament(String name, String desc, String start, String end, String limit, String status, int maxTeams) {
     Tournament t = new Tournament();
-    t.setNom(nom);
+    t.setName(name);
     t.setDescription(desc);
-    t.setDateDebut(LocalDate.parse(debut));
-    t.setDateFin(LocalDate.parse(fin));
-    t.setDateLimiteInscription(LocalDate.parse(limiteInscr));
-    t.setEtat(etat);
-    t.setNombresParticipantsMax(maxTeams);
+    t.setStartDate(LocalDate.parse(start));
+    t.setEndDate(LocalDate.parse(end));
+    t.setRegistrationDeadline(LocalDate.parse(limit));
+    t.setStatus(status);
+    t.setMaxParticipants(maxTeams);
     return t;
   }
 
-  /**
-   * Helper method to register teams to a tournament.
-   */
-  private void inscrire(
-      InscriptionEquipeTournoiRepository repo,
-      Tournament tournoi,
-      List<Team> teams,
-      String date) {
+  private void registerTeams(
+          InscriptionEquipeTournoiRepository repo, Tournament tournament, List<Team> teams, String date) {
     LocalDate d = LocalDate.parse(date);
     for (Team eq : teams) {
       RegistrationTeamTournament ins = new RegistrationTeamTournament();
-      ins.setTournoi(tournoi);
-      ins.setEquipe(eq);
-      ins.setDateInscription(d);
+      ins.setTournament(tournament);
+      ins.setTeam(eq);
+      ins.setRegistrationDate(d);
       repo.save(ins);
     }
   }
 
-  /**
-   * Initializes the demo data if the DB is empty.
-   *
-   * @param equipeRepo      team repository
-   * @param tournoiRepo     tournament repository
-   * @param inscriptionRepo registration repository
-   * @param userRepo        user repository
-   * @param pwdEncoder      password encoder
-   * @return CommandLineRunner executed on startup
-   */
   @Bean
   public CommandLineRunner initDatabase(
-      TeamRepository equipeRepo,
-      TournamentRepository tournoiRepo,
-      InscriptionEquipeTournoiRepository inscriptionRepo,
-      UserRepository userRepo,
-      PasswordEncoder pwdEncoder) {
+          TeamRepository teamRepo, TournamentRepository tournoiRepo,
+          InscriptionEquipeTournoiRepository inscriptionRepo, UserRepository userRepo, PasswordEncoder pwdEncoder) {
     return args -> {
       final String pwd = pwdEncoder.encode("Azerty2026!");
 
@@ -102,239 +70,98 @@ public class DataInitializer {
         }
         return;
       }
-      if (equipeRepo.count() > 0 || tournoiRepo.count() > 0) {
-        return;
-      }
+      if (teamRepo.count() > 0 || tournoiRepo.count() > 0) return;
 
-      // 8 real users
-      User lea = makeUser("lea@mail.com", "Lynx",
-          "tacticien", "2025-11-12", true,
-          pwd, "luffy.png");
-      User tom = makeUser("tom@mail.com", "Rogue",
-          "exécuteur", "2025-12-03", false,
-          pwd, "miles.jpg");
-      User ines = makeUser("ines@mail.com", "Pulse",
-          "guérisseur", "2026-01-18", false,
-          pwd, "erza.jpg");
-      User tibo = makeUser("tibo@mail.com", "Iron",
-          "gardien", "2025-10-27", true,
-          pwd, "kaido.png");
-      User lisa = makeUser("lisa@mail.com", "Storm",
-          "exécuteur", "2026-01-10", false,
-          pwd, "flash.jpg");
-      User noa = makeUser("noa@mail.com", "Flash",
-          "architecte", "2026-02-02", false,
-          pwd, "Pessi.jpg");
-      User tim = makeUser("tim@mail.com", "Titi",
-          "gardien", "2026-02-03", false,
-          pwd, "itadori.jpg");
-      User zoe = makeUser("zoe@mail.com", "Vector",
-          "catalyseur", "2026-02-04", false,
-          pwd, "makima.jpg");
+      User lea = makeUser("lea@mail.com", "Lynx", "tacticien", "2025-11-12", true, pwd, "luffy.png");
+      User tom = makeUser("tom@mail.com", "Rogue", "exécuteur", "2025-12-03", false, pwd, "miles.jpg");
+      User ines = makeUser("ines@mail.com", "Pulse", "guérisseur", "2026-01-18", false, pwd, "erza.jpg");
+      User tibo = makeUser("tibo@mail.com", "Iron", "gardien", "2025-10-27", true, pwd, "kaido.png");
+      User lisa = makeUser("lisa@mail.com", "Storm", "exécuteur", "2026-01-10", false, pwd, "flash.jpg");
+      User noa = makeUser("noa@mail.com", "Flash", "architecte", "2026-02-02", false, pwd, "Pessi.jpg");
+      User tim = makeUser("tim@mail.com", "Titi", "gardien", "2026-02-03", false, pwd, "itadori.jpg");
+      User zoe = makeUser("zoe@mail.com", "Vector", "catalyseur", "2026-02-04", false, pwd, "makima.jpg");
       userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe));
 
-      // 7 tournaments
-      Tournament springArena = makeTournoi(
-          "Spring Arena Cup 2025",
-          "Compétition printanière ouverte "
-              + "aux nouvelles teams",
-          "2025-04-15", "2025-04-25",
-          "2025-04-10", "TERMINE", 8);
+      Tournament springArena = makeTournament("Spring Arena Cup 2025", "Compétition printanière", "2025-04-15", "2025-04-25", "2025-04-10", "TERMINE", 8);
+      Tournament elite2025 = makeTournament("Elite Championship 2025", "Compétition élite", "2025-05-15", "2025-05-30", "2025-05-11", "TERMINE", 8);
+      Tournament summerPro = makeTournament("Summer Pro League 2025", "Tournoi estival", "2025-07-01", "2025-07-15", "2025-06-25", "TERMINE", 16);
+      Tournament winterClash = makeTournament("Vinci Winter Clash 2026", "Tournoi hivernal", "2026-01-10", "2026-01-20", "2026-01-05", "TERMINE", 12);
+      Tournament springBattle = makeTournament("Spring Battle Series 2026", "Série printanière", "2026-04-04", "2026-04-11", "2026-04-01", "EN_COURS", 8);
+      Tournament easterCup = makeTournament("Vinci Easter Cup 2026", "Tournoi de Pâques", "2026-04-15", "2026-04-25", "2026-04-08", "OUVERT", 8);
+      Tournament elite2026 = makeTournament("Elite Championship 2026", "Compétition élite", "2026-05-15", "2026-05-30", "2026-05-11", "OUVERT", 16);
 
-      Tournament elite2025 = makeTournoi(
-          "Elite Championship 2025",
-          "Compétition élite réservée "
-              + "aux meilleures teams",
-          "2025-05-15", "2025-05-30",
-          "2025-05-11", "TERMINE", 8);
+      tournoiRepo.saveAll(List.of(springArena, elite2025, summerPro, winterClash, springBattle, easterCup, elite2026));
 
-      Tournament summerPro = makeTournoi(
-          "Summer Pro League 2025",
-          "Tournoi estival de haut niveau "
-              + "avec les meilleures teams",
-          "2025-07-01", "2025-07-15",
-          "2025-06-25", "TERMINE", 16);
-
-      Tournament winterClash = makeTournoi(
-          "Vinci Winter Clash 2026",
-          "Tournoi hivernal réunissant "
-              + "des équipes semi-professionnelles",
-          "2026-01-10", "2026-01-20",
-          "2026-01-05", "TERMINE", 12);
-
-      Tournament springBattle = makeTournoi(
-          "Spring Battle Series 2026",
-          "Série printanière avec élimination directe "
-              + "et forte participation",
-          "2026-04-04", "2026-04-11",
-          "2026-04-01", "EN_COURS", 8);
-
-      Tournament easterCup = makeTournoi(
-          "Vinci Easter Cup 2026",
-          "Tournoi de Pâques ouvert "
-              + "à toutes les teams actives",
-          "2026-04-15", "2026-04-25",
-          "2026-04-08", "OUVERT", 8);
-
-      Tournament elite2026 = makeTournoi(
-          "Elite Championship 2026",
-          "Compétition élite réservée "
-              + "aux meilleures teams",
-          "2026-05-15", "2026-05-30",
-          "2026-05-11", "OUVERT", 16);
-
-      tournoiRepo.saveAll(List.of(
-          springArena,
-          elite2025,
-          summerPro,
-          winterClash,
-          springBattle,
-          easterCup,
-          elite2026));
-
-      // 3 real teams
       Team alpha = new Team();
       alpha.setName("TEAM_ALPHA");
-      alpha.setResponsablePrincipal(lea);
+      alpha.setPrimaryResponsible(lea);
       alpha.setProfileImage("akatsuki.jpg");
-      equipeRepo.save(alpha);
+      teamRepo.save(alpha);
 
       Team omega = new Team();
       omega.setName("TEAM_OMEGA");
-      omega.setResponsablePrincipal(tibo);
+      omega.setPrimaryResponsible(tibo);
       omega.setProfileImage("espada.jpg");
-      equipeRepo.save(omega);
+      teamRepo.save(omega);
 
       Team iota = new Team();
       iota.setName("TEAM_IOTA");
-      iota.setResponsablePrincipal(lisa);
-      iota.setResponsableSecondaire(noa);
+      iota.setPrimaryResponsible(lisa);
+      iota.setSecondaryResponsible(noa);
       iota.setProfileImage("fairytail.jpg");
-      equipeRepo.save(iota);
+      teamRepo.save(iota);
 
-      lea.setEquipe(alpha);
-      tom.setEquipe(alpha);
-      ines.setEquipe(alpha);
-      tibo.setEquipe(omega);
-      lisa.setEquipe(iota);
-      noa.setEquipe(iota);
-      tim.setEquipe(iota);
-      zoe.setEquipe(iota);
+      lea.setTeam(alpha); tom.setTeam(alpha); ines.setTeam(alpha);
+      tibo.setTeam(omega); lisa.setTeam(iota); noa.setTeam(iota); tim.setTeam(iota); zoe.setTeam(iota);
       userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe));
 
-      // 13 dummy teams
-      List<String> names = List.of(
-          "TEAM_BETA",
-          "TEAM_GAMMA",
-          "TEAM_DELTA",
-          "TEAM_EPSILON",
-          "TEAM_ZETA",
-          "TEAM_THETA",
-          "TEAM_KAPPA",
-          "TEAM_LAMBDA",
-          "TEAM_MU",
-          "TEAM_NU",
-          "TEAM_XI",
-          "TEAM_PI",
-          "TEAM_SIGMA");
-
-      List<String> botTags = List.of(
-          "Nova",
-          "Raptor",
-          "Blaze",
-          "Echo",
-          "Mantis",
-          "Viper",
-          "Astra",
-          "Cipher",
-          "Drift",
-          "Sable",
-          "Orion",
-          "Nyx",
-          "Havoc");
-
-      List<String> botAvatars = List.of(
-          "butcher.jpg",
-          "eren.png",
-          "femmecars.jpg",
-          "garou.jpg",
-          "jjk.jpg",
-          "lookism.jpg",
-          "neon2.jpg",
-          "pevin.jpg",
-          "pion.jpg",
-          "spiderman2099.jpg",
-          "tailong.jpg",
-          "crockmou.jpg",
-          "flash.jpg");
-
-      List<String> teamAvatars = List.of(
-          "hunter.jpg",
-          "onepiece.jpg",
-          "akatsuki.jpg",
-          "espada.jpg",
-          "fairytail.jpg");
+      List<String> names = List.of("TEAM_BETA", "TEAM_GAMMA", "TEAM_DELTA", "TEAM_EPSILON", "TEAM_ZETA", "TEAM_THETA", "TEAM_KAPPA", "TEAM_LAMBDA", "TEAM_MU", "TEAM_NU", "TEAM_XI", "TEAM_PI", "TEAM_SIGMA");
+      List<String> botTags = List.of("Nova", "Raptor", "Blaze", "Echo", "Mantis", "Viper", "Astra", "Cipher", "Drift", "Sable", "Orion", "Nyx", "Havoc");
+      List<String> botAvatars = List.of("butcher.jpg", "eren.png", "femmecars.jpg", "garou.jpg", "jjk.jpg", "lookism.jpg", "neon2.jpg", "pevin.jpg", "pion.jpg", "spiderman2099.jpg", "tailong.jpg", "crockmou.jpg", "flash.jpg");
+      List<String> teamAvatars = List.of("hunter.jpg", "onepiece.jpg", "akatsuki.jpg", "espada.jpg", "fairytail.jpg");
 
       List<Team> dum = new ArrayList<>();
       for (int i = 0; i < names.size(); i++) {
-        String name = names.get(i);
-        String botTag = botTags.get(i);
-        User bot = makeUser(
-            botTag.toLowerCase(Locale.ROOT) + "@demo.com",
-            botTag,
-            "exécuteur",
-            "2025-01-01",
-            false,
-            pwd,
-            botAvatars.get(i % botAvatars.size()));
+        User bot = makeUser(botTags.get(i).toLowerCase(Locale.ROOT) + "@demo.com", botTags.get(i), "exécuteur", "2025-01-01", false, pwd, botAvatars.get(i % botAvatars.size()));
         userRepo.save(bot);
 
         Team eq = new Team();
-        eq.setName(name);
-        eq.setResponsablePrincipal(bot);
+        eq.setName(names.get(i));
+        eq.setPrimaryResponsible(bot);
         eq.setProfileImage(teamAvatars.get(i % teamAvatars.size()));
-        equipeRepo.save(eq);
+        teamRepo.save(eq);
 
-        bot.setEquipe(eq);
+        bot.setTeam(eq);
         userRepo.save(bot);
         dum.add(eq);
       }
 
-      springArena.setGagnant(omega);
-      elite2025.setGagnant(iota);
-      summerPro.setGagnant(iota);
-      winterClash.setGagnant(alpha);
+      springArena.setWinner(omega);
+      elite2025.setWinner(iota);
+      summerPro.setWinner(iota);
+      winterClash.setWinner(alpha);
       tournoiRepo.saveAll(List.of(springArena, elite2025, summerPro, winterClash));
 
-      List<Team> t = new ArrayList<>(List.of(omega, iota));
-      t.addAll(dum.subList(0, 5));
-      inscrire(inscriptionRepo, springArena, t, "2025-04-08");
+      List<Team> t = new ArrayList<>(List.of(omega, iota)); t.addAll(dum.subList(0, 5));
+      registerTeams(inscriptionRepo, springArena, t, "2025-04-08");
 
-      t = new ArrayList<>(List.of(alpha, iota));
-      t.addAll(dum.subList(0, 4));
-      inscrire(inscriptionRepo, elite2025, t, "2025-05-09");
+      t = new ArrayList<>(List.of(alpha, iota)); t.addAll(dum.subList(0, 4));
+      registerTeams(inscriptionRepo, elite2025, t, "2025-05-09");
 
-      t = new ArrayList<>(List.of(alpha, omega, iota));
-      t.addAll(dum.subList(0, 11));
-      inscrire(inscriptionRepo, summerPro, t, "2025-06-20");
+      t = new ArrayList<>(List.of(alpha, omega, iota)); t.addAll(dum.subList(0, 11));
+      registerTeams(inscriptionRepo, summerPro, t, "2025-06-20");
 
-      t = new ArrayList<>(List.of(alpha, omega, iota));
-      t.addAll(dum.subList(0, 9));
-      inscrire(inscriptionRepo, winterClash, t, "2026-01-03");
+      t = new ArrayList<>(List.of(alpha, omega, iota)); t.addAll(dum.subList(0, 9));
+      registerTeams(inscriptionRepo, winterClash, t, "2026-01-03");
 
-      t = new ArrayList<>(List.of(alpha, omega, iota));
-      t.addAll(dum.subList(0, 5));
-      inscrire(inscriptionRepo, springBattle, t, "2026-03-28");
+      t = new ArrayList<>(List.of(alpha, omega, iota)); t.addAll(dum.subList(0, 5));
+      registerTeams(inscriptionRepo, springBattle, t, "2026-03-28");
 
-      t = new ArrayList<>(List.of(omega));
-      t.addAll(dum.subList(0, 6));
-      inscrire(inscriptionRepo, easterCup, t, "2026-04-05");
+      t = new ArrayList<>(List.of(omega)); t.addAll(dum.subList(0, 6));
+      registerTeams(inscriptionRepo, easterCup, t, "2026-04-05");
 
-      t = new ArrayList<>(List.of(alpha, omega, iota));
-      t.addAll(dum.subList(0, 11));
-      inscrire(inscriptionRepo, elite2026, t, "2026-05-05");
-
-      System.out.println("DB initialisée : 8 users, 16 teams, 7 tournois");
+      t = new ArrayList<>(List.of(alpha, omega, iota)); t.addAll(dum.subList(0, 11));
+      registerTeams(inscriptionRepo, elite2026, t, "2026-05-05");
     };
   }
 }

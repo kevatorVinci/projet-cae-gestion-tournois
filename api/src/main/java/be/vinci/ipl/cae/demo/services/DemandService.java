@@ -1,7 +1,7 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Demand;
-import be.vinci.ipl.cae.demo.models.entities.Demand.EtatDemande;
+import be.vinci.ipl.cae.demo.models.entities.Demand.DemandState; // 🇬🇧 Ancien : EtatDemande
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.DemandRepository;
@@ -21,26 +21,27 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DemandService {
 
-  private final DemandRepository demandeRepo;
+  private final DemandRepository demandRepo; // 🇬🇧 Ancien : demandeRepo
   private final UserRepository userRepo;
-  private final TeamRepository equipeRepo;
+  private final TeamRepository teamRepo; // 🇬🇧 Ancien : equipeRepo
   private final NotificationService notificationService;
 
   /**
    * Builds the service with required dependencies.
    *
-   * @param demandeRepo request repository
+   * @param demandRepo request repository
    * @param userRepo    user repository
-   * @param equipeRepo  team repository
+   * @param teamRepo  team repository
+   * @param notificationService notification service
    */
   public DemandService(
-      DemandRepository demandeRepo,
-      UserRepository userRepo,
-      TeamRepository equipeRepo,
-      NotificationService notificationService) {
-    this.demandeRepo = demandeRepo;
+          DemandRepository demandRepo,
+          UserRepository userRepo,
+          TeamRepository teamRepo,
+          NotificationService notificationService) {
+    this.demandRepo = demandRepo;
     this.userRepo = userRepo;
-    this.equipeRepo = equipeRepo;
+    this.teamRepo = teamRepo;
     this.notificationService = notificationService;
   }
 
@@ -49,69 +50,77 @@ public class DemandService {
    * Automatically checks whether the player already belongs to a team before
    * saving the request.
    *
-   * @param membreId unique ID of the player applying
-   * @param equipeId unique ID of the target team
-   * @return newly created and saved request with EN_ATTENTE status
+   * @param memberId unique ID of the player applying
+   * @param teamId unique ID of the target team
+   * @return newly created and saved request with PENDING status
    * @throws RuntimeException if the player does not exist, the team does not
-   *                          exist, or the player
-   *                          already belongs to a team
+   * exist, or the player
+   * already belongs to a team
    */
-  public Demand createJoinRequest(Long membreId, Long equipeId) {
-    User membre = userRepo
-        .findById(membreId)
-        .orElseThrow(() -> new RuntimeException("Joueur introuvable"));
-    Team equipe = equipeRepo
-        .findById(equipeId)
-        .orElseThrow(() -> new RuntimeException("Équipe introuvable"));
+  public Demand createJoinRequest(Long memberId, Long teamId) {
+    User member = userRepo
+            .findById(memberId)
+            .orElseThrow(() -> new RuntimeException("Player not found"));
 
-    if (membre.getEquipe() != null) {
-      throw new RuntimeException("Vous avez déjà une équipe !");
+    Team team = teamRepo
+            .findById(teamId)
+            .orElseThrow(() -> new RuntimeException("Team not found"));
+
+    // 🇬🇧 Updated to use getTeam()
+    if (member.getTeam() != null) {
+      throw new RuntimeException("You already have a team!");
     }
-    boolean hasNoResponsible = equipe.getResponsablePrincipal() == null
-        && equipe.getResponsableSecondaire() == null;
+
+    // 🇬🇧 Updated to use English getters
+    boolean hasNoResponsible = team.getPrimaryResponsible() == null
+            && team.getSecondaryResponsible() == null;
     if (hasNoResponsible) {
-      throw new RuntimeException("L'equipe n'a aucun responsable.");
+      throw new RuntimeException("The team has no responsible.");
     }
 
-    if (!isEquipeEligibleForJoin(equipe)) {
-      throw new RuntimeException("Cette equipe n'est plus disponible pour les demandes.");
+    if (!isTeamEligibleForJoin(team)) {
+      throw new RuntimeException("This team is no longer available for requests.");
     }
 
-    if (demandeRepo.existsByMembreIdAndEquipeIdAndEtat(
-        membreId, equipeId, EtatDemande.EN_ATTENTE)) {
-      throw new RuntimeException("Une demande en attente existe deja pour cette equipe.");
+    // 🇬🇧 Updated repository method call and state
+    if (demandRepo.existsByMemberIdAndTeamIdAndState(
+            memberId, teamId, DemandState.PENDING)) {
+      throw new RuntimeException("A pending request already exists for this team.");
     }
 
-    Demand demande = new Demand();
-    demande.setMembre(membre);
-    demande.setEquipe(equipe);
-    demande.setEtat(EtatDemande.EN_ATTENTE);
+    Demand demand = new Demand();
+    demand.setMember(member); // 🇬🇧 Ancien : setMembre
+    demand.setTeam(team); // 🇬🇧 Ancien : setEquipe
+    demand.setState(DemandState.PENDING); // 🇬🇧 Ancien : setEtat(EtatDemande.EN_ATTENTE)
 
-    Demand savedDemande = demandeRepo.save(demande);
-    notificationService.sendApplicationNotification(membre, equipe.getName());
-    if (equipe.getResponsablePrincipal() != null) {
+    Demand savedDemand = demandRepo.save(demand);
+    notificationService.sendApplicationNotification(member, team.getName());
+
+    if (team.getPrimaryResponsible() != null) {
       notificationService.notifyNewRequestToManager(
-          equipe.getResponsablePrincipal(), membre.getTag(), equipe.getName());
+              team.getPrimaryResponsible(), member.getTag(), team.getName());
     }
-    return savedDemande;
+    return savedDemand;
   }
 
   /**
    * Gets all pending requests for a given team.
    * Useful for the team responsible user's dashboard.
    *
-   * @param equipeId team ID used to filter requests
-   * @return iterable collection containing only EN_ATTENTE requests
+   * @param teamId team ID used to filter requests
+   * @return iterable collection containing only PENDING requests
    */
   @Transactional
-  public Iterable<Demand> getDemandesEnAttentePourEquipe(Long equipeId) {
-    Team equipe = equipeRepo.findById(equipeId).orElse(null);
-    if (equipe != null && !isEquipeEligibleForJoin(equipe)) {
+  public Iterable<Demand> getPendingRequestsForTeam(Long teamId) { // 🇬🇧 Ancien : getDemandesEnAttentePourEquipe
+    Team team = teamRepo.findById(teamId).orElse(null);
+    if (team != null && !isTeamEligibleForJoin(team)) {
       // Defensive cleanup: avoid orphan notifications for an invalid team.
-      demandeRepo.deleteByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
+      // 🇬🇧 Updated repository method and state
+      demandRepo.deleteByTeamIdAndState(teamId, DemandState.PENDING);
       return List.of();
     }
-    return demandeRepo.findByEquipeIdAndEtat(equipeId, EtatDemande.EN_ATTENTE);
+    // 🇬🇧 Updated repository method and state
+    return demandRepo.findByTeamIdAndState(teamId, DemandState.PENDING);
   }
 
   /**
@@ -121,27 +130,29 @@ public class DemandService {
    * @return pending demands for current user's team
    */
   @Transactional
-  public Iterable<Demand> getDemandesEnAttentePourResponsable(User currentUser) {
+  public Iterable<Demand> getPendingRequestsForResponsible(User currentUser) { // 🇬🇧 Ancien : getDemandesEnAttentePourResponsable
     if (currentUser == null) {
-      throw new SecurityException("Utilisateur non authentifie.");
+      throw new SecurityException("Unauthenticated user.");
     }
 
-    Team equipe = currentUser.getEquipe();
+    // 🇬🇧 Updated getter
+    Team team = currentUser.getTeam();
 
     // Primary path: use membership relation when available and valid.
-    if (equipe != null) {
-      verifyUserIsResponsible(equipe, currentUser);
-      return getDemandesEnAttentePourEquipe(equipe.getId());
+    if (team != null) {
+      verifyUserIsResponsible(team, currentUser);
+      return getPendingRequestsForTeam(team.getId());
     }
 
-    // Fallback path: handles inconsistent data where user.equipe is null but
+    // Fallback path: handles inconsistent data where user.team is null but
     // the user is still configured as primary/secondary responsible.
-    equipe = equipeRepo
-        .findByResponsablePrincipalIdOrResponsableSecondaireId(
-            currentUser.getId(), currentUser.getId())
-        .orElseThrow(() -> new SecurityException("Vous n'etes responsable d'aucune equipe."));
+    // 🇬🇧 Updated repository method
+    team = teamRepo
+            .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
+                    currentUser.getId(), currentUser.getId())
+            .orElseThrow(() -> new SecurityException("You are not responsible for any team."));
 
-    return getDemandesEnAttentePourEquipe(equipe.getId());
+    return getPendingRequestsForTeam(team.getId());
   }
 
   /**
@@ -150,113 +161,118 @@ public class DemandService {
    * player
    * to the new team in the database.
    *
-   * @param demandeId ID of the request to validate
-   * @return updated request with ACCEPTEE status
+   * @param demandId ID of the request to validate
+   * @param currentUser the authenticated user processing the request
+   * @return updated request with ACCEPTED status
    * @throws RuntimeException if the specified request does not exist
    */
   @Transactional
-  public Demand accepterDemande(Long demandeId, User currentUser) {
-    Demand demande = getAndVerifyDemande(demandeId, currentUser);
-    Team equipe = demande.getEquipe();
+  public Demand acceptDemand(Long demandId, User currentUser) { // 🇬🇧 Ancien : accepterDemande
+    Demand demand = getAndVerifyDemand(demandId, currentUser);
+    Team team = demand.getTeam(); // 🇬🇧 Ancien : getEquipe
 
-    if (!isEquipeEligibleForJoin(equipe)) {
-      throw new RuntimeException("L'equipe cible n'est plus disponible.");
+    if (!isTeamEligibleForJoin(team)) {
+      throw new RuntimeException("The target team is no longer available.");
     }
 
-    demande.setEtat(EtatDemande.ACCEPTEE);
-    demande.setDateTraitement(LocalDateTime.now());
+    demand.setState(DemandState.ACCEPTED); // 🇬🇧 Ancien : setEtat(EtatDemande.ACCEPTEE)
+    demand.setProcessingDate(LocalDateTime.now()); // 🇬🇧 Ancien : setDateTraitement
 
-    User user = demande.getMembre();
-    if (user.getEquipe() != null) {
-      throw new RuntimeException("Le joueur appartient deja a une equipe.");
+    User user = demand.getMember(); // 🇬🇧 Ancien : getMembre
+    if (user.getTeam() != null) { // 🇬🇧 Ancien : getEquipe
+      throw new RuntimeException("The player already belongs to a team.");
     }
 
-    user.setEquipe(equipe);
-    equipe.getMembres().add(user);
+    user.setTeam(team);
+    team.getMembers().add(user); // 🇬🇧 Ancien : getMembres()
     userRepo.save(user);
-    equipeRepo.save(equipe);
+    teamRepo.save(team);
 
     // Save the accepted request FIRST
-    Demand savedDemande = demandeRepo.save(demande);
+    Demand savedDemand = demandRepo.save(demand);
 
     // THEN remove other pending requests for this user
-    demandeRepo.deleteByMembreIdAndEtat(user.getId(), EtatDemande.EN_ATTENTE);
+    // 🇬🇧 Updated repository method and state
+    demandRepo.deleteByMemberIdAndState(user.getId(), DemandState.PENDING);
 
-    notificationService.notifyRequestAccepted(user, equipe.getName());
-    return savedDemande;
+    notificationService.notifyRequestAccepted(user, team.getName());
+    return savedDemand;
   }
 
   /**
    * Rejects a player's request with a rejection reason.
    * Updates request history without affecting the player's current team.
    *
-   * @param demandeId ID of the request to reject
-   * @param raison    text explaining the rejection reason (for example:
-   *                  "Insufficient level")
-   * @return updated request with REFUSEE status and reason
+   * @param demandId ID of the request to reject
+   * @param reason    text explaining the rejection reason (for example:
+   * "Insufficient level")
+   * @param currentUser the authenticated user processing the request
+   * @return updated request with REJECTED status and reason
    * @throws RuntimeException if the specified request does not exist
    */
   @Transactional
-  public Demand rejectDemand(Long demandeId, String raison, User currentUser) {
-    Demand demande = getAndVerifyDemande(demandeId, currentUser);
-    String raisonNormalisee = (raison == null || raison.isBlank())
-        ? "Aucune raison precisee."
-        : raison.trim();
+  public Demand rejectDemand(Long demandId, String reason, User currentUser) {
+    Demand demand = getAndVerifyDemand(demandId, currentUser);
+    String normalizedReason = (reason == null || reason.isBlank())
+            ? "No specific reason provided." // 🇬🇧 Translated default reason
+            : reason.trim();
 
-    demande.setEtat(EtatDemande.REFUSEE);
-    demande.setRaisonRefus(raisonNormalisee);
-    demande.setDateTraitement(LocalDateTime.now());
+    demand.setState(DemandState.REJECTED); // 🇬🇧 Ancien : setEtat(EtatDemande.REFUSEE)
+    demand.setRejectionReason(normalizedReason); // 🇬🇧 Ancien : setRaisonRefus
+    demand.setProcessingDate(LocalDateTime.now()); // 🇬🇧 Ancien : setDateTraitement
 
-    Demand savedDemande = demandeRepo.save(demande);
+    Demand savedDemand = demandRepo.save(demand);
     notificationService.notifyRequestDenied(
-        demande.getMembre(), demande.getEquipe().getName(), raisonNormalisee);
-    return savedDemande;
+            demand.getMember(), demand.getTeam().getName(), normalizedReason); // 🇬🇧 Ancien : getMembre, getEquipe
+    return savedDemand;
   }
 
   /**
    * Retrieves a request and verifies that the user is responsible for the team.
    *
-   * @param demandeId   request ID
+   * @param demandId   request ID
    * @param currentUser current user
    * @return matching request
    * @throws RuntimeException  if the request does not exist
    * @throws SecurityException if the user is not responsible
    */
-  private Demand getAndVerifyDemande(Long demandeId, User currentUser) {
-    Demand demande = demandeRepo
-        .findById(demandeId)
-        .orElseThrow(() -> new RuntimeException("Demande introuvable"));
-    verifyUserIsResponsible(demande.getEquipe(), currentUser);
-    return demande;
+  private Demand getAndVerifyDemand(Long demandId, User currentUser) { // 🇬🇧 Ancien : getAndVerifyDemande
+    Demand demand = demandRepo
+            .findById(demandId)
+            .orElseThrow(() -> new RuntimeException("Request not found"));
+    verifyUserIsResponsible(demand.getTeam(), currentUser); // 🇬🇧 Ancien : getEquipe
+    return demand;
   }
 
   /**
    * Verifies that the current user is a responsible member (primary or secondary)
    * of the team.
    *
-   * @param equipe      team to validate
+   * @param team      team to validate
    * @param currentUser current user
    * @throws SecurityException if the user is not responsible for the team
    */
-  private void verifyUserIsResponsible(Team equipe, User currentUser) {
+  private void verifyUserIsResponsible(Team team, User currentUser) {
+    // 🇬🇧 Updated to use English getters
     // 1. Check whether the user is the primary responsible (if present)
-    boolean isPrincipal = equipe.getResponsablePrincipal() != null
-        && equipe.getResponsablePrincipal().getId().equals(currentUser.getId());
+    boolean isPrimary = team.getPrimaryResponsible() != null
+            && team.getPrimaryResponsible().getId().equals(currentUser.getId());
 
     // 2. Check whether the user is the secondary responsible (if present)
-    boolean isSecondaire = equipe.getResponsableSecondaire() != null
-        && equipe.getResponsableSecondaire().getId().equals(currentUser.getId());
+    boolean isSecondary = team.getSecondaryResponsible() != null
+            && team.getSecondaryResponsible().getId().equals(currentUser.getId());
 
     // 3. Apply final decision logic (neither primary nor secondary)
-    if (!isPrincipal && !isSecondaire) {
-      throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
+    if (!isPrimary && !isSecondary) {
+      throw new SecurityException("Only the team responsible can manage members.");
     }
   }
 
-  private boolean isEquipeEligibleForJoin(Team equipe) {
-    if (equipe == null) {
+  private boolean isTeamEligibleForJoin(Team team) { // 🇬🇧 Ancien : isEquipeEligibleForJoin
+    if (team == null) {
       return false;
     }
-    return equipe.getResponsablePrincipal() != null || equipe.getResponsableSecondaire() != null;
+    // 🇬🇧 Updated to use English getters
+    return team.getPrimaryResponsible() != null || team.getSecondaryResponsible() != null;
   }
 }

@@ -44,8 +44,8 @@ public class User {
   @Column(nullable = false)
   private String profileImageUrl;
 
-  @Column(nullable = true)
-  private String team;
+  @Column(name = "team_name", nullable = true)
+  private String teamName;
 
   @Column(nullable = false)
   private LocalDate creationDate;
@@ -59,13 +59,11 @@ public class User {
   @Column(nullable = true)
   private String banReason;
 
-  private LocalDateTime dateCreationProfil;
+  @Column(name = "date_creation_profil")
+  private LocalDateTime profileCreationDate;
 
-  /**
-   * Team membership relation.
-   */
   @ManyToOne
   @JoinColumn(name = "equipe_id")
   @JsonBackReference
-  private Team equipe;
+  private Team team;
 }

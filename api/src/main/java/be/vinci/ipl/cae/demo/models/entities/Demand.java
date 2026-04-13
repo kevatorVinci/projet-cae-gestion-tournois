@@ -24,36 +24,37 @@ public class Demand {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long idDemande;
+  @Column(name = "id_demande")
+  private Long id;
 
-  @Column(nullable = false)
-  private LocalDateTime dateDemande = LocalDateTime.now();
+  @Column(name = "date_demande", nullable = false)
+  private LocalDateTime requestDate = LocalDateTime.now();
 
   // Foreign key to the applicant user
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "membre_id", nullable = false)
-  private User membre;
+  private User member; // 🇬🇧 Ancien : membre
 
   // Foreign key to the target team
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "equipe_id", nullable = false)
-  private Team equipe;
+  private Team team;
 
   // Request status (strict enum)
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private EtatDemande etat = EtatDemande.EN_ATTENTE;
+  @Column(name = "etat", nullable = false)
+  private DemandState state = DemandState.PENDING;
 
-  @Column(nullable = true)
-  private String raisonRefus;
+  @Column(name = "raison_refus", nullable = true)
+  private String rejectionReason;
 
-  @Column(nullable = true)
-  private LocalDateTime dateTraitement;
+  @Column(name = "date_traitement", nullable = true)
+  private LocalDateTime processingDate;
 
   /** Strict list of possible states for a request. */
-  public enum EtatDemande {
-    EN_ATTENTE,
-    ACCEPTEE,
-    REFUSEE
+  public enum DemandState { // 🇬🇧 Ancien : EtatDemande
+    PENDING,
+    ACCEPTED,
+    REJECTED
   }
 }

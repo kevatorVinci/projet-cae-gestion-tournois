@@ -29,13 +29,12 @@ public class Unavailability {
 
   @Column(name = "date_debut", nullable = false)
   @NotNull
-  private LocalDate dateDebut;
+  private LocalDate startDate;
 
   @Column(name = "date_fin", nullable = false)
   @NotNull
-  private LocalDate dateFin;
+  private LocalDate endDate;
 
-  // Link to the player (one player can have multiple unavailable periods)
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   @JsonIgnore

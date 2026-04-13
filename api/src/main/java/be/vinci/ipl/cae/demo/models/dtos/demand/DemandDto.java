@@ -1,19 +1,18 @@
 package be.vinci.ipl.cae.demo.models.dtos.demand;
 
-import be.vinci.ipl.cae.demo.models.entities.Demand.EtatDemande;
+import be.vinci.ipl.cae.demo.models.entities.Demand.DemandState;
 import java.time.LocalDateTime;
 
-/** DTO for join demand information. */
 public record DemandDto(
-    Long idDemande,
-    Long membreId,
-    String membreEmail,
-    String membreTag,
-    String membreSpecialty,
-    String membreProfileImageUrl,
-    Long equipeId,
-    String equipeName,
-    EtatDemande etat,
-    LocalDateTime dateDemande,
-    LocalDateTime dateTraitement,
-    String raisonRefus) {}
+        Long id,
+        Long memberId,
+        String memberEmail,
+        String memberTag,
+        String memberSpecialty,
+        String memberProfileImageUrl,
+        Long teamId,
+        String teamName,
+        DemandState state,
+        LocalDateTime requestDate,
+        LocalDateTime processingDate,
+        String rejectionReason) {}
