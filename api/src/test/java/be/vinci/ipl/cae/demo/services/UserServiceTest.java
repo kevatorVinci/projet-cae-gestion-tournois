@@ -47,13 +47,20 @@ class UserServiceTest {
   private NotificationService notificationService;
   @Mock
   private UserMapper userMapper;
-  @InjectMocks
+
   private UserService userService;
   private User user;
   private Credentials credentials;
 
   @BeforeEach
   void setUp() {
+    userService = new UserService(
+        "test-jwt-secret-for-unit-tests",
+        passwordEncoder,
+        userRepository,
+        equipeRepository,
+        notificationService,
+        userMapper);
     user = new User();
     user.setId(1L);
     user.setEmail(EMAIL);
