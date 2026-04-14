@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Controller handling availability blackout periods. */
+/**
+ * Controller handling availability blackout periods.
+ */
 @RestController
 @RequestMapping("/indisponibilites")
 public class UnavailabilityController {
@@ -25,7 +27,7 @@ public class UnavailabilityController {
   /**
    * Builds the controller.
    *
-   * @param indisponibiliteRepository blackout-period repository
+   * @param indisponibiliteRepository blackout-period repository.
    */
   public UnavailabilityController(UnavailabilityRepository indisponibiliteRepository) {
     this.indisponibiliteRepository = indisponibiliteRepository;
@@ -34,12 +36,12 @@ public class UnavailabilityController {
   /**
    * Gets all blackout periods for the authenticated user.
    *
-   * @param currentUser authenticated user
-   * @return list of periods
+   * @param currentUser authenticated user.
+   * @return list of periods.
    */
   @GetMapping
   public Iterable<Unavailability> getMesIndisponibilites(
-      @AuthenticationPrincipal User currentUser) {
+          @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
     return indisponibiliteRepository.findByUser(currentUser);
   }
@@ -47,14 +49,14 @@ public class UnavailabilityController {
   /**
    * Saves a new blackout period.
    *
-   * @param currentUser     authenticated user
-   * @param indisponibilite new period sent by the frontend
-   * @return saved period
+   * @param currentUser     authenticated user.
+   * @param indisponibilite new period sent by the frontend.
+   * @return saved period.
    */
   @PostMapping
   public Unavailability addIndisponibilite(
-      @AuthenticationPrincipal User currentUser,
-      @RequestBody @Valid Unavailability indisponibilite) {
+          @AuthenticationPrincipal User currentUser,
+          @RequestBody @Valid Unavailability indisponibilite) {
     ensureAuthenticated(currentUser);
     indisponibilite.setUser(currentUser);
 
@@ -64,28 +66,33 @@ public class UnavailabilityController {
   /**
    * Deletes a blackout period by ID.
    *
-   * @param id          period identifier
-   * @param currentUser authenticated user
+   * @param id          period identifier.
+   * @param currentUser authenticated user.
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
-      @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+          @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
 
     Unavailability indisponibilite = indisponibiliteRepository
-        .findById(id)
-        .orElseThrow(
-            () -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+            .findById(id)
+            .orElseThrow(
+                    () -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
 
     if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
+              HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
     }
 
     indisponibiliteRepository.delete(indisponibilite);
   }
 
+  /**
+   * Internal helper to check authentication.
+   *
+   * @param currentUser the user to check.
+   */
   private void ensureAuthenticated(User currentUser) {
     if (currentUser == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifie");

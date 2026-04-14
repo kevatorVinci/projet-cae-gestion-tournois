@@ -2,9 +2,12 @@ package be.vinci.ipl.cae.demo.models.dtos;
 
 import java.time.LocalDateTime;
 
-/** Public payload representing one notification item. */
+/**
+ * Data Transfer Object for notifications.
+ */
 public record NotificationDto(
-    Long idNotification,
-    String message,
-    LocalDateTime dateEnvoi,
-    Boolean estLue) {}
+        Long id,
+        String message,
+        LocalDateTime sentDate,
+        Boolean isRead) {
+}

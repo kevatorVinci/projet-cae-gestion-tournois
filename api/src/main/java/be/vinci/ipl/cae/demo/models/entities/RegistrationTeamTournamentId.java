@@ -4,16 +4,20 @@ import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Composite key for {@link RegistrationTeamTournament}. */
+/**
+ * Composite key for {@link RegistrationTeamTournament}.
+ */
 @Data
 @NoArgsConstructor
 public class RegistrationTeamTournamentId implements Serializable {
 
-  // Same name as the @Id field in the entity
-  // Type = PK type of Tournoi (Long)
-  private Long tournoi;
+  /**
+   * The tournament ID part of the composite key.
+   */
+  private Long tournament;
 
-  // Same name as the @Id field in the entity
-  // Type = PK type of Equipe (Long)
-  private Long equipe;
+  /**
+   * The team ID part of the composite key.
+   */
+  private Long team;
 }

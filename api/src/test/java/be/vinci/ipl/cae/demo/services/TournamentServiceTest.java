@@ -19,14 +19,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for TournamentService using Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
-class TournoiServiceTest {
+class TournamentServiceTest {
 
   @Mock
-  private TournamentRepository tournoiRepository;
+  private TournamentRepository tournamentRepository;
 
   @Mock
-  private RegisterTeamTournamentService inscriptionService;
+  private RegisterTeamTournamentService registrationService;
 
   @Mock
   private NotificationService notificationService;
@@ -37,10 +40,10 @@ class TournoiServiceTest {
   @InjectMocks
   private TournamentService service;
 
-  private Tournament makeTournoi(String nom) {
-    Tournament tournoi = new Tournament();
-    tournoi.setNom(nom);
-    return tournoi;
+  private Tournament makeTournament(String name) {
+    Tournament tournament = new Tournament();
+    tournament.setName(name);
+    return tournament;
   }
 
   private User makeUser(long id, String tag) {
@@ -59,51 +62,60 @@ class TournoiServiceTest {
     return user;
   }
 
+  /**
+   * Tests that creating a tournament only notifies admin users.
+   */
   @Test
-  void create_notifieSeulemmentLesAdmins() {
-    Tournament tournoi = makeTournoi("Spring Cup 2026");
+  void createNotifiesOnlyAdmins() {
+    Tournament tournament = makeTournament("Spring Cup 2026");
     User alice = makeAdmin(1L, "Alice");
     User bob = makeUser(2L, "Bob");
     User charlie = makeAdmin(3L, "Charlie");
 
-    when(tournoiRepository.findByNom("Spring Cup 2026")).thenReturn(Optional.empty());
-    when(tournoiRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+    when(tournamentRepository.findByName("Spring Cup 2026")).thenReturn(Optional.empty());
+    when(tournamentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     when(userRepository.findAll()).thenReturn(List.of(alice, bob, charlie));
 
-    Tournament result = service.create(tournoi);
+    Tournament result = service.create(tournament);
 
     assertThat(result).isNotNull();
-    assertThat(result.getEtat()).isEqualTo("BROUILLON");
-    // Seulement les 2 admins reçoivent la notif, pas Bob
+    assertThat(result.getStatus()).isEqualTo("BROUILLON");
     verify(notificationService, times(2)).notifyDraftTournamentCreation(any(User.class), any());
   }
 
+  /**
+   * Tests that no notification is sent if the tournament name is already used.
+   */
   @Test
-  void create_neNotifiePasSiNomDejaUtilise() {
-    Tournament tournoi = makeTournoi("Spring Cup 2026");
-    when(tournoiRepository.findByNom("Spring Cup 2026")).thenReturn(Optional.of(makeTournoi("Spring Cup 2026")));
+  void createDoesNotNotifyIfNameAlreadyUsed() {
+    Tournament tournament = makeTournament("Spring Cup 2026");
+    when(tournamentRepository.findByName("Spring Cup 2026"))
+        .thenReturn(Optional.of(makeTournament("Spring Cup 2026")));
 
-    Tournament result = service.create(tournoi);
+    Tournament result = service.create(tournament);
 
     assertThat(result).isNull();
-    verify(tournoiRepository, never()).save(any());
+    verify(tournamentRepository, never()).save(any());
     verify(notificationService, never()).notifyDraftTournamentCreation(any(User.class), any());
   }
 
+  /**
+   * Tests that publishing a tournament notifies all users.
+   */
   @Test
-  void publish_notifieTousLesUtilisateurs() {
-    Tournament tournoi = makeTournoi("Spring Cup 2026");
-    tournoi.setId(1L);
-    tournoi.setEtat("BROUILLON");
+  void publishNotifiesAllUsers() {
+    Tournament tournament = makeTournament("Spring Cup 2026");
+    tournament.setId(1L);
+    tournament.setStatus("BROUILLON");
 
     User alice = makeAdmin(1L, "Alice");
     User bob = makeUser(2L, "Bob");
     User charlie = makeUser(3L, "Charlie");
 
-    when(tournoiRepository.findById(1L)).thenReturn(Optional.of(tournoi));
-    when(tournoiRepository.save(any())).thenAnswer(invocation -> {
+    when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+    when(tournamentRepository.save(any())).thenAnswer(invocation -> {
       Tournament t = invocation.getArgument(0);
-      assertThat(t.getEtat()).isEqualTo("OUVERT");
+      assertThat(t.getStatus()).isEqualTo("OUVERT");
       return t;
     });
     when(userRepository.findAll()).thenReturn(List.of(alice, bob, charlie));
@@ -111,8 +123,7 @@ class TournoiServiceTest {
     Tournament result = service.publish(1L);
 
     assertThat(result).isNotNull();
-    assertThat(result.getEtat()).isEqualTo("OUVERT");
-    // Les 3 utilisateurs reçoivent la notif (admins inclus)
+    assertThat(result.getStatus()).isEqualTo("OUVERT");
     verify(notificationService, times(3)).notifyTournamentPublished(any(User.class), any());
   }
 }

@@ -18,25 +18,30 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Controller managing tournament endpoints. */
+/**
+ * Controller managing tournament endpoints.
+ */
 @RestController
 @RequestMapping("/tournois")
 public class TournamentController {
 
   private final TournamentService tournoiService;
 
-  /** Creates the controller with its service dependency. */
+  /**
+   * Creates the controller with its service dependency.
+   *
+   * @param tournoiService the tournament service to inject.
+   */
   public TournamentController(TournamentService tournoiService) {
     this.tournoiService = tournoiService;
   }
 
   /**
    * Returns public tournaments filtered by optional state and/or name search.
-   * BROUILLON is never returned. Accessible by everyone (US 2, 3, 4, 5, 6, 8).
    *
-   * @param etat optional state filter (OUVERT, EN_COURS, TERMINE, CLOTURE)
-   * @param nom  optional name fragment for case-insensitive search
-   * @return filtered list of public tournaments
+   * @param etat optional state filter.
+   * @param nom  optional name fragment for search.
+   * @return filtered list of public tournaments.
    */
   @GetMapping("/")
   public Iterable<Tournament> getAllPublic(
@@ -45,14 +50,23 @@ public class TournamentController {
     return tournoiService.getFiltered(etat, nom);
   }
 
-  /** Returns all tournaments including BROUILLON. Reserved for admins. */
+  /**
+   * Returns all tournaments including BROUILLON. Reserved for admins.
+   *
+   * @return all tournaments.
+   */
   @GetMapping("/all")
   @IsAdmin
   public Iterable<Tournament> getAll() {
     return tournoiService.getAll();
   }
 
-  /** Returns a single tournament by id. Accessible by everyone. */
+  /**
+   * Returns a single tournament by id.
+   *
+   * @param id the tournament identifier.
+   * @return the found tournament.
+   */
   @GetMapping("/{id}")
   public Tournament getOne(@PathVariable Long id) {
     return tournoiService
@@ -60,7 +74,12 @@ public class TournamentController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
-  /** Creates a new tournament in BROUILLON state. Reserved for admins (US 7). */
+  /**
+   * Creates a new tournament in BROUILLON state.
+   *
+   * @param tournoi the tournament data.
+   * @return the created tournament.
+   */
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
   @IsAdmin
@@ -73,7 +92,13 @@ public class TournamentController {
     return created;
   }
 
-  /** Updates a tournament. Only allowed in BROUILLON state. Reserved for admins (Could US 15). */
+  /**
+   * Updates a tournament. Only allowed in BROUILLON state.
+   *
+   * @param id      the tournament identifier.
+   * @param payload the new tournament data.
+   * @return the updated tournament.
+   */
   @PutMapping("/{id}")
   @IsAdmin
   public Tournament update(@PathVariable Long id, @Valid @RequestBody Tournament payload) {
@@ -85,7 +110,12 @@ public class TournamentController {
     return updated;
   }
 
-  /** Publishes a tournament (BROUILLON → OUVERT). Reserved for admins (Should US 9). */
+  /**
+   * Publishes a tournament (BROUILLON to OUVERT).
+   *
+   * @param id the tournament identifier.
+   * @return the published tournament.
+   */
   @PatchMapping("/{id}/publish")
   @IsAdmin
   public Tournament publish(@PathVariable Long id) {
@@ -98,8 +128,10 @@ public class TournamentController {
   }
 
   /**
-   * Closes registrations for a tournament (OUVERT → CLOTURE). Reserved for admins (Should US 10).
-   * Requires at least 2 registered teams.
+   * Closes registrations for a tournament (OUVERT to CLOTURE).
+   *
+   * @param id the tournament identifier.
+   * @return the closed tournament.
    */
   @PatchMapping("/{id}/close-registrations")
   @IsAdmin
@@ -114,7 +146,10 @@ public class TournamentController {
   }
 
   /**
-   * Starts a tournament (CLOTURE → EN_COURS). Reserved for admins.
+   * Starts a tournament (CLOTURE to EN_COURS).
+   *
+   * @param id the tournament identifier.
+   * @return the started tournament.
    */
   @PatchMapping("/{id}/start")
   @IsAdmin
@@ -127,7 +162,12 @@ public class TournamentController {
     return tournoi;
   }
 
-  /** Marks a tournament as finished (EN_COURS → TERMINE). Reserved for admins. */
+  /**
+   * Marks a tournament as finished (EN_COURS to TERMINE).
+   *
+   * @param id the tournament identifier.
+   * @return the finished tournament.
+   */
   @PatchMapping("/{id}/finish")
   @IsAdmin
   public Tournament finish(@PathVariable Long id) {
@@ -139,12 +179,18 @@ public class TournamentController {
     return tournoi;
   }
 
-  /** Cancels a tournament from any active state. Reserved for admins. */
+  /**
+   * Cancels a tournament from any active state.
+   *
+   * @param id      the tournament identifier.
+   * @param payload a map containing the reason.
+   * @return the cancelled tournament.
+   */
   @PatchMapping("/{id}/cancel")
   @IsAdmin
   public Tournament cancel(
-      @PathVariable Long id,
-      @RequestBody(required = false) Map<String, String> payload) {
+          @PathVariable Long id,
+          @RequestBody(required = false) Map<String, String> payload) {
     String reason = payload == null ? null : payload.get("reason");
     Tournament tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {

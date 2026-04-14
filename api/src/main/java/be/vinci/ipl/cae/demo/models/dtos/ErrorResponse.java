@@ -15,6 +15,9 @@ public class ErrorResponse {
 
   /**
    * Creates an error response with message and HTTP status code.
+   *
+   * @param message the error message.
+   * @param status  the HTTP status code.
    */
   public ErrorResponse(String message, int status) {
     this.message = message;

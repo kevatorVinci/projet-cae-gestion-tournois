@@ -21,7 +21,9 @@ import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Entity representing a tournament lifecycle and its team registrations. */
+/**
+ * Entity representing a tournament lifecycle and its team registrations.
+ */
 @Entity
 @Table(name = "tournois")
 @Data
@@ -32,33 +34,64 @@ public class Tournament {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(unique = true)
+  /**
+   * The unique name of the tournament.
+   */
+  @Column(name = "nom", unique = true)
   @NotBlank
-  private String nom;
+  private String name;
 
+  /**
+   * Detailed description of the tournament.
+   */
   private String description;
 
-  @NotNull private LocalDate dateDebut;
+  /**
+   * The date when the tournament starts.
+   */
+  @Column(name = "date_debut")
+  @NotNull
+  private LocalDate startDate;
 
-  @NotNull private LocalDate dateFin;
+  /**
+   * The date when the tournament ends.
+   */
+  @Column(name = "date_fin")
+  @NotNull
+  private LocalDate endDate;
 
-  @NotNull private LocalDate dateLimiteInscription;
+  /**
+   * The deadline for teams to register.
+   */
+  @Column(name = "date_limite_inscription")
+  @NotNull
+  private LocalDate registrationDeadline;
 
-  // Pas d'enum → simple String, la validation se fait au niveau service
-  private String etat;
+  /**
+   * Current status of the tournament (e.g., PENDING, ONGOING, FINISHED).
+   */
+  @Column(name = "etat")
+  private String status;
 
+  /**
+   * Maximum number of participating teams allowed.
+   */
+  @Column(name = "nombres_participants_max")
   @Min(value = 2, message = "Un tournoi doit avoir au moins 2 équipes participantes.")
-  private Integer nombresParticipantsMax;
+  private Integer maxParticipants;
 
+  /**
+   * The team that won the tournament.
+   */
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "id_gagnant")
-  @JsonIgnoreProperties({"membres", "inscriptions",
-      "responsablePrincipal",
-      "responsableSecondaire"})
-  private Team gagnant;
+  @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
+  private Team winner;
 
-  @OneToMany(mappedBy = "tournoi", fetch = FetchType.LAZY)
+  /**
+   * List of team registrations for this tournament.
+   */
+  @OneToMany(mappedBy = "tournament", fetch = FetchType.LAZY)
   @JsonManagedReference("tournoi-inscriptions")
-  private List<RegistrationTeamTournament> inscriptions =
-      new ArrayList<>();
+  private List<RegistrationTeamTournament> registrations = new ArrayList<>();
 }

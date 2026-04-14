@@ -26,49 +26,51 @@ public class TestDataInitializer extends AbstractDataInitializer {
     final String pwd = pwdEncoder.encode("Test1234!");
 
     User admin = makeUser("admin@test.com", "TestAdmin",
-        "tacticien", "2025-01-01", true, pwd, "luffy.png");
+            "tacticien", "2025-01-01", true, pwd, "luffy.png");
     User user = makeUser("user@test.com", "TestUser",
-        "exécuteur", "2025-01-01", false, pwd, "miles.jpg");
+            "exécuteur", "2025-01-01", false, pwd, "miles.jpg");
     User botA1 = makeUser("bota1@test.com", "BotA1",
-        "gardien", "2025-01-01", false, pwd, "kaido.png");
+            "gardien", "2025-01-01", false, pwd, "kaido.png");
     User botA2 = makeUser("bota2@test.com", "BotA2",
-        "guérisseur", "2025-01-01", false, pwd, "erza.jpg");
+            "guérisseur", "2025-01-01", false, pwd, "erza.jpg");
     User botA3 = makeUser("bota3@test.com", "BotA3",
-        "catalyseur", "2025-01-01", false, pwd, "itadori.jpg");
+            "catalyseur", "2025-01-01", false, pwd, "itadori.jpg");
     User botB1 = makeUser("botb1@test.com", "BotB1",
-        "architecte", "2025-01-01", false, pwd, "flash.jpg");
+            "architecte", "2025-01-01", false, pwd, "flash.jpg");
     User botB2 = makeUser("botb2@test.com", "BotB2",
-        "catalyseur", "2025-01-01", false, pwd, "makima.jpg");
+            "catalyseur", "2025-01-01", false, pwd, "makima.jpg");
     User botB3 = makeUser("botb3@test.com", "BotB3",
-        "gardien", "2025-01-01", false, pwd, "neon2.jpg");
+            "gardien", "2025-01-01", false, pwd, "neon2.jpg");
     userRepo.saveAll(List.of(admin, user, botA1, botA2, botA3, botB1, botB2, botB3));
 
     Team teamA = createTeam("TEST_TEAM_A", admin, null, null);
 
-    admin.setEquipe(teamA);
-    botA1.setEquipe(teamA);
-    botA2.setEquipe(teamA);
-    botA3.setEquipe(teamA);
+    admin.setTeam(teamA);
+    botA1.setTeam(teamA);
+    botA2.setTeam(teamA);
+    botA3.setTeam(teamA);
+
     final Team teamB = createTeam("TEST_TEAM_B", user, null, null);
-    user.setEquipe(teamB);
-    botB1.setEquipe(teamB);
-    botB2.setEquipe(teamB);
-    botB3.setEquipe(teamB);
+
+    user.setTeam(teamB);
+    botB1.setTeam(teamB);
+    botB2.setTeam(teamB);
+    botB3.setTeam(teamB);
     userRepo.saveAll(List.of(admin, botA1, botA2, botA3, user, botB1, botB2, botB3));
 
     Tournament tournament = makeTournament(
-        "Test Tournament",
-        "Minimal tournament for automated tests",
-        LocalDate.now().plusDays(10).toString(),
-        LocalDate.now().plusDays(20).toString(),
-        LocalDate.now().plusDays(5).toString(),
-        "OUVERT", 4);
+            "Test Tournament",
+            "Minimal tournament for automated tests",
+            LocalDate.now().plusDays(10).toString(),
+            LocalDate.now().plusDays(20).toString(),
+            LocalDate.now().plusDays(5).toString(),
+            "OUVERT", 4);
     tournamentRepo.save(tournament);
 
     RegistrationTeamTournament reg = new RegistrationTeamTournament();
-    reg.setTournoi(tournament);
-    reg.setEquipe(teamA);
-    reg.setDateInscription(LocalDate.now());
+    reg.setTournament(tournament);
+    reg.setTeam(teamA);
+    reg.setRegistrationDate(LocalDate.now());
     inscriptionRepo.save(reg);
 
     System.out.println("[test] DB initialized: 8 users, 2 teams, 1 tournament, 1 registration");

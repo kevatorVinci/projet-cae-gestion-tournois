@@ -4,8 +4,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * Seeds the database with a rich development dataset.
- * Activated only when the "dev" Spring profile is active.
+ * Seeds the database with a dataset for the development environment.
  */
 @Component
 @Profile("dev")
@@ -13,14 +12,10 @@ public class DevDataInitializer extends AbstractDataInitializer {
 
   @Override
   public void run(String... args) {
-    final String pwd = pwdEncoder.encode("Azerty2026!");
-
-    if (!prepareBaseSeed(pwd)) {
-      return;
+    String devPwd = pwdEncoder.encode("Azerty2026!");
+    if (prepareBaseSeed(devPwd)) {
+      seedBaseData(devPwd);
     }
-
-    seedBaseData(pwd);
-
-    System.out.println("[dev] DB initialized: 8 users, 16 teams, 7 tournaments");
+    System.out.println("Base de données DEV vérifiée.");
   }
 }

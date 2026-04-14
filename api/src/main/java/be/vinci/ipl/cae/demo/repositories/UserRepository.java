@@ -12,18 +12,18 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends CrudRepository<User, Long> {
 
   /**
-   * Find a user by its email.
+   * Finds a user by its email.
    *
-   * @param email the email
-   * @return the user
+   * @param email the email of the user.
+   * @return the user found, or null if no user matches.
    */
   User findByEmail(String email);
 
   /**
-   * Find a user by email wrapped in an Optional.
+   * Finds a user by email wrapped in an Optional.
    *
-   * @param email user email
-   * @return optional user
+   * @param email the user email.
+   * @return an optional containing the user if found.
    */
   Optional<User> findOptionalByEmail(String email);
 }

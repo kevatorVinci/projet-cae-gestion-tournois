@@ -2,10 +2,13 @@ package be.vinci.ipl.cae.demo.models.dtos.tournament;
 
 import java.time.LocalDate;
 
-/** Compact tournament view for registration-related responses. */
+/**
+ * Abstract Data Transfer Object for tournament information.
+ */
 public record TournamentAbstractDto(
-    Long id,
-    String nom,
-    String etat,
-    LocalDate dateDebut,
-    Integer nombresParticipantsMax) {}
+        Long id,
+        String name,
+        String status,
+        LocalDate startDate,
+        Integer maxParticipants) {
+}

@@ -39,7 +39,7 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
 
   /** Creates and returns an unsaved User entity. */
   protected User makeUser(String email, String tag, String spec,
-      String date, boolean admin, String pwd, String img) {
+                          String date, boolean admin, String pwd, String img) {
     User u = new User();
     u.setEmail(email);
     u.setTag(tag);
@@ -52,17 +52,17 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
   }
 
   /** Creates and returns an unsaved Tournament entity. */
-  protected Tournament makeTournament(String nom, String desc,
-      String debut, String fin, String limiteInscr,
-      String etat, int maxTeams) {
+  protected Tournament makeTournament(String name, String description,
+                                      String startDate, String endDate, String registrationDeadline,
+                                      String status, int maxParticipants) {
     Tournament t = new Tournament();
-    t.setNom(nom);
-    t.setDescription(desc);
-    t.setDateDebut(LocalDate.parse(debut));
-    t.setDateFin(LocalDate.parse(fin));
-    t.setDateLimiteInscription(LocalDate.parse(limiteInscr));
-    t.setEtat(etat);
-    t.setNombresParticipantsMax(maxTeams);
+    t.setName(name);
+    t.setDescription(description);
+    t.setStartDate(LocalDate.parse(startDate));
+    t.setEndDate(LocalDate.parse(endDate));
+    t.setRegistrationDeadline(LocalDate.parse(registrationDeadline));
+    t.setStatus(status);
+    t.setMaxParticipants(maxParticipants);
     return t;
   }
 
@@ -70,9 +70,9 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
   protected Team createTeam(String name, User principal, User secondary, String image) {
     Team team = new Team();
     team.setName(name);
-    team.setResponsablePrincipal(principal);
+    team.setPrimaryResponsible(principal);
     if (secondary != null) {
-      team.setResponsableSecondaire(secondary);
+      team.setSecondaryResponsible(secondary);
     }
     team.setProfileImage(image);
     teamRepo.save(team);
@@ -81,22 +81,22 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
 
   /** Creates, saves, and attaches a bot user to a team. */
   protected User addBotMember(String email, String tag, String spec,
-      String pwd, String img, Team team) {
+                              String pwd, String img, Team team) {
     User bot = makeUser(email, tag, spec, "2025-01-01", false, pwd, img);
     userRepo.save(bot);
-    bot.setEquipe(team);
+    bot.setTeam(team);
     userRepo.save(bot);
     return bot;
   }
 
   /** Registers each team in the list to the given tournament. */
-  protected void registerTeams(Tournament tournoi, List<Team> teams, String date) {
+  protected void registerTeams(Tournament tournament, List<Team> teams, String date) {
     LocalDate d = LocalDate.parse(date);
     for (Team eq : teams) {
       RegistrationTeamTournament ins = new RegistrationTeamTournament();
-      ins.setTournoi(tournoi);
-      ins.setEquipe(eq);
-      ins.setDateInscription(d);
+      ins.setTournament(tournament);
+      ins.setTeam(eq);
+      ins.setRegistrationDate(d);
       inscriptionRepo.save(ins);
     }
   }
@@ -117,110 +117,110 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
   @SuppressWarnings("PMD.ExcessiveMethodLength")
   protected SeedData seedBaseData(String pwd) {
     User lea = makeUser("lea@mail.com", "Lynx",
-        "tacticien", "2025-11-12", true, pwd, "luffy.png");
+            "tacticien", "2025-11-12", true, pwd, "luffy.png");
     User tom = makeUser("tom@mail.com", "Rogue",
-        "exécuteur", "2025-12-03", false, pwd, "miles.jpg");
+            "exécuteur", "2025-12-03", false, pwd, "miles.jpg");
     User ines = makeUser("ines@mail.com", "Pulse",
-        "guérisseur", "2026-01-18", false, pwd, "erza.jpg");
+            "guérisseur", "2026-01-18", false, pwd, "erza.jpg");
     User tibo = makeUser("tibo@mail.com", "Iron",
-        "gardien", "2025-10-27", true, pwd, "kaido.png");
+            "gardien", "2025-10-27", true, pwd, "kaido.png");
     User lisa = makeUser("lisa@mail.com", "Storm",
-        "exécuteur", "2026-01-10", false, pwd, "flash.jpg");
+            "exécuteur", "2026-01-10", false, pwd, "flash.jpg");
     User noa = makeUser("noa@mail.com", "Flash",
-        "architecte", "2026-02-02", false, pwd, "Pessi.jpg");
+            "architecte", "2026-02-02", false, pwd, "Pessi.jpg");
     User tim = makeUser("tim@mail.com", "Titi",
-        "gardien", "2026-02-03", false, pwd, "itadori.jpg");
+            "gardien", "2026-02-03", false, pwd, "itadori.jpg");
     User zoe = makeUser("zoe@mail.com", "Vector",
-        "catalyseur", "2026-02-04", false, pwd, "makima.jpg");
+            "catalyseur", "2026-02-04", false, pwd, "makima.jpg");
     userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe));
 
     Tournament springArena = makeTournament(
-        "Spring Arena Cup 2025",
-        "Compétition printanière ouverte aux nouvelles teams",
-        "2025-04-15", "2025-04-25", "2025-04-10", "TERMINE", 8);
+            "Spring Arena Cup 2025",
+            "Compétition printanière ouverte aux nouvelles teams",
+            "2025-04-15", "2025-04-25", "2025-04-10", "TERMINE", 8);
     Tournament elite2025 = makeTournament(
-        "Elite Championship 2025",
-        "Compétition élite réservée aux meilleures teams",
-        "2025-05-15", "2025-05-30", "2025-05-11", "TERMINE", 8);
+            "Elite Championship 2025",
+            "Compétition élite réservée aux meilleures teams",
+            "2025-05-15", "2025-05-30", "2025-05-11", "TERMINE", 8);
     Tournament summerPro = makeTournament(
-        "Summer Pro League 2025",
-        "Tournoi estival de haut niveau avec les meilleures teams",
-        "2025-07-01", "2025-07-15", "2025-06-25", "TERMINE", 16);
+            "Summer Pro League 2025",
+            "Tournoi estival de haut niveau avec les meilleures teams",
+            "2025-07-01", "2025-07-15", "2025-06-25", "TERMINE", 16);
     Tournament winterClash = makeTournament(
-        "Vinci Winter Clash 2026",
-        "Tournoi hivernal réunissant des équipes semi-professionnelles",
-        "2026-01-10", "2026-01-20", "2026-01-05", "TERMINE", 12);
+            "Vinci Winter Clash 2026",
+            "Tournoi hivernal réunissant des équipes semi-professionnelles",
+            "2026-01-10", "2026-01-20", "2026-01-05", "TERMINE", 12);
     Tournament springBattle = makeTournament(
-        "Spring Battle Series 2026",
-        "Série printanière avec élimination directe et forte participation",
-        "2026-04-04", "2026-04-11", "2026-04-01", "EN_COURS", 8);
+            "Spring Battle Series 2026",
+            "Série printanière avec élimination directe et forte participation",
+            "2026-04-04", "2026-04-11", "2026-04-01", "EN_COURS", 8);
     Tournament easterCup = makeTournament(
-        "Vinci Easter Cup 2026",
-        "Tournoi de Pâques ouvert à toutes les teams actives",
-        "2026-04-15", "2026-04-25", "2026-04-08", "OUVERT", 8);
+            "Vinci Easter Cup 2026",
+            "Tournoi de Pâques ouvert à toutes les teams actives",
+            "2026-04-15", "2026-04-25", "2026-04-08", "OUVERT", 8);
     Tournament elite2026 = makeTournament(
-        "Elite Championship 2026",
-        "Compétition élite réservée aux meilleures teams",
-        "2026-05-15", "2026-05-30", "2026-05-11", "OUVERT", 16);
+            "Elite Championship 2026",
+            "Compétition élite réservée aux meilleures teams",
+            "2026-05-15", "2026-05-30", "2026-05-11", "OUVERT", 16);
     tournamentRepo.saveAll(List.of(
-        springArena, elite2025, summerPro, winterClash,
-        springBattle, easterCup, elite2026));
+            springArena, elite2025, summerPro, winterClash,
+            springBattle, easterCup, elite2026));
 
     Team alpha = createTeam("TEAM_ALPHA", lea, null, "akatsuki.jpg");
-    lea.setEquipe(alpha);
-    tom.setEquipe(alpha);
-    ines.setEquipe(alpha);
+    lea.setTeam(alpha);
+    tom.setTeam(alpha);
+    ines.setTeam(alpha);
 
     final Team omega = createTeam("TEAM_OMEGA", tibo, null, "espada.jpg");
-    tibo.setEquipe(omega);
+    tibo.setTeam(omega);
 
     final Team iota = createTeam("TEAM_IOTA", lisa, noa, "fairytail.jpg");
-    lisa.setEquipe(iota);
-    noa.setEquipe(iota);
-    tim.setEquipe(iota);
-    zoe.setEquipe(iota);
+    lisa.setTeam(iota);
+    noa.setTeam(iota);
+    tim.setTeam(iota);
+    zoe.setTeam(iota);
     userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe));
 
     List<String> names = List.of(
-        "TEAM_BETA", "TEAM_GAMMA", "TEAM_DELTA", "TEAM_EPSILON", "TEAM_ZETA",
-        "TEAM_THETA", "TEAM_KAPPA", "TEAM_LAMBDA", "TEAM_MU", "TEAM_NU",
-        "TEAM_XI", "TEAM_PI", "TEAM_SIGMA");
+            "TEAM_BETA", "TEAM_GAMMA", "TEAM_DELTA", "TEAM_EPSILON", "TEAM_ZETA",
+            "TEAM_THETA", "TEAM_KAPPA", "TEAM_LAMBDA", "TEAM_MU", "TEAM_NU",
+            "TEAM_XI", "TEAM_PI", "TEAM_SIGMA");
     List<String> botTags = List.of(
-        "Nova", "Raptor", "Blaze", "Echo", "Mantis", "Viper", "Astra",
-        "Cipher", "Drift", "Sable", "Orion", "Nyx", "Havoc");
+            "Nova", "Raptor", "Blaze", "Echo", "Mantis", "Viper", "Astra",
+            "Cipher", "Drift", "Sable", "Orion", "Nyx", "Havoc");
     List<String> botAvatars = List.of(
-        "butcher.jpg", "eren.png", "femmecars.jpg", "garou.jpg", "jjk.jpg",
-        "lookism.jpg", "neon2.jpg", "pevin.jpg", "pion.jpg", "spiderman2099.jpg",
-        "tailong.jpg", "crockmou.jpg", "flash.jpg");
+            "butcher.jpg", "eren.png", "femmecars.jpg", "garou.jpg", "jjk.jpg",
+            "lookism.jpg", "neon2.jpg", "pevin.jpg", "pion.jpg", "spiderman2099.jpg",
+            "tailong.jpg", "crockmou.jpg", "flash.jpg");
     List<String> teamAvatars = List.of(
-        "hunter.jpg", "onepiece.jpg", "akatsuki.jpg", "espada.jpg", "fairytail.jpg");
+            "hunter.jpg", "onepiece.jpg", "akatsuki.jpg", "espada.jpg", "fairytail.jpg");
     List<String> extraSpecs = List.of(
-        "tacticien", "guérisseur", "gardien", "architecte", "catalyseur");
+            "tacticien", "guérisseur", "gardien", "architecte", "catalyseur");
 
     List<Team> dummyTeams = new ArrayList<>();
     for (int i = 0; i < names.size(); i++) {
       User bot = makeUser(
-          botTags.get(i).toLowerCase(Locale.ROOT) + "@demo.com",
-          botTags.get(i), "exécuteur", "2025-01-01", false,
-          pwd, botAvatars.get(i % botAvatars.size()));
+              botTags.get(i).toLowerCase(Locale.ROOT) + "@demo.com",
+              botTags.get(i), "exécuteur", "2025-01-01", false,
+              pwd, botAvatars.get(i % botAvatars.size()));
       userRepo.save(bot);
       Team team = createTeam(names.get(i), bot, null, teamAvatars.get(i % teamAvatars.size()));
-      bot.setEquipe(team);
+      bot.setTeam(team);
       userRepo.save(bot);
       dummyTeams.add(team);
       for (int j = 1; j <= 3; j++) {
         String tag = names.get(i).replace("TEAM_", "") + "Bot" + j;
         addBotMember(
-            tag.toLowerCase(Locale.ROOT) + "@demo.com",
-            tag, extraSpecs.get(j % extraSpecs.size()),
-            pwd, botAvatars.get((i + j) % botAvatars.size()), team);
+                tag.toLowerCase(Locale.ROOT) + "@demo.com",
+                tag, extraSpecs.get(j % extraSpecs.size()),
+                pwd, botAvatars.get((i + j) % botAvatars.size()), team);
       }
     }
 
-    springArena.setGagnant(omega);
-    elite2025.setGagnant(iota);
-    summerPro.setGagnant(iota);
-    winterClash.setGagnant(alpha);
+    springArena.setWinner(omega);
+    elite2025.setWinner(iota);
+    summerPro.setWinner(iota);
+    winterClash.setWinner(alpha);
     tournamentRepo.saveAll(List.of(springArena, elite2025, summerPro, winterClash));
 
     List<Team> t = new ArrayList<>(List.of(omega, iota));
@@ -252,30 +252,30 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
     registerTeams(elite2026, t, "2026-05-05");
 
     return new SeedData(lea, tom, ines, tibo, lisa, noa, tim, zoe,
-        alpha, omega, iota, dummyTeams,
-        springArena, elite2025, summerPro, winterClash, springBattle, easterCup, elite2026);
+            alpha, omega, iota, dummyTeams,
+            springArena, elite2025, summerPro, winterClash, springBattle, easterCup, elite2026);
   }
 
   /** Common seeded entities returned to subclasses for profile-specific extras. */
   protected record SeedData(
-      User lea,
-      User tom,
-      User ines,
-      User tibo,
-      User lisa,
-      User noa,
-      User tim,
-      User zoe,
-      Team alpha,
-      Team omega,
-      Team iota,
-      List<Team> dummyTeams,
-      Tournament springArena,
-      Tournament elite2025,
-      Tournament summerPro,
-      Tournament winterClash,
-      Tournament springBattle,
-      Tournament easterCup,
-      Tournament elite2026) {
+          User lea,
+          User tom,
+          User ines,
+          User tibo,
+          User lisa,
+          User noa,
+          User tim,
+          User zoe,
+          Team alpha,
+          Team omega,
+          Team iota,
+          List<Team> dummyTeams,
+          Tournament springArena,
+          Tournament elite2025,
+          Tournament summerPro,
+          Tournament winterClash,
+          Tournament springBattle,
+          Tournament easterCup,
+          Tournament elite2026) {
   }
 }

@@ -26,102 +26,114 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * REST controller for public team (Equipe) operations.
+ * REST controller for public team operations.
  */
 @RestController
 @RequestMapping("/equipes")
 public class TeamController {
 
-  private final TeamService equipeService;
-  private final TeamMapper equipeMapper;
+  private final TeamService teamService;
+  private final TeamMapper teamMapper;
 
   /**
-   * Constructor for EquipeController.
+   * Constructor for TeamController.
    *
-   * @param equipeService the injected service.
-   * @param equipeMapper  the injected mapper.
+   * @param teamService the service managing team logic.
+   * @param teamMapper  the mapper for team DTOs.
    */
-  public TeamController(TeamService equipeService, TeamMapper equipeMapper) {
-    this.equipeService = equipeService;
-    this.equipeMapper = equipeMapper;
-  }
-
-  /** Retrieve all teams (public version). */
-  @GetMapping({ "", "/" })
-  public Iterable<TeamPublicDto> readAllEquipes(@AuthenticationPrincipal User currentUser) {
-    List<TeamPublicDto> equipes = new ArrayList<>();
-    for (Team equipe : equipeService.getAllEquipes()) {
-      equipes.add(equipeMapper.toPublicDto(equipe, currentUser));
-    }
-    return equipes;
-  }
-
-  /** Retrieve a team by its ID. */
-  @GetMapping("/{id}")
-  public TeamPublicDto readOneEquipe(
-      @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
-    Team equipe = equipeService.getEquipeById(id)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Équipe introuvable"));
-
-    return equipeMapper.toPublicDto(equipe, currentUser);
+  public TeamController(TeamService teamService, TeamMapper teamMapper) {
+    this.teamService = teamService;
+    this.teamMapper = teamMapper;
   }
 
   /**
-   * Create a team for a given user id.
+   * Retrieves all teams available.
    *
-   * @param userId      user id
-   * @param dto         creation payload
-   * @param currentUser the authenticated user
-   * @return created team
+   * @param currentUser the current authenticated user.
+   * @return a list of team DTOs.
+   */
+  @GetMapping({"", "/"})
+  public Iterable<TeamPublicDto> readAllTeams(@AuthenticationPrincipal User currentUser) {
+    List<TeamPublicDto> teams = new ArrayList<>();
+    for (Team team : teamService.getAllTeams()) {
+      teams.add(teamMapper.toPublicDto(team, currentUser));
+    }
+    return teams;
+  }
+
+  /**
+   * Retrieves a single team by its ID.
+   *
+   * @param id          the team ID.
+   * @param currentUser the current authenticated user.
+   * @return the team DTO.
+   */
+  @GetMapping("/{id}")
+  public TeamPublicDto readOneTeam(
+          @PathVariable Long id,
+          @AuthenticationPrincipal User currentUser) {
+    Team team = teamService.getTeamById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Team not found"));
+
+    return teamMapper.toPublicDto(team, currentUser);
+  }
+
+  /**
+   * Creates a new team for the authenticated user.
+   *
+   * @param userId      the user ID from the path.
+   * @param dto         the team creation data.
+   * @param currentUser the current authenticated user.
+   * @return the created team.
    */
   @PostMapping("/{userId}/equipes")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("isAuthenticated()")
-  public Team creerEquipe(
-      @PathVariable Long userId,
-      @RequestBody @Valid TeamCreationDto dto,
-      @AuthenticationPrincipal User currentUser) {
+  public Team createTeam(
+          @PathVariable Long userId,
+          @RequestBody @Valid TeamCreationDto dto,
+          @AuthenticationPrincipal User currentUser) {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez créer une équipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "You can only create a team for your own account.");
     }
 
     try {
-      Team equipe = equipeService.createTeam(currentUser, dto.name(), dto.profileImage());
-      if (equipe == null) {
-        throw new ResponseStatusException(HttpStatus.CONFLICT, "Nom d'equipe deja utilise");
+      Team team = teamService.createTeam(currentUser, dto.name(), dto.profileImage());
+      if (team == null) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Team name already in use");
       }
-      return equipe;
+      return team;
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
   }
 
   /**
-   * Join an existing team for a given user id.
+   * Requests to join a team.
    *
-   * @param userId      user id
-   * @param dto         join payload
-   * @param currentUser the authenticated user
+   * @param userId      the user ID from the path.
+   * @param dto         the join request data.
+   * @param currentUser the current authenticated user.
    */
   @PostMapping("/{userId}/equipes/rejoindre")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
-  public void rejoindreEquipe(
-      @PathVariable Long userId,
-      @RequestBody @Valid TeamJoinDto dto,
-      @AuthenticationPrincipal User currentUser) {
+  public void joinTeam(
+          @PathVariable Long userId,
+          @RequestBody @Valid TeamJoinDto dto,
+          @AuthenticationPrincipal User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "You can only join a team for your own account.");
     }
 
     try {
-      equipeService.requestJoinTeam(currentUser, dto.equipeId());
+      teamService.requestJoinTeam(currentUser, dto.teamId());
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     } catch (IllegalArgumentException e) {
@@ -130,99 +142,99 @@ public class TeamController {
   }
 
   /**
-   * Leave current team for a given user id.
+   * Leaves the current team.
    *
-   * @param userId      user id
-   * @param body        map containing optional new responsible id
-   * @param currentUser authenticated user
+   * @param userId      the user ID from the path.
+   * @param body        optional map containing a new responsible ID.
+   * @param currentUser the current authenticated user.
    */
   @PostMapping("/{userId}/equipes/quitter")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
-  public void quitterEquipe(
-      @PathVariable Long userId,
-      @RequestBody(required = false) Map<String, Long> body,
-      @AuthenticationPrincipal User currentUser) {
+  public void leaveTeam(
+          @PathVariable Long userId,
+          @RequestBody(required = false) Map<String, Long> body,
+          @AuthenticationPrincipal User currentUser) {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez quitter l'equipe que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "You can only leave the team for your own account.");
     }
 
     try {
-      Long nouveauResponsableId = body == null ? null : body.get("nouveauResponsableId");
-      equipeService.leaveTeam(currentUser, nouveauResponsableId);
+      Long newResponsibleId = body == null ? null : body.get("newResponsibleId");
+      teamService.leaveTeam(currentUser, newResponsibleId);
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
   }
 
   /**
-   * Promote a member to responsible role.
+   * Promotes a member to team responsible.
    *
-   * @param userId      authenticated user id
-   * @param membreId    member id to promote
-   * @param currentUser authenticated user
+   * @param userId      the path user ID.
+   * @param memberId    the member ID to promote.
+   * @param currentUser the current authenticated user.
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/promouvoir")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
-  public void promouvoirResponsable(
-      @PathVariable Long userId,
-      @PathVariable Long membreId,
-      @AuthenticationPrincipal User currentUser) {
+  public void promoteResponsible(
+          @PathVariable Long userId,
+          @PathVariable("membreId") Long memberId,
+          @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
-    executeTeamAction(() -> equipeService.promoteTeamMember(currentUser, membreId));
+    executeTeamAction(() -> teamService.promoteTeamMember(currentUser, memberId));
   }
 
   /**
-   * Demote a responsible to regular member.
+   * Demotes a team responsible.
    *
-   * @param userId      authenticated user id
-   * @param membreId    responsible member id to demote
-   * @param currentUser authenticated user
+   * @param userId      the path user ID.
+   * @param memberId    the member ID to demote.
+   * @param currentUser the current authenticated user.
    */
   @PostMapping("/{userId}/equipes/responsables/{membreId}/depromouvoir")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
-  public void depromouvoirResponsable(
-      @PathVariable Long userId,
-      @PathVariable Long membreId,
-      @AuthenticationPrincipal User currentUser) {
+  public void demoteResponsible(
+          @PathVariable Long userId,
+          @PathVariable("membreId") Long memberId,
+          @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
-    executeTeamAction(() -> equipeService.demoteTeamLeader(currentUser, membreId));
+    executeTeamAction(() -> teamService.demoteTeamLeader(currentUser, memberId));
   }
 
   /**
-   * Checks if the current user is responsible for their team.
+   * Checks if the current user is a team responsible.
    *
-   * @param currentUser the authenticated user
-   * @return true if responsible
+   * @param currentUser the current authenticated user.
+   * @return true if the user is responsible.
    */
   @GetMapping("/me/isResponsable")
   @PreAuthorize("isAuthenticated()")
-  public boolean isCurrentUserResponsable(@AuthenticationPrincipal User currentUser) {
-    return equipeService.isCurrentUserResponsible(currentUser);
+  public boolean isCurrentUserResponsible(@AuthenticationPrincipal User currentUser) {
+    return teamService.isCurrentUserResponsible(currentUser);
   }
 
   /**
-   * Updates the profile image of a specific team.
+   * Updates the team profile image.
    *
-   * @param equipeId    the ID of the team
-   * @param dto         the payload containing the new image name
-   * @param currentUser the authenticated user making the request
+   * @param teamId      the team ID.
+   * @param dto         the data containing the new image.
+   * @param currentUser the current authenticated user.
    */
   @PutMapping("/{equipeId}/image")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
-  public void updateEquipeImage(
-      @PathVariable Long equipeId,
-      @RequestBody @Valid TeamUpdateDto dto,
-      @AuthenticationPrincipal User currentUser) {
+  public void updateTeamImage(
+          @PathVariable("equipeId") Long teamId,
+          @RequestBody @Valid TeamUpdateDto dto,
+          @AuthenticationPrincipal User currentUser) {
 
     try {
-      equipeService.updateEquipeImage(equipeId, dto.profileImage(), currentUser);
+      teamService.updateTeamImage(teamId, dto.profileImage(), currentUser);
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
     } catch (IllegalArgumentException e) {
@@ -233,8 +245,8 @@ public class TeamController {
   private void ensureSelfTeamManagement(Long userId, User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez gerer les responsables que pour votre propre compte.");
+              HttpStatus.FORBIDDEN,
+              "You can only manage responsibles for your own account.");
     }
   }
 

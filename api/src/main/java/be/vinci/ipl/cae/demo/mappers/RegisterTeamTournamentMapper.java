@@ -8,63 +8,87 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/** Mapper for tournament registration DTO conversions. */
+/**
+ * Mapper component to convert tournament registration entities into various DTOs.
+ */
 @Component
 public class RegisterTeamTournamentMapper {
 
-  /** Converts one inscription into the public tournament team inscription DTO. */
+  /**
+   * Converts a registration to a DTO focused on the team info for a tournament view.
+   *
+   * @param registration the entity to convert.
+   * @return the corresponding DTO, or null if input is null.
+   */
   public TournamentTeamRegistrationDto toTournoiEquipeInscriptionDto(
-      RegistrationTeamTournament inscription) {
-    if (inscription == null) {
+          RegistrationTeamTournament registration) {
+    if (registration == null) {
       return null;
     }
 
     return new TournamentTeamRegistrationDto(
-        inscription.getEquipe().getId(),
-        inscription.getEquipe().getName(),
-        inscription.getEquipe().getProfileImage(),
-        inscription.getDateInscription());
+            registration.getTeam().getId(),
+            registration.getTeam().getName(),
+            registration.getTeam().getProfileImage(),
+            registration.getRegistrationDate());
   }
 
   /**
-   * Converts multiple inscriptions to public tournament team inscription DTOs.
+   * Converts a list of registrations to team-focused DTOs.
+   *
+   * @param registrations an iterable collection of registration entities.
+   * @return a list of DTOs.
    */
   public List<TournamentTeamRegistrationDto> toTournoiEquipeInscriptionDtos(
-      Iterable<RegistrationTeamTournament> inscriptions) {
+          Iterable<RegistrationTeamTournament> registrations) {
     List<TournamentTeamRegistrationDto> result = new ArrayList<>();
-    for (RegistrationTeamTournament inscription : inscriptions) {
-      result.add(toTournoiEquipeInscriptionDto(inscription));
+    if (registrations != null) {
+      for (RegistrationTeamTournament registration : registrations) {
+        result.add(toTournoiEquipeInscriptionDto(registration));
+      }
     }
     return result;
   }
 
-  /** Converts one inscription to the team registration DTO. */
+  /**
+   * Converts a registration to a DTO focused on the tournament info for a team view.
+   *
+   * @param registration the entity to convert.
+   * @return the corresponding DTO, or null if input is null.
+   */
   public TeamTournamentRegistrationDto toEquipeTournamentRegistrationDto(
-      RegistrationTeamTournament inscription) {
-    if (inscription == null) {
+          RegistrationTeamTournament registration) {
+    if (registration == null) {
       return null;
     }
 
-    TournamentAbstractDto tournoi = new TournamentAbstractDto(
-        inscription.getTournoi().getId(),
-        inscription.getTournoi().getNom(),
-        inscription.getTournoi().getEtat(),
-        inscription.getTournoi().getDateDebut(),
-        inscription.getTournoi().getNombresParticipantsMax());
+    TournamentAbstractDto tournamentDto = new TournamentAbstractDto(
+            registration.getTournament().getId(),
+            registration.getTournament().getName(),
+            registration.getTournament().getStatus(),
+            registration.getTournament().getStartDate(),
+            registration.getTournament().getMaxParticipants());
 
     return new TeamTournamentRegistrationDto(
-        inscription.getTournoi().getId(),
-        inscription.getEquipe().getId(),
-        inscription.getDateInscription(),
-        tournoi);
+            registration.getTournament().getId(),
+            registration.getTeam().getId(),
+            registration.getRegistrationDate(),
+            tournamentDto);
   }
 
-  /** Converts multiple inscriptions to team registration DTOs. */
+  /**
+   * Converts a list of registrations to tournament-focused DTOs.
+   *
+   * @param registrations an iterable collection of registration entities.
+   * @return a list of DTOs.
+   */
   public List<TeamTournamentRegistrationDto> toEquipeTournamentRegistrationDtos(
-      Iterable<RegistrationTeamTournament> inscriptions) {
+          Iterable<RegistrationTeamTournament> registrations) {
     List<TeamTournamentRegistrationDto> result = new ArrayList<>();
-    for (RegistrationTeamTournament inscription : inscriptions) {
-      result.add(toEquipeTournamentRegistrationDto(inscription));
+    if (registrations != null) {
+      for (RegistrationTeamTournament registration : registrations) {
+        result.add(toEquipeTournamentRegistrationDto(registration));
+      }
     }
     return result;
   }

@@ -11,113 +11,139 @@ import java.util.Collection;
 import org.springframework.stereotype.Service;
 
 /**
- * Service managing all business logic related to team registrations for
- * tournaments.
+ * Service managing all business logic related to team registrations for tournaments.
  */
 @Service
 public class RegisterTeamTournamentService {
 
+  /**
+   * Minimum number of members required for a team to register.
+   */
   private static final int MIN_MEMBERS_FOR_REGISTRATION = 4;
 
+  /**
+   * Repository for managing registration persistence.
+   */
   private final InscriptionEquipeTournoiRepository inscriptionRepository;
-  private final TournamentRepository tournoiRepository;
-  private final TeamRepository equipeRepository;
-  private final TournamentService tournoiService;
+
+  /**
+   * Repository for managing tournament persistence.
+   */
+  private final TournamentRepository tournamentRepository;
+
+  /**
+   * Repository for managing team persistence.
+   */
+  private final TeamRepository teamRepository;
+
+  /**
+   * Service for tournament-related business logic.
+   */
+  private final TournamentService tournamentService;
+
+  /**
+   * Service for sending notifications to users.
+   */
   private final NotificationService notificationService;
 
   /**
-   * Creates the service with its repositories and tournament service dependency.
+   * Constructor with dependency injection.
+   *
+   * @param inscriptionRepository the registration repository.
+   * @param tournamentRepository  the tournament repository.
+   * @param teamRepository        the team repository.
+   * @param tournamentService     the tournament service.
+   * @param notificationService   the notification service.
    */
   public RegisterTeamTournamentService(
-      InscriptionEquipeTournoiRepository inscriptionRepository,
-      TournamentRepository tournoiRepository,
-      TeamRepository equipeRepository,
-      TournamentService tournoiService,
-      NotificationService notificationService) {
+          InscriptionEquipeTournoiRepository inscriptionRepository,
+          TournamentRepository tournamentRepository,
+          TeamRepository teamRepository,
+          TournamentService tournamentService,
+          NotificationService notificationService) {
     this.inscriptionRepository = inscriptionRepository;
-    this.tournoiRepository = tournoiRepository;
-    this.equipeRepository = equipeRepository;
-    this.tournoiService = tournoiService;
+    this.tournamentRepository = tournamentRepository;
+    this.teamRepository = teamRepository;
+    this.tournamentService = tournamentService;
     this.notificationService = notificationService;
   }
 
   /**
-   * Gets all registrations for a given tournament.
-   */
-  public Iterable<RegistrationTeamTournament> getAllByTournoi(Long tournoiId) {
-    Tournament tournoi = tournoiRepository.findById(tournoiId).orElse(null);
-    if (tournoi == null) {
-      return null;
-    }
-    return inscriptionRepository.findByTournoi(tournoi);
-  }
-
-  /**
-   * Gets all registrations for a specific team.
-   */
-  public Iterable<RegistrationTeamTournament> getAllByEquipe(Long equipeId) {
-    Team equipe = equipeRepository.findById(equipeId).orElse(null);
-    if (equipe == null) {
-      return null;
-    }
-    return inscriptionRepository.findByEquipe(equipe);
-  }
-
-  /**
-   * Registers a team in a tournament.
-   * Registration is immediate and final when the tournament is OUVERT.
+   * Retrieves all registrations for a specific tournament.
    *
-   * @param tournoiId tournament ID
-   * @param equipeId  team ID
-   * @return created registration, or null if action is not allowed
+   * @param tournamentId the unique identifier of the tournament.
+   * @return an iterable of registrations, or null if tournament is not found.
    */
-  public RegistrationTeamTournament register(Long tournoiId, Long equipeId) {
-    Tournament tournoi = tournoiRepository.findById(tournoiId).orElse(null);
-    if (tournoi == null || !"OUVERT".equals(tournoi.getEtat())) {
-      return null; // Tournament does not exist or is no longer open for registrations
+  public Iterable<RegistrationTeamTournament> getAllByTournament(Long tournamentId) {
+    Tournament tournament = tournamentRepository.findById(tournamentId).orElse(null);
+    if (tournament == null) {
+      return null;
     }
+    return inscriptionRepository.findByTournament(tournament);
+  }
 
-    Team equipe = equipeRepository.findById(equipeId).orElse(null);
-    if (equipe == null) {
+  /**
+   * Retrieves all registrations for a specific team.
+   *
+   * @param teamId the unique identifier of the team.
+   * @return an iterable of registrations, or null if team is not found.
+   */
+  public Iterable<RegistrationTeamTournament> getAllByTeam(Long teamId) {
+    Team team = teamRepository.findById(teamId).orElse(null);
+    if (team == null) {
+      return null;
+    }
+    return inscriptionRepository.findByTeam(team);
+  }
+
+  /**
+   * Registers a team for a tournament if all criteria are met.
+   *
+   * @param tournamentId the unique identifier of the tournament.
+   * @param teamId       the unique identifier of the team.
+   * @return the saved registration entity, or null if registration is not possible.
+   * @throws IllegalArgumentException if the team has fewer than the required members.
+   */
+  public RegistrationTeamTournament register(Long tournamentId, Long teamId) {
+    Tournament tournament = tournamentRepository.findById(tournamentId).orElse(null);
+    if (tournament == null || !"OUVERT".equals(tournament.getStatus())) {
       return null;
     }
 
-    if (equipe.getMembres() == null
-        || equipe.getMembres().size() < MIN_MEMBERS_FOR_REGISTRATION) {
+    Team team = teamRepository.findById(teamId).orElse(null);
+    if (team == null) {
+      return null;
+    }
+
+    if (team.getMembers() == null || team.getMembers().size() < MIN_MEMBERS_FOR_REGISTRATION) {
       throw new IllegalArgumentException(
-          "Une équipe doit avoir au moins 4 membres pour s'inscrire à un tournoi.");
+              "A team must have at least 4 members to register for a tournament.");
     }
 
-    // Block when the team is already registered
-    if (inscriptionRepository.findByTournoiAndEquipe(tournoi, equipe).isPresent()) {
+    if (inscriptionRepository.findByTournamentAndTeam(tournament, team).isPresent()) {
       return null;
     }
 
-    // Create the registration
-    RegistrationTeamTournament inscription = new RegistrationTeamTournament();
-    inscription.setTournoi(tournoi);
-    inscription.setEquipe(equipe);
-    inscription.setDateInscription(LocalDate.now());
+    RegistrationTeamTournament registration = new RegistrationTeamTournament();
+    registration.setTournament(tournament);
+    registration.setTeam(team);
+    registration.setRegistrationDate(LocalDate.now());
 
-    // (Note: If InscriptionEquipeTournoi still has an 'etat' field,
-    // remove it from InscriptionEquipeTournoi.java)
+    RegistrationTeamTournament saved = inscriptionRepository.save(registration);
 
-    RegistrationTeamTournament saved = inscriptionRepository.save(inscription);
-
-    String message = "Équipe : inscription confirmée pour votre équipe '"
-        + equipe.getName()
-        + "' est inscrite au tournoi '"
-        + tournoi.getNom()
-        + "'.";
-    for (var membre : equipe.getMembres()) {
-      notificationService.createNotification(membre, message);
+    String message = "Team: registration confirmed for your team '"
+            + team.getName()
+            + "' in the tournament '"
+            + tournament.getName()
+            + "'.";
+    for (var member : team.getMembers()) {
+      notificationService.createNotification(member, message);
     }
 
-    // Automatic closure when tournament reaches capacity
-    if (tournoi.getNombresParticipantsMax() != null) {
-      Collection<?> inscrits = (Collection<?>) inscriptionRepository.findByTournoi(tournoi);
-      if (inscrits.size() >= tournoi.getNombresParticipantsMax()) {
-        tournoiService.closeRegistrations(tournoi.getId()); // Tournament moves to CLOTURE
+    if (tournament.getMaxParticipants() != null) {
+      Collection<?> registered = (Collection<?>) inscriptionRepository.findByTournament(tournament);
+      if (registered.size() >= tournament.getMaxParticipants()) {
+        tournamentService.closeRegistrations(tournament.getId());
       }
     }
 
@@ -125,86 +151,78 @@ public class RegisterTeamTournamentService {
   }
 
   /**
-   * Unregisters a team from a tournament (deletes the registration row).
-   * Allowed only while the tournament is still OUVERT and before the deadline.
+   * Cancels a registration using its ID.
    *
-   * @param inscriptionId registration ID to delete
-   * @return true if unregistration succeeded, false otherwise
+   * @param registrationId the unique identifier of the registration.
+   * @return true if unregistration succeeded, false otherwise.
    */
-  public boolean unregister(Long inscriptionId) {
-    RegistrationTeamTournament inscription = inscriptionRepository
-        .findById(inscriptionId)
-        .orElse(null);
-    if (inscription == null) {
+  public boolean unregister(Long registrationId) {
+    RegistrationTeamTournament registration = inscriptionRepository
+            .findById(registrationId)
+            .orElse(null);
+    if (registration == null) {
       return false;
     }
 
-    Tournament tournoi = inscription.getTournoi();
-    if (!isUnregisterAllowed(tournoi, true)) {
+    Tournament tournament = registration.getTournament();
+    if (!isUnregisterAllowed(tournament)) {
       return false;
     }
 
-    // Clean unregistration: physically delete the row
-    inscriptionRepository.delete(inscription);
+    inscriptionRepository.delete(registration);
 
     return true;
   }
 
   /**
-   * Unregisters a team from a tournament using the logical key (tournoiId,
-   * equipeId).
-   * Allowed only while the tournament is still OUVERT and before the deadline.
-   */
-  public boolean unregisterByTournoiAndEquipe(Long tournoiId, Long equipeId) {
-    Tournament tournoi = tournoiRepository.findById(tournoiId).orElse(null);
-    Team equipe = equipeRepository.findById(equipeId).orElse(null);
-    if (tournoi == null || equipe == null) {
-      return false;
-    }
-
-    RegistrationTeamTournament inscription = inscriptionRepository
-        .findByTournoiAndEquipe(tournoi, equipe)
-        .orElse(null);
-    if (inscription == null) {
-      return false;
-    }
-
-    if (!isUnregisterAllowed(tournoi, false)) {
-      return false;
-    }
-
-    inscriptionRepository.delete(inscription);
-
-    return true;
-  }
-
-  /**
-   * Gets a registration by its ID.
-   */
-  public RegistrationTeamTournament getById(Long inscriptionId) {
-    return inscriptionRepository.findById(inscriptionId).orElse(null);
-  }
-
-  /**
-   * Validates whether a tournament still allows unregister operations.
+   * Cancels a registration for a specific tournament and team.
    *
-   * @param tournoi             tournament to validate
-   * @param logIfDeadlinePassed true to log a message when deadline is passed
-   * @return true if unregister is allowed, false otherwise
+   * @param tournamentId the unique identifier of the tournament.
+   * @param teamId       the unique identifier of the team.
+   * @return true if unregistration succeeded, false otherwise.
    */
-  private boolean isUnregisterAllowed(Tournament tournoi, boolean logIfDeadlinePassed) {
-    if (!"OUVERT".equals(tournoi.getEtat())) {
+  public boolean unregisterByTournamentAndTeam(Long tournamentId, Long teamId) {
+    Tournament tournament = tournamentRepository.findById(tournamentId).orElse(null);
+    Team team = teamRepository.findById(teamId).orElse(null);
+    if (tournament == null || team == null) {
       return false;
     }
 
-    if (tournoi.getDateLimiteInscription() != null
-        && tournoi.getDateLimiteInscription().isBefore(LocalDate.now())) {
-      if (logIfDeadlinePassed) {
-        System.out.println("Unregistration denied: tournament deadline has passed.");
-      }
+    RegistrationTeamTournament registration = inscriptionRepository
+            .findByTournamentAndTeam(tournament, team)
+            .orElse(null);
+    if (registration == null) {
       return false;
     }
+
+    if (!isUnregisterAllowed(tournament)) {
+      return false;
+    }
+
+    inscriptionRepository.delete(registration);
 
     return true;
+  }
+
+  /**
+   * Retrieves a registration by its ID.
+   *
+   * @param registrationId the unique identifier of the registration.
+   * @return the registration entity, or null if not found.
+   */
+  public RegistrationTeamTournament getById(Long registrationId) {
+    return inscriptionRepository.findById(registrationId).orElse(null);
+  }
+
+  /**
+   * Checks if unregistration is currently permitted for a tournament.
+   *
+   * @param tournament the tournament entity.
+   * @return true if unregistration is allowed, false otherwise.
+   */
+  private boolean isUnregisterAllowed(Tournament tournament) {
+    return "OUVERT".equals(tournament.getStatus())
+            && (tournament.getRegistrationDeadline() == null
+            || !tournament.getRegistrationDeadline().isBefore(LocalDate.now()));
   }
 }
