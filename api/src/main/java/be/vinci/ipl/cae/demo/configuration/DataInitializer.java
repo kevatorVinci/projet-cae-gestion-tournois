@@ -10,17 +10,9 @@ public class DataInitializer extends AbstractDataInitializer {
 
   @Override
   public void run(String... args) {
-    // 1. On définit le mot de passe pour la démo
-    final String pwd = pwdEncoder.encode("Azerty2026!");
-
-    // 2. On vérifie si la DB est déjà remplie (méthode partagée du parent)
-    // Si prepareBaseSeed retourne false, on arrête tout.
-    if (!prepareBaseSeed(pwd)) {
-      return;
+    if (prepareBaseSeed(pwdEncoder.encode("Azerty2026!"))) {
+      seedBaseData(pwdEncoder.encode("Azerty2026!"));
+      System.out.println("Base de données par défaut initialisée !");
     }
-
-    seedBaseData(pwd);
-
-    System.out.println("Base de données initialisée avec succès !");
   }
 }
