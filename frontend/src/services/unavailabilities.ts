@@ -10,10 +10,7 @@ const API_BASE = '/api';
 
 // Use the SAME token approach as teams.ts
 function getAuthHeaders(): HeadersInit {
-  const user = getAuthenticatedUser();
-  console.log('user:', user);
-  const token = user?.token;
-  console.log('token:', token);
+  const token = getAuthenticatedUser()?.token;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
