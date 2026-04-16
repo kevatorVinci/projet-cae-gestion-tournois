@@ -54,7 +54,17 @@ public class MatchController {
    */
   @GetMapping("/{tournamentId}/matches")
   public List<Match> getMatches(@PathVariable Long tournamentId) {
-    // Ask the service to return the list of matches for this tournament
     return matchService.getTournamentMatches(tournamentId);
+  }
+
+  /**
+   * Endpoint to retrieve all matches a specific team has played or will play.
+   *
+   * @param equipeId the ID of the team.
+   * @return a list of matches involving the team.
+   */
+  @GetMapping("/equipes/{equipeId}/matches")
+  public List<Match> getMatchesByTeam(@PathVariable Long equipeId) {
+    return matchService.getMatchesByTeam(equipeId);
   }
 }
