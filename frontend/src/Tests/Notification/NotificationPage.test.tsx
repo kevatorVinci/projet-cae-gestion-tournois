@@ -248,7 +248,7 @@ describe('Notifications', () => {
       await screen.findByText(/accepté : ta demande pour rejoindre/i),
     ).toBeInTheDocument();
 
-    const maTeamLink = screen.getByText(/voir ma team/i);
+    const maTeamLink = screen.getByText(/voir mon équipe/i);
     fireEvent.click(maTeamLink);
 
     expect(mockNavigate).toHaveBeenCalledWith('/maTeam');

@@ -117,7 +117,7 @@ public class RegisterTeamTournamentService {
 
     if (team.getMembers() == null || team.getMembers().size() < MIN_MEMBERS_FOR_REGISTRATION) {
       throw new IllegalArgumentException(
-              "A team must have at least 4 members to register for a tournament.");
+              "Une équipe doit avoir au moins 4 membres pour s'inscrire à un tournoi.");
     }
 
     if (inscriptionRepository.findByTournamentAndTeam(tournament, team).isPresent()) {
@@ -131,9 +131,9 @@ public class RegisterTeamTournamentService {
 
     RegistrationTeamTournament saved = inscriptionRepository.save(registration);
 
-    String message = "Team: registration confirmed for your team '"
+        String message = "Inscription confirmée : votre équipe '"
             + team.getName()
-            + "' in the tournament '"
+          + "' est inscrite au tournoi '"
             + tournament.getName()
             + "'.";
     for (var member : team.getMembers()) {

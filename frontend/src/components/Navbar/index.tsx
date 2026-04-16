@@ -147,7 +147,7 @@ const Navbar = () => {
             </Button>
             {authenticatedUser && hasTeam && (
               <Button color="inherit" onClick={() => navigate('/maTeam')}>
-                Ma Team
+                MaTeam
               </Button>
             )}
           </>
@@ -157,7 +157,7 @@ const Navbar = () => {
               color="inherit"
               onClick={() => navigate('/admin/tournaments')}
             >
-              Gestion Tournoi
+              Gestion des tournois
             </Button>
             <Button color="inherit" onClick={() => navigate('/admin')}>
               Admin

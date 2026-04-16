@@ -267,9 +267,9 @@ public class TournamentService {
     tournament.setStatus("ANNULE");
 
     String sanitizedReason = (reason == null || reason.isBlank())
-            ? "unspecified reason"
+          ? "raison non précisée"
             : reason.trim();
-    tournament.setName(tournament.getName() + " (Cancelled: " + sanitizedReason + ")");
+        tournament.setName(tournament.getName() + " (Annulé : " + sanitizedReason + ")");
 
     return tournamentRepository.save(tournament);
   }
@@ -296,7 +296,7 @@ public class TournamentService {
         } else {
           tournament.setStatus("ANNULE");
           tournament.setName(
-                  tournament.getName() + " (Cancelled: less than 2 registered teams)");
+                  tournament.getName() + " (Annulé : moins de 2 équipes inscrites)");
         }
         tournamentRepository.save(tournament);
       }

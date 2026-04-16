@@ -35,7 +35,7 @@ public class MatchService {
    */
   public Match updateResult(Long matchId, Integer score1, Integer score2) {
     Match match = matchRepository.findById(matchId)
-            .orElseThrow(() -> new RuntimeException("Match not found"));
+          .orElseThrow(() -> new RuntimeException("Match introuvable."));
 
     match.setScoreTeam1(score1);
     match.setScoreTeam2(score2);

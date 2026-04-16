@@ -78,11 +78,11 @@ public class UnavailabilityController {
             .findById(id)
             .orElseThrow(
                     () -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+              HttpStatus.NOT_FOUND, "Indisponibilité introuvable."));
 
     if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
+              HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilités.");
     }
 
     indisponibiliteRepository.delete(indisponibilite);
@@ -95,7 +95,7 @@ public class UnavailabilityController {
    */
   private void ensureAuthenticated(User currentUser) {
     if (currentUser == null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifie");
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié.");
     }
   }
 }

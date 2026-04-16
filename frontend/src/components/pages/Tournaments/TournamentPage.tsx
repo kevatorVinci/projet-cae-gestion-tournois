@@ -37,7 +37,7 @@ const fetchFilteredTournaments = async (nom?: string): Promise<Tournoi[]> => {
   if (nom) params.append('nom', nom);
   const query = params.toString() ? `?${params.toString()}` : '';
   const response = await fetch(`/api/tournois/${query}`);
-  if (!response.ok) throw new Error('Failed to fetch tournaments');
+  if (!response.ok) throw new Error('Impossible de charger les tournois.');
   return response.json();
 };
 

@@ -55,7 +55,7 @@ export async function toggleAdminRole(
     throw new Error(
       await parseError(
         response,
-        'Erreur lors de la modification. Verifiez le serveur Java.',
+        'Erreur lors de la modification. Vérifiez le serveur Java.',
       ),
     );
   }

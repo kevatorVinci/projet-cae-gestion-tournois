@@ -49,7 +49,7 @@ const theme = createTheme({
   },
 });
 
-const navItems = ['Accueil', 'Espace personnel', 'Tournois', 'Teams'];
+const navItems = ['Accueil', 'Espace personnel', 'Tournois', 'Équipes'];
 
 function Espace() {
   const [active, setActive] = useState('Espace personnel');

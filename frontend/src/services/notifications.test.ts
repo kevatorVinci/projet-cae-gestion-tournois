@@ -36,7 +36,7 @@ describe('notifications service', () => {
     mockGetAuthenticatedUser.mockReturnValue(undefined);
 
     expect(() => getCurrentUserIdFromToken()).toThrow(
-      /session expiree|expire/i,
+      /session expirée|expire/i,
     );
   });
 
@@ -45,7 +45,7 @@ describe('notifications service', () => {
     mockDecodeJwtPayload.mockReturnValue({});
 
     expect(() => getCurrentUserIdFromToken()).toThrow(
-      /impossible de recuperer l utilisateur connecte/i,
+      /impossible de r[ée]cup[ée]rer l.utilisateur connect[ée]/i,
     );
   });
 
