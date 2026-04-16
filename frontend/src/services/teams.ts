@@ -182,7 +182,7 @@ export async function joinEquipe(
         'Content-Type': 'application/json',
         Authorization: token,
       },
-      body: JSON.stringify({ equipeId: teamId }),
+      body: JSON.stringify({ teamId }),
     },
   );
 
@@ -209,7 +209,7 @@ export async function leaveEquipe(
         Authorization: token,
       },
       body: JSON.stringify(
-        nouveauResponsableId ? { nouveauResponsableId } : {},
+        nouveauResponsableId ? { newResponsibleId: nouveauResponsableId } : {},
       ),
     },
   );

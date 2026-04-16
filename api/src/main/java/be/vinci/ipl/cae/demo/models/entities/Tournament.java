@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,6 +40,7 @@ public class Tournament {
    */
   @Column(name = "nom", unique = true)
   @NotBlank
+  @JsonProperty("nom")
   private String name;
 
   /**
@@ -51,6 +53,7 @@ public class Tournament {
    */
   @Column(name = "date_debut")
   @NotNull
+  @JsonProperty("dateDebut")
   private LocalDate startDate;
 
   /**
@@ -58,6 +61,7 @@ public class Tournament {
    */
   @Column(name = "date_fin")
   @NotNull
+  @JsonProperty("dateFin")
   private LocalDate endDate;
 
   /**
@@ -65,12 +69,14 @@ public class Tournament {
    */
   @Column(name = "date_limite_inscription")
   @NotNull
+  @JsonProperty("dateLimiteInscription")
   private LocalDate registrationDeadline;
 
   /**
    * Current status of the tournament (e.g., PENDING, ONGOING, FINISHED).
    */
   @Column(name = "etat")
+  @JsonProperty("etat")
   private String status;
 
   /**
@@ -78,6 +84,7 @@ public class Tournament {
    */
   @Column(name = "nombres_participants_max")
   @Min(value = 2, message = "Un tournoi doit avoir au moins 2 équipes participantes.")
+  @JsonProperty("nombresParticipantsMax")
   private Integer maxParticipants;
 
   /**
@@ -86,6 +93,7 @@ public class Tournament {
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "id_gagnant")
   @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
+  @JsonProperty("gagnant")
   private Team winner;
 
   /**

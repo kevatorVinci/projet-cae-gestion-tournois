@@ -52,6 +52,7 @@ export function MyTeam() {
   const [loading, setLoading] = useState(true);
   const [isResponsable, setIsResponsable] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageSeverity, setMessageSeverity] = useState<'success' | 'error'>('success');
   const [memberActionLoadingId, setMemberActionLoadingId] = useState<
     number | null
   >(null);
@@ -188,6 +189,7 @@ export function MyTeam() {
       setTeam(null);
       setIsResponsable(false);
       setIsSimpleLeaveDialogOpen(false);
+      setMessageSeverity('success');
       setMessage('Vous avez quitté votre équipe.');
       window.dispatchEvent(new Event('team-membership-changed'));
       navigate('/equipes');
@@ -196,6 +198,7 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
+      setMessageSeverity('error');
       setMessage(
         err instanceof Error
           ? err.message
@@ -210,6 +213,7 @@ export function MyTeam() {
     }
 
     if (!replacementResponsibleId) {
+      setMessageSeverity('error');
       setMessage('Vous devez choisir un nouveau responsable avant de quitter.');
       return;
     }
@@ -220,6 +224,7 @@ export function MyTeam() {
       setIsResponsable(false);
       setIsLeaveDialogOpen(false);
       setReplacementResponsibleId(null);
+      setMessageSeverity('success');
       setMessage('Vous avez quitté votre équipe.');
       window.dispatchEvent(new Event('team-membership-changed'));
       navigate('/equipes');
@@ -228,6 +233,7 @@ export function MyTeam() {
       if (handleAuthFailure(err)) {
         return;
       }
+      setMessageSeverity('error');
       setMessage(
         err instanceof Error
           ? err.message
@@ -241,12 +247,14 @@ export function MyTeam() {
       setMemberActionLoadingId(memberId);
       await promoteResponsable(memberId);
       await loadMyTeam();
+      setMessageSeverity('success');
       setMessage(`${memberTag || 'Le membre'} est maintenant responsable.`);
     } catch (err: unknown) {
       console.error('Erreur API :', err);
       if (handleAuthFailure(err)) {
         return;
       }
+      setMessageSeverity('error');
       setMessage(
         err instanceof Error
           ? err.message
@@ -276,12 +284,14 @@ export function MyTeam() {
       setMemberActionLoadingId(memberId);
       await depromoteResponsable(memberId);
       await loadMyTeam();
+      setMessageSeverity('success');
       setMessage(`${memberTag || 'Le membre'} n'est plus responsable.`);
     } catch (err: unknown) {
       console.error('Erreur API :', err);
       if (handleAuthFailure(err)) {
         return;
       }
+      setMessageSeverity('error');
       setMessage(
         err instanceof Error
           ? err.message
@@ -540,7 +550,7 @@ export function MyTeam() {
     >
       <Container maxWidth="lg" sx={{ mb: 1 }}>
         {message && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity={messageSeverity} sx={{ mb: 2 }}>
             {message}
           </Alert>
         )}
