@@ -134,7 +134,7 @@ const HomePage = () => {
               letterSpacing: '0.02em',
             }}
           >
-            Where Genius Meets Battle
+            Là où le génie affronte la bataille
           </Typography>
           {authenticatedUser && (
             <Typography
@@ -157,7 +157,7 @@ const HomePage = () => {
           >
             {authenticatedUser
               ? "Rejoins les tournois et domine l'arène."
-              : "Rejoins la plateforme e-sport de Vinci Arena. Forme ta team, inscris-toi aux tournois, domine l'arène."}
+              : "Rejoins la plateforme e-sport de Vinci Arena. Forme ton équipe, inscris-toi aux tournois, domine l'arène."}
           </Typography>
           {!authenticatedUser && (
             <Box

@@ -42,7 +42,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
       if (!response.ok)
         throw new Error(
-          `fetch error : ${response.status} : ${response.statusText}`,
+          `Erreur lors de l'inscription : ${response.status} : ${response.statusText}`,
         );
 
       await response.json();
@@ -72,7 +72,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
             errorMessage = errorData.message;
           }
         } catch (e) {
-          // If the response is not JSON, keep the default message
+          // Si la réponse n'est pas du JSON, on garde le message par défaut.
         }
         throw new Error(errorMessage);
       }

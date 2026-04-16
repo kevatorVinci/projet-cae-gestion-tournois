@@ -210,7 +210,7 @@ export function DemandesAdhesion() {
             </Typography>
           </Box>
           <Chip
-            label={`Team : ${teamName}`}
+            label={`Équipe : ${teamName}`}
             sx={{ bgcolor: '#e8822a', color: 'white', fontWeight: 600 }}
           />
         </Box>

@@ -6,7 +6,7 @@ const API_BASE = '/api';
 function getRequiredAuthToken(): string {
   const token = getAuthenticatedUser()?.token;
   if (!token) {
-    throw new Error('Session expiree. Veuillez vous reconnecter.');
+    throw new Error('Session expirée. Veuillez vous reconnecter.');
   }
   return token;
 }
@@ -87,7 +87,7 @@ export async function getDemandesEnAttenteResponsable(): Promise<
     throw new Error(
       await parseError(
         response,
-        'Impossible de recuperer les demandes en attente.',
+        'Impossible de récupérer les demandes en attente.',
       ),
     );
   }

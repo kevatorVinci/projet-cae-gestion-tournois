@@ -69,29 +69,29 @@ public class DemandService {
   public Demand createJoinRequest(Long memberId, Long teamId) {
     User member = userRepo
             .findById(memberId)
-            .orElseThrow(() -> new RuntimeException("Player not found"));
+          .orElseThrow(() -> new RuntimeException("Joueur introuvable."));
 
     Team team = teamRepo
             .findById(teamId)
-            .orElseThrow(() -> new RuntimeException("Team not found"));
+          .orElseThrow(() -> new RuntimeException("Équipe introuvable."));
 
     if (member.getTeam() != null) {
-      throw new RuntimeException("You already have a team!");
+          throw new RuntimeException("Vous avez déjà une équipe !");
     }
 
     boolean hasNoResponsible = team.getPrimaryResponsible() == null
             && team.getSecondaryResponsible() == null;
     if (hasNoResponsible) {
-      throw new RuntimeException("The team has no responsible.");
+      throw new RuntimeException("Cette équipe n'a aucun responsable.");
     }
 
     if (!isTeamEligibleForJoin(team)) {
-      throw new RuntimeException("This team is no longer available for requests.");
+      throw new RuntimeException("Cette équipe n'est plus disponible pour les demandes.");
     }
 
     if (demandRepo.existsByMemberIdAndTeamIdAndState(
             memberId, teamId, DemandState.PENDING)) {
-      throw new RuntimeException("A pending request already exists for this team.");
+      throw new RuntimeException("Une demande en attente existe déjà pour cette équipe.");
     }
 
     Demand demand = new Demand();
@@ -135,7 +135,7 @@ public class DemandService {
   @Transactional
   public Iterable<Demand> getPendingRequestsForResponsible(User currentUser) {
     if (currentUser == null) {
-      throw new SecurityException("Unauthenticated user.");
+      throw new SecurityException("Utilisateur non authentifié.");
     }
 
     Team team = currentUser.getTeam();
@@ -148,7 +148,7 @@ public class DemandService {
     team = teamRepo
             .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
                     currentUser.getId(), currentUser.getId())
-            .orElseThrow(() -> new SecurityException("You are not responsible for any team."));
+          .orElseThrow(() -> new SecurityException("Vous n'êtes responsable d'aucune équipe."));
 
     return getPendingRequestsForTeam(team.getId());
   }
@@ -167,7 +167,7 @@ public class DemandService {
     Team team = demand.getTeam();
 
     if (!isTeamEligibleForJoin(team)) {
-      throw new RuntimeException("The target team is no longer available.");
+      throw new RuntimeException("L'équipe cible n'est plus disponible.");
     }
 
     demand.setState(DemandState.ACCEPTED);
@@ -175,7 +175,7 @@ public class DemandService {
 
     User user = demand.getMember();
     if (user.getTeam() != null) {
-      throw new RuntimeException("The player already belongs to a team.");
+      throw new RuntimeException("Le joueur appartient déjà à une équipe.");
     }
 
     user.setTeam(team);
@@ -204,7 +204,7 @@ public class DemandService {
   public Demand rejectDemand(Long demandId, String reason, User currentUser) {
     Demand demand = getAndVerifyDemand(demandId, currentUser);
     String normalizedReason = (reason == null || reason.isBlank())
-            ? "No specific reason provided."
+          ? "Aucune raison précise fournie."
             : reason.trim();
 
     demand.setState(DemandState.REJECTED);
@@ -229,7 +229,7 @@ public class DemandService {
   private Demand getAndVerifyDemand(Long demandId, User currentUser) {
     Demand demand = demandRepo
             .findById(demandId)
-            .orElseThrow(() -> new RuntimeException("Request not found"));
+          .orElseThrow(() -> new RuntimeException("Demande introuvable."));
     verifyUserIsResponsible(demand.getTeam(), currentUser);
     return demand;
   }
@@ -249,7 +249,7 @@ public class DemandService {
             && team.getSecondaryResponsible().getId().equals(currentUser.getId());
 
     if (!isPrimary && !isSecondary) {
-      throw new SecurityException("Only the team responsible can manage members.");
+      throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
     }
   }
 

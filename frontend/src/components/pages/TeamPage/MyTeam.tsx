@@ -101,8 +101,8 @@ export function MyTeam() {
     (err: unknown): boolean => {
       const errorMessage = err instanceof Error ? err.message : '';
       if (
-        errorMessage.includes('Session expiree') ||
-        errorMessage.includes('Utilisateur non authentifie')
+        errorMessage.includes('Session expirée') ||
+        errorMessage.includes('Utilisateur non authentifié')
       ) {
         navigate('/login');
         return true;
@@ -297,7 +297,7 @@ export function MyTeam() {
       setMessage(
         err instanceof Error
           ? err.message
-          : 'Impossible de deheriter ce responsable.',
+          : 'Impossible de retirer ce responsable.',
       );
     } finally {
       setMemberActionLoadingId(null);
