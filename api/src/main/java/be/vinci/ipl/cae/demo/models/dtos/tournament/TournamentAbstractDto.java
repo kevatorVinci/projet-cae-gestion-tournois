@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.models.dtos.tournament;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 
 /**
@@ -7,8 +8,8 @@ import java.time.LocalDate;
  */
 public record TournamentAbstractDto(
         Long id,
-        String name,
-        String status,
-        LocalDate startDate,
-        Integer maxParticipants) {
+        @JsonProperty("nom") String name,
+        @JsonProperty("etat") String status,
+        @JsonProperty("dateDebut") LocalDate startDate,
+        @JsonProperty("nombresParticipantsMax") Integer maxParticipants) {
 }
