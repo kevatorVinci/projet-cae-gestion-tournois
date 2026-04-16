@@ -41,7 +41,14 @@ export default function ResponsableRoute({ children }: ResponsableRouteProps) {
 
   if (isResponsable === null) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+        }}
+      >
         <CircularProgress sx={{ color: '#e8822a' }} />
       </Box>
     );

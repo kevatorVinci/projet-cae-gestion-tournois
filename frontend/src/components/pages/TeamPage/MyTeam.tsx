@@ -52,7 +52,9 @@ export function MyTeam() {
   const [loading, setLoading] = useState(true);
   const [isResponsable, setIsResponsable] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [messageSeverity, setMessageSeverity] = useState<'success' | 'error'>('success');
+  const [messageSeverity, setMessageSeverity] = useState<'success' | 'error'>(
+    'success',
+  );
   const [memberActionLoadingId, setMemberActionLoadingId] = useState<
     number | null
   >(null);
