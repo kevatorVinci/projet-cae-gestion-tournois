@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,13 +8,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
- * Entity representing a match between two teams in a tournament.
+ * Entity representing a match in a tournament.
  */
 @Data
 @NoArgsConstructor
@@ -23,55 +27,39 @@ public class Match {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id_match")
+  @Column(name = "id")
   private Long id;
 
-  /**
-   * The tournament this match belongs to.
-   */
   @ManyToOne
-  @JoinColumn(name = "tournoi_id", nullable = false)
+  @JoinColumn(name = "tournament_id", nullable = false)
   private Tournament tournament;
 
-  /**
-   * The first team participating in the match.
-   */
   @ManyToOne
-  @JoinColumn(name = "equipe1_id", nullable = false)
+  @JoinColumn(name = "team1_id")
   private Team team1;
 
-  /**
-   * The second team participating in the match.
-   */
   @ManyToOne
-  @JoinColumn(name = "equipe2_id", nullable = false)
+  @JoinColumn(name = "team2_id")
   private Team team2;
 
-  @Column(name = "date_match")
-  private LocalDateTime matchDate;
+  @Column(name = "round_number", nullable = false)
+  private int round;
 
-  @Column(name = "score_equipe1")
-  private Integer scoreTeam1 = 0;
+  @Column(name = "scheduled_date_time", nullable = false)
+  private LocalDateTime scheduledDateTime;
 
-  @Column(name = "score_equipe2")
-  private Integer scoreTeam2 = 0;
-
-  /**
-   * The team that won the match.
-   */
-  @ManyToOne
-  @JoinColumn(name = "vainqueur_id")
-  private Team winner;
-
-  /**
-   * The current status of the match (e.g., PENDING, FINISHED).
-   */
-  @Column(nullable = false)
+  @Column(name = "status", nullable = false)
   private String status = "PENDING";
 
+  @ManyToOne
+  @JoinColumn(name = "admin_responsible_id", nullable = false)
+  private User adminResponsible;
+
   /**
-   * The round number in the tournament.
+   * The link to the match result.
    */
-  @Column(name = "tour_numero")
-  private Integer roundNumber;
+  @OneToOne(mappedBy = "match", cascade = CascadeType.ALL)
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  private MatchResult result;
 }
