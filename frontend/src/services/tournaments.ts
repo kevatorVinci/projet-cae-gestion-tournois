@@ -33,6 +33,29 @@ export interface AcceptedTournamentRegistration {
   dateInscription?: string;
 }
 
+export interface MatchTeam {
+  id: number;
+  name: string;
+  profileImage?: string;
+}
+
+export interface TeamMatch {
+  id: number;
+  tournament: {
+    id: number;
+    nom: string;
+    etat: string;
+  };
+  equipe1: MatchTeam;
+  equipe2: MatchTeam;
+  dateMatch?: string;
+  scoreEquipe1: number;
+  scoreEquipe2: number;
+  vainqueur?: MatchTeam | null;
+  statut: string;
+  tourNumero?: number;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // 1. TOURNAMENT MANAGEMENT (PUBLIC AND ADMIN)
 // ═══════════════════════════════════════════════════════════════════
@@ -226,6 +249,14 @@ export const registerTeamToTournament = async (
       errorData.message || 'Inscription refusée (Tournoi plein ou fermé ?).',
     );
   }
+  return await response.json();
+};
+
+export const fetchTeamMatches = async (
+  equipeId: string | number,
+): Promise<TeamMatch[]> => {
+  const response = await fetch(`/api/tournaments/equipes/${equipeId}/matches`);
+  if (!response.ok) return [];
   return await response.json();
 };
 

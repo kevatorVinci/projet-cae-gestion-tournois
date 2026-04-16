@@ -1,5 +1,7 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,6 +33,7 @@ public class Match {
    */
   @ManyToOne
   @JoinColumn(name = "tournoi_id", nullable = false)
+  @JsonIgnoreProperties({"registrations", "winner"})
   private Tournament tournament;
 
   /**
@@ -38,6 +41,8 @@ public class Match {
    */
   @ManyToOne
   @JoinColumn(name = "equipe1_id", nullable = false)
+  @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
+  @JsonProperty("equipe1")
   private Team team1;
 
   /**
@@ -45,15 +50,20 @@ public class Match {
    */
   @ManyToOne
   @JoinColumn(name = "equipe2_id", nullable = false)
+  @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
+  @JsonProperty("equipe2")
   private Team team2;
 
   @Column(name = "date_match")
+  @JsonProperty("dateMatch")
   private LocalDateTime matchDate;
 
   @Column(name = "score_equipe1")
+  @JsonProperty("scoreEquipe1")
   private Integer scoreTeam1 = 0;
 
   @Column(name = "score_equipe2")
+  @JsonProperty("scoreEquipe2")
   private Integer scoreTeam2 = 0;
 
   /**
@@ -61,17 +71,21 @@ public class Match {
    */
   @ManyToOne
   @JoinColumn(name = "vainqueur_id")
+  @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
+  @JsonProperty("vainqueur")
   private Team winner;
 
   /**
    * The current status of the match (e.g., PENDING, FINISHED).
    */
   @Column(nullable = false)
+  @JsonProperty("statut")
   private String status = "PENDING";
 
   /**
    * The round number in the tournament.
    */
   @Column(name = "tour_numero")
+  @JsonProperty("tourNumero")
   private Integer roundNumber;
 }

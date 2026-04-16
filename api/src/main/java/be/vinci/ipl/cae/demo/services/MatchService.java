@@ -70,4 +70,14 @@ public class MatchService {
   public List<Match> getTournamentMatches(Long tournamentId) {
     return matchRepository.findByTournamentId(tournamentId);
   }
+
+  /**
+   * Returns all matches a specific team has played or will play.
+   *
+   * @param teamId the unique identifier of the team.
+   * @return a list of matches involving the team.
+   */
+  public List<Match> getMatchesByTeam(Long teamId) {
+    return matchRepository.findByTeam1IdOrTeam2Id(teamId, teamId);
+  }
 }
