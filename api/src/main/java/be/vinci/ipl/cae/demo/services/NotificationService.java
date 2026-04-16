@@ -153,7 +153,8 @@ public class NotificationService {
           User manager, String candidateTag, String teamName) {
     createNotification(
             manager,
-        "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe '" + teamName + "'.");
+            "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe "
+                + "'" + teamName + "'.");
   }
 
   /**
@@ -165,7 +166,8 @@ public class NotificationService {
   public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
             user,
-            "Accepté : votre demande pour rejoindre '" + teamName + "' a été acceptée. Bienvenue !");
+            "Accepté : votre demande pour rejoindre '" + teamName
+                + "' a été acceptée. Bienvenue !");
   }
 
   /**
@@ -193,7 +195,8 @@ public class NotificationService {
   public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
             admin,
-            "Admin : nouveau tournoi en brouillon '" + tournamentName + "'. Publiez-le quand il est prêt.");
+            "Admin : nouveau tournoi en brouillon '" + tournamentName
+                + "'. Publiez-le quand il est prêt.");
   }
 
   /**
