@@ -77,31 +77,31 @@ public class MatchService {
    */
   public void generateTournamentSchedule(Long tournamentId) {
     Tournament tournament = tournamentRepository.findById(tournamentId)
-            .orElseThrow(() -> new IllegalStateException("Tournoi introuvable."));
+        .orElseThrow(() -> new IllegalStateException("Tournoi introuvable."));
 
     if (!"CLOTURE".equals(tournament.getStatus()) && !"EN_COURS".equals(tournament.getStatus())) {
       throw new IllegalStateException(
-              "Le planning ne peut être généré que pour un tournoi clôturé ou en cours.");
+          "Le planning ne peut être généré que pour un tournoi clôturé ou en cours.");
     }
 
     List<Match> existingMatches =
-      matchRepository.findByTournamentIdOrderByRoundNumberAscMatchDateAscIdAsc(tournamentId);
+        matchRepository.findByTournamentIdOrderByRoundNumberAscMatchDateAscIdAsc(tournamentId);
     if (!existingMatches.isEmpty()) {
       throw new IllegalStateException("Le planning a déjà été généré pour ce tournoi.");
     }
 
     List<RegistrationTeamTournament> registrations =
-      inscriptionRepository.findByTournament(tournament);
+        inscriptionRepository.findByTournament(tournament);
     List<Team> teams = new ArrayList<>(registrations.stream()
-      .map(RegistrationTeamTournament::getTeam)
-      .sorted(Comparator.comparing(Team::getId))
-      .toList());
+        .map(RegistrationTeamTournament::getTeam)
+        .sorted(Comparator.comparing(Team::getId))
+        .toList());
 
     Collections.shuffle(teams);
 
     if (teams.size() < 2) {
       throw new IllegalArgumentException(
-              "Il faut au moins 2 équipes pour générer un planning.");
+          "Il faut au moins 2 équipes pour générer un planning.");
     }
 
     LocalDateTime baseDate = tournament.getStartDate().atTime(10, 0);
@@ -113,18 +113,18 @@ public class MatchService {
     LocalDateTime tournamentEndDate = tournament.getEndDate().atTime(23, 59, 59);
     if (baseDate.isAfter(tournamentEndDate)) {
       throw new IllegalStateException(
-              "Le planning ne peut pas être généré dans la fenêtre du tournoi.");
+          "Le planning ne peut pas être généré dans la fenêtre du tournoi.");
     }
 
     int n = teams.size();
     int realMatchCount = n / 2;       // floor(n/2) real matches
-    boolean hasBye     = (n % 2) == 1; // one BYE if odd
+    boolean hasBye = n % 2 == 1; // one BYE if odd
 
     if (realMatchCount > 0) {
       LocalDateTime lastMatchDate = baseDate.plusHours((realMatchCount - 1L) * 2L);
       if (lastMatchDate.isAfter(tournamentEndDate)) {
         throw new IllegalStateException(
-                "La fenêtre du tournoi est trop courte pour placer tous les matchs.");
+            "La fenêtre du tournoi est trop courte pour placer tous les matchs.");
       }
     }
 
@@ -140,7 +140,7 @@ public class MatchService {
       match.setStatus("PENDING");
       match.setWinner(null);
       match.setPoolCode(null);
-      match.setMatchDate(baseDate.plusHours((i / 2L) * 2L));
+      match.setMatchDate(baseDate.plusHours(i / 2L * 2L));
       matches.add(match);
     }
 
@@ -157,7 +157,7 @@ public class MatchService {
       match.setScoreTeam1(1);
       match.setScoreTeam2(0);
       match.setPoolCode("BYE");
-      // No date for bye matches.
+      match.setMatchDate(baseDate);
       matches.add(match);
     }
 
@@ -176,7 +176,7 @@ public class MatchService {
             .orElseThrow(() -> new IllegalStateException("Tournoi introuvable."));
 
     List<Match> matches =
-      matchRepository.findByTournamentIdOrderByRoundNumberAscMatchDateAscIdAsc(tournamentId);
+        matchRepository.findByTournamentIdOrderByRoundNumberAscMatchDateAscIdAsc(tournamentId);
     if (matches.isEmpty()) {
       throw new IllegalStateException(
               "Aucun planning généré. Générez les matchs avant publication.");

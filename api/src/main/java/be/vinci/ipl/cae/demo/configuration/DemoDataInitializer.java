@@ -59,8 +59,9 @@ public class DemoDataInitializer extends AbstractDataInitializer {
 
     Tournament springShowdown = getOrCreateTournament(
         "Vinci Spring Showdown 2026",
-      "Tournoi clôturé de démonstration avec 5 équipes inscrites sur 8",
+          "Tournoi clôturé de démonstration avec 5 équipes inscrites sur 8",
         "2026-04-20", "2026-05-05", "2026-04-09", "CLOTURE", CLOSED_TOURNAMENT_TEAM_CAP);
+    ensureRegistrations(springShowdown, registrationTeams.subList(0, 5), "2026-04-07");
 
     getOrCreateTournament(
         "Summer Invitational 2026",
@@ -71,26 +72,24 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         "Demo Closed Arena I",
         "Tournoi de démonstration clôturé (8/8 équipes).",
         "2026-06-01", "2026-06-06", "2026-05-25", "CLOTURE", CLOSED_TOURNAMENT_TEAM_CAP);
+    ensureRegistrations(closedArenaOne, registrationTeams.subList(0, 8), "2026-05-23");
 
     Tournament closedArenaTwo = getOrCreateTournament(
         "Demo Closed Arena II",
         "Tournoi de démonstration clôturé (8/8 équipes).",
         "2026-06-08", "2026-06-13", "2026-06-01", "CLOTURE", CLOSED_TOURNAMENT_TEAM_CAP);
+    ensureRegistrations(closedArenaTwo, registrationTeams.subList(0, 8), "2026-05-30");
 
     Tournament closedArenaThree = getOrCreateTournament(
         "Demo Closed Arena III",
         "Tournoi de démonstration clôturé (8/8 équipes).",
         "2026-06-15", "2026-06-20", "2026-06-08", "CLOTURE", CLOSED_TOURNAMENT_TEAM_CAP);
+    ensureRegistrations(closedArenaThree, registrationTeams.subList(0, 8), "2026-06-06");
 
     Tournament closedArenaFour = getOrCreateTournament(
         "Demo Closed Arena IV",
         "Tournoi de démonstration clôturé (8/8 équipes).",
         "2026-06-22", "2026-06-27", "2026-06-15", "CLOTURE", CLOSED_TOURNAMENT_TEAM_CAP);
-
-    ensureRegistrations(springShowdown, registrationTeams.subList(0, 5), "2026-04-07");
-    ensureRegistrations(closedArenaOne, registrationTeams.subList(0, 8), "2026-05-23");
-    ensureRegistrations(closedArenaTwo, registrationTeams.subList(0, 8), "2026-05-30");
-    ensureRegistrations(closedArenaThree, registrationTeams.subList(0, 8), "2026-06-06");
     ensureRegistrations(closedArenaFour, registrationTeams.subList(0, 8), "2026-06-13");
   }
 

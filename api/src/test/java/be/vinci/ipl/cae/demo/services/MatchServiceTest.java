@@ -80,7 +80,8 @@ class MatchServiceTest {
     Team gamma = makeTeam(3L, "Gamma");
 
     when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-    when(matchRepository.findByTournamentId(1L)).thenReturn(List.of());
+    when(matchRepository.findByTournamentIdOrderByRoundNumberAscMatchDateAscIdAsc(1L))
+      .thenReturn(List.of());
     when(inscriptionRepository.findByTournament(tournament)).thenReturn(
         List.of(
             makeRegistration(tournament, alpha),
