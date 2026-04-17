@@ -74,7 +74,7 @@ public class TeamController {
           @AuthenticationPrincipal User currentUser) {
     Team team = teamService.getTeamById(id)
             .orElseThrow(() -> new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Team not found"));
+            HttpStatus.NOT_FOUND, "Équipe introuvable."));
 
     return teamMapper.toPublicDto(team, currentUser);
   }

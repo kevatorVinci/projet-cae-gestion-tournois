@@ -180,7 +180,7 @@ public class TeamService {
 
     User member = findMemberInTeam(team, memberId);
     if (isUserResponsible(team, member)) {
-      throw new IllegalStateException("This member is already responsible.");
+      throw new IllegalStateException("Ce membre est déjà responsable.");
     }
 
     if (team.getPrimaryResponsible() == null) {
@@ -209,11 +209,11 @@ public class TeamService {
 
     User member = findMemberInTeam(team, memberId);
     if (!isUserResponsible(team, member)) {
-      throw new IllegalStateException("This member is not responsible.");
+      throw new IllegalStateException("Ce membre n'est pas responsable.");
     }
 
     if (countResponsibles(team) <= 1) {
-      throw new IllegalStateException("Impossible de retirer le dernier responsable.");
+      throw new IllegalStateException("Impossible de rétrograder le dernier responsable.");
     }
 
     removeResponsibleRole(team, member.getId());
@@ -298,12 +298,12 @@ public class TeamService {
   @Transactional
   public void updateTeamImage(Long teamId, String imageName, User currentUser) {
     Team team = teamRepository.findById(teamId)
-            .orElseThrow(() -> new IllegalArgumentException("Team not found."));
+          .orElseThrow(() -> new IllegalArgumentException("Équipe introuvable."));
 
     User persistedUser = loadPersistedUser(currentUser);
 
     if (!isUserResponsible(team, persistedUser)) {
-      throw new IllegalStateException("Only a responsible can modify the team's image.");
+      throw new IllegalStateException("Seul un responsable peut modifier l'image de l'équipe.");
     }
 
     team.setProfileImage(imageName);
@@ -357,7 +357,7 @@ public class TeamService {
    */
   private void verifyCurrentUserIsResponsible(Team team, User currentUser) {
     if (!isUserResponsible(team, currentUser)) {
-      throw new IllegalStateException("Only a responsible can manage the responsibles.");
+      throw new IllegalStateException("Seul un responsable peut gérer les responsables.");
     }
   }
 

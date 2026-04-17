@@ -131,9 +131,9 @@ public class RegisterTeamTournamentService {
 
     RegistrationTeamTournament saved = inscriptionRepository.save(registration);
 
-    String message = "Team: registration confirmed for your team '"
+        String message = "Inscription confirmée : votre équipe '"
             + team.getName()
-            + "' in the tournament '"
+          + "' est inscrite au tournoi '"
             + tournament.getName()
             + "'.";
     for (var member : team.getMembers()) {

@@ -327,7 +327,7 @@ const TournoiDetailPage = () => {
 
     const token = getAuthenticatedUser()?.token;
     if (!token) {
-      setRegisterFeedback('Session expiree. Veuillez vous reconnecter.');
+      setRegisterFeedback('Session expirée. Veuillez vous reconnecter.');
       setRegisterFeedbackIsError(true);
       setRegisterConfirmOpen(false);
       return;

@@ -70,7 +70,7 @@ export function CreateEquipe() {
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <BackButton />
           <Typography variant="h4" fontWeight={700} color="white" gutterBottom>
-            Créer une Team ⚔️
+            Créer une équipe ⚔️
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Réunissez vos alliés et forgez votre légende sur Vinci Arena.

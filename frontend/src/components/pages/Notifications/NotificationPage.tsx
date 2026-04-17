@@ -136,7 +136,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (startsWithAny(m, ['refus :', 'denied:'])) {
+  if (m.startsWith('refusé :') || m.startsWith('refus :')) {
     return {
       type: 'refus',
       color: '#ef4444',
@@ -231,7 +231,7 @@ export default function Notifications() {
       setError(
         err instanceof Error
           ? err.message
-          : 'Impossible de recuperer les notifications.',
+          : 'Impossible de récupérer les notifications.',
       );
     } finally {
       setLoading(false);
@@ -248,7 +248,7 @@ export default function Notifications() {
       setError(
         err instanceof Error
           ? err.message
-          : 'Impossible de recuperer l utilisateur connecte.',
+          : "Impossible de récupérer l'utilisateur connecté.",
       );
     }
   }, []);
@@ -842,7 +842,7 @@ export default function Notifications() {
                               },
                             }}
                           >
-                            Voir ma team
+                            Voir mon équipe
                           </Typography>
                         )}
 

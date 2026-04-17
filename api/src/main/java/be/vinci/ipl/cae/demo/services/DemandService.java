@@ -69,7 +69,7 @@ public class DemandService {
   public Demand createJoinRequest(Long memberId, Long teamId) {
     User member = userRepo
             .findById(memberId)
-            .orElseThrow(() -> new RuntimeException("Player not found"));
+          .orElseThrow(() -> new RuntimeException("Joueur introuvable."));
 
     Team team = teamRepo
             .findById(teamId)
@@ -135,7 +135,7 @@ public class DemandService {
   @Transactional
   public Iterable<Demand> getPendingRequestsForResponsible(User currentUser) {
     if (currentUser == null) {
-      throw new SecurityException("Unauthenticated user.");
+      throw new SecurityException("Utilisateur non authentifié.");
     }
 
     Team team = currentUser.getTeam();
@@ -229,7 +229,7 @@ public class DemandService {
   private Demand getAndVerifyDemand(Long demandId, User currentUser) {
     Demand demand = demandRepo
             .findById(demandId)
-            .orElseThrow(() -> new RuntimeException("Request not found"));
+          .orElseThrow(() -> new RuntimeException("Demande introuvable."));
     verifyUserIsResponsible(demand.getTeam(), currentUser);
     return demand;
   }
@@ -249,7 +249,7 @@ public class DemandService {
             && team.getSecondaryResponsible().getId().equals(currentUser.getId());
 
     if (!isPrimary && !isSecondary) {
-      throw new SecurityException("Only the team responsible can manage members.");
+      throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
     }
   }
 

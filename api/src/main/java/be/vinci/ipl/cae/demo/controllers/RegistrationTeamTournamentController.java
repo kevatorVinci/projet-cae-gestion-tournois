@@ -59,7 +59,7 @@ public class RegistrationTeamTournamentController {
     Iterable<RegistrationTeamTournament> registrations =
             registrationService.getAllByTournament(tournamentId);
     if (registrations == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournament not found");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournoi introuvable.");
     }
     return registrations;
   }
@@ -74,7 +74,7 @@ public class RegistrationTeamTournamentController {
     Iterable<RegistrationTeamTournament> registrations =
             registrationService.getAllByTeam(teamId);
     if (registrations == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable.");
     }
     return registrations;
   }
@@ -234,7 +234,7 @@ public class RegistrationTeamTournamentController {
     }
     Team team = teamService.getTeamById(teamId).orElse(null);
     if (team == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable.");
     }
     if (!teamService.isUserResponsible(team, currentUser)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, forbiddenMessage);
