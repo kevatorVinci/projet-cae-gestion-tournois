@@ -1,18 +1,5 @@
 package be.vinci.ipl.cae.demo.services;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
@@ -20,8 +7,6 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import java.time.LocalDate;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +14,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for UserService using Mockito.

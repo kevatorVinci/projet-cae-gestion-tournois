@@ -5,8 +5,9 @@ import be.vinci.ipl.cae.demo.models.dtos.team.TeamPublicDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamService;
-import java.util.List;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * Mapper for team-related DTO conversions.

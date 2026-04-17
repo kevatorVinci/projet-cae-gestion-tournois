@@ -4,10 +4,11 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Service managing the business logic related to teams.
@@ -157,7 +158,6 @@ public class TeamService {
   public boolean isCurrentUserResponsible(User currentUser) {
     try {
       User persistedCurrentUser = loadPersistedUser(currentUser);
-      // Ligne coupée en deux pour éviter de dépasser 100 caractères !
       Team userTeam = resolveCurrentUserTeam(persistedCurrentUser);
       return isUserResponsible(userTeam, persistedCurrentUser);
     } catch (IllegalStateException e) {
@@ -231,7 +231,8 @@ public class TeamService {
   @Transactional
   public void leaveTeam(User user, Long newResponsibleId) {
     User persistedUser = userRepository.findById(user.getId())
-            .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+            .orElseThrow(() -> new IllegalStateException(
+                    "The member does not belong to any team."));
 
     Team team = resolveCurrentUserTeam(persistedUser);
 
@@ -372,7 +373,6 @@ public class TeamService {
     return team.getMembers().stream()
             .filter(member -> member.getId().equals(memberId))
             .findFirst()
-            // Exception coupée en deux pour rester sous 100 caractères !
             .orElseThrow(() -> new IllegalStateException(
                     "The member does not belong to the team."));
   }
@@ -390,7 +390,6 @@ public class TeamService {
     }
 
     return userRepository.findById(currentUser.getId())
-            // Exception coupée en deux pour rester sous 100 caractères !
             .orElseThrow(() -> new IllegalStateException(
                     "The member does not belong to any team."));
   }

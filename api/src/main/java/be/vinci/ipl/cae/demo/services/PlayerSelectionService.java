@@ -3,7 +3,7 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
 import be.vinci.ipl.cae.demo.models.entities.Team;
-import be.vinci.ipl.cae.demo.models.entities.User; // Or whatever your member entity is named
+import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.PlayerSelectionRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
@@ -21,6 +21,14 @@ public class PlayerSelectionService {
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
 
+    /**
+     * Constructor.
+     *
+     * @param playerSelectionRepository the selection repository
+     * @param matchRepository           the match repository
+     * @param userRepository            the user repository
+     * @param teamRepository            the team repository
+     */
     public PlayerSelectionService(
             PlayerSelectionRepository playerSelectionRepository,
             MatchRepository matchRepository,
@@ -34,30 +42,34 @@ public class PlayerSelectionService {
 
     /**
      * Creates a new player selection for a match.
+     *
+     * @param matchId  the match id
+     * @param memberId the member id
+     * @param teamId   the team id
+     * @return the created selection
      */
     public PlayerSelection createSelection(Long matchId, Long memberId, Long teamId) {
-        // 1. We find the real objects in the database
         Match match = matchRepository.findById(matchId).orElse(null);
         User member = userRepository.findById(memberId).orElse(null);
         Team team = teamRepository.findById(teamId).orElse(null);
 
-        // 2. If any of them doesn't exist, we stop and return null
         if (match == null || member == null || team == null) {
             return null;
         }
 
-        // 3. We create the link between them
         PlayerSelection selection = new PlayerSelection();
         selection.setMatch(match);
         selection.setMember(member);
         selection.setTeam(team);
 
-        // 4. We save it to the database
         return playerSelectionRepository.save(selection);
     }
 
     /**
      * Gets all players participating in a specific match.
+     *
+     * @param matchId the match id
+     * @return the selections
      */
     public Iterable<PlayerSelection> getSelectionsForMatch(Long matchId) {
         return playerSelectionRepository.findByMatchId(matchId);

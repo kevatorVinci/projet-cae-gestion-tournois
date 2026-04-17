@@ -2,9 +2,10 @@ package be.vinci.ipl.cae.demo.mappers;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper component to convert Notification entities into Data Transfer Objects.

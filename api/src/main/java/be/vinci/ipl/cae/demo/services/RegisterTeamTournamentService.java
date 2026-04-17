@@ -6,9 +6,10 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.util.Collection;
-import org.springframework.stereotype.Service;
 
 /**
  * Service managing all business logic related to team registrations for tournaments.

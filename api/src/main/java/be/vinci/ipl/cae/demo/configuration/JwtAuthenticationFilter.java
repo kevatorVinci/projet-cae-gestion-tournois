@@ -45,33 +45,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
    */
   @Override
   protected void doFilterInternal(
-          HttpServletRequest request,
-          HttpServletResponse response,
-          FilterChain filterChain)
-          throws ServletException, IOException {
+    HttpServletRequest request,
+    HttpServletResponse response,
+    FilterChain filterChain) throws ServletException, IOException {
+
     String token = request.getHeader("Authorization");
+
     if (token != null) {
       if (token.startsWith("Bearer ")) {
         token = token.substring(7);
       }
+
       String email = userService.verifyJwtToken(token);
+
       if (email != null) {
         User user = userService.readOneFromEmail(email);
+
         if (user != null) {
           List<GrantedAuthority> authorities = new ArrayList<>();
+
           if (user.isAdmin()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
           }
+
           if (isResponsible(user)) {
             authorities.add(new SimpleGrantedAuthority("ROLE_RESPONSABLE"));
           }
+
           UsernamePasswordAuthenticationToken authentication =
-                  new UsernamePasswordAuthenticationToken(user, null, authorities);
-          authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            new UsernamePasswordAuthenticationToken(user, null, authorities);
+
+          authentication.setDetails(
+            new WebAuthenticationDetailsSource().buildDetails(request)
+          );
+
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
       }
     }
+
     filterChain.doFilter(request, response);
   }
 
@@ -85,10 +97,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     if (user == null || user.getTeam() == null) {
       return false;
     }
+
     User primary = user.getTeam().getPrimaryResponsible();
     User secondary = user.getTeam().getSecondaryResponsible();
     Long userId = user.getId();
+
     return (primary != null && primary.getId().equals(userId))
-            || (secondary != null && secondary.getId().equals(userId));
+      || (secondary != null && secondary.getId().equals(userId));
   }
 }

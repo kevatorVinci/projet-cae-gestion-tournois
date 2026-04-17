@@ -12,6 +12,9 @@ public class PlayerSelectionMapper {
 
     /**
      * Converts an entity to a DTO.
+     *
+     * @param selection The selection entity.
+     * @return The mapped DTO.
      */
     public PlayerSelectionDto toDto(PlayerSelection selection) {
         PlayerSelectionDto dto = new PlayerSelectionDto();

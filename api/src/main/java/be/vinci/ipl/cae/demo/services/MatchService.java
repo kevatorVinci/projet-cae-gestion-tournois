@@ -12,25 +12,32 @@ public class MatchService {
 
   private final MatchRepository matchRepository;
 
+  /**
+   * Constructor.
+   *
+   * @param matchRepository the repository
+   */
   public MatchService(MatchRepository matchRepository) {
-    this.matchRepository = matchRepository; // Injecting the repository to talk to the DB
+    this.matchRepository = matchRepository;
   }
 
   /**
    * Finds a match by its ID.
+   *
    * @param id The ID of the match to find.
    * @return The found match or null.
    */
   public Match getOne(Long id) {
-    return matchRepository.findById(id).orElse(null); // Tries to find the match or returns null
+    return matchRepository.findById(id).orElse(null);
   }
 
   /**
    * Saves or updates a match in the database.
+   *
    * @param match The match object to save.
    * @return The saved match entity.
    */
   public Match saveOne(Match match) {
-    return matchRepository.save(match); // Persists the match in the database
+    return matchRepository.save(match);
   }
 }

@@ -1,19 +1,16 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
+
+/**
+ * Entity representing the final result of a match.
+ */
 @Data
 @NoArgsConstructor
 @Entity

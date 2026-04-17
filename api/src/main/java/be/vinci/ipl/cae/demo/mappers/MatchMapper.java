@@ -12,28 +12,29 @@ public class MatchMapper {
 
     /**
      * Converts a Match entity to a MatchDto.
+     *
      * @param match The entity from the database.
      * @return The DTO for the frontend.
      */
     public MatchDto toDto(Match match) {
         MatchDto dto = new MatchDto();
-        dto.setId(match.getId()); // Copies the unique identifier
-        dto.setTournamentId(match.getTournament().getId()); // Gets the ID from the Tournament entity
+        dto.setId(match.getId());
+        dto.setTournamentId(match.getTournament().getId());
 
-        // Checks if team1 is not null before getting its ID
+        // Checks if team1 exists before mapping its ID
         if (match.getTeam1() != null) {
             dto.setTeam1Id(match.getTeam1().getId());
         }
 
-        // Checks if team2 is not null before getting its ID
+        // Checks if team2 exists before mapping its ID
         if (match.getTeam2() != null) {
             dto.setTeam2Id(match.getTeam2().getId());
         }
 
-        dto.setRound(match.getRound()); // Copies the round number
-        dto.setScheduledDateTime(match.getScheduledDateTime()); // Copies the match time
-        dto.setStatus(match.getStatus()); // Copies the status string
-        dto.setAdminResponsibleId(match.getAdminResponsible().getId()); // Gets the admin ID
+        dto.setRound(match.getRound());
+        dto.setScheduledDateTime(match.getScheduledDateTime());
+        dto.setStatus(match.getStatus());
+        dto.setAdminResponsibleId(match.getAdminResponsible().getId());
 
         return dto;
     }

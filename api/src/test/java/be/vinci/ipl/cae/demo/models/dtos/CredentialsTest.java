@@ -1,15 +1,16 @@
 package be.vinci.ipl.cae.demo.models.dtos;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for Credentials DTO validation logic.

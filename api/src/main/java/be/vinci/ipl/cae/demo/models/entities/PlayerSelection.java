@@ -1,11 +1,6 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Table(name = "match_player_selections")
-@IdClass(PlayerSelectionId.class) // Tells Spring Boot to use the double ID
+@IdClass(PlayerSelectionId.class)
 public class PlayerSelection {
 
     @Id
@@ -27,7 +22,7 @@ public class PlayerSelection {
     @Id
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)
-    private User member; // User is the "membre" entity in your project
+    private User member;
 
     @ManyToOne
     @JoinColumn(name = "team_id", nullable = false)

@@ -2,9 +2,10 @@ package be.vinci.ipl.cae.demo.mappers;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper for user-facing authentication DTO conversions.

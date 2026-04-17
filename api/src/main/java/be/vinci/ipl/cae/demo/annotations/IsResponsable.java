@@ -13,5 +13,4 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("hasRole('RESPONSABLE')")
 public @interface IsResponsable {
-
 }

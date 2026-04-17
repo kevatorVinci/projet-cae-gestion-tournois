@@ -5,14 +5,15 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
 /**
  * Service managing all business logic related to tournaments.

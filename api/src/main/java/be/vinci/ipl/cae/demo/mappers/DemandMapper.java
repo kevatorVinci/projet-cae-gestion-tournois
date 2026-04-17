@@ -2,9 +2,10 @@ package be.vinci.ipl.cae.demo.mappers;
 
 import be.vinci.ipl.cae.demo.models.dtos.demand.DemandDto;
 import be.vinci.ipl.cae.demo.models.entities.Demand;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper component to convert Demand entities into Data Transfer Objects.

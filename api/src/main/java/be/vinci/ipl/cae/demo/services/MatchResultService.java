@@ -7,9 +7,10 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.MatchResultRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 /**
  * Service handling business logic for match results.
@@ -21,9 +22,17 @@ public class MatchResultService {
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
 
-    public MatchResultService(MatchResultRepository matchResultRepository,
-                              MatchRepository matchRepository,
-                              UserRepository userRepository) {
+    /**
+     * Constructor.
+     *
+     * @param matchResultRepository the result repository
+     * @param matchRepository       the match repository
+     * @param userRepository        the user repository
+     */
+    public MatchResultService(
+            MatchResultRepository matchResultRepository,
+            MatchRepository matchRepository,
+            UserRepository userRepository) {
         this.matchResultRepository = matchResultRepository;
         this.matchRepository = matchRepository;
         this.userRepository = userRepository;
@@ -31,20 +40,20 @@ public class MatchResultService {
 
     /**
      * Encodes a new result for a specific match.
-     * Uses @Transactional because we update both the MatchResult and the Match table.
+     *
+     * @param matchId the match id
+     * @param dto     the data transfer object
+     * @return the saved result
      */
     @Transactional
     public MatchResult encodeResult(Long matchId, MatchResultCreateDto dto) {
-        // 1. Find the match and the admin
         Match match = matchRepository.findById(matchId).orElse(null);
         User admin = userRepository.findById(dto.getAdminEncoderId()).orElse(null);
 
-        // 2. If match or admin is not found, stop here
         if (match == null || admin == null) {
             return null;
         }
 
-        // 3. Create the new result
         MatchResult result = new MatchResult();
         result.setMatch(match);
         result.setAdminEncoder(admin);
@@ -52,24 +61,21 @@ public class MatchResultService {
         result.setScoreTeam2(dto.getScoreTeam2());
         result.setForfeitTeam1(dto.isForfeitTeam1());
         result.setForfeitTeam2(dto.isForfeitTeam2());
-
-        // Automatically set the encoding date to right now!
         result.setEncodingDate(LocalDateTime.now());
-
-        // Default validation statuses
         result.setValidationStatusTeam1("PENDING");
         result.setValidationStatusTeam2("PENDING");
 
-        // 4. Update the match status to FINISHED
         match.setStatus("FINISHED");
-        matchRepository.save(match); // Save the match update
+        matchRepository.save(match);
 
-        // 5. Save and return the result
         return matchResultRepository.save(result);
     }
 
     /**
      * Finds a result for a specific match.
+     *
+     * @param matchId the match id
+     * @return the match result
      */
     public MatchResult getResultForMatch(Long matchId) {
         return matchResultRepository.findById(matchId).orElse(null);

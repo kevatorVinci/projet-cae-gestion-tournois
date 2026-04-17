@@ -4,9 +4,10 @@ import be.vinci.ipl.cae.demo.models.dtos.tournament.TeamTournamentRegistrationDt
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentAbstractDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentTeamRegistrationDto;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper component to convert tournament registration entities into various DTOs.

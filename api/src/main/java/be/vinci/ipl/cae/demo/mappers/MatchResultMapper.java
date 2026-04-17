@@ -1,6 +1,6 @@
 package be.vinci.ipl.cae.demo.mappers;
 
-import be.vinci.ipl.cae.demo.models.dtos.match.MatchResultDto;
+import be.vinci.ipl.cae.demo.models.dtos.matchresult.MatchResultDto;
 import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +12,9 @@ public class MatchResultMapper {
 
     /**
      * Converts a MatchResult entity to a MatchResultDto.
+     *
+     * @param result The result entity.
+     * @return The mapped DTO.
      */
     public MatchResultDto toDto(MatchResult result) {
         MatchResultDto dto = new MatchResultDto();

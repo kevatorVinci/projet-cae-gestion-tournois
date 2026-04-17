@@ -9,14 +9,15 @@ import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for user authentication and profile management.
