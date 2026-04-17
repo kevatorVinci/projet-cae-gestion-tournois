@@ -60,6 +60,68 @@ interface NotifMeta {
 const startsWithAny = (message: string, prefixes: string[]): boolean =>
   prefixes.some((prefix) => message.startsWith(prefix));
 
+const translateMessage = (message: string): string => {
+  if (message.startsWith('Welcome:')) {
+    return (
+      'Bienvenue : votre compte a été créé.' +
+      ' Rejoignez ou créez une équipe pour commencer !'
+    );
+  }
+
+  const teamCreated = message.match(
+    /^Team created: you are now the manager of team '(.+)'\./,
+  );
+  if (teamCreated) {
+    return `Équipe créée : vous êtes maintenant responsable de l'équipe '${teamCreated[1]}'.`;
+  }
+
+  const requestSent = message.match(
+    /^Request sent: your request to join '(.+)' is pending\./,
+  );
+  if (requestSent) {
+    return `Demande envoyée : votre demande pour rejoindre '${requestSent[1]}' est en attente.`;
+  }
+
+  const newRequest = message.match(
+    /^New request: (.+) wants to join team '(.+)'\./,
+  );
+  if (newRequest) {
+    return `Nouvelle demande : ${newRequest[1]} souhaite rejoindre l'équipe '${newRequest[2]}'.`;
+  }
+
+  const accepted = message.match(
+    /^Accepted: your request to join '(.+)' has been accepted\./,
+  );
+  if (accepted) {
+    return `Accepté : votre demande pour rejoindre '${accepted[1]}' a été acceptée. Bienvenue !`;
+  }
+
+  const denied = message.match(
+    /^Denied: your request to join '(.+)' was refused\. Reason: (.+)/,
+  );
+  if (denied) {
+    const reason =
+      denied[2] === 'No reason provided.' ? 'Aucun motif fourni.' : denied[2];
+    return `Refus : votre demande pour rejoindre '${denied[1]}' a été refusée. Motif : ${reason}`;
+  }
+
+  const adminDraft = message.match(
+    /^Admin: new draft tournament '(.+)'\. Publish it when ready\./,
+  );
+  if (adminDraft) {
+    return `Admin : nouveau tournoi en brouillon '${adminDraft[1]}'. Publiez-le quand il est prêt.`;
+  }
+
+  const newTournament = message.match(
+    /^New tournament: '(.+)' has just been published\./,
+  );
+  if (newTournament) {
+    return `Nouveau tournoi : '${newTournament[1]}' vient d'être publié. Inscrivez-vous maintenant !`;
+  }
+
+  return message;
+};
+
 const getNotifMeta = (message: string): NotifMeta => {
   const m = message.toLowerCase();
 
@@ -736,7 +798,7 @@ export default function Notifications() {
                         lineHeight: 1.6,
                       }}
                     >
-                      {n.message}
+                      {translateMessage(n.message)}
                     </Typography>
 
                     {(isJoinRequestNotification(n.message) ||
