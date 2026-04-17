@@ -2,72 +2,35 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
-import java.util.List;
 import org.springframework.stereotype.Service;
 
 /**
- * Service handling the business logic for matches.
+ * Service class handling the business logic for matches.
  */
 @Service
 public class MatchService {
 
-  /**
-   * Repository used to access match data in the database.
-   */
   private final MatchRepository matchRepository;
 
-  /**
-   * Constructor with dependency injection.
-   *
-   * @param matchRepository the repository for matches.
-   */
   public MatchService(MatchRepository matchRepository) {
-    this.matchRepository = matchRepository;
+    this.matchRepository = matchRepository; // Injecting the repository to talk to the DB
   }
 
   /**
-   * Updates the result of a match and determines the winner.
-   *
-   * @param matchId the unique identifier of the match.
-   * @param score1  the score of the first team.
-   * @param score2  the score of the second team.
-   * @return the updated match entity.
+   * Finds a match by its ID.
+   * @param id The ID of the match to find.
+   * @return The found match or null.
    */
-  public Match updateResult(Long matchId, Integer score1, Integer score2) {
-    Match match = matchRepository.findById(matchId)
-            .orElseThrow(() -> new RuntimeException("Match not found"));
-
-    match.setScoreTeam1(score1);
-    match.setScoreTeam2(score2);
-
-    if (score1 > score2) {
-      match.setWinner(match.getTeam1());
-    } else if (score2 > score1) {
-      match.setWinner(match.getTeam2());
-    } else {
-      match.setWinner(null);
-    }
-
-    match.setStatus("FINISHED");
-    return matchRepository.save(match);
+  public Match getOne(Long id) {
+    return matchRepository.findById(id).orElse(null); // Tries to find the match or returns null
   }
 
   /**
-   * Generates the schedule for a tournament.
-   *
-   * @param tournamentId the unique identifier of the tournament.
+   * Saves or updates a match in the database.
+   * @param match The match object to save.
+   * @return The saved match entity.
    */
-  public void generateTournamentSchedule(Long tournamentId) {
-    // Logic to generate matches for the tournament
-  }
-
-  /**
-   * Returns all matches for a specific tournament.
-   *
-   * @param tournamentId the unique identifier of the tournament.
-   * @return a list of matches belonging to the tournament.
-   */
-  public List<Match> getTournamentMatches(Long tournamentId) {
-    return matchRepository.findByTournamentId(tournamentId);
+  public Match saveOne(Match match) {
+    return matchRepository.save(match); // Persists the match in the database
   }
 }

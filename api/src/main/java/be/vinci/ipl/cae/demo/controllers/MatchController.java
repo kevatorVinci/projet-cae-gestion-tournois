@@ -1,60 +1,43 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.mappers.MatchMapper;
+import be.vinci.ipl.cae.demo.models.dtos.match.MatchDto;
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.services.MatchService;
-import java.util.List;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
 
 /**
- * Controller to handle requests related to Matches and Schedules.
+ * REST Controller providing endpoints for match operations.
  */
 @RestController
-@RequestMapping("/tournaments")
+@RequestMapping("/matches") // All endpoints in this class start with /matches
 public class MatchController {
 
   private final MatchService matchService;
+  private final MatchMapper matchMapper;
 
-  /**
-   * Constructor.
-   * Links our entry point (Controller) to our brain (Service).
-   *
-   * @param matchService the injected match service.
-   */
-  public MatchController(MatchService matchService) {
-    this.matchService = matchService;
+  public MatchController(MatchService matchService, MatchMapper matchMapper) {
+    this.matchService = matchService; // Injecting the service
+    this.matchMapper = matchMapper; // Injecting the mapper
   }
 
   /**
-   * Endpoint to generate the schedule for a specific tournament.
-   * React will send a POST request here to start the match creation.
-   *
-   * @param tournamentId the ID of the tournament from the URL.
+   * Endpoint to get a single match by its ID.
+   * @param id The ID from the URL path.
+   * @return A response containing the MatchDto.
    */
-  @PostMapping("/{tournamentId}/schedule")
-  @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("isAuthenticated()")
-  public void generateSchedule(@PathVariable Long tournamentId) {
-    // Ask the service to do the hard work of generating matches!
-    matchService.generateTournamentSchedule(tournamentId);
-  }
+  @GetMapping("/{id}")
+  public ResponseEntity<MatchDto> getOne(@PathVariable Long id) {
+    Match match = matchService.getOne(id); // Asks the service for the match
 
-  /**
-   * Endpoint to retrieve all matches for a specific tournament.
-   * React will send a GET request here to display the tournament bracket.
-   *
-   * @param tournamentId the ID of the tournament from the URL.
-   * @return a list of matches.
-   */
-  @GetMapping("/{tournamentId}/matches")
-  public List<Match> getMatches(@PathVariable Long tournamentId) {
-    // Ask the service to return the list of matches for this tournament
-    return matchService.getTournamentMatches(tournamentId);
+    if (match == null) {
+      return ResponseEntity.notFound().build(); // Returns 404 if not found
+    }
+
+    return ResponseEntity.ok(matchMapper.toDto(match)); // Converts to DTO and returns 200 OK
   }
 }

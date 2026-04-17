@@ -14,22 +14,16 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/**
- * Entity representing the final result of a match.
- */
 @Data
 @NoArgsConstructor
 @Entity
-@Table(name = "match_results") // Creates the table named "match_results" in the database
+@Table(name = "match_results")
 public class MatchResult {
 
     @Id
     @Column(name = "match_id")
     private Long id;
 
-    /**
-     * MapsId tells JPA that the result ID is exactly the same as the match ID.
-     */
     @OneToOne
     @MapsId
     @JoinColumn(name = "match_id")
@@ -57,8 +51,8 @@ public class MatchResult {
     private User adminEncoder;
 
     @Column(name = "validation_status_team1", nullable = false)
-    private String validationStatusTeam1;
+    private String validationStatusTeam1 = "PENDING";
 
     @Column(name = "validation_status_team2", nullable = false)
-    private String validationStatusTeam2;
+    private String validationStatusTeam2 = "PENDING";
 }
