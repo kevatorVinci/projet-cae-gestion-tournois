@@ -118,7 +118,7 @@ public class RegistrationTeamTournamentController {
           @PathVariable("equipeId") Long teamId,
           @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-            teamId, currentUser, "You can only view your own team registrations");
+            teamId, currentUser, "Vous ne pouvez voir que les inscriptions de votre propre équipe.");
     return registrationMapper.toEquipeTournamentRegistrationDtos(
             fetchTeamRegistrations(teamId));
   }
@@ -152,7 +152,7 @@ public class RegistrationTeamTournamentController {
           @PathVariable("equipeId") Long teamId,
           @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-            teamId, currentUser, "You can only register your own team");
+            teamId, currentUser, "Vous ne pouvez inscrire que votre propre équipe.");
     RegistrationTeamTournament registration;
     try {
       registration = registrationService.register(tournamentId, teamId);
@@ -163,7 +163,7 @@ public class RegistrationTeamTournamentController {
     if (registration == null) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Tournament not found, not OUVERT, or team already registered");
+              "Tournoi introuvable, pas ouvert, ou équipe déjà inscrite.");
     }
     return registration;
   }
@@ -186,17 +186,17 @@ public class RegistrationTeamTournamentController {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
-              "A responsible cannot unregister a team from a tournament");
+              "Un responsable ne peut pas désinscrire une équipe d'un tournoi.");
     }
 
     ensureCurrentUserResponsibleForTeam(
-            teamId, currentUser, "You can only unregister your own team");
+            teamId, currentUser, "Vous ne pouvez désinscrire que votre propre équipe.");
 
     boolean success = registrationService.unregisterByTournamentAndTeam(tournamentId, teamId);
     if (!success) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament not OUVERT, or deadline passed");
+              "Inscription introuvable, tournoi pas ouvert, ou délai dépassé.");
     }
   }
 
@@ -216,13 +216,13 @@ public class RegistrationTeamTournamentController {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
-              "A responsible cannot unregister a team from a tournament");
+              "Un responsable ne peut pas désinscrire une équipe d'un tournoi.");
     }
     boolean success = registrationService.unregister(registrationId);
     if (!success) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Registration not found, tournament not OUVERT, or deadline passed");
+              "Inscription introuvable, tournoi pas ouvert, ou délai dépassé.");
     }
   }
 

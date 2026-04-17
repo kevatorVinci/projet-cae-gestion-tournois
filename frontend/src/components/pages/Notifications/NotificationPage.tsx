@@ -57,10 +57,13 @@ interface NotifMeta {
   label: string;
 }
 
+const startsWithAny = (message: string, prefixes: string[]): boolean =>
+  prefixes.some((prefix) => message.startsWith(prefix));
+
 const getNotifMeta = (message: string): NotifMeta => {
   const m = message.toLowerCase();
 
-  if (m.startsWith('accepté :')) {
+  if (startsWithAny(m, ['accepté :', 'accepted:'])) {
     return {
       type: 'accepte',
       color: '#22c55e',
@@ -71,7 +74,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('refus :')) {
+  if (startsWithAny(m, ['refus :', 'denied:'])) {
     return {
       type: 'refus',
       color: '#ef4444',
@@ -82,7 +85,14 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('nouvelle demande :') || m.startsWith('demande envoyée :')) {
+  if (
+    startsWithAny(m, [
+      'nouvelle demande :',
+      'demande envoyée :',
+      'new request:',
+      'application sent:',
+    ])
+  ) {
     return {
       type: 'demande',
       color: '#3b82f6',
@@ -93,7 +103,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('équipe créée :') || m.startsWith('équipe :')) {
+  if (startsWithAny(m, ['équipe créée :', 'équipe :', 'team created:'])) {
     return {
       type: 'equipe',
       color: '#a78bfa',
@@ -104,7 +114,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('admin :')) {
+  if (startsWithAny(m, ['admin :', 'admin:'])) {
     return {
       type: 'admin',
       color: '#f59e0b',
@@ -115,7 +125,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('nouveau tournoi :')) {
+  if (startsWithAny(m, ['nouveau tournoi :', 'new tournament:'])) {
     return {
       type: 'tournoi',
       color: '#06b6d4',
@@ -224,20 +234,28 @@ export default function Notifications() {
 
   const isJoinRequestNotification = (message: string) => {
     const normalized = message.toLowerCase();
-    return (
-      normalized.startsWith('nouvelle demande :') ||
-      normalized.startsWith('demande envoyée :')
-    );
+    return startsWithAny(normalized, [
+      'nouvelle demande :',
+      'demande envoyée :',
+      'new request:',
+      'application sent:',
+    ]);
   };
 
+  const isTeamManagerJoinRequestNotification = (message: string) =>
+    startsWithAny(message.toLowerCase(), ['nouvelle demande :', 'new request:']);
+
   const isAcceptedNotification = (message: string) =>
-    message.toLowerCase().startsWith('accepté :');
+    startsWithAny(message.toLowerCase(), ['accepté :', 'accepted:']);
 
   const isDraftTournamentNotification = (message: string) =>
-    message.toLowerCase().startsWith('admin : nouveau tournoi en brouillon');
+    startsWithAny(message.toLowerCase(), [
+      'admin : nouveau tournoi en brouillon',
+      'admin: new draft tournament',
+    ]);
 
   const isPublishedTournamentNotification = (message: string) =>
-    message.toLowerCase().startsWith('nouveau tournoi :');
+    startsWithAny(message.toLowerCase(), ['nouveau tournoi :', 'new tournament:']);
 
   const extractTournamentName = (message: string) => {
     const match = message.match(/'([^']+)'/);
@@ -611,9 +629,8 @@ export default function Notifications() {
           {!loading &&
             filtered.map((n) => {
               const meta = getNotifMeta(n.message);
-              const isDemandeResponsable = n.message
-                .toLowerCase()
-                .startsWith('nouvelle demande :');
+              const isDemandeResponsable =
+                isTeamManagerJoinRequestNotification(n.message);
               const isTournamentNotification =
                 isDraftTournamentNotification(n.message) ||
                 isPublishedTournamentNotification(n.message);

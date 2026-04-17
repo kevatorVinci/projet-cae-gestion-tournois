@@ -71,7 +71,10 @@ export function DemandesAdhesion() {
         const rawDemandes = await getDemandesEnAttenteResponsable();
         const mappedDemandes: PendingDemandeView[] = rawDemandes.map((d) => ({
           id: d.idDemande,
-          tag: d.membreTag ?? d.membreEmail ?? `Membre #${d.membreId}`,
+          tag:
+            d.membreTag ??
+            d.membreEmail ??
+            (d.membreId > 0 ? `Membre #${d.membreId}` : 'Membre inconnu'),
           specialty: d.membreSpecialty ?? 'Inconnue',
           avatarUrl: normalizeAvatarUrl(d.membreProfileImageUrl),
           equipeName: d.equipeName,

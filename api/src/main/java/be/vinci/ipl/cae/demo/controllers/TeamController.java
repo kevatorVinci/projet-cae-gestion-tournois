@@ -98,13 +98,13 @@ public class TeamController {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
-              "You can only create a team for your own account.");
+              "Vous ne pouvez créer une équipe que pour votre propre compte.");
     }
 
     try {
       Team team = teamService.createTeam(currentUser, dto.name(), dto.profileImage());
       if (team == null) {
-        throw new ResponseStatusException(HttpStatus.CONFLICT, "Team name already in use");
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce nom d'équipe est déjà utilisé.");
       }
       return team;
     } catch (IllegalStateException e) {
@@ -129,7 +129,7 @@ public class TeamController {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
-              "You can only join a team for your own account.");
+              "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
     }
 
     try {
@@ -159,7 +159,7 @@ public class TeamController {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
-              "You can only leave the team for your own account.");
+              "Vous ne pouvez quitter l'équipe que pour votre propre compte.");
     }
 
     try {
@@ -246,7 +246,7 @@ public class TeamController {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
-              "You can only manage responsibles for your own account.");
+              "Vous ne pouvez gérer les responsables que pour votre propre compte.");
     }
   }
 

@@ -93,7 +93,7 @@ public class TeamService {
    */
   public Team createTeam(User user, String teamName, String profileImage) {
     if (user.getTeam() != null) {
-      throw new IllegalStateException("The member already belongs to a team.");
+      throw new IllegalStateException("Ce membre appartient déjà à une équipe.");
     }
 
     if (teamRepository.existsByName(teamName)) {
@@ -188,7 +188,7 @@ public class TeamService {
     } else if (team.getSecondaryResponsible() == null) {
       team.setSecondaryResponsible(member);
     } else {
-      throw new IllegalStateException("The team already has the maximum number of responsibles.");
+      throw new IllegalStateException("L'équipe a déjà le nombre maximum de responsables.");
     }
 
     teamRepository.save(team);
@@ -213,7 +213,7 @@ public class TeamService {
     }
 
     if (countResponsibles(team) <= 1) {
-      throw new IllegalStateException("Cannot demote the last responsible.");
+      throw new IllegalStateException("Impossible de retirer le dernier responsable.");
     }
 
     removeResponsibleRole(team, member.getId());
@@ -231,7 +231,7 @@ public class TeamService {
   @Transactional
   public void leaveTeam(User user, Long newResponsibleId) {
     User persistedUser = userRepository.findById(user.getId())
-            .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
+            .orElseThrow(() -> new IllegalStateException("Ce membre n'appartient à aucune équipe."));
 
     Team team = resolveCurrentUserTeam(persistedUser);
 
@@ -254,12 +254,12 @@ public class TeamService {
       boolean onlyResponsible = countResponsibles(team) == 1;
       if (onlyResponsible) {
         if (newResponsibleId == null) {
-          throw new IllegalStateException("You must designate a replacement.");
+          throw new IllegalStateException("Vous devez désigner un remplaçant.");
         }
 
         User newResponsible = findMemberInTeam(team, newResponsibleId);
         if (newResponsible.getId().equals(persistedUser.getId())) {
-          throw new IllegalStateException("The replacement must be another member.");
+          throw new IllegalStateException("Le remplaçant doit être un autre membre.");
         }
         if (!isUserResponsible(team, newResponsible)) {
           if (team.getPrimaryResponsible() == null) {
@@ -274,7 +274,7 @@ public class TeamService {
       normalizeResponsibleSlots(team);
 
       if (countResponsibles(team) == 0 && !team.getMembers().isEmpty()) {
-        throw new IllegalStateException("The team must keep at least one responsible.");
+        throw new IllegalStateException("L'équipe doit garder au moins un responsable.");
       }
     }
 
@@ -328,7 +328,7 @@ public class TeamService {
    */
   private Team resolveCurrentUserTeam(User currentUser) {
     if (currentUser == null || currentUser.getId() == null) {
-      throw new IllegalStateException("The member does not belong to any team.");
+      throw new IllegalStateException("Ce membre n'appartient à aucune équipe.");
     }
 
     if (currentUser.getTeam() != null) {
@@ -344,7 +344,7 @@ public class TeamService {
       }
     }
 
-    throw new IllegalStateException("The member does not belong to any team.");
+    throw new IllegalStateException("Ce membre n'appartient à aucune équipe.");
   }
 
   /**
@@ -374,7 +374,7 @@ public class TeamService {
             .findFirst()
             // Exception coupée en deux pour rester sous 100 caractères !
             .orElseThrow(() -> new IllegalStateException(
-                    "The member does not belong to the team."));
+                    "Ce membre ne fait pas partie de l'équipe."));
   }
 
   /**
@@ -386,13 +386,13 @@ public class TeamService {
    */
   private User loadPersistedUser(User currentUser) {
     if (currentUser == null || currentUser.getId() == null) {
-      throw new IllegalStateException("The member does not belong to any team.");
+      throw new IllegalStateException("Ce membre n'appartient à aucune équipe.");
     }
 
     return userRepository.findById(currentUser.getId())
             // Exception coupée en deux pour rester sous 100 caractères !
             .orElseThrow(() -> new IllegalStateException(
-                    "The member does not belong to any team."));
+                    "Ce membre n'appartient à aucune équipe."));
   }
 
   /**

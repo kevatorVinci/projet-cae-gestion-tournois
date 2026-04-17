@@ -26,6 +26,7 @@ import TournoiDetailPage from '../pages/Tournaments/TournoiDetailPage';
 import AdminTournamentsPage from '../pages/Tournaments/AdminTournamentsPage';
 import CreateTournamentPage from '../pages/Tournaments/CreateTournament';
 import EditTournamentPage from '../pages/Tournaments/EditTournament';
+import TournamentMatchesPage from '../pages/Tournaments/TournamentMatchesPage';
 
 const appBlueGradient =
   'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
@@ -52,6 +53,10 @@ const App = () => (
         <Route path="/equipes" element={<TeamsList />} />
         <Route path="/tournois" element={<TournoiPage />} />
         <Route path="/tournois/:id" element={<TournoiDetailPage />} />
+        <Route
+          path="/tournois/:id/matchs"
+          element={<TournamentMatchesPage />}
+        />
         <Route
           path="/equipes/creer"
           element={

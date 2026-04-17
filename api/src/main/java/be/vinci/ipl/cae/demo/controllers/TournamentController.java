@@ -87,7 +87,7 @@ public class TournamentController {
     Tournament created = tournoiService.create(tournoi);
     if (created == null) {
       throw new ResponseStatusException(
-              HttpStatus.CONFLICT, "A tournament with this name already exists");
+              HttpStatus.CONFLICT, "Un tournoi avec ce nom existe déjà.");
     }
     return created;
   }
@@ -105,7 +105,7 @@ public class TournamentController {
     Tournament updated = tournoiService.update(id, payload);
     if (updated == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
+              HttpStatus.BAD_REQUEST, "Tournoi introuvable ou pas en état brouillon.");
     }
     return updated;
   }
@@ -122,7 +122,7 @@ public class TournamentController {
     Tournament tournoi = tournoiService.publish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
+              HttpStatus.BAD_REQUEST, "Tournoi introuvable ou pas en état brouillon.");
     }
     return tournoi;
   }
@@ -140,7 +140,7 @@ public class TournamentController {
     if (tournoi == null) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Tournament not found, not OUVERT, or not enough teams (minimum 2)");
+              "Tournoi introuvable, pas ouvert, ou pas assez d'équipes (minimum 2).");
     }
     return tournoi;
   }
@@ -157,7 +157,7 @@ public class TournamentController {
     Tournament tournoi = tournoiService.start(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Tournament not found or not in CLOTURE state");
+              HttpStatus.BAD_REQUEST, "Tournoi introuvable ou pas en état clôturé.");
     }
     return tournoi;
   }
@@ -174,7 +174,7 @@ public class TournamentController {
     Tournament tournoi = tournoiService.finish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Tournament not found or not in EN_COURS state");
+              HttpStatus.BAD_REQUEST, "Tournoi introuvable ou pas en cours.");
     }
     return tournoi;
   }
@@ -195,7 +195,7 @@ public class TournamentController {
     Tournament tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
+              HttpStatus.BAD_REQUEST, "Tournoi introuvable ou déjà terminé/annulé.");
     }
     return tournoi;
   }
