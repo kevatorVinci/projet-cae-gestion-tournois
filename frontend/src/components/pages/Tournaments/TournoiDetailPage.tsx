@@ -750,7 +750,12 @@ const TournoiDetailPage = () => {
             {activeContentTab === 'teams' &&
               (teams.length === 0 ? (
                 <>
-                  <Typography variant="h6" fontWeight={700} color="white" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    color="white"
+                    sx={{ mb: 1 }}
+                  >
                     Équipes inscrites
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -759,7 +764,12 @@ const TournoiDetailPage = () => {
                 </>
               ) : (
                 <>
-                  <Typography variant="h6" fontWeight={700} color="white" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    color="white"
+                    sx={{ mb: 1 }}
+                  >
                     Équipes inscrites
                   </Typography>
                   <Stack spacing={1.5}>
@@ -859,7 +869,10 @@ const TournoiDetailPage = () => {
                     Le planning des matchs n'est pas encore publié.
                   </Typography>
                 ) : (
-                  <TournamentBracket matches={matches} tournamentEndDate={tournoi.dateFin} />
+                  <TournamentBracket
+                    matches={matches}
+                    tournamentEndDate={tournoi.dateFin}
+                  />
                 )}
               </Stack>
             )}

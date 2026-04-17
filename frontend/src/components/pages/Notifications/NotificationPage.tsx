@@ -243,7 +243,10 @@ export default function Notifications() {
   };
 
   const isTeamManagerJoinRequestNotification = (message: string) =>
-    startsWithAny(message.toLowerCase(), ['nouvelle demande :', 'new request:']);
+    startsWithAny(message.toLowerCase(), [
+      'nouvelle demande :',
+      'new request:',
+    ]);
 
   const isAcceptedNotification = (message: string) =>
     startsWithAny(message.toLowerCase(), ['accepté :', 'accepted:']);
@@ -255,7 +258,10 @@ export default function Notifications() {
     ]);
 
   const isPublishedTournamentNotification = (message: string) =>
-    startsWithAny(message.toLowerCase(), ['nouveau tournoi :', 'new tournament:']);
+    startsWithAny(message.toLowerCase(), [
+      'nouveau tournoi :',
+      'new tournament:',
+    ]);
 
   const extractTournamentName = (message: string) => {
     const match = message.match(/'([^']+)'/);
@@ -629,8 +635,9 @@ export default function Notifications() {
           {!loading &&
             filtered.map((n) => {
               const meta = getNotifMeta(n.message);
-              const isDemandeResponsable =
-                isTeamManagerJoinRequestNotification(n.message);
+              const isDemandeResponsable = isTeamManagerJoinRequestNotification(
+                n.message,
+              );
               const isTournamentNotification =
                 isDraftTournamentNotification(n.message) ||
                 isPublishedTournamentNotification(n.message);

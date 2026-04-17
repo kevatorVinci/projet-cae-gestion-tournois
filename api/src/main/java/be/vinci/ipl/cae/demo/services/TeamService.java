@@ -231,7 +231,8 @@ public class TeamService {
   @Transactional
   public void leaveTeam(User user, Long newResponsibleId) {
     User persistedUser = userRepository.findById(user.getId())
-            .orElseThrow(() -> new IllegalStateException("Ce membre n'appartient à aucune équipe."));
+            .orElseThrow(() -> new IllegalStateException(
+                    "Ce membre n'appartient à aucune équipe."));
 
     Team team = resolveCurrentUserTeam(persistedUser);
 

@@ -118,7 +118,8 @@ public class RegistrationTeamTournamentController {
           @PathVariable("equipeId") Long teamId,
           @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-            teamId, currentUser, "Vous ne pouvez voir que les inscriptions de votre propre équipe.");
+            teamId, currentUser,
+            "Vous ne pouvez voir que les inscriptions de votre propre équipe.");
     return registrationMapper.toEquipeTournamentRegistrationDtos(
             fetchTeamRegistrations(teamId));
   }

@@ -301,7 +301,7 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
    */
   @SuppressWarnings("PMD.ExcessiveMethodLength")
   protected void ensureMatchHistory() {
-    // ── Spring Battle (EN_COURS) ────────────────────────────────────────────
+    // ── Spring Battle (EN_COURS) ────────────────────
     tournamentRepo.findByName("Spring Battle Series 2026").ifPresent(battle -> {
       if (!matchRepo.findByTournamentId(battle.getId()).isEmpty()) return;
       List<RegistrationTeamTournament> regs = inscriptionRepo.findByTournament(battle);
@@ -332,7 +332,7 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
       tournamentRepo.save(battle);
     });
 
-    // ── Spring Arena Cup 2025 — 7 teams, winner = TEAM_OMEGA ───────────────
+    // ── Spring Arena Cup 2025 — 7 teams, winner = TEAM_OMEGA ────
     // Bracket: omega(BYE) + 3 real matches R1 → 2 real matches R2 → finale
     tournamentRepo.findByName("Spring Arena Cup 2025").ifPresent(t -> {
       if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
@@ -361,7 +361,7 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
       tournamentRepo.save(t);
     });
 
-    // ── Elite Championship 2025 — 6 teams, winner = TEAM_IOTA ─────────────
+    // ── Elite Championship 2025 — 6 teams, winner = TEAM_IOTA ──
     // Bracket: 3 real matches R1 → iota+alpha advance, d2 gets BYE in R2 → finale
     tournamentRepo.findByName("Elite Championship 2025").ifPresent(t -> {
       if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
@@ -388,7 +388,7 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
       tournamentRepo.save(t);
     });
 
-    // ── Summer Pro League 2025 — 14 teams, winner = TEAM_IOTA ─────────────
+    // ── Summer Pro League 2025 — 14 teams, winner = TEAM_IOTA ──
     tournamentRepo.findByName("Summer Pro League 2025").ifPresent(t -> {
       if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
       Team alpha = teamRepo.findByName("TEAM_ALPHA").orElseThrow();
@@ -432,7 +432,7 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
       tournamentRepo.save(t);
     });
 
-    // ── Vinci Winter Clash 2026 — 12 teams, winner = TEAM_ALPHA ───────────
+    // ── Vinci Winter Clash 2026 — 12 teams, winner = TEAM_ALPHA ─
     tournamentRepo.findByName("Vinci Winter Clash 2026").ifPresent(t -> {
       if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
       Team alpha = teamRepo.findByName("TEAM_ALPHA").orElseThrow();

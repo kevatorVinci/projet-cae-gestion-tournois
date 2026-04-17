@@ -116,7 +116,8 @@ public class NotificationService {
   public void notifyAccountCreation(User user) {
     createNotification(
             user,
-            "Bienvenue : votre compte a été créé. Rejoignez ou créez une équipe pour commencer !");
+            "Bienvenue : votre compte a été créé."
+                    + " Rejoignez ou créez une équipe pour commencer !");
   }
 
   /**
@@ -127,7 +128,9 @@ public class NotificationService {
    */
   public void notifyTeamCreation(User user, String teamName) {
     createNotification(
-            user, "Équipe créée : vous êtes maintenant responsable de l'équipe '" + teamName + "'.");
+            user,
+            "Équipe créée : vous êtes maintenant responsable de l'équipe '"
+                    + teamName + "'.");
   }
 
   /**
@@ -165,7 +168,8 @@ public class NotificationService {
   public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
             user,
-            "Accepté : votre demande pour rejoindre '" + teamName + "' a été acceptée. Bienvenue !");
+            "Accepté : votre demande pour rejoindre '" + teamName
+                    + "' a été acceptée. Bienvenue !");
   }
 
   /**
@@ -193,7 +197,8 @@ public class NotificationService {
   public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
             admin,
-            "Admin : nouveau tournoi en brouillon '" + tournamentName + "'. Publiez-le quand il est prêt.");
+            "Admin : nouveau tournoi en brouillon '" + tournamentName
+                    + "'. Publiez-le quand il est prêt.");
   }
 
   /**
@@ -205,6 +210,7 @@ public class NotificationService {
   public void notifyTournamentPublished(User user, String tournamentName) {
     createNotification(
             user,
-            "Nouveau tournoi : '" + tournamentName + "' vient d'être publié. Inscrivez-vous maintenant !");
+            "Nouveau tournoi : '" + tournamentName
+                    + "' vient d'être publié. Inscrivez-vous maintenant !");
   }
 }

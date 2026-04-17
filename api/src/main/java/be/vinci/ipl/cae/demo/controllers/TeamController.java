@@ -104,7 +104,8 @@ public class TeamController {
     try {
       Team team = teamService.createTeam(currentUser, dto.name(), dto.profileImage());
       if (team == null) {
-        throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce nom d'équipe est déjà utilisé.");
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT, "Ce nom d'équipe est déjà utilisé.");
       }
       return team;
     } catch (IllegalStateException e) {

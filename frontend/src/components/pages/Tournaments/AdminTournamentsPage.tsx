@@ -193,8 +193,8 @@ const AdminTournamentsPage = () => {
         type: 'success',
         text: (
           <>
-            Le planning du tournoi <strong>{tournamentName}</strong> a ete genere.
-            Vous pouvez maintenant le publier.
+            Le planning du tournoi <strong>{tournamentName}</strong> a ete
+            genere. Vous pouvez maintenant le publier.
           </>
         ),
       });
@@ -223,8 +223,8 @@ const AdminTournamentsPage = () => {
         type: 'success',
         text: (
           <>
-            Le planning du tournoi <strong>{tournamentName}</strong> a ete publie:
-            il est visible pour tous les joueurs.
+            Le planning du tournoi <strong>{tournamentName}</strong> a ete
+            publie: il est visible pour tous les joueurs.
           </>
         ),
       });
@@ -558,22 +558,23 @@ const AdminTournamentsPage = () => {
                             </Button>
                           )}
 
-                          {hasGeneratedPlanning && !tournament.planningMatchPublie && (
-                            <Button
-                              variant="contained"
-                              onClick={() =>
-                                handlePublishPlanning(tournament.id)
-                              }
-                              sx={{
-                                backgroundColor: '#7c3aed',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                '&:hover': { backgroundColor: '#6d28d9' },
-                              }}
-                            >
-                              Publier planning
-                            </Button>
-                          )}
+                          {hasGeneratedPlanning &&
+                            !tournament.planningMatchPublie && (
+                              <Button
+                                variant="contained"
+                                onClick={() =>
+                                  handlePublishPlanning(tournament.id)
+                                }
+                                sx={{
+                                  backgroundColor: '#7c3aed',
+                                  color: 'white',
+                                  fontWeight: 'bold',
+                                  '&:hover': { backgroundColor: '#6d28d9' },
+                                }}
+                              >
+                                Publier planning
+                              </Button>
+                            )}
 
                           <Button
                             variant="outlined"
