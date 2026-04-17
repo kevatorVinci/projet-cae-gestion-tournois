@@ -14,18 +14,24 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Tab,
+  Tabs,
   Stack,
   Typography,
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GroupsIcon from '@mui/icons-material/Groups';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import BackButton from '../../BackButton';
 import { Tournoi } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import {
   fetchTeamRegistrations,
+  fetchTournamentMatches,
   registerTeamToTournament,
+  TeamMatch,
 } from '../../../services/tournaments';
+import TournamentBracket from './TournamentBracket';
 import {
   getEquipeById,
   getUserTeam,
@@ -154,6 +160,7 @@ const fetchAcceptedInscriptions = async (
 const TournoiDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const [tournoi, setTournoi] = useState<TournoiDetail | null>(null);
   const [acceptedInscriptions, setAcceptedInscriptions] = useState<
     InscriptionTournoi[]
@@ -172,6 +179,11 @@ const TournoiDetailPage = () => {
   const [registerFeedbackIsError, setRegisterFeedbackIsError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeContentTab, setActiveContentTab] = useState<'teams' | 'matches'>(
+    'teams',
+  );
+
+  const [matches, setMatches] = useState<TeamMatch[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -190,6 +202,9 @@ const TournoiDetailPage = () => {
         ]);
         setTournoi(tournoiDetail);
         setAcceptedInscriptions(inscriptions);
+
+        const tournamentMatches = await fetchTournamentMatches(id);
+        setMatches(tournamentMatches);
 
         const token = getAuthenticatedUser()?.token;
         if (!token) {
@@ -689,109 +704,162 @@ const TournoiDetailPage = () => {
           }}
         >
           <CardContent>
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              sx={{ mb: 2 }}
+            <Tabs
+              value={activeContentTab}
+              onChange={(_, value: 'teams' | 'matches') =>
+                setActiveContentTab(value)
+              }
+              textColor="inherit"
+              indicatorColor="secondary"
+              sx={{
+                mb: 2,
+                '& .MuiTab-root': {
+                  color: 'rgba(255,255,255,0.72)',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  minHeight: 42,
+                },
+                '& .Mui-selected': {
+                  color: '#93c5fd !important',
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#3b82f6',
+                  height: 3,
+                  borderRadius: 10,
+                },
+              }}
             >
-              <GroupsIcon sx={{ color: '#e8822a' }} />
-              <Typography variant="h6" fontWeight={700} color="white">
-                Équipes inscrites ({teams.length}
-                {tournoi.nombresParticipantsMax
-                  ? `/${tournoi.nombresParticipantsMax}`
-                  : ''}
-                )
-              </Typography>
-            </Stack>
+              <Tab
+                value="teams"
+                icon={<GroupsIcon fontSize="small" />}
+                iconPosition="start"
+                label={`Équipes (${teams.length}${
+                  tournoi.nombresParticipantsMax
+                    ? `/${tournoi.nombresParticipantsMax}`
+                    : ''
+                })`}
+              />
+              <Tab
+                value="matches"
+                icon={<CalendarMonthIcon fontSize="small" />}
+                iconPosition="start"
+                label={`Matchs (${matches.length})`}
+              />
+            </Tabs>
 
-            {teams.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                Aucune équipe inscrite pour le moment.
-              </Typography>
-            ) : (
-              <Stack spacing={1.5}>
-                {teams.map((inscription, index) =>
-                  (() => {
-                    const teamId = resolveTeamId(inscription);
-                    const canNavigate = typeof teamId === 'number';
-                    const teamImage =
-                      resolveTeamImage(inscription) ||
-                      (canNavigate ? teamImagesById[teamId] : undefined);
+            {activeContentTab === 'teams' &&
+              (teams.length === 0 ? (
+                <>
+                  <Typography variant="h6" fontWeight={700} color="white" sx={{ mb: 1 }}>
+                    Équipes inscrites
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Aucune équipe inscrite pour le moment.
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography variant="h6" fontWeight={700} color="white" sx={{ mb: 1 }}>
+                    Équipes inscrites
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    {teams.map((inscription, index) =>
+                      (() => {
+                        const teamId = resolveTeamId(inscription);
+                        const canNavigate = typeof teamId === 'number';
+                        const teamImage =
+                          resolveTeamImage(inscription) ||
+                          (canNavigate ? teamImagesById[teamId] : undefined);
 
-                    return (
-                      <Box
-                        key={`${resolveTeamName(inscription, index)}-${index}`}
-                        onClick={() => {
-                          if (!canNavigate) {
-                            return;
-                          }
-                          navigate(`/equipes/${teamId}`);
-                        }}
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          p: 1.5,
-                          borderRadius: 1.5,
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          backgroundColor: 'rgba(255,255,255,0.02)',
-                          cursor: canNavigate ? 'pointer' : 'default',
-                          transition:
-                            'border-color 0.2s ease, background-color 0.2s ease',
-                          '&:hover': canNavigate
-                            ? {
-                                borderColor: 'rgba(96,165,250,0.65)',
-                                backgroundColor: 'rgba(96,165,250,0.08)',
+                        return (
+                          <Box
+                            key={`${resolveTeamName(inscription, index)}-${index}`}
+                            onClick={() => {
+                              if (!canNavigate) {
+                                return;
                               }
-                            : undefined,
-                        }}
-                      >
-                        {/** Team avatar generated from team name when no team image exists. */}
-                        <Stack
-                          direction="row"
-                          spacing={1.5}
-                          alignItems="center"
-                        >
-                          <Avatar
-                            src={normalizeImageSrc(teamImage)}
-                            sx={{
-                              bgcolor: getAvatarColorFromName(
-                                resolveTeamName(inscription, index),
-                              ),
-                              color: 'white',
+                              navigate(`/equipes/${teamId}`);
                             }}
-                          >
-                            {resolveTeamName(inscription, index)
-                              .charAt(0)
-                              .toUpperCase()}
-                          </Avatar>
-                          <Typography
-                            color={canNavigate ? '#93c5fd' : 'white'}
-                            fontWeight={600}
                             sx={{
-                              textDecoration: canNavigate
-                                ? 'underline'
-                                : 'none',
-                              textUnderlineOffset: canNavigate
-                                ? '2px'
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              p: 1.5,
+                              borderRadius: 1.5,
+                              border: '1px solid rgba(255,255,255,0.08)',
+                              backgroundColor: 'rgba(255,255,255,0.02)',
+                              cursor: canNavigate ? 'pointer' : 'default',
+                              transition:
+                                'border-color 0.2s ease, background-color 0.2s ease',
+                              '&:hover': canNavigate
+                                ? {
+                                    borderColor: 'rgba(96,165,250,0.65)',
+                                    backgroundColor: 'rgba(96,165,250,0.08)',
+                                  }
                                 : undefined,
                             }}
                           >
-                            {resolveTeamName(inscription, index)}
-                          </Typography>
-                        </Stack>
-                        {inscription.etat &&
-                          inscription.etat !== 'ACCEPTEE' && (
-                            <Chip
-                              size="small"
-                              label={inscription.etat}
-                              sx={{ bgcolor: '#1a2540', color: 'white' }}
-                            />
-                          )}
-                      </Box>
-                    );
-                  })(),
+                            {/** Team avatar generated from team name when no team image exists. */}
+                            <Stack
+                              direction="row"
+                              spacing={1.5}
+                              alignItems="center"
+                            >
+                              <Avatar
+                                src={normalizeImageSrc(teamImage)}
+                                sx={{
+                                  bgcolor: getAvatarColorFromName(
+                                    resolveTeamName(inscription, index),
+                                  ),
+                                  color: 'white',
+                                }}
+                              >
+                                {resolveTeamName(inscription, index)
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </Avatar>
+                              <Typography
+                                color={canNavigate ? '#93c5fd' : 'white'}
+                                fontWeight={600}
+                                sx={{
+                                  textDecoration: canNavigate
+                                    ? 'underline'
+                                    : 'none',
+                                  textUnderlineOffset: canNavigate
+                                    ? '2px'
+                                    : undefined,
+                                }}
+                              >
+                                {resolveTeamName(inscription, index)}
+                              </Typography>
+                            </Stack>
+                            {inscription.etat &&
+                              inscription.etat !== 'ACCEPTEE' && (
+                                <Chip
+                                  size="small"
+                                  label={inscription.etat}
+                                  sx={{ bgcolor: '#1a2540', color: 'white' }}
+                                />
+                              )}
+                          </Box>
+                        );
+                      })(),
+                    )}
+                  </Stack>
+                </>
+              ))}
+
+            {activeContentTab === 'matches' && (
+              <Stack spacing={1.5}>
+                <Typography variant="h6" fontWeight={700} color="white">
+                  Matchs
+                </Typography>
+                {!tournoi.planningMatchPublie || matches.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Le planning des matchs n'est pas encore publié.
+                  </Typography>
+                ) : (
+                  <TournamentBracket matches={matches} tournamentEndDate={tournoi.dateFin} />
                 )}
               </Stack>
             )}

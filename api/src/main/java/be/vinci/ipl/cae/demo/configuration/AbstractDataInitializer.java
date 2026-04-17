@@ -1,15 +1,19 @@
 package be.vinci.ipl.cae.demo.configuration;
 
+import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
+import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +37,9 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
 
   @Autowired
   protected UserRepository userRepo;
+
+  @Autowired
+  protected MatchRepository matchRepo;
 
   @Autowired
   protected PasswordEncoder pwdEncoder;
@@ -87,6 +94,38 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
     bot.setTeam(team);
     userRepo.save(bot);
     return bot;
+  }
+
+  /** Creates a finished match with scores and winner. */
+  protected Match makeFinishedMatch(Tournament tournament, Team team1, Team team2,
+                                    int round, LocalDateTime date,
+                                    int score1, int score2, Team winner) {
+    Match m = new Match();
+    m.setTournament(tournament);
+    m.setTeam1(team1);
+    m.setTeam2(team2);
+    m.setRoundNumber(round);
+    m.setMatchDate(date);
+    m.setScoreTeam1(score1);
+    m.setScoreTeam2(score2);
+    m.setWinner(winner);
+    m.setStatus("FINISHED");
+    return m;
+  }
+
+  /** Creates a BYE match (automatic pass, no opponent). */
+  protected Match makeByeMatch(Tournament tournament, Team team, int round) {
+    Match m = new Match();
+    m.setTournament(tournament);
+    m.setTeam1(team);
+    m.setTeam2(null);
+    m.setRoundNumber(round);
+    m.setScoreTeam1(1);
+    m.setScoreTeam2(0);
+    m.setWinner(team);
+    m.setStatus("FINISHED");
+    m.setPoolCode("BYE");
+    return m;
   }
 
   /** Registers each team in the list to the given tournament. */
@@ -254,6 +293,184 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
     return new SeedData(lea, tom, ines, tibo, lisa, noa, tim, zoe,
             alpha, omega, iota, dummyTeams,
             springArena, elite2025, summerPro, winterClash, springBattle, easterCup, elite2026);
+  }
+
+  /**
+   * Ensures match history exists for all seeded tournaments.
+   * Safe to call on every boot — skips any tournament that already has matches.
+   */
+  @SuppressWarnings("PMD.ExcessiveMethodLength")
+  protected void ensureMatchHistory() {
+    // ── Spring Battle (EN_COURS) ────────────────────────────────────────────
+    tournamentRepo.findByName("Spring Battle Series 2026").ifPresent(battle -> {
+      if (!matchRepo.findByTournamentId(battle.getId()).isEmpty()) return;
+      List<RegistrationTeamTournament> regs = inscriptionRepo.findByTournament(battle);
+      List<Team> teams = new ArrayList<>(regs.stream()
+              .map(RegistrationTeamTournament::getTeam).toList());
+      Collections.shuffle(teams);
+      List<Match> ms = new ArrayList<>();
+      LocalDateTime base = battle.getStartDate().atTime(10, 0);
+      for (int i = 0; i + 1 < teams.size(); i += 2) {
+        Match m = new Match();
+        m.setTournament(battle);
+        m.setTeam1(teams.get(i));
+        m.setTeam2(teams.get(i + 1));
+        m.setRoundNumber(1);
+        m.setMatchDate(base.plusHours((i / 2) * 2L));
+        if (i < 4) {
+          m.setStatus("FINISHED");
+          m.setScoreTeam1(i + 2);
+          m.setScoreTeam2(i + 1);
+          m.setWinner(teams.get(i));
+        } else {
+          m.setStatus("PENDING");
+        }
+        ms.add(m);
+      }
+      matchRepo.saveAll(ms);
+      battle.setMatchSchedulePublished(true);
+      tournamentRepo.save(battle);
+    });
+
+    // ── Spring Arena Cup 2025 — 7 teams, winner = TEAM_OMEGA ───────────────
+    // Bracket: omega(BYE) + 3 real matches R1 → 2 real matches R2 → finale
+    tournamentRepo.findByName("Spring Arena Cup 2025").ifPresent(t -> {
+      if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
+      Team omega = teamRepo.findByName("TEAM_OMEGA").orElseThrow();
+      Team iota  = teamRepo.findByName("TEAM_IOTA").orElseThrow();
+      Team d0    = teamRepo.findByName("TEAM_BETA").orElseThrow();
+      Team d1    = teamRepo.findByName("TEAM_GAMMA").orElseThrow();
+      Team d2    = teamRepo.findByName("TEAM_DELTA").orElseThrow();
+      Team d3    = teamRepo.findByName("TEAM_EPSILON").orElseThrow();
+      Team d4    = teamRepo.findByName("TEAM_ZETA").orElseThrow();
+      LocalDateTime b  = t.getStartDate().atTime(10, 0);
+      LocalDateTime b2 = b.plusDays(3);
+      List<Match> ms = new ArrayList<>();
+      // R1 — 3 real matches + 1 BYE
+      ms.add(makeFinishedMatch(t, iota, d0, 1, b,              2, 1, iota));
+      ms.add(makeFinishedMatch(t, d1,   d2, 1, b.plusHours(2), 3, 1, d1));
+      ms.add(makeFinishedMatch(t, d3,   d4, 1, b.plusHours(4), 2, 0, d3));
+      ms.add(makeByeMatch(t, omega, 1));
+      // R2 — iota vs d1, omega vs d3
+      ms.add(makeFinishedMatch(t, iota,  d1, 2, b2,              2, 1, iota));
+      ms.add(makeFinishedMatch(t, omega, d3, 2, b2.plusHours(2), 3, 2, omega));
+      // Finale — omega wins
+      ms.add(makeFinishedMatch(t, omega, iota, 3, t.getEndDate().atTime(10, 0), 3, 1, omega));
+      matchRepo.saveAll(ms);
+      t.setMatchSchedulePublished(true);
+      tournamentRepo.save(t);
+    });
+
+    // ── Elite Championship 2025 — 6 teams, winner = TEAM_IOTA ─────────────
+    // Bracket: 3 real matches R1 → iota+alpha advance, d2 gets BYE in R2 → finale
+    tournamentRepo.findByName("Elite Championship 2025").ifPresent(t -> {
+      if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
+      Team alpha = teamRepo.findByName("TEAM_ALPHA").orElseThrow();
+      Team iota  = teamRepo.findByName("TEAM_IOTA").orElseThrow();
+      Team d0    = teamRepo.findByName("TEAM_BETA").orElseThrow();
+      Team d1    = teamRepo.findByName("TEAM_GAMMA").orElseThrow();
+      Team d2    = teamRepo.findByName("TEAM_DELTA").orElseThrow();
+      Team d3    = teamRepo.findByName("TEAM_EPSILON").orElseThrow();
+      LocalDateTime b  = t.getStartDate().atTime(10, 0);
+      LocalDateTime b2 = b.plusDays(3);
+      List<Match> ms = new ArrayList<>();
+      // R1
+      ms.add(makeFinishedMatch(t, iota,  d0, 1, b,              3, 1, iota));
+      ms.add(makeFinishedMatch(t, alpha, d1, 1, b.plusHours(2), 2, 1, alpha));
+      ms.add(makeFinishedMatch(t, d2,    d3, 1, b.plusHours(4), 3, 0, d2));
+      // R2
+      ms.add(makeFinishedMatch(t, iota, alpha, 2, b2, 2, 1, iota));
+      ms.add(makeByeMatch(t, d2, 2));
+      // Finale — iota wins
+      ms.add(makeFinishedMatch(t, iota, d2, 3, t.getEndDate().atTime(10, 0), 3, 1, iota));
+      matchRepo.saveAll(ms);
+      t.setMatchSchedulePublished(true);
+      tournamentRepo.save(t);
+    });
+
+    // ── Summer Pro League 2025 — 14 teams, winner = TEAM_IOTA ─────────────
+    tournamentRepo.findByName("Summer Pro League 2025").ifPresent(t -> {
+      if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
+      Team alpha = teamRepo.findByName("TEAM_ALPHA").orElseThrow();
+      Team omega = teamRepo.findByName("TEAM_OMEGA").orElseThrow();
+      Team iota  = teamRepo.findByName("TEAM_IOTA").orElseThrow();
+      Team d0    = teamRepo.findByName("TEAM_BETA").orElseThrow();
+      Team d1    = teamRepo.findByName("TEAM_GAMMA").orElseThrow();
+      Team d2    = teamRepo.findByName("TEAM_DELTA").orElseThrow();
+      Team d3    = teamRepo.findByName("TEAM_EPSILON").orElseThrow();
+      Team d4    = teamRepo.findByName("TEAM_ZETA").orElseThrow();
+      Team d5    = teamRepo.findByName("TEAM_THETA").orElseThrow();
+      Team d6    = teamRepo.findByName("TEAM_KAPPA").orElseThrow();
+      Team d7    = teamRepo.findByName("TEAM_LAMBDA").orElseThrow();
+      Team d8    = teamRepo.findByName("TEAM_MU").orElseThrow();
+      Team d9    = teamRepo.findByName("TEAM_NU").orElseThrow();
+      Team d10   = teamRepo.findByName("TEAM_XI").orElseThrow();
+      LocalDateTime b  = t.getStartDate().atTime(10, 0);
+      LocalDateTime b2 = b.plusDays(3);
+      LocalDateTime b3 = b.plusDays(6);
+      List<Match> ms = new ArrayList<>();
+      // R1 — 7 real matches
+      ms.add(makeFinishedMatch(t, iota,  d0,  1, b,               3, 1, iota));
+      ms.add(makeFinishedMatch(t, alpha, d1,  1, b.plusHours(2),  2, 1, alpha));
+      ms.add(makeFinishedMatch(t, omega, d2,  1, b.plusHours(4),  3, 0, omega));
+      ms.add(makeFinishedMatch(t, d3,    d4,  1, b.plusHours(6),  2, 1, d3));
+      ms.add(makeFinishedMatch(t, d5,    d6,  1, b.plusHours(8),  3, 2, d5));
+      ms.add(makeFinishedMatch(t, d7,    d8,  1, b.plusHours(10), 2, 0, d7));
+      ms.add(makeFinishedMatch(t, d9,    d10, 1, b.plusHours(12), 3, 1, d9));
+      // R2 — 3 real matches + BYE
+      ms.add(makeFinishedMatch(t, iota,  alpha, 2, b2,              2, 1, iota));
+      ms.add(makeFinishedMatch(t, omega, d3,    2, b2.plusHours(2), 3, 2, omega));
+      ms.add(makeFinishedMatch(t, d5,    d7,    2, b2.plusHours(4), 2, 1, d5));
+      ms.add(makeByeMatch(t, d9, 2));
+      // R3
+      ms.add(makeFinishedMatch(t, iota, omega, 3, b3,              2, 1, iota));
+      ms.add(makeFinishedMatch(t, d5,   d9,    3, b3.plusHours(2), 3, 1, d5));
+      // Finale — iota wins
+      ms.add(makeFinishedMatch(t, iota, d5, 4, t.getEndDate().atTime(10, 0), 3, 2, iota));
+      matchRepo.saveAll(ms);
+      t.setMatchSchedulePublished(true);
+      tournamentRepo.save(t);
+    });
+
+    // ── Vinci Winter Clash 2026 — 12 teams, winner = TEAM_ALPHA ───────────
+    tournamentRepo.findByName("Vinci Winter Clash 2026").ifPresent(t -> {
+      if (!matchRepo.findByTournamentId(t.getId()).isEmpty()) return;
+      Team alpha = teamRepo.findByName("TEAM_ALPHA").orElseThrow();
+      Team omega = teamRepo.findByName("TEAM_OMEGA").orElseThrow();
+      Team iota  = teamRepo.findByName("TEAM_IOTA").orElseThrow();
+      Team d0    = teamRepo.findByName("TEAM_BETA").orElseThrow();
+      Team d1    = teamRepo.findByName("TEAM_GAMMA").orElseThrow();
+      Team d2    = teamRepo.findByName("TEAM_DELTA").orElseThrow();
+      Team d3    = teamRepo.findByName("TEAM_EPSILON").orElseThrow();
+      Team d4    = teamRepo.findByName("TEAM_ZETA").orElseThrow();
+      Team d5    = teamRepo.findByName("TEAM_THETA").orElseThrow();
+      Team d6    = teamRepo.findByName("TEAM_KAPPA").orElseThrow();
+      Team d7    = teamRepo.findByName("TEAM_LAMBDA").orElseThrow();
+      Team d8    = teamRepo.findByName("TEAM_MU").orElseThrow();
+      LocalDateTime b  = t.getStartDate().atTime(10, 0);
+      LocalDateTime b2 = b.plusDays(3);
+      LocalDateTime b3 = b.plusDays(6);
+      List<Match> ms = new ArrayList<>();
+      // R1 — 6 real matches
+      ms.add(makeFinishedMatch(t, alpha, d0, 1, b,               3, 1, alpha));
+      ms.add(makeFinishedMatch(t, omega, d1, 1, b.plusHours(2),  2, 1, omega));
+      ms.add(makeFinishedMatch(t, iota,  d2, 1, b.plusHours(4),  3, 0, iota));
+      ms.add(makeFinishedMatch(t, d3,    d4, 1, b.plusHours(6),  2, 1, d3));
+      ms.add(makeFinishedMatch(t, d5,    d6, 1, b.plusHours(8),  3, 2, d5));
+      ms.add(makeFinishedMatch(t, d7,    d8, 1, b.plusHours(10), 2, 0, d7));
+      // R2 — 3 real matches
+      ms.add(makeFinishedMatch(t, alpha, omega, 2, b2,              2, 1, alpha));
+      ms.add(makeFinishedMatch(t, iota,  d3,   2, b2.plusHours(2), 3, 1, iota));
+      ms.add(makeFinishedMatch(t, d5,    d7,   2, b2.plusHours(4), 2, 1, d5));
+      // R3 — 1 real match + BYE (alpha vs iota, d5 gets BYE)
+      ms.add(makeFinishedMatch(t, alpha, iota, 3, b3, 2, 1, alpha));
+      ms.add(makeByeMatch(t, d5, 3));
+      // Finale — alpha wins
+      ms.add(makeFinishedMatch(t, alpha, d5, 4, t.getEndDate().atTime(10, 0), 3, 2, alpha));
+      matchRepo.saveAll(ms);
+      t.setMatchSchedulePublished(true);
+      tournamentRepo.save(t);
+    });
   }
 
   /** Common seeded entities returned to subclasses for profile-specific extras. */
