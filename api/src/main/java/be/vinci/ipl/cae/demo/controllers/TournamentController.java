@@ -1,10 +1,14 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.annotations.IsAdmin;
+import be.vinci.ipl.cae.demo.mappers.TournamentMapper;
+import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentCancelDto;
+import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentCreateDto;
+import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentResponseDto;
+import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentUpdateDto;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.services.TournamentService;
 import jakarta.validation.Valid;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,14 +30,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class TournamentController {
 
   private final TournamentService tournoiService;
+  private final TournamentMapper tournamentMapper;
 
   /**
    * Creates the controller with its service dependency.
    *
    * @param tournoiService the tournament service to inject.
    */
-  public TournamentController(TournamentService tournoiService) {
+  public TournamentController(TournamentService tournoiService, TournamentMapper tournamentMapper) {
     this.tournoiService = tournoiService;
+    this.tournamentMapper = tournamentMapper;
   }
 
   /**
@@ -44,10 +50,10 @@ public class TournamentController {
    * @return filtered list of public tournaments.
    */
   @GetMapping("/")
-  public Iterable<Tournament> getAllPublic(
+  public Iterable<TournamentResponseDto> getAllPublic(
       @RequestParam(required = false) String etat,
       @RequestParam(required = false) String nom) {
-    return tournoiService.getFiltered(etat, nom);
+    return tournoiMapperToDtos(tournoiService.getFiltered(etat, nom));
   }
 
   /**
@@ -57,8 +63,8 @@ public class TournamentController {
    */
   @GetMapping("/all")
   @IsAdmin
-  public Iterable<Tournament> getAll() {
-    return tournoiService.getAll();
+  public Iterable<TournamentResponseDto> getAll() {
+    return tournoiMapperToDtos(tournoiService.getAll());
   }
 
   /**
@@ -68,9 +74,10 @@ public class TournamentController {
    * @return the found tournament.
    */
   @GetMapping("/{id}")
-  public Tournament getOne(@PathVariable Long id) {
+  public TournamentResponseDto getOne(@PathVariable Long id) {
     return tournoiService
         .getOne(id)
+        .map(tournamentMapper::toDto)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
@@ -83,13 +90,13 @@ public class TournamentController {
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
   @IsAdmin
-  public Tournament create(@Valid @RequestBody Tournament tournoi) {
-    Tournament created = tournoiService.create(tournoi);
+  public TournamentResponseDto create(@Valid @RequestBody TournamentCreateDto tournoi) {
+    Tournament created = tournoiService.create(tournamentMapper.toEntity(tournoi));
     if (created == null) {
       throw new ResponseStatusException(
           HttpStatus.CONFLICT, "A tournament with this name already exists");
     }
-    return created;
+    return tournamentMapper.toDto(created);
   }
 
   /**
@@ -101,13 +108,16 @@ public class TournamentController {
    */
   @PutMapping("/{id}")
   @IsAdmin
-  public Tournament update(@PathVariable Long id, @Valid @RequestBody Tournament payload) {
-    Tournament updated = tournoiService.update(id, payload);
+  public TournamentResponseDto update(
+      @PathVariable Long id,
+      @Valid @RequestBody TournamentUpdateDto payload) {
+    Tournament tournament = tournamentMapper.toEntity(payload);
+    Tournament updated = tournoiService.update(id, tournament);
     if (updated == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
     }
-    return updated;
+    return tournamentMapper.toDto(updated);
   }
 
   /**
@@ -118,13 +128,13 @@ public class TournamentController {
    */
   @PatchMapping("/{id}/publish")
   @IsAdmin
-  public Tournament publish(@PathVariable Long id) {
+  public TournamentResponseDto publish(@PathVariable Long id) {
     Tournament tournoi = tournoiService.publish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
     }
-    return tournoi;
+    return tournamentMapper.toDto(tournoi);
   }
 
   /**
@@ -135,14 +145,14 @@ public class TournamentController {
    */
   @PatchMapping("/{id}/close-registrations")
   @IsAdmin
-  public Tournament closeRegistrations(@PathVariable Long id) {
+  public TournamentResponseDto closeRegistrations(@PathVariable Long id) {
     Tournament tournoi = tournoiService.closeRegistrations(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Tournament not found, not OUVERT, or not enough teams (minimum 2)");
     }
-    return tournoi;
+    return tournamentMapper.toDto(tournoi);
   }
 
   /**
@@ -153,13 +163,13 @@ public class TournamentController {
    */
   @PatchMapping("/{id}/start")
   @IsAdmin
-  public Tournament start(@PathVariable Long id) {
+  public TournamentResponseDto start(@PathVariable Long id) {
     Tournament tournoi = tournoiService.start(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in CLOTURE state");
     }
-    return tournoi;
+    return tournamentMapper.toDto(tournoi);
   }
 
   /**
@@ -170,33 +180,41 @@ public class TournamentController {
    */
   @PatchMapping("/{id}/finish")
   @IsAdmin
-  public Tournament finish(@PathVariable Long id) {
+  public TournamentResponseDto finish(@PathVariable Long id) {
     Tournament tournoi = tournoiService.finish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in EN_COURS state");
     }
-    return tournoi;
+    return tournamentMapper.toDto(tournoi);
   }
 
   /**
    * Cancels a tournament from any active state.
    *
    * @param id      the tournament identifier.
-   * @param payload a map containing the reason.
+    * @param payload the cancellation payload.
    * @return the cancelled tournament.
    */
   @PatchMapping("/{id}/cancel")
   @IsAdmin
-  public Tournament cancel(
+  public TournamentResponseDto cancel(
       @PathVariable Long id,
-      @RequestBody(required = false) Map<String, String> payload) {
-    String reason = payload == null ? null : payload.get("reason");
+      @RequestBody(required = false) TournamentCancelDto payload) {
+    String reason = payload == null ? null : payload.reason();
     Tournament tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
     }
-    return tournoi;
+    return tournamentMapper.toDto(tournoi);
+  }
+
+  private Iterable<TournamentResponseDto> tournoiMapperToDtos(Iterable<Tournament> tournaments) {
+    java.util.List<TournamentResponseDto> result = new java.util.ArrayList<>();
+    for (Tournament tournament : tournaments) {
+      result.add(tournamentMapper.toDto(tournament));
+    }
+    return result;
   }
 }

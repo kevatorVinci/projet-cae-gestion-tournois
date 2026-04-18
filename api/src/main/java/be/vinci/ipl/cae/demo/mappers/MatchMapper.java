@@ -2,6 +2,8 @@ package be.vinci.ipl.cae.demo.mappers;
 
 import be.vinci.ipl.cae.demo.models.dtos.match.MatchDto;
 import be.vinci.ipl.cae.demo.models.entities.Match;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,6 +20,10 @@ public class MatchMapper {
    */
   public MatchDto toDto(Match match) {
     MatchDto dto = new MatchDto();
+    if (match == null) {
+      return dto;
+    }
+
     dto.setId(match.getId());
     dto.setTournamentId(match.getTournament().getId());
 
@@ -37,5 +43,21 @@ public class MatchMapper {
     dto.setAdminResponsibleId(match.getAdminResponsible().getId());
 
     return dto;
+  }
+
+  /**
+   * Converts many Match entities to DTOs.
+   *
+   * @param matches the matches to convert.
+   * @return the DTO list.
+   */
+  public List<MatchDto> toDtos(Iterable<Match> matches) {
+    List<MatchDto> result = new ArrayList<>();
+    if (matches != null) {
+      for (Match match : matches) {
+        result.add(toDto(match));
+      }
+    }
+    return result;
   }
 }

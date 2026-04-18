@@ -147,7 +147,7 @@ describe('AdminPage', () => {
       '/api/auths/addAdmin',
       expect.objectContaining({
         method: 'PUT',
-        body: 'joueur@vinci.be',
+        body: JSON.stringify({ email: 'joueur@vinci.be' }),
       }),
     );
 

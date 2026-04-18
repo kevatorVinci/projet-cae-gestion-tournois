@@ -45,10 +45,10 @@ export async function toggleAdminRole(
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
-      'Content-Type': 'text/plain',
+      'Content-Type': 'application/json',
       Authorization: token,
     },
-    body: email,
+    body: JSON.stringify({ email }),
   });
 
   if (!response.ok) {

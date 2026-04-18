@@ -2,11 +2,11 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.annotations.IsResponsable;
 import be.vinci.ipl.cae.demo.mappers.DemandMapper;
+import be.vinci.ipl.cae.demo.models.dtos.demand.DemandDecisionDto;
 import be.vinci.ipl.cae.demo.models.dtos.demand.DemandDto;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.DemandService;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -99,14 +99,14 @@ public class DemandController {
   @IsResponsable
   public void rejectDemand(
       @PathVariable Long demandId,
-      @RequestBody(required = false) Map<String, String> body,
+      @RequestBody(required = false) DemandDecisionDto body,
       @AuthenticationPrincipal User currentUser) {
     try {
       String rejectionReason = null;
       if (body != null) {
-        rejectionReason = body.get("rejectionReason");
+        rejectionReason = body.rejectionReason();
         if (rejectionReason == null || rejectionReason.isBlank()) {
-          rejectionReason = body.get("raisonRefus");
+          rejectionReason = body.raisonRefus();
         }
       }
       demandService.rejectDemand(demandId, rejectionReason, currentUser);
