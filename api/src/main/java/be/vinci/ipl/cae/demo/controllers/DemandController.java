@@ -78,8 +78,8 @@ public class DemandController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @IsResponsable
   public void acceptDemand(
-    @PathVariable Long demandId,
-    @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long demandId,
+      @AuthenticationPrincipal User currentUser) {
     try {
       demandService.acceptDemand(demandId, currentUser);
     } catch (RuntimeException e) {
@@ -98,9 +98,9 @@ public class DemandController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @IsResponsable
   public void rejectDemand(
-    @PathVariable Long demandId,
-    @RequestBody(required = false) Map<String, String> body,
-    @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long demandId,
+      @RequestBody(required = false) Map<String, String> body,
+      @AuthenticationPrincipal User currentUser) {
     try {
       String rejectionReason = (body != null) ? body.get("rejectionReason") : null;
       demandService.rejectDemand(demandId, rejectionReason, currentUser);

@@ -1,10 +1,9 @@
 package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 /**
  * Repository for team operations.
@@ -43,5 +42,5 @@ public interface TeamRepository extends CrudRepository<Team, Long> {
    * @return an optional containing the team if found.
    */
   Optional<Team> findByPrimaryResponsibleIdOrSecondaryResponsibleId(
-          Long primaryId, Long secondaryId);
+      Long primaryId, Long secondaryId);
 }

@@ -6,7 +6,13 @@ import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -35,7 +41,7 @@ public class UnavailabilityController {
    */
   @GetMapping
   public Iterable<Unavailability> getMesIndisponibilites(
-          @AuthenticationPrincipal User currentUser) {
+      @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
     return indisponibiliteRepository.findByUser(currentUser);
   }
@@ -49,8 +55,8 @@ public class UnavailabilityController {
    */
   @PostMapping
   public Unavailability addIndisponibilite(
-          @AuthenticationPrincipal User currentUser,
-          @RequestBody @Valid Unavailability indisponibilite) {
+      @AuthenticationPrincipal User currentUser,
+      @RequestBody @Valid Unavailability indisponibilite) {
     ensureAuthenticated(currentUser);
     indisponibilite.setUser(currentUser);
 
@@ -65,18 +71,22 @@ public class UnavailabilityController {
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
-          @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long id,
+      @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
 
     Unavailability indisponibilite = indisponibiliteRepository
-            .findById(id)
-            .orElseThrow(
-                    () -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
+        .findById(id)
+        .orElseThrow(
+            () -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Indisponibilite introuvable"
+            )
+        );
 
     if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
+          HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites."
+      );
     }
 
     indisponibiliteRepository.delete(indisponibilite);

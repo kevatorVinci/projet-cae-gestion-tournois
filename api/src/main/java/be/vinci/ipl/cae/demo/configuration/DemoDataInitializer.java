@@ -36,37 +36,44 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     Team alpha = data.alpha();
     Team omega = data.omega();
 
-    addBotMember("alphabot@demo.com", "AlphaBot", "architecte", pwd, "neon2.jpg", alpha);
+    addBotMember(
+        "alphabot@demo.com",
+        "AlphaBot",
+        "architecte",
+        pwd,
+        "neon2.jpg",
+        alpha
+    );
 
     for (int j = 1; j <= 3; j++) {
       addBotMember(
-        "omegabot" + j + "@demo.com",
-        "OmegaBot" + j,
-        "gardien",
-        pwd,
-        "kaido.png",
-        omega
+          "omegabot" + j + "@demo.com",
+          "OmegaBot" + j,
+          "gardien",
+          pwd,
+          "kaido.png",
+          omega
       );
     }
 
     Tournament springShowdown = makeTournament(
-      "Vinci Spring Showdown 2026",
-      "Tournoi clôturé prêt pour la génération du planning des matchs",
-      "2026-04-20",
-      "2026-05-05",
-      "2026-04-09",
-      "CLOTURE",
-      8
+        "Vinci Spring Showdown 2026",
+        "Tournoi clôturé prêt pour la génération du planning des matchs",
+        "2026-04-20",
+        "2026-05-05",
+        "2026-04-09",
+        "CLOTURE",
+        8
     );
 
     Tournament summerInvitational = makeTournament(
-      "Summer Invitational 2026",
-      "Tournoi estival en préparation, pas encore publié",
-      "2026-07-01",
-      "2026-07-15",
-      "2026-06-20",
-      "BROUILLON",
-      12
+        "Summer Invitational 2026",
+        "Tournoi estival en préparation, pas encore publié",
+        "2026-07-01",
+        "2026-07-15",
+        "2026-06-20",
+        "BROUILLON",
+        12
     );
 
     tournamentRepo.saveAll(List.of(springShowdown, summerInvitational));
@@ -75,7 +82,9 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     showTeams.addAll(data.dummyTeams().subList(0, 3));
     registerTeams(springShowdown, showTeams, "2026-04-07");
 
-    System.out.println("[demo] DB initialized: users, 16 teams (4+ members),"
-      + " 9 tournaments (incl. 1 CLOTURE + 1 BROUILLON)");
+    System.out.println(
+        "[demo] DB initialized: users, 16 teams (4+ members),"
+        + " 9 tournaments (incl. 1 CLOTURE + 1 BROUILLON)"
+    );
   }
 }

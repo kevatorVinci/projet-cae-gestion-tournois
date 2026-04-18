@@ -1,6 +1,11 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,17 +19,17 @@ import lombok.NoArgsConstructor;
 @IdClass(PlayerSelectionId.class)
 public class PlayerSelection {
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "match_id", nullable = false)
-    private Match match;
+  @Id
+  @ManyToOne
+  @JoinColumn(name = "match_id", nullable = false)
+  private Match match;
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "member_id", nullable = false)
-    private User member;
+  @Id
+  @ManyToOne
+  @JoinColumn(name = "member_id", nullable = false)
+  private User member;
 
-    @ManyToOne
-    @JoinColumn(name = "team_id", nullable = false)
-    private Team team;
+  @ManyToOne
+  @JoinColumn(name = "team_id", nullable = false)
+  private Team team;
 }

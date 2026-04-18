@@ -18,6 +18,7 @@ public class MatchService {
    * @param matchRepository the repository
    */
   public MatchService(MatchRepository matchRepository) {
+    // Assigns the injected repository to our private variable
     this.matchRepository = matchRepository;
   }
 
@@ -28,6 +29,7 @@ public class MatchService {
    * @return The found match or null.
    */
   public Match getOne(Long id) {
+    // Uses the repository to find the match by ID. If not found, it returns null.
     return matchRepository.findById(id).orElse(null);
   }
 
@@ -38,6 +40,7 @@ public class MatchService {
    * @return The saved match entity.
    */
   public Match saveOne(Match match) {
+    // Saves the provided match entity into the database and returns the saved object
     return matchRepository.save(match);
   }
 }

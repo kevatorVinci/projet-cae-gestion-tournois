@@ -7,11 +7,10 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.DemandRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service handling the business logic of team join requests.
@@ -49,10 +48,10 @@ public class DemandService {
    * @param notificationService the notification service.
    */
   public DemandService(
-          DemandRepository demandRepo,
-          UserRepository userRepo,
-          TeamRepository teamRepo,
-          NotificationService notificationService) {
+      DemandRepository demandRepo,
+      UserRepository userRepo,
+      TeamRepository teamRepo,
+      NotificationService notificationService) {
     this.demandRepo = demandRepo;
     this.userRepo = userRepo;
     this.teamRepo = teamRepo;
@@ -69,19 +68,20 @@ public class DemandService {
    */
   public Demand createJoinRequest(Long memberId, Long teamId) {
     User member = userRepo
-            .findById(memberId)
-            .orElseThrow(() -> new RuntimeException("Player not found"));
+        .findById(memberId)
+        .orElseThrow(() -> new RuntimeException("Player not found"));
 
     Team team = teamRepo
-            .findById(teamId)
-            .orElseThrow(() -> new RuntimeException("Team not found"));
+        .findById(teamId)
+        .orElseThrow(() -> new RuntimeException("Team not found"));
 
     if (member.getTeam() != null) {
       throw new RuntimeException("You already have a team!");
     }
 
     boolean hasNoResponsible = team.getPrimaryResponsible() == null
-            && team.getSecondaryResponsible() == null;
+        && team.getSecondaryResponsible() == null;
+
     if (hasNoResponsible) {
       throw new RuntimeException("The team has no responsible.");
     }
@@ -91,7 +91,7 @@ public class DemandService {
     }
 
     if (demandRepo.existsByMemberIdAndTeamIdAndState(
-            memberId, teamId, DemandState.PENDING)) {
+        memberId, teamId, DemandState.PENDING)) {
       throw new RuntimeException("A pending request already exists for this team.");
     }
 
@@ -105,7 +105,8 @@ public class DemandService {
 
     if (team.getPrimaryResponsible() != null) {
       notificationService.notifyNewRequestToManager(
-              team.getPrimaryResponsible(), member.getTag(), team.getName());
+          team.getPrimaryResponsible(), member.getTag(), team.getName()
+      );
     }
     return savedDemand;
   }
@@ -147,9 +148,10 @@ public class DemandService {
     }
 
     team = teamRepo
-            .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
-                    currentUser.getId(), currentUser.getId())
-            .orElseThrow(() -> new SecurityException("You are not responsible for any team."));
+        .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
+            currentUser.getId(), currentUser.getId()
+        )
+        .orElseThrow(() -> new SecurityException("You are not responsible for any team."));
 
     return getPendingRequestsForTeam(team.getId());
   }
@@ -205,8 +207,8 @@ public class DemandService {
   public Demand rejectDemand(Long demandId, String reason, User currentUser) {
     Demand demand = getAndVerifyDemand(demandId, currentUser);
     String normalizedReason = (reason == null || reason.isBlank())
-            ? "No specific reason provided."
-            : reason.trim();
+        ? "No specific reason provided."
+        : reason.trim();
 
     demand.setState(DemandState.REJECTED);
     demand.setRejectionReason(normalizedReason);
@@ -214,7 +216,8 @@ public class DemandService {
 
     Demand savedDemand = demandRepo.save(demand);
     notificationService.notifyRequestDenied(
-            demand.getMember(), demand.getTeam().getName(), normalizedReason);
+        demand.getMember(), demand.getTeam().getName(), normalizedReason
+    );
     return savedDemand;
   }
 
@@ -229,8 +232,8 @@ public class DemandService {
    */
   private Demand getAndVerifyDemand(Long demandId, User currentUser) {
     Demand demand = demandRepo
-            .findById(demandId)
-            .orElseThrow(() -> new RuntimeException("Request not found"));
+        .findById(demandId)
+        .orElseThrow(() -> new RuntimeException("Request not found"));
     verifyUserIsResponsible(demand.getTeam(), currentUser);
     return demand;
   }
@@ -244,10 +247,10 @@ public class DemandService {
    */
   private void verifyUserIsResponsible(Team team, User currentUser) {
     boolean isPrimary = team.getPrimaryResponsible() != null
-            && team.getPrimaryResponsible().getId().equals(currentUser.getId());
+        && team.getPrimaryResponsible().getId().equals(currentUser.getId());
 
     boolean isSecondary = team.getSecondaryResponsible() != null
-            && team.getSecondaryResponsible().getId().equals(currentUser.getId());
+        && team.getSecondaryResponsible().getId().equals(currentUser.getId());
 
     if (!isPrimary && !isSecondary) {
       throw new SecurityException("Only the team responsible can manage members.");

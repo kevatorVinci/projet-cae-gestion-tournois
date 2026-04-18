@@ -10,17 +10,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class PlayerSelectionMapper {
 
-    /**
-     * Converts an entity to a DTO.
-     *
-     * @param selection The selection entity.
-     * @return The mapped DTO.
-     */
-    public PlayerSelectionDto toDto(PlayerSelection selection) {
-        PlayerSelectionDto dto = new PlayerSelectionDto();
-        dto.setMatchId(selection.getMatch().getId());
-        dto.setMemberId(selection.getMember().getId());
-        dto.setTeamId(selection.getTeam().getId());
-        return dto;
-    }
+  /**
+   * Converts an entity to a DTO.
+   *
+   * @param selection The selection entity.
+   * @return The mapped DTO.
+   */
+  public PlayerSelectionDto toDto(PlayerSelection selection) {
+    PlayerSelectionDto dto = new PlayerSelectionDto();
+    dto.setMatchId(selection.getMatch().getId());
+    dto.setMemberId(selection.getMember().getId());
+    dto.setTeamId(selection.getTeam().getId());
+    return dto;
+  }
 }

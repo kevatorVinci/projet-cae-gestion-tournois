@@ -7,9 +7,9 @@ import lombok.Data;
  */
 @Data
 public class MatchResultCreateDto {
-    private int scoreTeam1;
-    private int scoreTeam2;
-    private boolean isForfeitTeam1;
-    private boolean isForfeitTeam2;
-    private Long adminEncoderId;
+  private int scoreTeam1;
+  private int scoreTeam2;
+  private boolean isForfeitTeam1;
+  private boolean isForfeitTeam2;
+  private Long adminEncoderId;
 }

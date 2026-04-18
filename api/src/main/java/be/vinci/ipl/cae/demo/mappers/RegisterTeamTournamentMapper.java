@@ -4,10 +4,9 @@ import be.vinci.ipl.cae.demo.models.dtos.tournament.TeamTournamentRegistrationDt
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentAbstractDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentTeamRegistrationDto;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 /**
  * Mapper component to convert tournament registration entities into various DTOs.
@@ -22,16 +21,17 @@ public class RegisterTeamTournamentMapper {
    * @return the corresponding DTO, or null if input is null.
    */
   public TournamentTeamRegistrationDto toTournoiEquipeInscriptionDto(
-          RegistrationTeamTournament registration) {
+      RegistrationTeamTournament registration) {
     if (registration == null) {
       return null;
     }
 
     return new TournamentTeamRegistrationDto(
-            registration.getTeam().getId(),
-            registration.getTeam().getName(),
-            registration.getTeam().getProfileImage(),
-            registration.getRegistrationDate());
+        registration.getTeam().getId(),
+        registration.getTeam().getName(),
+        registration.getTeam().getProfileImage(),
+        registration.getRegistrationDate()
+    );
   }
 
   /**
@@ -41,7 +41,7 @@ public class RegisterTeamTournamentMapper {
    * @return a list of DTOs.
    */
   public List<TournamentTeamRegistrationDto> toTournoiEquipeInscriptionDtos(
-          Iterable<RegistrationTeamTournament> registrations) {
+      Iterable<RegistrationTeamTournament> registrations) {
     List<TournamentTeamRegistrationDto> result = new ArrayList<>();
     if (registrations != null) {
       for (RegistrationTeamTournament registration : registrations) {
@@ -58,23 +58,25 @@ public class RegisterTeamTournamentMapper {
    * @return the corresponding DTO, or null if input is null.
    */
   public TeamTournamentRegistrationDto toEquipeTournamentRegistrationDto(
-          RegistrationTeamTournament registration) {
+      RegistrationTeamTournament registration) {
     if (registration == null) {
       return null;
     }
 
     TournamentAbstractDto tournamentDto = new TournamentAbstractDto(
-            registration.getTournament().getId(),
-            registration.getTournament().getName(),
-            registration.getTournament().getStatus(),
-            registration.getTournament().getStartDate(),
-            registration.getTournament().getMaxParticipants());
+        registration.getTournament().getId(),
+        registration.getTournament().getName(),
+        registration.getTournament().getStatus(),
+        registration.getTournament().getStartDate(),
+        registration.getTournament().getMaxParticipants()
+    );
 
     return new TeamTournamentRegistrationDto(
-            registration.getTournament().getId(),
-            registration.getTeam().getId(),
-            registration.getRegistrationDate(),
-            tournamentDto);
+        registration.getTournament().getId(),
+        registration.getTeam().getId(),
+        registration.getRegistrationDate(),
+        tournamentDto
+    );
   }
 
   /**
@@ -84,7 +86,7 @@ public class RegisterTeamTournamentMapper {
    * @return a list of DTOs.
    */
   public List<TeamTournamentRegistrationDto> toEquipeTournamentRegistrationDtos(
-          Iterable<RegistrationTeamTournament> registrations) {
+      Iterable<RegistrationTeamTournament> registrations) {
     List<TeamTournamentRegistrationDto> result = new ArrayList<>();
     if (registrations != null) {
       for (RegistrationTeamTournament registration : registrations) {

@@ -6,10 +6,9 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.Collection;
+import org.springframework.stereotype.Service;
 
 /**
  * Service managing all business logic related to team registrations for tournaments.
@@ -57,11 +56,11 @@ public class RegisterTeamTournamentService {
    * @param notificationService   the notification service.
    */
   public RegisterTeamTournamentService(
-          InscriptionEquipeTournoiRepository inscriptionRepository,
-          TournamentRepository tournamentRepository,
-          TeamRepository teamRepository,
-          TournamentService tournamentService,
-          NotificationService notificationService) {
+      InscriptionEquipeTournoiRepository inscriptionRepository,
+      TournamentRepository tournamentRepository,
+      TeamRepository teamRepository,
+      TournamentService tournamentService,
+      NotificationService notificationService) {
     this.inscriptionRepository = inscriptionRepository;
     this.tournamentRepository = tournamentRepository;
     this.teamRepository = teamRepository;
@@ -118,7 +117,7 @@ public class RegisterTeamTournamentService {
 
     if (team.getMembers() == null || team.getMembers().size() < MIN_MEMBERS_FOR_REGISTRATION) {
       throw new IllegalArgumentException(
-              "A team must have at least 4 members to register for a tournament.");
+          "A team must have at least 4 members to register for a tournament.");
     }
 
     if (inscriptionRepository.findByTournamentAndTeam(tournament, team).isPresent()) {
@@ -133,16 +132,18 @@ public class RegisterTeamTournamentService {
     RegistrationTeamTournament saved = inscriptionRepository.save(registration);
 
     String message = "Team: registration confirmed for your team '"
-            + team.getName()
-            + "' in the tournament '"
-            + tournament.getName()
-            + "'.";
+        + team.getName()
+        + "' in the tournament '"
+        + tournament.getName()
+        + "'.";
+
     for (var member : team.getMembers()) {
       notificationService.createNotification(member, message);
     }
 
     if (tournament.getMaxParticipants() != null) {
-      Collection<?> registered = (Collection<?>) inscriptionRepository.findByTournament(tournament);
+      Collection<?> registered =
+          (Collection<?>) inscriptionRepository.findByTournament(tournament);
       if (registered.size() >= tournament.getMaxParticipants()) {
         tournamentService.closeRegistrations(tournament.getId());
       }
@@ -159,8 +160,9 @@ public class RegisterTeamTournamentService {
    */
   public boolean unregister(Long registrationId) {
     RegistrationTeamTournament registration = inscriptionRepository
-            .findById(registrationId)
-            .orElse(null);
+        .findById(registrationId)
+        .orElse(null);
+
     if (registration == null) {
       return false;
     }
@@ -185,13 +187,15 @@ public class RegisterTeamTournamentService {
   public boolean unregisterByTournamentAndTeam(Long tournamentId, Long teamId) {
     Tournament tournament = tournamentRepository.findById(tournamentId).orElse(null);
     Team team = teamRepository.findById(teamId).orElse(null);
+
     if (tournament == null || team == null) {
       return false;
     }
 
     RegistrationTeamTournament registration = inscriptionRepository
-            .findByTournamentAndTeam(tournament, team)
-            .orElse(null);
+        .findByTournamentAndTeam(tournament, team)
+        .orElse(null);
+
     if (registration == null) {
       return false;
     }
@@ -223,7 +227,7 @@ public class RegisterTeamTournamentService {
    */
   private boolean isUnregisterAllowed(Tournament tournament) {
     return "OUVERT".equals(tournament.getStatus())
-            && (tournament.getRegistrationDeadline() == null
-            || !tournament.getRegistrationDeadline().isBefore(LocalDate.now()));
+        && (tournament.getRegistrationDeadline() == null
+        || !tournament.getRegistrationDeadline().isBefore(LocalDate.now()));
   }
 }

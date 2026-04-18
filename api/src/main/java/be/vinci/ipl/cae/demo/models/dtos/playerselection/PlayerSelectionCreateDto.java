@@ -7,7 +7,7 @@ import lombok.Data;
  */
 @Data
 public class PlayerSelectionCreateDto {
-    private Long matchId;
-    private Long memberId;
-    private Long teamId;
+  private Long matchId;
+  private Long memberId;
+  private Long teamId;
 }

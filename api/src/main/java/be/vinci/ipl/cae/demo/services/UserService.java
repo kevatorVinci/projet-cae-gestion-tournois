@@ -9,15 +9,14 @@ import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for user authentication and profile management.
@@ -75,11 +74,11 @@ public class UserService {
    * @param userMapper          user mapper.
    */
   public UserService(
-          BCryptPasswordEncoder passwordEncoder,
-          UserRepository userRepository,
-          TeamRepository teamRepository,
-          NotificationService notificationService,
-          UserMapper userMapper) {
+      BCryptPasswordEncoder passwordEncoder,
+      UserRepository userRepository,
+      TeamRepository teamRepository,
+      NotificationService notificationService,
+      UserMapper userMapper) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.teamRepository = teamRepository;
@@ -97,19 +96,20 @@ public class UserService {
     User user = userRepository.findByEmail(email);
 
     var tokenBuilder = JWT.create()
-            .withIssuer("auth0")
-            .withClaim("email", email)
-            .withIssuedAt(new Date())
-            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
+        .withIssuer("auth0")
+        .withClaim("email", email)
+        .withIssuedAt(new Date())
+        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
 
     if (user != null && user.getId() != null) {
       tokenBuilder = tokenBuilder
-              .withSubject(String.valueOf(user.getId()))
-              .withClaim("id", user.getId());
+          .withSubject(String.valueOf(user.getId()))
+          .withClaim("id", user.getId());
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
     AuthenticatedUser authenticatedUser = userMapper.toAuthenticatedUser(user, token);
+
     if (authenticatedUser.getEmail() == null) {
       authenticatedUser.setEmail(email);
     }
@@ -210,11 +210,12 @@ public class UserService {
    * @return updated authenticated user payload or null.
    */
   public AuthenticatedUser updateProfile(
-          String email,
-          String specialty,
-          String profileImage,
-          String oldPassword,
-          String newPassword) {
+      String email,
+      String specialty,
+      String profileImage,
+      String oldPassword,
+      String newPassword) {
+
     User user = userRepository.findByEmail(email);
 
     if (user != null) {
@@ -222,9 +223,9 @@ public class UserService {
       user.setProfileImageUrl(profileImage);
 
       if (oldPassword != null
-              && !oldPassword.isBlank()
-              && newPassword != null
-              && !newPassword.isBlank()) {
+          && !oldPassword.isBlank()
+          && newPassword != null
+          && !newPassword.isBlank()) {
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
           user.setPassword(passwordEncoder.encode(newPassword));
         } else {
@@ -309,8 +310,8 @@ public class UserService {
     }
 
     Team team = teamRepository
-            .findByPrimaryResponsibleIdOrSecondaryResponsibleId(user.getId(), user.getId())
-            .orElse(user.getTeam());
+        .findByPrimaryResponsibleIdOrSecondaryResponsibleId(user.getId(), user.getId())
+        .orElse(user.getTeam());
 
     if (team == null) {
       return;
@@ -319,9 +320,9 @@ public class UserService {
     Long bannedUserId = user.getId();
 
     boolean wasPrimary = team.getPrimaryResponsible() != null
-            && team.getPrimaryResponsible().getId().equals(bannedUserId);
+        && team.getPrimaryResponsible().getId().equals(bannedUserId);
     boolean wasSecondary = team.getSecondaryResponsible() != null
-            && team.getSecondaryResponsible().getId().equals(bannedUserId);
+        && team.getSecondaryResponsible().getId().equals(bannedUserId);
 
     if (wasPrimary) {
       team.setPrimaryResponsible(null);
@@ -340,22 +341,26 @@ public class UserService {
 
     if (team.getPrimaryResponsible() == null) {
       User replacement = team.getMembers().stream()
-              .filter(member -> member.getId() != null)
-              .filter(member -> !member.getId().equals(bannedUserId))
-              .filter(member -> !member.isBanned())
-              .min(
-                      Comparator.comparing(
-                                      User::getCreationDate,
-                                      Comparator.nullsLast(Comparator.naturalOrder()))
-                              .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
-              .orElse(null);
+          .filter(member -> member.getId() != null)
+          .filter(member -> !member.getId().equals(bannedUserId))
+          .filter(member -> !member.isBanned())
+          .min(
+              Comparator.comparing(
+                  User::getCreationDate,
+                  Comparator.nullsLast(Comparator.naturalOrder())
+              ).thenComparing(
+                  User::getId,
+                  Comparator.nullsLast(Long::compareTo)
+              )
+          )
+          .orElse(null);
 
       team.setPrimaryResponsible(replacement);
     }
 
-    team
-            .getMembers()
-            .removeIf(member -> member.getId() != null && member.getId().equals(bannedUserId));
+    team.getMembers().removeIf(
+        member -> member.getId() != null && member.getId().equals(bannedUserId)
+    );
     user.setTeam(null);
 
     teamRepository.save(team);
