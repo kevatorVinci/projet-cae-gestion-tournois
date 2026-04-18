@@ -3,9 +3,9 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
 import be.vinci.ipl.cae.demo.models.dtos.auth.AdminEmailDto;
 import be.vinci.ipl.cae.demo.models.dtos.auth.BanUserDto;
-import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -126,7 +126,7 @@ public class AuthController {
   /**
    * Adds the administrator role to a user.
    *
-   * @param email the email address of the user to promote.
+   * @param payload the payload containing the email address of the user to promote.
    */
   @PutMapping("/addAdmin")
   @IsAdmin
@@ -137,7 +137,7 @@ public class AuthController {
   /**
    * Removes the administrator role from a user.
    *
-   * @param email the email address of the user to demote.
+   * @param payload the payload containing the email address of the user to demote.
    */
   @PutMapping("/removeAdmin")
   @IsAdmin

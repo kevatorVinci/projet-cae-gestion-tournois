@@ -192,8 +192,8 @@ public class TournamentController {
   /**
    * Cancels a tournament from any active state.
    *
-   * @param id      the tournament identifier.
-    * @param payload the cancellation payload.
+   * @param id the tournament identifier.
+   * @param payload the cancellation payload.
    * @return the cancelled tournament.
    */
   @PatchMapping("/{id}/cancel")

@@ -193,7 +193,6 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
    */
   @SuppressWarnings("PMD.ExcessiveMethodLength")
   protected SeedData seedBaseData(String pwd) {
-    
 
     User lea = makeUser("lea@mail.com", "Lynx", "tacticien", "2025-11-12", true, pwd, "luffy.png");
     User tom =
@@ -209,21 +208,23 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
     User zoe =
         makeUser("zoe@mail.com", "Vector", "catalyseur", "2026-02-04", false, pwd, "makima.jpg");
     User kevin =
-      makeUser(
-        "kevin@mail.com",
-        "Kevator",
-        "responsable",
-        "2026-02-10",
-        true,
-        pwd,
-        "pevin.jpg");
+        makeUser(
+            "kevin@mail.com",
+            "Kevator",
+            "responsable",
+            "2026-02-10",
+            true,
+            pwd,
+            "pevin.jpg");
     User hakim =
-      makeUser("hakim@mail.com", "Chef", "stratège", "2026-02-11", true, pwd, "garou.jpg");
+        makeUser("hakim@mail.com", "Chef", "stratège", "2026-02-11", true, pwd, "garou.jpg");
     User seyman =
-      makeUser("seyman@mail.com", "Seyman", "analyste", "2026-02-12", true, pwd, "eren.png");
+        makeUser("seyman@mail.com", "Seyman", "analyste", "2026-02-12", true, pwd, "eren.png");
     User uche =
-      makeUser("uche@mail.com", "Uche", "support", "2026-02-13", true, pwd, "jjk.jpg");
-    userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe, kevin, hakim, seyman, uche));
+        makeUser("uche@mail.com", "Uche", "support", "2026-02-13", true, pwd, "jjk.jpg");
+    userRepo.saveAll(List.of(
+        lea, tom, ines, tibo, lisa, noa, tim, zoe, kevin, hakim, seyman, uche
+    ));
 
     Tournament springArena = makeTournament(
         "Spring Arena Cup 2025",
@@ -285,7 +286,9 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
     hakim.setTeam(dev);
     seyman.setTeam(dev);
     uche.setTeam(dev);
-    userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe, kevin, hakim, seyman, uche));
+    userRepo.saveAll(List.of(
+        lea, tom, ines, tibo, lisa, noa, tim, zoe, kevin, hakim, seyman, uche
+    ));
 
     List<String> names = List.of(
         "TEAM_BETA", "TEAM_GAMMA", "TEAM_DELTA", "TEAM_EPSILON", "TEAM_ZETA",

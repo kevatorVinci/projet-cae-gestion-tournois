@@ -3,7 +3,6 @@ package be.vinci.ipl.cae.demo.models.dtos.tournament;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 
-
 /**
  * Abstract Data Transfer Object for tournament information.
  */

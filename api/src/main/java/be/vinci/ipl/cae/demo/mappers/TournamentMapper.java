@@ -6,6 +6,7 @@ import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentUpdateDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
+import java.time.LocalDate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -50,12 +51,14 @@ public class TournamentMapper {
       return tournament;
     }
 
-    tournament.setName(dto.name());
-    tournament.setDescription(dto.description());
-    tournament.setStartDate(dto.startDate());
-    tournament.setEndDate(dto.endDate());
-    tournament.setRegistrationDeadline(dto.registrationDeadline());
-    tournament.setMaxParticipants(dto.maxParticipants());
+    setTournamentFields(
+        tournament,
+        dto.name(),
+        dto.description(),
+        dto.startDate(),
+        dto.endDate(),
+        dto.registrationDeadline(),
+        dto.maxParticipants());
     return tournament;
   }
 
@@ -66,18 +69,19 @@ public class TournamentMapper {
    * @return the tournament entity.
    */
   public Tournament toEntity(TournamentUpdateDto dto) {
-    Tournament tournament = new Tournament();
     if (dto == null) {
-      return tournament;
+      return new Tournament();
     }
 
-    tournament.setName(dto.name());
-    tournament.setDescription(dto.description());
-    tournament.setStartDate(dto.startDate());
-    tournament.setEndDate(dto.endDate());
-    tournament.setRegistrationDeadline(dto.registrationDeadline());
-    tournament.setMaxParticipants(dto.maxParticipants());
-    return tournament;
+    TournamentCreateDto createDto = new TournamentCreateDto(
+        dto.name(),
+        dto.description(),
+        dto.startDate(),
+        dto.endDate(),
+        dto.registrationDeadline(),
+        dto.maxParticipants());
+
+    return toEntity(createDto);
   }
 
   /**
@@ -116,5 +120,21 @@ public class TournamentMapper {
       return null;
     }
     return new TeamReferenceDto(team.getId(), team.getName());
+  }
+
+  private void setTournamentFields(
+      Tournament tournament,
+      String name,
+      String description,
+      LocalDate startDate,
+      LocalDate endDate,
+      LocalDate registrationDeadline,
+      Integer maxParticipants) {
+    tournament.setName(name);
+    tournament.setDescription(description);
+    tournament.setStartDate(startDate);
+    tournament.setEndDate(endDate);
+    tournament.setRegistrationDeadline(registrationDeadline);
+    tournament.setMaxParticipants(maxParticipants);
   }
 }
