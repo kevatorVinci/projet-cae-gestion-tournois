@@ -19,4 +19,21 @@ public interface PlayerSelectionRepository
    * @return A list of selections.
    */
   Iterable<PlayerSelection> findByMatchId(Long matchId);
+
+  /**
+   * Finds selections for a specific match and team.
+   *
+   * @param matchId the match ID.
+   * @param teamId  the team ID.
+   * @return selections for the team in the match.
+   */
+  Iterable<PlayerSelection> findByMatchIdAndTeamId(Long matchId, Long teamId);
+
+  /**
+   * Deletes all selections for one team in one match.
+   *
+   * @param matchId the match ID.
+   * @param teamId  the team ID.
+   */
+  void deleteByMatchIdAndTeamId(Long matchId, Long teamId);
 }

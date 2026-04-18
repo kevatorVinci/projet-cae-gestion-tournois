@@ -46,7 +46,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
     text: string;
-  } | null>(null); // ✨ NOUVEAU : La mémoire pour la barre de recherche
+  } | null>(null); // Search bar state memory
 
   const [searchTerm, setSearchTerm] = useState('');
   const [banDialogOpen, setBanDialogOpen] = useState(false);
@@ -90,7 +90,7 @@ export default function AdminPage() {
             : 'Erreur de connexion au serveur.',
       });
     }
-  }; // ✨ NOUVEAU : On filtre la liste des joueurs en fonction de ce qu'on tape dans la recherche !
+  }; // Filters the players list based on the current search input.
 
   const openBanDialog = (email: string) => {
     setUserToBan(email);

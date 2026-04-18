@@ -872,6 +872,9 @@ const TournoiDetailPage = () => {
                   <TournamentBracket
                     matches={matches}
                     tournamentEndDate={tournoi.dateFin}
+                    onMatchSelect={(matchId) => {
+                      navigate(`/tournois/${id}/matchs/${matchId}`);
+                    }}
                   />
                 )}
               </Stack>
