@@ -193,39 +193,38 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
    */
   @SuppressWarnings("PMD.ExcessiveMethodLength")
   protected SeedData seedBaseData(String pwd) {
-    User lea = makeUser(
-        "lea@mail.com", "Lynx",
-        "tacticien", "2025-11-12", true, pwd, "luffy.png"
-    );
-    User tom = makeUser(
-        "tom@mail.com", "Rogue",
-        "exécuteur", "2025-12-03", false, pwd, "miles.jpg"
-    );
-    User ines = makeUser(
-        "ines@mail.com", "Pulse",
-        "guérisseur", "2026-01-18", false, pwd, "erza.jpg"
-    );
-    User tibo = makeUser(
-        "tibo@mail.com", "Iron",
-        "gardien", "2025-10-27", true, pwd, "kaido.png"
-    );
-    User lisa = makeUser(
-        "lisa@mail.com", "Storm",
-        "exécuteur", "2026-01-10", false, pwd, "flash.jpg"
-    );
-    User noa = makeUser(
-        "noa@mail.com", "Flash",
-        "architecte", "2026-02-02", false, pwd, "Pessi.jpg"
-    );
-    User tim = makeUser(
-        "tim@mail.com", "Titi",
-        "gardien", "2026-02-03", false, pwd, "itadori.jpg"
-    );
-    User zoe = makeUser(
-        "zoe@mail.com", "Vector",
-        "catalyseur", "2026-02-04", false, pwd, "makima.jpg"
-    );
-    userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe));
+
+    User lea = makeUser("lea@mail.com", "Lynx", "tacticien", "2025-11-12", true, pwd, "luffy.png");
+    User tom =
+        makeUser("tom@mail.com", "Rogue", "exécuteur", "2025-12-03", false, pwd, "miles.jpg");
+    User ines =
+        makeUser("ines@mail.com", "Pulse", "guérisseur", "2026-01-18", false, pwd, "erza.jpg");
+    User tibo = makeUser("tibo@mail.com", "Iron", "gardien", "2025-10-27", true, pwd, "kaido.png");
+    User lisa =
+        makeUser("lisa@mail.com", "Storm", "exécuteur", "2026-01-10", false, pwd, "flash.jpg");
+    User noa =
+        makeUser("noa@mail.com", "Flash", "architecte", "2026-02-02", false, pwd, "Pessi.jpg");
+    User tim = makeUser("tim@mail.com", "Titi", "gardien", "2026-02-03", false, pwd, "itadori.jpg");
+    User zoe =
+        makeUser("zoe@mail.com", "Vector", "catalyseur", "2026-02-04", false, pwd, "makima.jpg");
+    User kevin =
+        makeUser(
+            "kevin@mail.com",
+            "Kevator",
+            "responsable",
+            "2026-02-10",
+            true,
+            pwd,
+            "pevin.jpg");
+    User hakim =
+        makeUser("hakim@mail.com", "Chef", "stratège", "2026-02-11", true, pwd, "garou.jpg");
+    User seyman =
+        makeUser("seyman@mail.com", "Seyman", "analyste", "2026-02-12", true, pwd, "eren.png");
+    User uche =
+        makeUser("uche@mail.com", "Uche", "support", "2026-02-13", true, pwd, "jjk.jpg");
+    userRepo.saveAll(List.of(
+        lea, tom, ines, tibo, lisa, noa, tim, zoe, kevin, hakim, seyman, uche
+    ));
 
     Tournament springArena = makeTournament(
         "Spring Arena Cup 2025",
@@ -281,7 +280,15 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
     noa.setTeam(iota);
     tim.setTeam(iota);
     zoe.setTeam(iota);
-    userRepo.saveAll(List.of(lea, tom, ines, tibo, lisa, noa, tim, zoe));
+
+    final Team dev = createTeam("TEAM_DEV_CAE", kevin, null, "onepiece.jpg");
+    kevin.setTeam(dev);
+    hakim.setTeam(dev);
+    seyman.setTeam(dev);
+    uche.setTeam(dev);
+    userRepo.saveAll(List.of(
+        lea, tom, ines, tibo, lisa, noa, tim, zoe, kevin, hakim, seyman, uche
+    ));
 
     List<String> names = List.of(
         "TEAM_BETA", "TEAM_GAMMA", "TEAM_DELTA", "TEAM_EPSILON", "TEAM_ZETA",

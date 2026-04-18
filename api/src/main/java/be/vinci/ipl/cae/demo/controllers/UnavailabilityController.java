@@ -1,5 +1,8 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.mappers.UnavailabilityMapper;
+import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityCreateDto;
+import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityResponseDto;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
@@ -23,14 +26,18 @@ import org.springframework.web.server.ResponseStatusException;
 public class UnavailabilityController {
 
   private final UnavailabilityRepository indisponibiliteRepository;
+  private final UnavailabilityMapper unavailabilityMapper;
 
   /**
    * Builds the controller.
    *
    * @param indisponibiliteRepository blackout-period repository.
    */
-  public UnavailabilityController(UnavailabilityRepository indisponibiliteRepository) {
+  public UnavailabilityController(
+      UnavailabilityRepository indisponibiliteRepository,
+      UnavailabilityMapper unavailabilityMapper) {
     this.indisponibiliteRepository = indisponibiliteRepository;
+    this.unavailabilityMapper = unavailabilityMapper;
   }
 
   /**
@@ -40,10 +47,14 @@ public class UnavailabilityController {
    * @return list of periods.
    */
   @GetMapping
-  public Iterable<Unavailability> getMesIndisponibilites(
+  public Iterable<UnavailabilityResponseDto> getMesIndisponibilites(
       @AuthenticationPrincipal User currentUser) {
     ensureAuthenticated(currentUser);
-    return indisponibiliteRepository.findByUser(currentUser);
+    java.util.List<UnavailabilityResponseDto> result = new java.util.ArrayList<>();
+    for (Unavailability indisponibilite : indisponibiliteRepository.findByUser(currentUser)) {
+      result.add(unavailabilityMapper.toDto(indisponibilite));
+    }
+    return result;
   }
 
   /**
@@ -54,13 +65,13 @@ public class UnavailabilityController {
    * @return saved period.
    */
   @PostMapping
-  public Unavailability addIndisponibilite(
+  public UnavailabilityResponseDto addIndisponibilite(
       @AuthenticationPrincipal User currentUser,
-      @RequestBody @Valid Unavailability indisponibilite) {
+      @RequestBody @Valid UnavailabilityCreateDto indisponibilite) {
     ensureAuthenticated(currentUser);
-    indisponibilite.setUser(currentUser);
-
-    return indisponibiliteRepository.save(indisponibilite);
+    Unavailability entity = unavailabilityMapper.toEntity(indisponibilite);
+    entity.setUser(currentUser);
+    return unavailabilityMapper.toDto(indisponibiliteRepository.save(entity));
   }
 
   /**

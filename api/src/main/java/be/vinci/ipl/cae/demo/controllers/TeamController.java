@@ -1,6 +1,7 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.mappers.TeamMapper;
+import be.vinci.ipl.cae.demo.models.dtos.team.LeaveTeamDto;
 import be.vinci.ipl.cae.demo.models.dtos.team.TeamCreationDto;
 import be.vinci.ipl.cae.demo.models.dtos.team.TeamJoinDto;
 import be.vinci.ipl.cae.demo.models.dtos.team.TeamPublicDto;
@@ -11,7 +12,6 @@ import be.vinci.ipl.cae.demo.services.TeamService;
 import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -90,7 +90,7 @@ public class TeamController {
   @PostMapping("/{userId}/equipes")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("isAuthenticated()")
-  public Team createTeam(
+  public TeamPublicDto createTeam(
       @PathVariable Long userId,
       @RequestBody @Valid TeamCreationDto dto,
       @AuthenticationPrincipal User currentUser) {
@@ -107,7 +107,7 @@ public class TeamController {
         throw new ResponseStatusException(
             HttpStatus.CONFLICT, "Ce nom d'équipe est déjà utilisé.");
       }
-      return team;
+      return teamMapper.toPublicDto(team, currentUser);
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
@@ -154,7 +154,7 @@ public class TeamController {
   @PreAuthorize("isAuthenticated()")
   public void leaveTeam(
       @PathVariable Long userId,
-      @RequestBody(required = false) Map<String, Long> body,
+      @RequestBody(required = false) LeaveTeamDto body,
       @AuthenticationPrincipal User currentUser) {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
@@ -164,7 +164,7 @@ public class TeamController {
     }
 
     try {
-      Long newResponsibleId = body == null ? null : body.get("newResponsibleId");
+      Long newResponsibleId = body == null ? null : body.newResponsibleId();
       teamService.leaveTeam(currentUser, newResponsibleId);
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);

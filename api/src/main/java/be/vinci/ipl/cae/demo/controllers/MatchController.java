@@ -56,7 +56,7 @@ public class MatchController {
    * @return a list of matches involving the team.
    */
   @GetMapping("/equipes/{equipeId}/matches")
-  public List<Match> getMatchesByTeam(@PathVariable Long equipeId) {
-    return matchService.getMatchesByTeam(equipeId);
+  public ResponseEntity<List<MatchDto>> getMatchesByTeam(@PathVariable Long equipeId) {
+    return ResponseEntity.ok(matchMapper.toDtos(matchService.getMatchesByTeam(equipeId)));
   }
 }

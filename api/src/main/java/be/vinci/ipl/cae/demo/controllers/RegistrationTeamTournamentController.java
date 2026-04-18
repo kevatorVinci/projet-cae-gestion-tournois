@@ -87,9 +87,10 @@ public class RegistrationTeamTournamentController {
    */
   @GetMapping("/{tournoiId}/inscriptions")
   @IsAdmin
-  public Iterable<RegistrationTeamTournament> getAllByTournament(
+  public Iterable<TeamTournamentRegistrationDto> getAllByTournament(
       @PathVariable("tournoiId") Long tournamentId) {
-    return fetchTournamentRegistrations(tournamentId);
+    return registrationMapper.toEquipeTournamentRegistrationDtos(
+        fetchTournamentRegistrations(tournamentId));
   }
 
   /**
@@ -147,7 +148,7 @@ public class RegistrationTeamTournamentController {
   @PostMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @ResponseStatus(HttpStatus.CREATED)
   @IsResponsable
-  public RegistrationTeamTournament register(
+  public TeamTournamentRegistrationDto register(
       @PathVariable("tournoiId") Long tournamentId,
       @PathVariable("equipeId") Long teamId,
       @AuthenticationPrincipal User currentUser) {
@@ -165,7 +166,7 @@ public class RegistrationTeamTournamentController {
           HttpStatus.BAD_REQUEST,
           "Tournament not found, not OUVERT, or team already registered");
     }
-    return registration;
+    return registrationMapper.toEquipeTournamentRegistrationDto(registration);
   }
 
   /**

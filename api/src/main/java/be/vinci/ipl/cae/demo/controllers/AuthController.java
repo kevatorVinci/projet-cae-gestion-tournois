@@ -4,10 +4,11 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
+import be.vinci.ipl.cae.demo.models.dtos.auth.AdminEmailDto;
+import be.vinci.ipl.cae.demo.models.dtos.auth.BanUserDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -125,23 +126,23 @@ public class AuthController {
   /**
    * Adds the administrator role to a user.
    *
-   * @param email the email address of the user to promote.
+   * @param payload the payload containing the email address of the user to promote.
    */
   @PutMapping("/addAdmin")
   @IsAdmin
-  public void addAdmin(@RequestBody String email) {
-    userService.addAdmin(email);
+  public void addAdmin(@RequestBody @Valid AdminEmailDto payload) {
+    userService.addAdmin(payload.email());
   }
 
   /**
    * Removes the administrator role from a user.
    *
-   * @param email the email address of the user to demote.
+   * @param payload the payload containing the email address of the user to demote.
    */
   @PutMapping("/removeAdmin")
   @IsAdmin
-  public void removeAdmin(@RequestBody String email) {
-    userService.removeAdmin(email);
+  public void removeAdmin(@RequestBody @Valid AdminEmailDto payload) {
+    userService.removeAdmin(payload.email());
   }
 
   /**
@@ -151,13 +152,8 @@ public class AuthController {
    */
   @PostMapping("/ban")
   @IsAdmin
-  public void banUser(@RequestBody Map<String, String> payload) {
-    String email = payload.get("email");
-    if (email == null || email.isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requis pour bannir.");
-    }
-    String reason = payload.get("reason");
-    userService.banUser(email, reason);
+  public void banUser(@RequestBody @Valid BanUserDto payload) {
+    userService.banUser(payload.email(), payload.reason());
   }
 
   /**
