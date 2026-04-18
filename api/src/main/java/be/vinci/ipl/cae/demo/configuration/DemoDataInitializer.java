@@ -2,10 +2,6 @@ package be.vinci.ipl.cae.demo.configuration;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +13,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Profile("demo")
-@SuppressWarnings("PMD.ExcessiveMethodLength")
 public class DemoDataInitializer extends AbstractDataInitializer {
 
   /**
@@ -30,10 +25,9 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     final String pwd = pwdEncoder.encode("Azerty2026!");
 
     boolean shouldSeedBase = prepareBaseSeed(pwd);
-    SeedData data = null;
 
     if (shouldSeedBase) {
-      data = seedBaseData(pwd);
+      SeedData data = seedBaseData(pwd);
 
       Team alpha = data.alpha();
       Team omega = data.omega();
@@ -45,46 +39,16 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       }
     }
 
-    ensureDemoTournaments(data);
-    ensureMatchHistory();
+    ensureDemoTournaments();
 
     System.out.println("[demo] DB initialized/updated: tournois demo vérifiés "
-        + "(4 tournois CLOTURE supplémentaires en 8/8).");
+        + "(Tournois supplémentaires ajoutés).");
   }
 
-  private void ensureDemoTournaments(SeedData data) {
-    List<Team> registrationTeams = resolveRegistrationTeams(data);
-    if (registrationTeams.size() < CLOSED_TOURNAMENT_TEAM_CAP) {
-      System.out.println("[demo] Impossible de créer les tournois 8/8: "
-          + "moins de 8 équipes disponibles.");
-      return;
-    }
-
-    SeedData data = seedBaseData(pwd);
-
-    Team alpha = data.alpha();
-    Team omega = data.omega();
-
-    addBotMember(
-        "alphabot@demo.com",
-        "AlphaBot",
-        "architecte",
-        pwd,
-        "neon2.jpg",
-        alpha
-    );
-
-    for (int j = 1; j <= 3; j++) {
-      addBotMember(
-          "omegabot" + j + "@demo.com",
-          "OmegaBot" + j,
-          "gardien",
-          pwd,
-          "kaido.png",
-          omega
-      );
-    }
-
+  /**
+   * Ensures the specific demo tournaments are present in the database.
+   */
+  private void ensureDemoTournaments() {
     Tournament springShowdown = makeTournament(
         "Vinci Spring Showdown 2026",
         "Tournoi clôturé prêt pour la génération du planning des matchs",
@@ -105,17 +69,16 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         12
     );
 
-    tournamentRepo.saveAll(List.of(springShowdown, summerInvitational));
+    if (tournamentRepo.findByName("Vinci Spring Showdown 2026").isEmpty()) {
+      tournamentRepo.save(springShowdown);
+    }
 
-    Tournament closedArenaOne = getOrCreateTournament(
-        "Demo Closed Arena I",
-        "Tournoi de démonstration clôturé (8/8 équipes).",
-        "2026-06-01", "2026-06-06", "2026-05-25", "CLOTURE", CLOSED_TOURNAMENT_TEAM_CAP);
-    ensureRegistrations(closedArenaOne, registrationTeams.subList(0, 8), "2026-05-23");
+    if (tournamentRepo.findByName("Summer Invitational 2026").isEmpty()) {
+      tournamentRepo.save(summerInvitational);
+    }
 
     System.out.println(
-        "[demo] DB initialized: users, 16 teams (4+ members),"
-        + " 9 tournaments (incl. 1 CLOTURE + 1 BROUILLON)"
+        "[demo] DB initialized: 2 tournaments (incl. 1 CLOTURE + 1 BROUILLON)"
     );
   }
 }
