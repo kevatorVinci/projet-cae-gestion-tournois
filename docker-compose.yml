@@ -1,6 +1,5 @@
 services:
   frontend:
-    container_name: frontend-demo
     image: frontend-demo
     build:
       context: ./frontend
@@ -10,7 +9,6 @@ services:
       - api
 
   api:
-    container_name: api-demo
     image: api-demo
     build:
       context: ./api
@@ -20,23 +18,21 @@ services:
       - db
     environment:
       SPRING_PROFILES_ACTIVE: demo
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${SPRING_DATASOURCE_NAME}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
 
   db:
     image: postgres:14
-    container_name: db-demo
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${SPRING_DATASOURCE_NAME}
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     ports:
-      - "${POSTGRES_PORT:-15432}:5432"
+      - "15432:5432"
 
   reverse-proxy:
-    container_name: reverse-proxy-demo
     image: nginx:alpine
     ports:
       - "80:80"
