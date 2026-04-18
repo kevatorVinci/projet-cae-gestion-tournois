@@ -53,6 +53,8 @@ public class SecurityConfiguration {
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, "/tournois/**")
                 .permitAll()
+                .requestMatchers(HttpMethod.GET, "/tournaments/**")
+                .permitAll()
                 .requestMatchers("/indisponibilites", "/indisponibilites/**")
                 .authenticated()
                 .anyRequest()

@@ -304,7 +304,7 @@ const TeamsList = () => {
             }}
           >
             <ToggleButton value="teams" aria-label="Voir les équipes">
-              <GroupsIcon sx={{ mr: 1 }} /> Équipes
+              <GroupsIcon sx={{ mr: 1 }} /> Teams
             </ToggleButton>
             <ToggleButton value="players" aria-label="Voir les joueurs">
               <PersonIcon sx={{ mr: 1 }} /> Joueurs
@@ -358,7 +358,7 @@ const TeamsList = () => {
                   sx={{ fontSize: 56, color: 'rgba(255,255,255,0.08)' }}
                 />
                 <Typography color="text.secondary">
-                  Aucune équipe trouvée.
+                  Aucune team trouvée.
                 </Typography>
               </Box>
             ) : (

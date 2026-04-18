@@ -1,6 +1,7 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,6 +35,7 @@ public class Unavailability {
    */
   @Column(name = "date_debut", nullable = false)
   @NotNull
+  @JsonProperty("dateDebut")
   private LocalDate startDate;
 
   /**
@@ -41,6 +43,7 @@ public class Unavailability {
    */
   @Column(name = "date_fin", nullable = false)
   @NotNull
+  @JsonProperty("dateFin")
   private LocalDate endDate;
 
   /**

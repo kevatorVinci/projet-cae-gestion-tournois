@@ -575,7 +575,7 @@ export function TournoisResponsable() {
                   }}
                 />
                 <Chip
-                  label={`Team : ${teamName}`}
+                  label={`Équipe : ${teamName}`}
                   sx={{
                     mb: 1.5,
                     ml: 1,

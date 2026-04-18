@@ -99,7 +99,7 @@ public class UnavailabilityController {
    */
   private void ensureAuthenticated(User currentUser) {
     if (currentUser == null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifie");
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié.");
     }
   }
 }

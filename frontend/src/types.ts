@@ -86,6 +86,7 @@ interface Tournoi {
   etat: 'BROUILLON' | 'OUVERT' | 'CLOTURE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
   nombresParticipantsMax?: number;
   gagnant?: { id: number; name: string } | null;
+  planningMatchPublie?: boolean;
 }
 
 export type {

@@ -6,7 +6,7 @@ const API_BASE = '/api/notifications';
 function getRequiredAuthToken(): string {
   const token = getAuthenticatedUser()?.token;
   if (!token) {
-    throw new Error('Session expiree. Veuillez vous reconnecter.');
+    throw new Error('Session expirée. Veuillez vous reconnecter.');
   }
   return token;
 }
@@ -17,7 +17,7 @@ export function getCurrentUserIdFromToken(): number {
   const maybeId = payload?.id ?? payload?.userId;
 
   if (!maybeId) {
-    throw new Error('Impossible de recuperer l utilisateur connecte.');
+    throw new Error("Impossible de récupérer l'utilisateur connecté.");
   }
 
   return Number(maybeId);
@@ -47,7 +47,7 @@ export async function getNotificationsByUser(
 
   if (!response.ok) {
     throw new Error(
-      await parseError(response, 'Impossible de recuperer les notifications.'),
+      await parseError(response, 'Impossible de récupérer les notifications.'),
     );
   }
 
@@ -68,7 +68,7 @@ export async function getUnreadNotificationsByUser(
     throw new Error(
       await parseError(
         response,
-        'Impossible de recuperer les notifications non lues.',
+        'Impossible de récupérer les notifications non lues.',
       ),
     );
   }

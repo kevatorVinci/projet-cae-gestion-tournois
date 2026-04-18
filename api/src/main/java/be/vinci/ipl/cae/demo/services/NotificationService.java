@@ -54,8 +54,8 @@ public class NotificationService {
    */
   public Notification markAsRead(Long notificationId) {
     Notification n = notificationRepository
-        .findById(notificationId)
-        .orElseThrow(() -> new RuntimeException("Notification not found"));
+            .findById(notificationId)
+            .orElseThrow(() -> new RuntimeException("Notification introuvable"));
 
     n.setIsRead(true);
     return notificationRepository.save(n);
@@ -114,9 +114,8 @@ public class NotificationService {
    */
   public void notifyAccountCreation(User user) {
     createNotification(
-        user,
-        "Welcome: your account has been created. Join or create a team to start!"
-    );
+            user,
+            "Bienvenue : votre compte a été créé. Rejoignez ou créez une équipe pour commencer !");
   }
 
   /**
@@ -157,9 +156,9 @@ public class NotificationService {
       String candidateTag,
       String teamName) {
     createNotification(
-        manager,
-        "New request: " + candidateTag + " wants to join the team '" + teamName + "'."
-    );
+            manager,
+            "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe "
+                + "'" + teamName + "'.");
   }
 
   /**
@@ -170,9 +169,9 @@ public class NotificationService {
    */
   public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
-        user,
-        "Accepted: your request to join '" + teamName + "' has been accepted. Welcome!"
-    );
+            user,
+            "Accepté : votre demande pour rejoindre '" + teamName
+                + "' a été acceptée. Bienvenue !");
   }
 
   /**

@@ -33,6 +33,109 @@ export interface AcceptedTournamentRegistration {
   dateInscription?: string;
 }
 
+export interface MatchTeam {
+  id: number;
+  name: string;
+  profileImage?: string;
+}
+
+export interface TeamMatch {
+  id: number;
+  tournament: {
+    id: number;
+    nom: string;
+    etat: string;
+  };
+  equipe1: MatchTeam;
+  equipe2: MatchTeam;
+  dateMatch?: string;
+  scoreEquipe1: number;
+  scoreEquipe2: number;
+  vainqueur?: MatchTeam | null;
+  statut: string;
+  tourNumero?: number;
+  poolCode?: string;
+}
+
+const parseApiError = async (
+  response: Response,
+  fallbackMessage: string,
+): Promise<string> => {
+  if (response.status === 401) {
+    return 'Session expirée ou invalide. Reconnectez-vous avec un compte admin.';
+  }
+
+  if (response.status === 403) {
+    return 'Action réservée aux administrateurs.';
+  }
+
+  try {
+    const json = (await response.json()) as { message?: string };
+    if (json?.message) {
+      return json.message;
+    }
+  } catch {
+    // Ignore JSON parse errors and fallback to plain text/status.
+  }
+
+  try {
+    const text = (await response.text()).trim();
+    if (text) {
+      return `${fallbackMessage} (${response.status}) - ${text}`;
+    }
+  } catch {
+    // Ignore text parsing errors.
+  }
+
+  return `${fallbackMessage} (HTTP ${response.status})`;
+};
+
+const getAuthorizationHeader = (token: string): string => {
+  const normalized = token.trim();
+  return /^bearer\s+/i.test(normalized)
+    ? normalized.replace(/^bearer\s+/i, 'Bearer ')
+    : `Bearer ${normalized}`;
+};
+
+const toHeadersRecord = (headers?: HeadersInit): Record<string, string> => {
+  const result: Record<string, string> = {};
+  const source = new Headers(headers);
+  source.forEach((value, key) => {
+    result[key] = value;
+  });
+  return result;
+};
+
+const fetchWithAdminAuthFallback = async (
+  url: string,
+  token: string,
+  init: RequestInit,
+): Promise<Response> => {
+  const normalizedToken = token.trim();
+  const authVariants = [
+    getAuthorizationHeader(normalizedToken),
+    normalizedToken,
+  ];
+
+  let lastResponse: Response | null = null;
+  for (const authorizationValue of authVariants) {
+    const response = await fetch(url, {
+      ...init,
+      headers: {
+        ...toHeadersRecord(init.headers),
+        Authorization: authorizationValue,
+      },
+    });
+
+    lastResponse = response;
+    if (response.status !== 401) {
+      return response;
+    }
+  }
+
+  return lastResponse as Response;
+};
+
 // ═══════════════════════════════════════════════════════════════════
 // 1. TOURNAMENT MANAGEMENT (PUBLIC AND ADMIN)
 // ═══════════════════════════════════════════════════════════════════
@@ -54,7 +157,7 @@ export const fetchPublicTournaments = async (etat?: string, nom?: string) => {
 export const fetchAllTournaments = async (token: string) => {
   const requestOptions = {
     method: 'GET',
-    headers: { Authorization: token },
+    headers: { Authorization: getAuthorizationHeader(token) },
   };
   const response = await fetch('/api/tournois/all', requestOptions);
   if (!response.ok) {
@@ -121,7 +224,10 @@ const changeTournamentState = async (
 ) => {
   const requestOptions = {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Authorization: token },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: getAuthorizationHeader(token),
+    },
     body: body ? JSON.stringify(body) : undefined,
   };
   const response = await fetch(`/api/tournois/${id}/${action}`, requestOptions);
@@ -163,7 +269,7 @@ export const fetchTournamentRegistrations = async (
   token: string,
 ) => {
   const response = await fetch(`/api/tournois/${tournoiId}/inscriptions`, {
-    headers: { Authorization: token },
+    headers: { Authorization: getAuthorizationHeader(token) },
   });
   if (!response.ok) throw new Error('Impossible de charger les inscriptions.');
   return await response.json();
@@ -188,7 +294,7 @@ export const fetchTeamRegistrations = async (
   const response = await fetch(
     `/api/tournois/equipes/${equipeId}/inscriptions`,
     {
-      headers: { Authorization: token },
+      headers: { Authorization: getAuthorizationHeader(token) },
     },
   );
   if (!response.ok)
@@ -214,7 +320,7 @@ export const registerTeamToTournament = async (
 ) => {
   const requestOptions = {
     method: 'POST',
-    headers: { Authorization: token },
+    headers: { Authorization: getAuthorizationHeader(token) },
   };
   const response = await fetch(
     `/api/tournois/${tournoiId}/inscriptions/equipes/${equipeId}`,
@@ -229,6 +335,126 @@ export const registerTeamToTournament = async (
   return await response.json();
 };
 
+export const generateTournamentSchedule = async (
+  tournoiId: string | number,
+  token: string,
+): Promise<TeamMatch[]> => {
+  let response = await fetchWithAdminAuthFallback(
+    `/api/tournois/${tournoiId}/schedule`,
+    token,
+    {
+      method: 'POST',
+    },
+  );
+
+  if (response.status === 404) {
+    response = await fetchWithAdminAuthFallback(
+      `/api/tournaments/${tournoiId}/schedule`,
+      token,
+      {
+        method: 'POST',
+      },
+    );
+  }
+
+  if (response.status === 409) {
+    const conflictMessage = await parseApiError(
+      response,
+      'Le planning existe déjà.',
+    );
+
+    if (conflictMessage.toLowerCase().includes('déjà été généré')) {
+      return fetchTournamentMatchesAdmin(tournoiId, token);
+    }
+
+    throw new Error(conflictMessage);
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      await parseApiError(
+        response,
+        'Impossible de générer le planning des matchs.',
+      ),
+    );
+  }
+  return await response.json();
+};
+
+export const publishTournamentSchedule = async (
+  tournoiId: string | number,
+  token: string,
+): Promise<void> => {
+  let response = await fetchWithAdminAuthFallback(
+    `/api/tournois/${tournoiId}/schedule/publish`,
+    token,
+    {
+      method: 'POST',
+    },
+  );
+
+  if (response.status === 404) {
+    response = await fetchWithAdminAuthFallback(
+      `/api/tournaments/${tournoiId}/schedule/publish`,
+      token,
+      {
+        method: 'POST',
+      },
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      await parseApiError(
+        response,
+        'Impossible de publier le planning des matchs.',
+      ),
+    );
+  }
+};
+
+export const fetchTournamentMatches = async (
+  tournoiId: string | number,
+): Promise<TeamMatch[]> => {
+  const response = await fetch(`/api/tournois/${tournoiId}/matches`);
+  if (!response.ok) return [];
+  return await response.json();
+};
+
+export const fetchTournamentMatchesAdmin = async (
+  tournoiId: string | number,
+  token: string,
+): Promise<TeamMatch[]> => {
+  let response = await fetchWithAdminAuthFallback(
+    `/api/tournois/${tournoiId}/matches/admin`,
+    token,
+    {
+      method: 'GET',
+    },
+  );
+
+  if (response.status === 404) {
+    response = await fetchWithAdminAuthFallback(
+      `/api/tournaments/${tournoiId}/matches/admin`,
+      token,
+      {
+        method: 'GET',
+      },
+    );
+  }
+
+  if (!response.ok) return [];
+  return await response.json();
+};
+
+export const fetchTeamMatches = async (
+  equipeId: string | number,
+): Promise<TeamMatch[]> => {
+  const response = await fetch(`/api/tournois/equipes/${equipeId}/matches`);
+  if (!response.ok) return [];
+  return await response.json();
+};
+
 export const unregisterTeam = async (
   tournoiId: string | number,
   equipeId: string | number,
@@ -236,7 +462,7 @@ export const unregisterTeam = async (
 ) => {
   const requestOptions = {
     method: 'DELETE',
-    headers: { Authorization: token },
+    headers: { Authorization: getAuthorizationHeader(token) },
   };
   const response = await fetch(
     `/api/tournois/${tournoiId}/inscriptions/equipes/${equipeId}`,

@@ -102,7 +102,13 @@ public class DemandController {
       @RequestBody(required = false) Map<String, String> body,
       @AuthenticationPrincipal User currentUser) {
     try {
-      String rejectionReason = (body != null) ? body.get("rejectionReason") : null;
+      String rejectionReason = null;
+      if (body != null) {
+        rejectionReason = body.get("rejectionReason");
+        if (rejectionReason == null || rejectionReason.isBlank()) {
+          rejectionReason = body.get("raisonRefus");
+        }
+      }
       demandService.rejectDemand(demandId, rejectionReason, currentUser);
     } catch (RuntimeException e) {
       handleDemandException(e);

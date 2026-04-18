@@ -46,7 +46,7 @@ public class AuthController {
   public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) {
     AuthenticatedUser user = userService.register(credentials);
     if (user == null) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT);
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Cet email est déjà utilisé.");
     }
     return user;
   }

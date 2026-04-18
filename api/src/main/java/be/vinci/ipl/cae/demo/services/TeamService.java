@@ -93,7 +93,7 @@ public class TeamService {
    */
   public Team createTeam(User user, String teamName, String profileImage) {
     if (user.getTeam() != null) {
-      throw new IllegalStateException("The member already belongs to a team.");
+      throw new IllegalStateException("Ce membre appartient déjà à une équipe.");
     }
 
     if (teamRepository.existsByName(teamName)) {
@@ -179,7 +179,7 @@ public class TeamService {
 
     User member = findMemberInTeam(team, memberId);
     if (isUserResponsible(team, member)) {
-      throw new IllegalStateException("This member is already responsible.");
+      throw new IllegalStateException("Ce membre est déjà responsable.");
     }
 
     if (team.getPrimaryResponsible() == null) {
@@ -208,11 +208,11 @@ public class TeamService {
 
     User member = findMemberInTeam(team, memberId);
     if (!isUserResponsible(team, member)) {
-      throw new IllegalStateException("This member is not responsible.");
+      throw new IllegalStateException("Ce membre n'est pas responsable.");
     }
 
     if (countResponsibles(team) <= 1) {
-      throw new IllegalStateException("Cannot demote the last responsible.");
+      throw new IllegalStateException("Impossible de rétrograder le dernier responsable.");
     }
 
     removeResponsibleRole(team, member.getId());
@@ -255,12 +255,12 @@ public class TeamService {
       boolean onlyResponsible = countResponsibles(team) == 1;
       if (onlyResponsible) {
         if (newResponsibleId == null) {
-          throw new IllegalStateException("You must designate a replacement.");
+          throw new IllegalStateException("Vous devez désigner un remplaçant.");
         }
 
         User newResponsible = findMemberInTeam(team, newResponsibleId);
         if (newResponsible.getId().equals(persistedUser.getId())) {
-          throw new IllegalStateException("The replacement must be another member.");
+          throw new IllegalStateException("Le remplaçant doit être un autre membre.");
         }
         if (!isUserResponsible(team, newResponsible)) {
           if (team.getPrimaryResponsible() == null) {
@@ -275,7 +275,7 @@ public class TeamService {
       normalizeResponsibleSlots(team);
 
       if (countResponsibles(team) == 0 && !team.getMembers().isEmpty()) {
-        throw new IllegalStateException("The team must keep at least one responsible.");
+        throw new IllegalStateException("L'équipe doit garder au moins un responsable.");
       }
     }
 
@@ -303,7 +303,7 @@ public class TeamService {
     User persistedUser = loadPersistedUser(currentUser);
 
     if (!isUserResponsible(team, persistedUser)) {
-      throw new IllegalStateException("Only a responsible can modify the team's image.");
+      throw new IllegalStateException("Seul un responsable peut modifier l'image de l'équipe.");
     }
 
     team.setProfileImage(imageName);
@@ -329,7 +329,7 @@ public class TeamService {
    */
   private Team resolveCurrentUserTeam(User currentUser) {
     if (currentUser == null || currentUser.getId() == null) {
-      throw new IllegalStateException("The member does not belong to any team.");
+      throw new IllegalStateException("Ce membre n'appartient à aucune équipe.");
     }
 
     if (currentUser.getTeam() != null) {
@@ -345,7 +345,7 @@ public class TeamService {
       }
     }
 
-    throw new IllegalStateException("The member does not belong to any team.");
+    throw new IllegalStateException("Ce membre n'appartient à aucune équipe.");
   }
 
   /**
@@ -357,7 +357,7 @@ public class TeamService {
    */
   private void verifyCurrentUserIsResponsible(Team team, User currentUser) {
     if (!isUserResponsible(team, currentUser)) {
-      throw new IllegalStateException("Only a responsible can manage the responsibles.");
+      throw new IllegalStateException("Seul un responsable peut gérer les responsables.");
     }
   }
 
@@ -387,7 +387,7 @@ public class TeamService {
    */
   private User loadPersistedUser(User currentUser) {
     if (currentUser == null || currentUser.getId() == null) {
-      throw new IllegalStateException("The member does not belong to any team.");
+      throw new IllegalStateException("Ce membre n'appartient à aucune équipe.");
     }
 
     return userRepository.findById(currentUser.getId())

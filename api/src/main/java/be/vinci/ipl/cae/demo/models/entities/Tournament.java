@@ -88,6 +88,13 @@ public class Tournament {
   private Integer maxParticipants;
 
   /**
+   * Whether generated matches are visible to non-admin users.
+   */
+  @Column(name = "planning_match_publie", nullable = false)
+  @JsonProperty("planningMatchPublie")
+  private boolean matchSchedulePublished = false;
+
+  /**
    * The team that won the tournament.
    */
   @ManyToOne(fetch = FetchType.EAGER)

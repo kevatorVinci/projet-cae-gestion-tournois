@@ -44,7 +44,7 @@ describe('CreateEquipe', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/créer une team/i)).toBeDefined();
+    expect(screen.getByText(/créer une équipe/i)).toBeDefined();
     expect(screen.getByLabelText(/nom de l'équipe/i)).toBeDefined();
     expect(
       screen.getByRole('button', { name: /fonder l'équipe/i }),

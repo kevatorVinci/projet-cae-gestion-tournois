@@ -27,7 +27,7 @@ export async function register(credentials: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
   });
-  if (!response.ok) throw new Error('Registration failed');
+  if (!response.ok) throw new Error("Échec de l'inscription.");
   return response.json();
 }
 
@@ -45,7 +45,7 @@ export async function login(credentials: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
   });
-  if (!response.ok) throw new Error('Login failed');
+  if (!response.ok) throw new Error('Échec de la connexion.');
   return response.json();
 }
 

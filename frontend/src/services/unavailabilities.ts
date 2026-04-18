@@ -10,10 +10,7 @@ const API_BASE = '/api';
 
 // Use the SAME token approach as teams.ts
 function getAuthHeaders(): HeadersInit {
-  const user = getAuthenticatedUser();
-  console.log('user:', user);
-  const token = user?.token;
-  console.log('token:', token);
+  const token = getAuthenticatedUser()?.token;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -26,7 +23,7 @@ export const getMesIndisponibilites = async (): Promise<Period[]> => {
       'Content-Type': 'application/json',
     },
   });
-  if (!response.ok) throw new Error('Erreur lors de la récupération');
+  if (!response.ok) throw new Error('Erreur lors de la récupération.');
   return response.json();
 };
 
@@ -58,5 +55,5 @@ export const deleteIndisponibilite = async (id: number): Promise<void> => {
       ...getAuthHeaders(),
     },
   });
-  if (!response.ok) throw new Error('Erreur lors de la suppression');
+  if (!response.ok) throw new Error('Erreur lors de la suppression.');
 };

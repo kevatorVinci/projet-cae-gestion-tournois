@@ -1,4 +1,11 @@
-import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -20,6 +27,9 @@ import {
 import BackButton from '../../BackButton';
 import {
   fetchAllTournaments,
+  fetchTournamentMatchesAdmin,
+  generateTournamentSchedule,
+  publishTournamentSchedule,
   publishTournament,
 } from '../../../services/tournaments';
 import { UserContext } from '../../../contexts/UserContext';
@@ -87,8 +97,10 @@ const AdminTournamentsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{
     type: 'success' | 'error';
-    text: string;
+    text: ReactNode;
   } | null>(null);
+  const [planningGeneratedByTournament, setPlanningGeneratedByTournament] =
+    useState<Record<number, boolean>>({});
 
   // Memory variable to store the selected filter
   const [filter, setFilter] = useState('Tous');
@@ -100,8 +112,39 @@ const AdminTournamentsPage = () => {
     if (!authenticatedUser?.token) return;
     try {
       setLoading(true);
-      const data = await fetchAllTournaments(authenticatedUser.token);
+      const data: Tournoi[] = await fetchAllTournaments(
+        authenticatedUser.token,
+      );
       setTournaments(data);
+
+      try {
+        const candidates = data.filter(
+          (tournament: Tournoi) =>
+            tournament.etat === 'CLOTURE' || tournament.etat === 'EN_COURS',
+        );
+
+        const entries = await Promise.all(
+          candidates.map(async (tournament: Tournoi) => {
+            if (tournament.planningMatchPublie) {
+              return [tournament.id, true] as const;
+            }
+
+            try {
+              const adminMatches = await fetchTournamentMatchesAdmin(
+                tournament.id,
+                authenticatedUser.token,
+              );
+              return [tournament.id, adminMatches.length > 0] as const;
+            } catch {
+              return [tournament.id, false] as const;
+            }
+          }),
+        );
+
+        setPlanningGeneratedByTournament(Object.fromEntries(entries));
+      } catch {
+        setPlanningGeneratedByTournament({});
+      }
     } catch (err) {
       setError('Impossible de charger les tournois.');
     } finally {
@@ -133,6 +176,66 @@ const AdminTournamentsPage = () => {
       setActionMessage({
         type: 'error',
         text: 'Erreur lors de la publication du tournoi. Vérifiez votre connexion.',
+      });
+    }
+  };
+
+  const handleGeneratePlanning = async (id: number) => {
+    if (!authenticatedUser?.token) return;
+    setActionMessage(null);
+    const tournamentName =
+      tournaments.find((tournament) => tournament.id === id)?.nom ||
+      `Tournoi #${id}`;
+
+    try {
+      await generateTournamentSchedule(id, authenticatedUser.token);
+      setActionMessage({
+        type: 'success',
+        text: (
+          <>
+            Le planning du tournoi <strong>{tournamentName}</strong> a ete
+            genere. Vous pouvez maintenant le publier.
+          </>
+        ),
+      });
+      await loadTournaments();
+    } catch (err) {
+      setActionMessage({
+        type: 'error',
+        text:
+          err instanceof Error
+            ? err.message
+            : 'Erreur lors de la génération du planning.',
+      });
+    }
+  };
+
+  const handlePublishPlanning = async (id: number) => {
+    if (!authenticatedUser?.token) return;
+    setActionMessage(null);
+    const tournamentName =
+      tournaments.find((tournament) => tournament.id === id)?.nom ||
+      `Tournoi #${id}`;
+
+    try {
+      await publishTournamentSchedule(id, authenticatedUser.token);
+      setActionMessage({
+        type: 'success',
+        text: (
+          <>
+            Le planning du tournoi <strong>{tournamentName}</strong> a ete
+            publie: il est visible pour tous les joueurs.
+          </>
+        ),
+      });
+      await loadTournaments();
+    } catch (err) {
+      setActionMessage({
+        type: 'error',
+        text:
+          err instanceof Error
+            ? err.message
+            : 'Erreur lors de la publication du planning.',
       });
     }
   };
@@ -346,6 +449,9 @@ const AdminTournamentsPage = () => {
             sortedTournaments.map((tournament) =>
               (() => {
                 const etatStyle = ETAT_STYLES[tournament.etat];
+                const hasGeneratedPlanning =
+                  planningGeneratedByTournament[tournament.id] ||
+                  tournament.planningMatchPublie;
 
                 return (
                   <Card
@@ -425,6 +531,67 @@ const AdminTournamentsPage = () => {
                             }}
                           >
                             Publier
+                          </Button>
+                        </Box>
+                      )}
+
+                      {(tournament.etat === 'CLOTURE' ||
+                        tournament.etat === 'EN_COURS') && (
+                        <Box
+                          sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {!hasGeneratedPlanning && (
+                            <Button
+                              variant="contained"
+                              onClick={() =>
+                                handleGeneratePlanning(tournament.id)
+                              }
+                              sx={{
+                                backgroundColor: '#3b82f6',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                '&:hover': { backgroundColor: '#2563eb' },
+                              }}
+                            >
+                              Générer planning
+                            </Button>
+                          )}
+
+                          {hasGeneratedPlanning &&
+                            !tournament.planningMatchPublie && (
+                              <Button
+                                variant="contained"
+                                onClick={() =>
+                                  handlePublishPlanning(tournament.id)
+                                }
+                                sx={{
+                                  backgroundColor: '#7c3aed',
+                                  color: 'white',
+                                  fontWeight: 'bold',
+                                  '&:hover': { backgroundColor: '#6d28d9' },
+                                }}
+                              >
+                                Publier planning
+                              </Button>
+                            )}
+
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              navigate(`/tournois/${tournament.id}/matchs`)
+                            }
+                            disabled={!hasGeneratedPlanning}
+                            sx={{
+                              color: '#60a5fa',
+                              borderColor: '#60a5fa',
+                              opacity: hasGeneratedPlanning ? 1 : 0.6,
+                              '&:hover': {
+                                backgroundColor: 'rgba(96,165,250,0.12)',
+                              },
+                            }}
+                          >
+                            Voir planning
                           </Button>
                         </Box>
                       )}

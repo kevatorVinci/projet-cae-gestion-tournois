@@ -174,7 +174,7 @@ class NotificationServiceTest {
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
-    assertTrue(captor.getValue().getMessage().startsWith("Welcome"));
+    assertTrue(captor.getValue().getMessage().startsWith("Bienvenue"));
   }
 
   /**
@@ -202,7 +202,7 @@ class NotificationServiceTest {
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
-    assertTrue(captor.getValue().getMessage().startsWith("Accepted"));
+    assertTrue(captor.getValue().getMessage().startsWith("Accepté :"));
   }
 
   /**
@@ -217,7 +217,7 @@ class NotificationServiceTest {
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
     String msg = captor.getValue().getMessage();
-    assertTrue(msg.startsWith("Denied"));
+    assertTrue(msg.startsWith("Refusé :"));
     assertTrue(msg.contains("Insufficient level"));
   }
 
@@ -232,6 +232,6 @@ class NotificationServiceTest {
 
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
-    assertTrue(captor.getValue().getMessage().contains("No reason provided"));
+    assertTrue(captor.getValue().getMessage().contains("Aucune raison fournie"));
   }
 }

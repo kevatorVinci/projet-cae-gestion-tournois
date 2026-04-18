@@ -140,7 +140,7 @@ describe('MyTeam', () => {
       admin: false,
     });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
-    vi.mocked(getUserTeam).mockRejectedValueOnce(new Error('Session expiree'));
+    vi.mocked(getUserTeam).mockRejectedValueOnce(new Error('Session expirée'));
 
     render(
       <MemoryRouter>

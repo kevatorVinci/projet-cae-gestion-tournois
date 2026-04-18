@@ -13,9 +13,17 @@ import {
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PersonIcon from '@mui/icons-material/Person';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import { User, UserContextType } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import { getAllEquipes } from '../../../services/teams';
+import {
+  fetchTeamRegistrationsPublic,
+  fetchTeamMatches,
+  TeamRegistrationItem,
+  TeamMatch,
+} from '../../../services/tournaments';
 import BackButton from '../../BackButton';
 import { UserContext } from '../../../contexts/UserContext';
 
@@ -45,6 +53,10 @@ export default function MemberDetails() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamId, setTeamId] = useState<number | null>(null);
+  const [registrations, setRegistrations] = useState<TeamRegistrationItem[]>(
+    [],
+  );
+  const [matches, setMatches] = useState<TeamMatch[]>([]);
 
   const isOwnProfile = authenticatedUser?.tag === user?.tag;
 
@@ -130,6 +142,15 @@ export default function MemberDetails() {
           });
 
           setTeamId(foundTeamId);
+
+          if (foundTeamId) {
+            const [regs, teamMatches] = await Promise.all([
+              fetchTeamRegistrationsPublic(foundTeamId).catch(() => []),
+              fetchTeamMatches(foundTeamId).catch(() => []),
+            ]);
+            setRegistrations(regs);
+            setMatches(teamMatches);
+          }
         } else {
           setUser(null);
           setTeamId(null);
@@ -488,6 +509,236 @@ export default function MemberDetails() {
                     : 'Ce joueur ne fait actuellement partie d’aucune équipe.'}
                 </Typography>
               </Box>
+            </Paper>
+          </Box>
+
+          {/* ── Tournois & Matchs ── */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+              gap: 3,
+            }}
+          >
+            {/* Tournois */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                bgcolor: '#111827',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}
+              >
+                <EmojiEventsIcon sx={{ color: '#e8822a', fontSize: 22 }} />
+                <Typography variant="h6" fontWeight={700} color="white">
+                  Tournois
+                </Typography>
+              </Box>
+
+              {registrations.length === 0 ? (
+                <Typography variant="body2" color="rgba(255,255,255,0.4)">
+                  Aucun tournoi pour le moment.
+                </Typography>
+              ) : (
+                <Stack spacing={1.5}>
+                  {registrations.map((reg) => {
+                    const etat = reg.tournoi?.etat;
+                    const chipColor =
+                      etat === 'EN_COURS'
+                        ? '#e8822a'
+                        : etat === 'TERMINE'
+                          ? '#10b981'
+                          : etat === 'ANNULE'
+                            ? '#ef4444'
+                            : '#3b82f6';
+                    const etatLabel =
+                      etat === 'EN_COURS'
+                        ? 'En cours'
+                        : etat === 'TERMINE'
+                          ? 'Terminé'
+                          : etat === 'ANNULE'
+                            ? 'Annulé'
+                            : etat === 'CLOTURE'
+                              ? 'Clôturé'
+                              : 'Ouvert';
+                    return (
+                      <Box
+                        key={reg.tournoiId}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => navigate(`/tournois/${reg.tournoiId}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            navigate(`/tournois/${reg.tournoiId}`);
+                          }
+                        }}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          border: '1px solid rgba(255,255,255,0.07)',
+                          bgcolor: 'rgba(255,255,255,0.02)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 1,
+                          transition: 'border-color 0.2s',
+                          '&:hover': { borderColor: chipColor },
+                        }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            color="white"
+                          >
+                            {reg.tournoi?.nom}
+                          </Typography>
+                          {reg.tournoi?.dateDebut && (
+                            <Typography
+                              variant="caption"
+                              color="rgba(255,255,255,0.45)"
+                            >
+                              {new Date(
+                                reg.tournoi.dateDebut,
+                              ).toLocaleDateString('fr-BE')}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Chip
+                          label={etatLabel}
+                          size="small"
+                          sx={{
+                            bgcolor: `${chipColor}22`,
+                            color: chipColor,
+                            fontWeight: 700,
+                            fontSize: 10,
+                            border: `1px solid ${chipColor}44`,
+                          }}
+                        />
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              )}
+            </Paper>
+
+            {/* Matchs */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                bgcolor: '#111827',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}
+              >
+                <SportsMartialArtsIcon
+                  sx={{ color: '#3b82f6', fontSize: 22 }}
+                />
+                <Typography variant="h6" fontWeight={700} color="white">
+                  Matchs
+                </Typography>
+              </Box>
+
+              {matches.length === 0 ? (
+                <Typography variant="body2" color="rgba(255,255,255,0.4)">
+                  Aucun match pour le moment.
+                </Typography>
+              ) : (
+                <Stack spacing={1.5}>
+                  {matches.map((match) => {
+                    const isTeam1 = match.equipe1?.id === teamId;
+                    const opponent = isTeam1 ? match.equipe2 : match.equipe1;
+                    const myScore = isTeam1
+                      ? match.scoreEquipe1
+                      : match.scoreEquipe2;
+                    const opponentScore = isTeam1
+                      ? match.scoreEquipe2
+                      : match.scoreEquipe1;
+                    const won =
+                      match.statut === 'FINISHED' &&
+                      match.vainqueur?.id === teamId;
+                    const lost =
+                      match.statut === 'FINISHED' &&
+                      match.vainqueur != null &&
+                      match.vainqueur.id !== teamId;
+                    const resultColor = won
+                      ? '#10b981'
+                      : lost
+                        ? '#ef4444'
+                        : '#e8822a';
+                    const resultLabel = won
+                      ? 'Victoire'
+                      : lost
+                        ? 'Défaite'
+                        : 'En attente';
+                    return (
+                      <Box
+                        key={match.id}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          border: '1px solid rgba(255,255,255,0.07)',
+                          bgcolor: 'rgba(255,255,255,0.02)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 1,
+                        }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            color="white"
+                          >
+                            vs {opponent?.name ?? '?'}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="rgba(255,255,255,0.45)"
+                          >
+                            {match.tournament?.nom}
+                            {match.tourNumero != null
+                              ? ` · Tour ${match.tourNumero}`
+                              : ''}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
+                          {match.statut === 'FINISHED' && (
+                            <Typography
+                              variant="body2"
+                              fontWeight={800}
+                              color={resultColor}
+                            >
+                              {myScore} – {opponentScore}
+                            </Typography>
+                          )}
+                          <Chip
+                            label={resultLabel}
+                            size="small"
+                            sx={{
+                              bgcolor: `${resultColor}22`,
+                              color: resultColor,
+                              fontWeight: 700,
+                              fontSize: 10,
+                              border: `1px solid ${resultColor}44`,
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              )}
             </Paper>
           </Box>
         </Stack>
