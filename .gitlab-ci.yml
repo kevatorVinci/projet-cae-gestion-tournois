@@ -19,11 +19,3 @@ frontend test:
   artifacts:
     paths:
       - frontend/coverage/
-
-images:
-  stage: images
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - docker compose build
