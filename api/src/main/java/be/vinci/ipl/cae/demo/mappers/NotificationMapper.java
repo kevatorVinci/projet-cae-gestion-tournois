@@ -24,10 +24,11 @@ public class NotificationMapper {
     }
 
     return new NotificationDto(
-      notification.getId(),
-      notification.getMessage(),
-      notification.getSentDate(),
-      notification.getIsRead());
+        notification.getId(),
+        notification.getMessage(),
+        notification.getSentDate(),
+        notification.getIsRead()
+    );
   }
 
   /**

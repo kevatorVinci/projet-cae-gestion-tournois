@@ -17,6 +17,11 @@ import org.springframework.stereotype.Component;
 @Profile("test")
 public class TestDataInitializer extends AbstractDataInitializer {
 
+  /**
+   * Executes the data initialization for the test profile.
+   *
+   * @param args command line arguments
+   */
   @Override
   public void run(String... args) {
     if (userRepo.count() > 0 || teamRepo.count() > 0 || tournamentRepo.count() > 0) {

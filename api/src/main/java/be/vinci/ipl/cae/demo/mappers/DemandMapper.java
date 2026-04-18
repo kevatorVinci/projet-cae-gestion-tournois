@@ -24,18 +24,19 @@ public class DemandMapper {
     }
 
     return new DemandDto(
-      demand.getId(),
-      demand.getMember().getId(),
-      demand.getMember().getEmail(),
-      demand.getMember().getTag(),
-      demand.getMember().getSpecialty(),
-      demand.getMember().getProfileImageUrl(),
-      demand.getTeam().getId(),
-      demand.getTeam().getName(),
-      demand.getState(),
-      demand.getRequestDate(),
-      demand.getProcessingDate(),
-      demand.getRejectionReason());
+        demand.getId(),
+        demand.getMember().getId(),
+        demand.getMember().getEmail(),
+        demand.getMember().getTag(),
+        demand.getMember().getSpecialty(),
+        demand.getMember().getProfileImageUrl(),
+        demand.getTeam().getId(),
+        demand.getTeam().getName(),
+        demand.getState(),
+        demand.getRequestDate(),
+        demand.getProcessingDate(),
+        demand.getRejectionReason()
+    );
   }
 
   /**

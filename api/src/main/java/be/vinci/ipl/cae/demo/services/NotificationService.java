@@ -43,8 +43,7 @@ public class NotificationService {
    * @return a list of unread notifications.
    */
   public List<Notification> getUnread(Long userId) {
-    return notificationRepository
-            .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
+    return notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
   }
 
   /**
@@ -55,8 +54,8 @@ public class NotificationService {
    */
   public Notification markAsRead(Long notificationId) {
     Notification n = notificationRepository
-            .findById(notificationId)
-            .orElseThrow(() -> new RuntimeException("Notification introuvable"));
+        .findById(notificationId)
+        .orElseThrow(() -> new RuntimeException("Notification introuvable"));
 
     n.setIsRead(true);
     return notificationRepository.save(n);
@@ -69,7 +68,7 @@ public class NotificationService {
    */
   public void markAllAsRead(Long userId) {
     List<Notification> unread = notificationRepository
-            .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
+        .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
 
     unread.forEach(n -> n.setIsRead(true));
     notificationRepository.saveAll(unread);
@@ -115,8 +114,8 @@ public class NotificationService {
    */
   public void notifyAccountCreation(User user) {
     createNotification(
-            user,
-            "Bienvenue : votre compte a été créé. Rejoignez ou créez une équipe pour commencer !");
+        user,
+        "Bienvenue : votre compte a été créé. Rejoignez ou créez une équipe pour commencer !");
   }
 
   /**
@@ -127,7 +126,9 @@ public class NotificationService {
    */
   public void notifyTeamCreation(User user, String teamName) {
     createNotification(
-            user, "Équipe créée : vous êtes désormais responsable de l'équipe '" + teamName + "'.");
+        user,
+        "Équipe créée : vous êtes maintenant le responsable de l'équipe '" + teamName + "'."
+    );
   }
 
   /**
@@ -138,8 +139,10 @@ public class NotificationService {
    */
   public void sendApplicationNotification(User user, String teamName) {
     createNotification(
-            user,
-            "Demande envoyée : votre demande pour rejoindre '" + teamName + "' est en attente.");
+        user,
+        "Demande envoyée : votre requête pour rejoindre l'équipe '" + teamName
+            + "' est en attente."
+    );
   }
 
   /**
@@ -150,11 +153,13 @@ public class NotificationService {
    * @param teamName     the name of the team.
    */
   public void notifyNewRequestToManager(
-          User manager, String candidateTag, String teamName) {
+      User manager,
+      String candidateTag,
+      String teamName) {
     createNotification(
-            manager,
-            "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe "
-                + "'" + teamName + "'.");
+        manager,
+        "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe '" + teamName + "'."
+    );
   }
 
   /**
@@ -165,9 +170,9 @@ public class NotificationService {
    */
   public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
-            user,
-            "Accepté : votre demande pour rejoindre '" + teamName
-                + "' a été acceptée. Bienvenue !");
+        user,
+        "Accepté : votre demande pour rejoindre '" + teamName + "' a été acceptée. Bienvenue !"
+    );
   }
 
   /**
@@ -180,10 +185,12 @@ public class NotificationService {
   public void notifyRequestDenied(User user, String teamName, String reason) {
     String displayedReason =
         (reason == null || reason.isBlank()) ? "Aucune raison fournie." : reason;
+
     createNotification(
-            user,
-        "Refusé : votre demande pour rejoindre '" + teamName + "' a été refusée. Raison : "
-                    + displayedReason);
+        user,
+        "Refusé : votre demande pour rejoindre l'équipe '" + teamName
+            + "' a été refusée. Raison : " + displayedReason
+    );
   }
 
   /**
@@ -194,9 +201,10 @@ public class NotificationService {
    */
   public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
-            admin,
-            "Admin : nouveau tournoi en brouillon '" + tournamentName
-                + "'. Publiez-le quand il est prêt.");
+        admin,
+        "Admin : le tournoi brouillon '" + tournamentName
+            + "' a été créé. Publiez-le quand vous êtes prêt."
+    );
   }
 
   /**
@@ -207,7 +215,9 @@ public class NotificationService {
    */
   public void notifyTournamentPublished(User user, String tournamentName) {
     createNotification(
-            user,
-            "Nouveau tournoi : '" + tournamentName + "' vient d'être publié. Inscrivez-vous maintenant !");
+        user,
+        "Nouveau tournoi : le tournoi '" + tournamentName
+            + "' vient d'être publié. Inscrivez-vous vite !"
+    );
   }
 }

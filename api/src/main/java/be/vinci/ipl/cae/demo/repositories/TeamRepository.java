@@ -42,5 +42,5 @@ public interface TeamRepository extends CrudRepository<Team, Long> {
    * @return an optional containing the team if found.
    */
   Optional<Team> findByPrimaryResponsibleIdOrSecondaryResponsibleId(
-          Long primaryId, Long secondaryId);
+      Long primaryId, Long secondaryId);
 }

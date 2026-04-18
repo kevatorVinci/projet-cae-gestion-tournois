@@ -1,95 +1,52 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.annotations.IsAdmin;
+import be.vinci.ipl.cae.demo.mappers.MatchMapper;
+import be.vinci.ipl.cae.demo.models.dtos.match.MatchDto;
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.services.MatchService;
 import java.util.List;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Controller to handle requests related to Matches and Schedules.
+ * REST Controller providing endpoints for match operations.
  */
 @RestController
-@RequestMapping({"/tournaments", "/tournois"})
+@RequestMapping("/matches")
 public class MatchController {
 
   private final MatchService matchService;
+  private final MatchMapper matchMapper;
 
   /**
-   * Constructor.
-   * Links our entry point (Controller) to our brain (Service).
+   * Constructor for MatchController.
    *
-   * @param matchService the injected match service.
+   * @param matchService the match service
+   * @param matchMapper  the match mapper
    */
-  public MatchController(MatchService matchService) {
+  public MatchController(MatchService matchService, MatchMapper matchMapper) {
     this.matchService = matchService;
+    this.matchMapper = matchMapper;
   }
 
   /**
-   * Endpoint to generate the schedule for a specific tournament.
-   * React will send a POST request here to start the match creation.
+   * Endpoint to get a single match by its ID.
    *
-   * @param tournamentId the ID of the tournament from the URL.
+   * @param id The ID from the URL path.
+   * @return A response containing the MatchDto.
    */
-  @PostMapping("/{tournamentId}/schedule")
-  @ResponseStatus(HttpStatus.CREATED)
-  @IsAdmin
-  public List<Match> generateSchedule(@PathVariable Long tournamentId) {
-    try {
-      matchService.generateTournamentSchedule(tournamentId);
-      return matchService.getTournamentMatches(tournamentId);
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+  @GetMapping("/{id}")
+  public ResponseEntity<MatchDto> getOne(@PathVariable Long id) {
+    Match match = matchService.getOne(id);
+
+    if (match == null) {
+      return ResponseEntity.notFound().build();
     }
-  }
 
-  /**
-   * Publishes a generated schedule so all users can view it.
-   *
-   * @param tournamentId the ID of the tournament from the URL.
-   */
-  @PostMapping("/{tournamentId}/schedule/publish")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @IsAdmin
-  public void publishSchedule(@PathVariable Long tournamentId) {
-    try {
-      matchService.publishTournamentSchedule(tournamentId);
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
-    }
-  }
-
-  /**
-   * Endpoint to retrieve all matches for a specific tournament.
-   * React will send a GET request here to display the tournament bracket.
-   *
-   * @param tournamentId the ID of the tournament from the URL.
-   * @return a list of matches.
-   */
-  @GetMapping("/{tournamentId}/matches")
-  public List<Match> getMatches(@PathVariable Long tournamentId) {
-    return matchService.getTournamentPublicMatches(tournamentId);
-  }
-
-  /**
-   * Admin-only preview of tournament matches before publication.
-   *
-   * @param tournamentId the ID of the tournament.
-   * @return all matches of the tournament.
-   */
-  @GetMapping("/{tournamentId}/matches/admin")
-  @IsAdmin
-  public List<Match> getMatchesForAdmin(@PathVariable Long tournamentId) {
-    return matchService.getTournamentMatches(tournamentId);
+    return ResponseEntity.ok(matchMapper.toDto(match));
   }
 
   /**

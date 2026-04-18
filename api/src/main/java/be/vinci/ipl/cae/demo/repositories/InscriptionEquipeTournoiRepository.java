@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface InscriptionEquipeTournoiRepository
-        extends CrudRepository<RegistrationTeamTournament, Long> {
+    extends CrudRepository<RegistrationTeamTournament, Long> {
 
   /**
    * Finds all registrations for a given tournament.
@@ -39,5 +39,5 @@ public interface InscriptionEquipeTournoiRepository
    * @return an optional registration if found.
    */
   Optional<RegistrationTeamTournament> findByTournamentAndTeam(
-          Tournament tournament, Team team);
+      Tournament tournament, Team team);
 }

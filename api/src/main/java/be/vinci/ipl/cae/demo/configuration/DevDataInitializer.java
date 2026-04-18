@@ -16,7 +16,6 @@ public class DevDataInitializer extends AbstractDataInitializer {
     if (prepareBaseSeed(devPwd)) {
       seedBaseData(devPwd);
     }
-    ensureMatchHistory();
     System.out.println("Base de données DEV vérifiée.");
   }
 }

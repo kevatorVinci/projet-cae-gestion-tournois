@@ -70,11 +70,11 @@ public class TeamController {
    */
   @GetMapping("/{id}")
   public TeamPublicDto readOneTeam(
-          @PathVariable Long id,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long id,
+      @AuthenticationPrincipal User currentUser) {
     Team team = teamService.getTeamById(id)
-            .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Équipe introuvable."));
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Team not found"));
 
     return teamMapper.toPublicDto(team, currentUser);
   }
@@ -91,14 +91,14 @@ public class TeamController {
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("isAuthenticated()")
   public Team createTeam(
-          @PathVariable Long userId,
-          @RequestBody @Valid TeamCreationDto dto,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId,
+      @RequestBody @Valid TeamCreationDto dto,
+      @AuthenticationPrincipal User currentUser) {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Vous ne pouvez créer une équipe que pour votre propre compte.");
+          HttpStatus.FORBIDDEN,
+          "You can only create a team for your own account.");
     }
 
     try {
@@ -124,13 +124,13 @@ public class TeamController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void joinTeam(
-          @PathVariable Long userId,
-          @RequestBody @Valid TeamJoinDto dto,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId,
+      @RequestBody @Valid TeamJoinDto dto,
+      @AuthenticationPrincipal User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Vous ne pouvez rejoindre une équipe que pour votre propre compte.");
+          HttpStatus.FORBIDDEN,
+          "You can only join a team for your own account.");
     }
 
     try {
@@ -153,14 +153,14 @@ public class TeamController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void leaveTeam(
-          @PathVariable Long userId,
-          @RequestBody(required = false) Map<String, Long> body,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId,
+      @RequestBody(required = false) Map<String, Long> body,
+      @AuthenticationPrincipal User currentUser) {
 
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Vous ne pouvez quitter l'équipe que pour votre propre compte.");
+          HttpStatus.FORBIDDEN,
+          "You can only leave the team for your own account.");
     }
 
     try {
@@ -182,9 +182,9 @@ public class TeamController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void promoteResponsible(
-          @PathVariable Long userId,
-          @PathVariable("membreId") Long memberId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId,
+      @PathVariable("membreId") Long memberId,
+      @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> teamService.promoteTeamMember(currentUser, memberId));
   }
@@ -200,9 +200,9 @@ public class TeamController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void demoteResponsible(
-          @PathVariable Long userId,
-          @PathVariable("membreId") Long memberId,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long userId,
+      @PathVariable("membreId") Long memberId,
+      @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> teamService.demoteTeamLeader(currentUser, memberId));
   }
@@ -230,9 +230,9 @@ public class TeamController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @PreAuthorize("isAuthenticated()")
   public void updateTeamImage(
-          @PathVariable("equipeId") Long teamId,
-          @RequestBody @Valid TeamUpdateDto dto,
-          @AuthenticationPrincipal User currentUser) {
+      @PathVariable("equipeId") Long teamId,
+      @RequestBody @Valid TeamUpdateDto dto,
+      @AuthenticationPrincipal User currentUser) {
 
     try {
       teamService.updateTeamImage(teamId, dto.profileImage(), currentUser);
@@ -246,8 +246,8 @@ public class TeamController {
   private void ensureSelfTeamManagement(Long userId, User currentUser) {
     if (currentUser == null || !userId.equals(currentUser.getId())) {
       throw new ResponseStatusException(
-              HttpStatus.FORBIDDEN,
-              "Vous ne pouvez gérer les responsables que pour votre propre compte.");
+          HttpStatus.FORBIDDEN,
+          "You can only manage responsibles for your own account.");
     }
   }
 
