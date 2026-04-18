@@ -655,31 +655,20 @@ export default function MemberDetails() {
               ) : (
                 <Stack spacing={1.5}>
                   {matches.map((match) => {
-                    const isTeam1 = match.equipe1?.id === teamId;
-                    const opponent = isTeam1 ? match.equipe2 : match.equipe1;
-                    const myScore = isTeam1
-                      ? match.scoreEquipe1
-                      : match.scoreEquipe2;
-                    const opponentScore = isTeam1
-                      ? match.scoreEquipe2
-                      : match.scoreEquipe1;
-                    const won =
-                      match.statut === 'FINISHED' &&
-                      match.vainqueur?.id === teamId;
-                    const lost =
-                      match.statut === 'FINISHED' &&
-                      match.vainqueur != null &&
-                      match.vainqueur.id !== teamId;
-                    const resultColor = won
-                      ? '#10b981'
-                      : lost
-                        ? '#ef4444'
-                        : '#e8822a';
-                    const resultLabel = won
-                      ? 'Victoire'
-                      : lost
-                        ? 'Défaite'
-                        : 'En attente';
+                    const isTeam1 = match.team1Id === teamId;
+                    const opponentName = isTeam1
+                      ? match.team2Name
+                      : match.team1Name;
+                    const isFinished =
+                      match.status === 'FINISHED' || match.status === 'TERMINE';
+                    const tournamentName =
+                      registrations.find(
+                        (registration) =>
+                          registration.tournoiId === match.tournamentId,
+                      )?.tournoi?.nom ?? `Tournoi #${match.tournamentId}`;
+                    const resultColor = isFinished ? '#10b981' : '#e8822a';
+                    const resultLabel = isFinished ? 'Terminé' : 'En attente';
+
                     return (
                       <Box
                         key={match.id}
@@ -700,26 +689,28 @@ export default function MemberDetails() {
                             fontWeight={700}
                             color="white"
                           >
-                            vs {opponent?.name ?? '?'}
+                            vs {opponentName ?? '?'}
                           </Typography>
                           <Typography
                             variant="caption"
                             color="rgba(255,255,255,0.45)"
                           >
-                            {match.tournament?.nom}
-                            {match.tourNumero != null
-                              ? ` · Tour ${match.tourNumero}`
+                            {tournamentName}
+                            {match.round != null
+                              ? ` · Tour ${match.round}`
                               : ''}
                           </Typography>
                         </Box>
                         <Box sx={{ textAlign: 'right' }}>
-                          {match.statut === 'FINISHED' && (
+                          {match.scheduledDateTime && (
                             <Typography
                               variant="body2"
                               fontWeight={800}
-                              color={resultColor}
+                              color="rgba(255,255,255,0.75)"
                             >
-                              {myScore} – {opponentScore}
+                              {new Date(match.scheduledDateTime).toLocaleString(
+                                'fr-BE',
+                              )}
                             </Typography>
                           )}
                           <Chip

@@ -26,5 +26,5 @@ public interface MatchRepository extends CrudRepository<Match, Long> {
    * @param tournamentId the tournament ID.
    * @return a list of matches.
    */
-  List<Match> findByTournamentIdOrderByRoundNumberAscMatchDateAscIdAsc(Long tournamentId);
+  List<Match> findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(Long tournamentId);
 }

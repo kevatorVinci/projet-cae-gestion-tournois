@@ -1,15 +1,22 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.annotations.IsAdmin;
+import be.vinci.ipl.cae.demo.mappers.MatchMapper;
 import be.vinci.ipl.cae.demo.mappers.TournamentMapper;
+import be.vinci.ipl.cae.demo.models.dtos.match.MatchDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentCancelDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentCreateDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentUpdateDto;
+import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
+import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.services.MatchService;
 import be.vinci.ipl.cae.demo.services.TournamentService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,15 +38,26 @@ public class TournamentController {
 
   private final TournamentService tournoiService;
   private final TournamentMapper tournamentMapper;
+  private final MatchService matchService;
+  private final MatchMapper matchMapper;
 
   /**
-   * Creates the controller with its service dependency.
+   * Creates the controller with its service dependencies.
    *
-   * @param tournoiService the tournament service to inject.
+   * @param tournoiService    the tournament service to inject.
+   * @param tournamentMapper  the tournament mapper to inject.
+   * @param matchService      the match service to inject.
+   * @param matchMapper       the match mapper to inject.
    */
-  public TournamentController(TournamentService tournoiService, TournamentMapper tournamentMapper) {
+  public TournamentController(
+      TournamentService tournoiService,
+      TournamentMapper tournamentMapper,
+      MatchService matchService,
+      MatchMapper matchMapper) {
     this.tournoiService = tournoiService;
     this.tournamentMapper = tournamentMapper;
+    this.matchService = matchService;
+    this.matchMapper = matchMapper;
   }
 
   /**
@@ -208,6 +226,65 @@ public class TournamentController {
           HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
     }
     return tournamentMapper.toDto(tournoi);
+  }
+
+  /**
+   * Generates the first-round match schedule for a tournament.
+   *
+   * @param id          the tournament identifier.
+   * @param currentUser the authenticated admin user.
+   * @return the list of created match DTOs.
+   */
+  @PostMapping("/{id}/schedule")
+  @IsAdmin
+  public List<MatchDto> generateSchedule(
+      @PathVariable Long id,
+      @AuthenticationPrincipal User currentUser) {
+    try {
+      List<Match> matches = matchService.generateSchedule(id, currentUser);
+      return matchMapper.toDtos(matches);
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+    }
+  }
+
+  /**
+   * Publishes the match schedule so it becomes visible to all users.
+   *
+   * @param id the tournament identifier.
+   */
+  @PostMapping("/{id}/schedule/publish")
+  @IsAdmin
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void publishSchedule(@PathVariable Long id) {
+    try {
+      matchService.publishTournamentSchedule(id);
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+  }
+
+  /**
+   * Returns all matches for a tournament (admin view, even if not published).
+   *
+   * @param id the tournament identifier.
+   * @return a list of match DTOs.
+   */
+  @GetMapping("/{id}/matches/admin")
+  @IsAdmin
+  public List<MatchDto> getTournamentMatchesAdmin(@PathVariable Long id) {
+    return matchMapper.toDtos(matchService.getTournamentMatches(id));
+  }
+
+  /**
+   * Returns public matches for a tournament (only when schedule is published).
+   *
+   * @param id the tournament identifier.
+   * @return a list of match DTOs.
+   */
+  @GetMapping("/{id}/matches")
+  public List<MatchDto> getTournamentMatches(@PathVariable Long id) {
+    return matchMapper.toDtos(matchService.getTournamentPublicMatches(id));
   }
 
   private Iterable<TournamentResponseDto> tournoiMapperToDtos(Iterable<Tournament> tournaments) {

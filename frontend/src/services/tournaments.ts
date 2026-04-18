@@ -41,20 +41,15 @@ export interface MatchTeam {
 
 export interface TeamMatch {
   id: number;
-  tournament: {
-    id: number;
-    nom: string;
-    etat: string;
-  };
-  equipe1: MatchTeam;
-  equipe2: MatchTeam;
-  dateMatch?: string;
-  scoreEquipe1: number;
-  scoreEquipe2: number;
-  vainqueur?: MatchTeam | null;
-  statut: string;
-  tourNumero?: number;
-  poolCode?: string;
+  tournamentId: number;
+  team1Id?: number;
+  team2Id?: number;
+  team1Name?: string;
+  team2Name?: string;
+  round: number;
+  scheduledDateTime?: string;
+  status: string;
+  adminResponsibleId?: number;
 }
 
 const parseApiError = async (
@@ -450,7 +445,7 @@ export const fetchTournamentMatchesAdmin = async (
 export const fetchTeamMatches = async (
   equipeId: string | number,
 ): Promise<TeamMatch[]> => {
-  const response = await fetch(`/api/tournois/equipes/${equipeId}/matches`);
+  const response = await fetch(`/api/matches/equipes/${equipeId}/matches`);
   if (!response.ok) return [];
   return await response.json();
 };

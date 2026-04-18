@@ -27,14 +27,14 @@ public class MatchMapper {
     dto.setId(match.getId());
     dto.setTournamentId(match.getTournament().getId());
 
-    // Checks if team1 exists before mapping its ID
     if (match.getTeam1() != null) {
       dto.setTeam1Id(match.getTeam1().getId());
+      dto.setTeam1Name(match.getTeam1().getName());
     }
 
-    // Checks if team2 exists before mapping its ID
     if (match.getTeam2() != null) {
       dto.setTeam2Id(match.getTeam2().getId());
+      dto.setTeam2Name(match.getTeam2().getName());
     }
 
     dto.setRound(match.getRound());

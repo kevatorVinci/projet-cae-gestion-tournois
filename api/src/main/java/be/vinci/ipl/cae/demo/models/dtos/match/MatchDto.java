@@ -12,6 +12,8 @@ public class MatchDto {
   private Long tournamentId;
   private Long team1Id;
   private Long team2Id;
+  private String team1Name;
+  private String team2Name;
   private int round;
   private LocalDateTime scheduledDateTime;
   private String status;

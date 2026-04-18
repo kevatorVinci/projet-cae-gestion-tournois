@@ -47,38 +47,36 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
   if (matches.length === 0) return [];
 
   const minRound = matches.reduce(
-    (acc, match) => Math.min(acc, match.tourNumero ?? 1),
+    (acc, match) => Math.min(acc, match.round ?? 1),
     Number.MAX_SAFE_INTEGER,
   );
 
-  const round1 = matches.filter(
-    (match) => (match.tourNumero ?? 1) === minRound,
-  );
+  const round1 = matches.filter((match) => (match.round ?? 1) === minRound);
 
   const realRaw = round1
-    .filter((m) => m.poolCode !== 'BYE')
+    .filter((m) => m.team2Id != null || m.team2Name != null)
     .sort((a, b) => {
-      if (a.dateMatch && b.dateMatch) {
+      if (a.scheduledDateTime && b.scheduledDateTime) {
         return (
-          new Date(a.dateMatch).getTime() - new Date(b.dateMatch).getTime()
+          new Date(a.scheduledDateTime).getTime() -
+          new Date(b.scheduledDateTime).getTime()
         );
       }
       return String(a.id).localeCompare(String(b.id));
     });
 
-  const byeRaw = round1.find((m) => m.poolCode === 'BYE') ?? null;
+  const byeRaw =
+    round1.find((m) => m.team2Id == null && m.team2Name == null) ?? null;
 
   if (realRaw.length === 0) return [];
 
   const realSlots: BracketSlot[] = realRaw.map((match, i) => ({
     id: match.id,
     round: 1,
-    team1Name: match.equipe1?.name ?? '?',
-    team2Name: match.equipe2?.name ?? '?',
-    score1: match.scoreEquipe1,
-    score2: match.scoreEquipe2,
-    dateMatch: match.dateMatch,
-    status: match.statut,
+    team1Name: match.team1Name ?? '?',
+    team2Name: match.team2Name ?? '?',
+    dateMatch: match.scheduledDateTime,
+    status: match.status,
     isBye: false,
     topY: i * BRACKET_STRIDE,
   }));
@@ -87,9 +85,9 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
     ? {
         id: byeRaw.id,
         round: 1,
-        team1Name: byeRaw.equipe1?.name ?? '?',
+        team1Name: byeRaw.team1Name ?? '?',
         team2Name: '',
-        status: byeRaw.statut,
+        status: byeRaw.status,
         isBye: true,
         topY: realSlots.length * BRACKET_STRIDE,
       }
@@ -105,7 +103,7 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
     const nextRound: BracketSlot[] = [];
 
     const currentRoundMatches = matches.filter(
-      (m) => (m.tourNumero ?? 1) === roundNumber,
+      (m) => (m.round ?? 1) === roundNumber,
     );
     currentRoundMatches.sort((a, b) =>
       String(a.id).localeCompare(String(b.id)),
@@ -138,11 +136,11 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
       const expectedT2 = getWinnerName(p2);
 
       let realMatchIndex = currentRoundMatches.findIndex((m) => {
-        const e1 = m.equipe1?.name;
-        const e2 = m.equipe2?.name;
+        const t1 = m.team1Name;
+        const t2 = m.team2Name;
         return (
-          (expectedT1 !== '?' && (e1 === expectedT1 || e2 === expectedT1)) ||
-          (expectedT2 !== '?' && (e1 === expectedT2 || e2 === expectedT2))
+          (expectedT1 !== '?' && (t1 === expectedT1 || t2 === expectedT1)) ||
+          (expectedT2 !== '?' && (t1 === expectedT2 || t2 === expectedT2))
         );
       });
 
@@ -163,12 +161,10 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
         nextRound.push({
           id: realMatch.id,
           round: roundNumber,
-          team1Name: realMatch.equipe1?.name ?? expectedT1,
-          team2Name: realMatch.equipe2?.name ?? expectedT2,
-          score1: realMatch.scoreEquipe1,
-          score2: realMatch.scoreEquipe2,
-          dateMatch: realMatch.dateMatch,
-          status: realMatch.statut,
+          team1Name: realMatch.team1Name ?? expectedT1,
+          team2Name: realMatch.team2Name ?? expectedT2,
+          dateMatch: realMatch.scheduledDateTime,
+          status: realMatch.status,
           isBye: false,
           topY: myCenter - BRACKET_CARD_HEIGHT / 2,
         });
