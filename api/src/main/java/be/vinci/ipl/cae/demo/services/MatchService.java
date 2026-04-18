@@ -1,16 +1,10 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Match;
-import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
-import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -49,6 +43,7 @@ public class MatchService {
   public Match getOne(Long id) {
     return matchRepository.findById(id).orElse(null);
   }
+
   /**
    * Saves or updates a match in the database.
    *

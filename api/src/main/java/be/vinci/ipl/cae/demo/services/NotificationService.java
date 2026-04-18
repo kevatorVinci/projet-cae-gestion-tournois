@@ -54,8 +54,8 @@ public class NotificationService {
    */
   public Notification markAsRead(Long notificationId) {
     Notification n = notificationRepository
-            .findById(notificationId)
-            .orElseThrow(() -> new RuntimeException("Notification introuvable"));
+        .findById(notificationId)
+        .orElseThrow(() -> new RuntimeException("Notification introuvable"));
 
     n.setIsRead(true);
     return notificationRepository.save(n);
@@ -114,8 +114,8 @@ public class NotificationService {
    */
   public void notifyAccountCreation(User user) {
     createNotification(
-            user,
-            "Bienvenue : votre compte a été créé. Rejoignez ou créez une équipe pour commencer !");
+        user,
+        "Bienvenue : votre compte a été créé. Rejoignez ou créez une équipe pour commencer !");
   }
 
   /**
@@ -127,7 +127,7 @@ public class NotificationService {
   public void notifyTeamCreation(User user, String teamName) {
     createNotification(
         user,
-        "Team created: you are now the manager of team '" + teamName + "'."
+        "Équipe créée : vous êtes maintenant le responsable de l'équipe '" + teamName + "'."
     );
   }
 
@@ -140,7 +140,8 @@ public class NotificationService {
   public void sendApplicationNotification(User user, String teamName) {
     createNotification(
         user,
-        "Application sent: your request to join '" + teamName + "' is pending."
+        "Demande envoyée : votre requête pour rejoindre l'équipe '" + teamName
+            + "' est en attente."
     );
   }
 
@@ -156,9 +157,9 @@ public class NotificationService {
       String candidateTag,
       String teamName) {
     createNotification(
-            manager,
-            "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe "
-                + "'" + teamName + "'.");
+        manager,
+        "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe '" + teamName + "'."
+    );
   }
 
   /**
@@ -169,9 +170,9 @@ public class NotificationService {
    */
   public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
-            user,
-            "Accepté : votre demande pour rejoindre '" + teamName
-                + "' a été acceptée. Bienvenue !");
+        user,
+        "Accepté : votre demande pour rejoindre '" + teamName + "' a été acceptée. Bienvenue !"
+    );
   }
 
   /**
@@ -183,12 +184,12 @@ public class NotificationService {
    */
   public void notifyRequestDenied(User user, String teamName, String reason) {
     String displayedReason =
-        (reason == null || reason.isBlank()) ? "No reason provided." : reason;
+        (reason == null || reason.isBlank()) ? "Aucune raison fournie." : reason;
 
     createNotification(
         user,
-        "Denied: your request to join '" + teamName + "' has been denied. Reason: "
-            + displayedReason
+        "Refusé : votre demande pour rejoindre l'équipe '" + teamName
+            + "' a été refusée. Raison : " + displayedReason
     );
   }
 
@@ -201,7 +202,8 @@ public class NotificationService {
   public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
         admin,
-        "Admin: new draft tournament '" + tournamentName + "'. Publish when ready."
+        "Admin : le tournoi brouillon '" + tournamentName
+            + "' a été créé. Publiez-le quand vous êtes prêt."
     );
   }
 
@@ -214,7 +216,8 @@ public class NotificationService {
   public void notifyTournamentPublished(User user, String tournamentName) {
     createNotification(
         user,
-        "New tournament: '" + tournamentName + "' has just been published. Register now!"
+        "Nouveau tournoi : le tournoi '" + tournamentName
+            + "' vient d'être publié. Inscrivez-vous vite !"
     );
   }
 }

@@ -1,7 +1,7 @@
 package be.vinci.ipl.cae.demo.models.dtos.tournament;
 
-import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDate;
 
 /**
  * Public-facing registration DTO for tournament detail page.
