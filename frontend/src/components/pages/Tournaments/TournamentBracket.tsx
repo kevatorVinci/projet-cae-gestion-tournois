@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { TeamMatch } from '../../../services/tournaments';
 
 const BRACKET_CARD_HEIGHT = 108;
@@ -18,7 +18,7 @@ type BracketSlot = {
   topY: number;
 };
 
-// Génère une couleur unique et constante basée sur le nom de l'équipe
+// Generates a unique and consistent color based on the team name
 const getTeamColor = (name: string): string => {
   if (!name || name === '?') return '#94a3b8';
   let hash = 0;
@@ -29,7 +29,7 @@ const getTeamColor = (name: string): string => {
   return `hsl(${hue}, 85%, 65%)`;
 };
 
-// Fonction utilitaire pour deviner qui avance au tour suivant
+// Utility function to infer who advances to the next round
 const getWinnerName = (slot: BracketSlot): string => {
   if (slot.isBye) return slot.team1Name;
 
@@ -227,12 +227,19 @@ const computePlaceholderDate = (
 type Props = {
   matches: TeamMatch[];
   tournamentEndDate?: string | null;
+  selectedMatchId?: number | null;
+  onMatchSelect?: (matchId: number) => void;
 };
 
 const LINE_COLOR = 'rgba(148,163,184,0.55)';
 const THICKNESS = 2;
 
-const TournamentBracket = ({ matches, tournamentEndDate = null }: Props) => {
+const TournamentBracket = ({
+  matches,
+  tournamentEndDate = null,
+  selectedMatchId = null,
+  onMatchSelect,
+}: Props) => {
   const bracketTree = buildBracketTree(matches);
 
   if (bracketTree.length === 0) return null;
@@ -374,6 +381,11 @@ const TournamentBracket = ({ matches, tournamentEndDate = null }: Props) => {
                     typeof match.id === 'string' &&
                     match.id.startsWith('placeholder-');
                   const isBye = match.isBye === true;
+                  const numericMatchId = Number(match.id);
+                  const isMatchSelectable =
+                    !isPlaceholder && Number.isFinite(numericMatchId);
+                  const isSelected =
+                    isMatchSelectable && selectedMatchId === numericMatchId;
                   const top = match.topY - columnTopY;
                   const displayDate = isPlaceholder
                     ? computePlaceholderDate(
@@ -388,21 +400,44 @@ const TournamentBracket = ({ matches, tournamentEndDate = null }: Props) => {
                   const isWinner1 = s1 > s2;
                   const isWinner2 = s2 > s1;
                   const isDraw = s1 === s2;
+                  const triggerSelect = () => {
+                    if (isMatchSelectable && onMatchSelect) {
+                      onMatchSelect(numericMatchId);
+                    }
+                  };
 
                   return (
                     <Box
                       key={match.id}
+                      onPointerDown={
+                        isMatchSelectable ? triggerSelect : undefined
+                      }
+                      onClick={isMatchSelectable ? triggerSelect : undefined}
+                      role={isMatchSelectable ? 'button' : undefined}
+                      tabIndex={isMatchSelectable ? 0 : -1}
+                      onKeyDown={
+                        isMatchSelectable
+                          ? (event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                triggerSelect();
+                              }
+                            }
+                          : undefined
+                      }
                       sx={{
                         height: BRACKET_CARD_HEIGHT,
                         width: 260,
                         p: 1.2,
                         boxSizing: 'border-box',
                         borderRadius: 1.5,
-                        border: isPlaceholder
-                          ? '2px dashed rgba(255,255,255,0.22)'
-                          : isBye
-                            ? '2px solid rgba(234,179,8,0.45)'
-                            : '2px solid rgba(255,255,255,0.28)',
+                        border: isSelected
+                          ? '2px solid #e8822a'
+                          : isPlaceholder
+                            ? '2px dashed rgba(255,255,255,0.22)'
+                            : isBye
+                              ? '2px solid rgba(234,179,8,0.45)'
+                              : '2px solid rgba(255,255,255,0.28)',
                         backgroundColor: isBye
                           ? 'rgba(234,179,8,0.05)'
                           : 'rgba(255,255,255,0.02)',
@@ -411,6 +446,17 @@ const TournamentBracket = ({ matches, tournamentEndDate = null }: Props) => {
                         top: `${top}px`,
                         display: 'flex',
                         flexDirection: 'column',
+                        cursor: isMatchSelectable ? 'pointer' : 'default',
+                        transition: 'all 0.18s ease',
+                        boxShadow: isSelected
+                          ? '0 0 0 1px rgba(232,130,42,0.45), 0 10px 24px rgba(232,130,42,0.16)'
+                          : 'none',
+                        '&:hover': isMatchSelectable
+                          ? {
+                              borderColor: 'rgba(232,130,42,0.75)',
+                              backgroundColor: 'rgba(232,130,42,0.06)',
+                            }
+                          : undefined,
                       }}
                     >
                       <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
@@ -515,6 +561,27 @@ const TournamentBracket = ({ matches, tournamentEndDate = null }: Props) => {
                                   : '#e8822a',
                           }}
                         />
+
+                        {isMatchSelectable && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              triggerSelect();
+                            }}
+                            sx={{
+                              minWidth: 0,
+                              px: 0.75,
+                              color: '#93c5fd',
+                              textTransform: 'none',
+                              fontSize: '0.72rem',
+                              lineHeight: 1,
+                            }}
+                          >
+                            Voir le detail
+                          </Button>
+                        )}
                       </Stack>
 
                       {!isBye && (

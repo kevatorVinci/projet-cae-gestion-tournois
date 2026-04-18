@@ -20,7 +20,11 @@ public class PlayerSelectionMapper {
     PlayerSelectionDto dto = new PlayerSelectionDto();
     dto.setMatchId(selection.getMatch().getId());
     dto.setMemberId(selection.getMember().getId());
+    dto.setMemberTag(selection.getMember().getTag());
+    dto.setMemberSpecialty(selection.getMember().getSpecialty());
+    dto.setMemberProfileImageUrl(selection.getMember().getProfileImageUrl());
     dto.setTeamId(selection.getTeam().getId());
+    dto.setTeamName(selection.getTeam().getName());
     return dto;
   }
 }

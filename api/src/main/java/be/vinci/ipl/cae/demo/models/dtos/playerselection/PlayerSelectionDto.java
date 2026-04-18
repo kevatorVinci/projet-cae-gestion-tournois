@@ -9,5 +9,9 @@ import lombok.Data;
 public class PlayerSelectionDto {
   private Long matchId;
   private Long memberId;
+  private String memberTag;
+  private String memberSpecialty;
+  private String memberProfileImageUrl;
   private Long teamId;
+  private String teamName;
 }

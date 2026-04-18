@@ -38,7 +38,7 @@ export const addIndisponibilite = async (
       ...getAuthHeaders(),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ dateDebut, dateFin }),
+    body: JSON.stringify({ startDate: dateDebut, endDate: dateFin }),
   });
   if (!response.ok) {
     const body = await response.text();

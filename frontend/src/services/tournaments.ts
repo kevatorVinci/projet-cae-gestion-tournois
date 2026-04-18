@@ -52,6 +52,33 @@ export interface TeamMatch {
   adminResponsibleId?: number;
 }
 
+export interface MatchPlayerSelection {
+  matchId: number;
+  memberId: number;
+  memberTag?: string;
+  memberSpecialty?: string;
+  memberProfileImageUrl?: string;
+  teamId: number;
+  teamName?: string;
+}
+
+export interface MatchPlayerSelectionMember {
+  memberId: number;
+  tag: string;
+  specialty?: string;
+  profileImageUrl?: string;
+  selected: boolean;
+}
+
+export interface MatchTeamSelectionView {
+  matchId: number;
+  teamId: number;
+  canEdit: boolean;
+  maxPlayers: number;
+  selectedCount: number;
+  members: MatchPlayerSelectionMember[];
+}
+
 const parseApiError = async (
   response: Response,
   fallbackMessage: string,
@@ -447,6 +474,68 @@ export const fetchTeamMatches = async (
 ): Promise<TeamMatch[]> => {
   const response = await fetch(`/api/matches/equipes/${equipeId}/matches`);
   if (!response.ok) return [];
+  return await response.json();
+};
+
+export const fetchMatchSelections = async (
+  matchId: string | number,
+  token?: string,
+): Promise<MatchPlayerSelection[]> => {
+  const response = await fetch(`/api/selections/match/${matchId}`, {
+    headers: token
+      ? { Authorization: getAuthorizationHeader(token) }
+      : undefined,
+  });
+  if (!response.ok) return [];
+  return await response.json();
+};
+
+export const fetchTeamSelectionEditor = async (
+  matchId: string | number,
+  teamId: string | number,
+  token: string,
+): Promise<MatchTeamSelectionView> => {
+  const response = await fetch(
+    `/api/selections/match/${matchId}/team/${teamId}/editor`,
+    {
+      headers: { Authorization: getAuthorizationHeader(token) },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await parseApiError(response, 'Impossible de charger la composition.'),
+    );
+  }
+  return await response.json();
+};
+
+export const updateMatchTeamSelection = async (
+  matchId: string | number,
+  teamId: string | number,
+  memberIds: number[],
+  token: string,
+): Promise<MatchPlayerSelection[]> => {
+  const response = await fetch(
+    `/api/selections/match/${matchId}/team/${teamId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: getAuthorizationHeader(token),
+      },
+      body: JSON.stringify({ memberIds }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await parseApiError(
+        response,
+        'Impossible de mettre à jour la composition.',
+      ),
+    );
+  }
   return await response.json();
 };
 

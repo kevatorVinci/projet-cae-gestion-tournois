@@ -72,7 +72,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
             errorMessage = errorData.message;
           }
         } catch (e) {
-          // Si la réponse n'est pas du JSON, on garde le message par défaut.
+          // If the response is not JSON, keep the default message.
         }
         throw new Error(errorMessage);
       }

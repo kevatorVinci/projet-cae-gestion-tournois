@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -9,6 +9,7 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Stack,
   Typography,
 } from '@mui/material';
 import PublishIcon from '@mui/icons-material/Publish';
@@ -27,6 +28,7 @@ import TournamentBracket from './TournamentBracket';
 const TournamentMatchesPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [matches, setMatches] = useState<TeamMatch[]>([]);
   const [tournamentName, setTournamentName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,16 @@ const TournamentMatchesPage = () => {
   const [publishFeedback, setPublishFeedback] = useState<string | null>(null);
   const [tournamentEndDate, setTournamentEndDate] = useState<string | null>(
     null,
+  );
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
+
+  const toMatchId = (value: unknown): number | null => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const queryMatchId = toMatchId(
+    new URLSearchParams(location.search).get('matchId'),
   );
 
   useEffect(() => {
@@ -73,6 +85,19 @@ const TournamentMatchesPage = () => {
 
         setTournamentName(tournoi.nom || `Tournoi #${id}`);
         setMatches(matchList);
+        setSelectedMatchId((prev) => {
+          if (matchList.length === 0) return null;
+          if (
+            queryMatchId != null &&
+            matchList.some((match) => toMatchId(match.id) === queryMatchId)
+          ) {
+            return queryMatchId;
+          }
+          if (prev && matchList.some((match) => toMatchId(match.id) === prev)) {
+            return prev;
+          }
+          return toMatchId(matchList[0].id);
+        });
       } catch {
         setError('Impossible de charger les matchs.');
       } finally {
@@ -80,7 +105,7 @@ const TournamentMatchesPage = () => {
       }
     };
     load();
-  }, [id]);
+  }, [id, queryMatchId]);
 
   if (loading) {
     return (
@@ -96,6 +121,11 @@ const TournamentMatchesPage = () => {
       </Box>
     );
   }
+
+  const selectedMatch =
+    matches.find((match) => toMatchId(match.id) === selectedMatchId) ??
+    matches[0] ??
+    null;
 
   return (
     <Box
@@ -259,19 +289,26 @@ const TournamentMatchesPage = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card
-            sx={{
-              backgroundColor: '#111827',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            <CardContent sx={{ overflowX: 'auto', py: 3 }}>
-              <TournamentBracket
-                matches={matches}
-                tournamentEndDate={tournamentEndDate}
-              />
-            </CardContent>
-          </Card>
+          <Stack spacing={3}>
+            <Card
+              sx={{
+                backgroundColor: '#111827',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <CardContent sx={{ overflowX: 'auto', py: 3 }}>
+                <TournamentBracket
+                  matches={matches}
+                  tournamentEndDate={tournamentEndDate}
+                  selectedMatchId={toMatchId(selectedMatch?.id) ?? null}
+                  onMatchSelect={(matchId) => {
+                    setSelectedMatchId(matchId);
+                    navigate(`/tournois/${id}/matchs/${matchId}`);
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </Stack>
         )}
       </Container>
     </Box>

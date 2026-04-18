@@ -81,7 +81,7 @@ const CreateTournamentPage = () => {
       return null;
     }
 
-    // ✨ CORRECTION: We take the token from authenticatedUser, not from localStorage!
+    // We take the token from authenticatedUser, not from localStorage.
     const token = authenticatedUser?.token;
     if (!token) {
       setError("Vous devez être connecté en tant qu'administrateur.");

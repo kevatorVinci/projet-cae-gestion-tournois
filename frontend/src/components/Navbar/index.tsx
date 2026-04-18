@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -9,13 +9,14 @@ import {
   IconButton,
   Avatar,
   Badge,
-  Chip, // Permet d'afficher l'étiquette ADMIN orange
+  Chip,
 } from '@mui/material';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import LogoutIcon from '@mui/icons-material/Logout';
 import logo from '../../assets/images/logo.png';
 import { UserContext } from '../../contexts/UserContext';
+import { useAdminView } from '../../contexts/useAdminView';
 import { UserContextType } from '../../types';
 import { getUserTeam } from '../../services/teams';
 import {
@@ -28,10 +29,13 @@ const Navbar = () => {
   const location = useLocation();
   const { authenticatedUser, clearUser }: UserContextType =
     useContext(UserContext);
+  const {
+    isAdminView,
+    setIsAdminView,
+    toggleAdminView: contextToggle,
+  } = useAdminView();
   const [hasTeam, setHasTeam] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-
-  const [isAdminView, setIsAdminView] = useState(false);
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return '/luffy.png';
@@ -93,11 +97,10 @@ const Navbar = () => {
   };
 
   const toggleAdminView = () => {
+    contextToggle();
     if (!isAdminView) {
-      setIsAdminView(true);
       navigate('/admin');
     } else {
-      setIsAdminView(false);
       navigate('/');
     }
   };
