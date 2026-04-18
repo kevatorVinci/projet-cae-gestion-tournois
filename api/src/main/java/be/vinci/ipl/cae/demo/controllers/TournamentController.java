@@ -244,7 +244,7 @@ public class TournamentController {
       List<Match> matches = matchService.generateSchedule(id, currentUser);
       return matchMapper.toDtos(matches);
     } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
   }
 
@@ -260,7 +260,7 @@ public class TournamentController {
     try {
       matchService.publishTournamentSchedule(id);
     } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
     }
   }
 
@@ -288,7 +288,7 @@ public class TournamentController {
   }
 
   private Iterable<TournamentResponseDto> tournoiMapperToDtos(Iterable<Tournament> tournaments) {
-    java.util.List<TournamentResponseDto> result = new java.util.ArrayList<>();
+    List<TournamentResponseDto> result = new java.util.ArrayList<>();
     for (Tournament tournament : tournaments) {
       result.add(tournamentMapper.toDto(tournament));
     }
