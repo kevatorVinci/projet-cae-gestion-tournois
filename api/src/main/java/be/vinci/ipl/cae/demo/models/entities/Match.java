@@ -49,7 +49,7 @@ public class Match {
    * The second team participating in the match.
    */
   @ManyToOne
-  @JoinColumn(name = "equipe2_id", nullable = false)
+  @JoinColumn(name = "equipe2_id")
   @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
   @JsonProperty("equipe2")
   private Team team2;
@@ -88,4 +88,11 @@ public class Match {
   @Column(name = "tour_numero")
   @JsonProperty("tourNumero")
   private Integer roundNumber;
+
+  /**
+   * Pool label for group-stage style schedule (e.g., "Poule A").
+   */
+  @Column(name = "pool_code")
+  @JsonProperty("poolCode")
+  private String poolCode;
 }

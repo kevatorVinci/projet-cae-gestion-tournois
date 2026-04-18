@@ -118,7 +118,8 @@ public class RegistrationTeamTournamentController {
           @PathVariable("equipeId") Long teamId,
           @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-                teamId, currentUser, "Vous ne pouvez consulter que les inscriptions de votre équipe.");
+            teamId, currentUser,
+            "Vous ne pouvez voir que les inscriptions de votre propre équipe.");
     return registrationMapper.toEquipeTournamentRegistrationDtos(
             fetchTeamRegistrations(teamId));
   }
@@ -152,7 +153,7 @@ public class RegistrationTeamTournamentController {
           @PathVariable("equipeId") Long teamId,
           @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
-                teamId, currentUser, "Vous ne pouvez inscrire que votre propre équipe.");
+            teamId, currentUser, "Vous ne pouvez inscrire que votre propre équipe.");
     RegistrationTeamTournament registration;
     try {
       registration = registrationService.register(tournamentId, teamId);
@@ -163,7 +164,7 @@ public class RegistrationTeamTournamentController {
     if (registration == null) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Tournoi introuvable, non ouvert ou équipe déjà inscrite.");
+              "Tournoi introuvable, pas ouvert, ou équipe déjà inscrite.");
     }
     return registration;
   }
@@ -190,13 +191,13 @@ public class RegistrationTeamTournamentController {
     }
 
     ensureCurrentUserResponsibleForTeam(
-          teamId, currentUser, "Vous ne pouvez désinscrire que votre propre équipe.");
+            teamId, currentUser, "Vous ne pouvez désinscrire que votre propre équipe.");
 
     boolean success = registrationService.unregisterByTournamentAndTeam(tournamentId, teamId);
     if (!success) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Inscription introuvable, tournoi non ouvert ou date limite dépassée.");
+              "Inscription introuvable, tournoi pas ouvert, ou délai dépassé.");
     }
   }
 
@@ -222,7 +223,7 @@ public class RegistrationTeamTournamentController {
     if (!success) {
       throw new ResponseStatusException(
               HttpStatus.BAD_REQUEST,
-              "Inscription introuvable, tournoi non ouvert ou date limite dépassée.");
+              "Inscription introuvable, tournoi pas ouvert, ou délai dépassé.");
     }
   }
 

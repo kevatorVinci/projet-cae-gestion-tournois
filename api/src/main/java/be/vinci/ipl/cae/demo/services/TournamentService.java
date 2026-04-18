@@ -231,6 +231,7 @@ public class TournamentService {
       return null;
     }
     tournament.setStatus("EN_COURS");
+    tournament.setMatchSchedulePublished(true);
     return tournamentRepository.save(tournament);
   }
 

@@ -23,6 +23,62 @@ async function parseError(response: Response, fallbackMessage: string) {
   return fallbackMessage;
 }
 
+type RawDemandePendingItem = {
+  idDemande?: number;
+  id?: number;
+  membreId?: number;
+  memberId?: number;
+  membreEmail?: string;
+  memberEmail?: string;
+  membreTag?: string;
+  memberTag?: string;
+  membreSpecialty?: string;
+  memberSpecialty?: string;
+  membreProfileImageUrl?: string;
+  memberProfileImageUrl?: string;
+  equipeId?: number;
+  teamId?: number;
+  equipeName?: string;
+  teamName?: string;
+  etat?: 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+  state?: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  dateDemande?: string;
+  requestDate?: string;
+  dateTraitement?: string;
+  processingDate?: string;
+  raisonRefus?: string;
+  rejectionReason?: string;
+};
+
+function mapStateToFrontend(
+  state?: RawDemandePendingItem['state'],
+): DemandePendingItem['etat'] {
+  if (state === 'PENDING') return 'EN_ATTENTE';
+  if (state === 'ACCEPTED') return 'ACCEPTEE';
+  if (state === 'REJECTED') return 'REFUSEE';
+  return undefined;
+}
+
+function normalizePendingDemand(
+  raw: RawDemandePendingItem,
+): DemandePendingItem {
+  return {
+    idDemande: raw.idDemande ?? raw.id ?? 0,
+    membreId: raw.membreId ?? raw.memberId ?? 0,
+    membreEmail: raw.membreEmail ?? raw.memberEmail,
+    membreTag: raw.membreTag ?? raw.memberTag,
+    membreSpecialty: raw.membreSpecialty ?? raw.memberSpecialty,
+    membreProfileImageUrl:
+      raw.membreProfileImageUrl ?? raw.memberProfileImageUrl,
+    equipeId: raw.equipeId ?? raw.teamId ?? 0,
+    equipeName: raw.equipeName ?? raw.teamName,
+    etat: raw.etat ?? mapStateToFrontend(raw.state),
+    dateDemande: raw.dateDemande ?? raw.requestDate,
+    dateTraitement: raw.dateTraitement ?? raw.processingDate,
+    raisonRefus: raw.raisonRefus ?? raw.rejectionReason,
+  };
+}
+
 export async function accepterDemande(
   demandeId: number,
 ): Promise<DemandeDecisionResult | null> {
@@ -63,7 +119,7 @@ export async function refuserDemande(
       'Content-Type': 'application/json',
       Authorization: token,
     },
-    body: JSON.stringify(raisonRefus ? { raisonRefus } : {}),
+    body: JSON.stringify(raisonRefus ? { rejectionReason: raisonRefus } : {}),
   });
 
   if (!response.ok) {
@@ -92,5 +148,6 @@ export async function getDemandesEnAttenteResponsable(): Promise<
     );
   }
 
-  return response.json() as Promise<DemandePendingItem[]>;
+  const data = (await response.json()) as RawDemandePendingItem[];
+  return data.map(normalizePendingDemand);
 }

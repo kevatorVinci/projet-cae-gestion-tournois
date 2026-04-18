@@ -21,6 +21,14 @@ public interface MatchRepository extends CrudRepository<Match, Long> {
   List<Match> findByTournamentId(Long tournamentId);
 
   /**
+   * Finds tournament matches with a stable ordering shared by admin/public views.
+   *
+   * @param tournamentId the ID of the tournament.
+   * @return ordered matches of the tournament.
+   */
+  List<Match> findByTournamentIdOrderByRoundNumberAscMatchDateAscIdAsc(Long tournamentId);
+
+  /**
    * Finds all matches where a specific team is playing (either as team 1 or team 2).
    *
    * @param team1Id the ID of the team playing as team 1.

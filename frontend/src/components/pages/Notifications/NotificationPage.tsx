@@ -57,10 +57,75 @@ interface NotifMeta {
   label: string;
 }
 
+const startsWithAny = (message: string, prefixes: string[]): boolean =>
+  prefixes.some((prefix) => message.startsWith(prefix));
+
+const translateMessage = (message: string): string => {
+  if (message.startsWith('Welcome:')) {
+    return (
+      'Bienvenue : votre compte a été créé.' +
+      ' Rejoignez ou créez une équipe pour commencer !'
+    );
+  }
+
+  const teamCreated = message.match(
+    /^Team created: you are now the manager of team '(.+)'\./,
+  );
+  if (teamCreated) {
+    return `Équipe créée : vous êtes maintenant responsable de l'équipe '${teamCreated[1]}'.`;
+  }
+
+  const requestSent = message.match(
+    /^Request sent: your request to join '(.+)' is pending\./,
+  );
+  if (requestSent) {
+    return `Demande envoyée : votre demande pour rejoindre '${requestSent[1]}' est en attente.`;
+  }
+
+  const newRequest = message.match(
+    /^New request: (.+) wants to join team '(.+)'\./,
+  );
+  if (newRequest) {
+    return `Nouvelle demande : ${newRequest[1]} souhaite rejoindre l'équipe '${newRequest[2]}'.`;
+  }
+
+  const accepted = message.match(
+    /^Accepted: your request to join '(.+)' has been accepted\./,
+  );
+  if (accepted) {
+    return `Accepté : votre demande pour rejoindre '${accepted[1]}' a été acceptée. Bienvenue !`;
+  }
+
+  const denied = message.match(
+    /^Denied: your request to join '(.+)' was refused\. Reason: (.+)/,
+  );
+  if (denied) {
+    const reason =
+      denied[2] === 'No reason provided.' ? 'Aucun motif fourni.' : denied[2];
+    return `Refus : votre demande pour rejoindre '${denied[1]}' a été refusée. Motif : ${reason}`;
+  }
+
+  const adminDraft = message.match(
+    /^Admin: new draft tournament '(.+)'\. Publish it when ready\./,
+  );
+  if (adminDraft) {
+    return `Admin : nouveau tournoi en brouillon '${adminDraft[1]}'. Publiez-le quand il est prêt.`;
+  }
+
+  const newTournament = message.match(
+    /^New tournament: '(.+)' has just been published\./,
+  );
+  if (newTournament) {
+    return `Nouveau tournoi : '${newTournament[1]}' vient d'être publié. Inscrivez-vous maintenant !`;
+  }
+
+  return message;
+};
+
 const getNotifMeta = (message: string): NotifMeta => {
   const m = message.toLowerCase();
 
-  if (m.startsWith('accepté :')) {
+  if (startsWithAny(m, ['accepté :', 'accepted:'])) {
     return {
       type: 'accepte',
       color: '#22c55e',
@@ -82,7 +147,14 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('nouvelle demande :') || m.startsWith('demande envoyée :')) {
+  if (
+    startsWithAny(m, [
+      'nouvelle demande :',
+      'demande envoyée :',
+      'new request:',
+      'application sent:',
+    ])
+  ) {
     return {
       type: 'demande',
       color: '#3b82f6',
@@ -93,7 +165,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('équipe créée :') || m.startsWith('équipe :')) {
+  if (startsWithAny(m, ['équipe créée :', 'équipe :', 'team created:'])) {
     return {
       type: 'equipe',
       color: '#a78bfa',
@@ -104,7 +176,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('admin :')) {
+  if (startsWithAny(m, ['admin :', 'admin:'])) {
     return {
       type: 'admin',
       color: '#f59e0b',
@@ -115,7 +187,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (m.startsWith('nouveau tournoi :')) {
+  if (startsWithAny(m, ['nouveau tournoi :', 'new tournament:'])) {
     return {
       type: 'tournoi',
       color: '#06b6d4',
@@ -224,20 +296,34 @@ export default function Notifications() {
 
   const isJoinRequestNotification = (message: string) => {
     const normalized = message.toLowerCase();
-    return (
-      normalized.startsWith('nouvelle demande :') ||
-      normalized.startsWith('demande envoyée :')
-    );
+    return startsWithAny(normalized, [
+      'nouvelle demande :',
+      'demande envoyée :',
+      'new request:',
+      'application sent:',
+    ]);
   };
 
+  const isTeamManagerJoinRequestNotification = (message: string) =>
+    startsWithAny(message.toLowerCase(), [
+      'nouvelle demande :',
+      'new request:',
+    ]);
+
   const isAcceptedNotification = (message: string) =>
-    message.toLowerCase().startsWith('accepté :');
+    startsWithAny(message.toLowerCase(), ['accepté :', 'accepted:']);
 
   const isDraftTournamentNotification = (message: string) =>
-    message.toLowerCase().startsWith('admin : nouveau tournoi en brouillon');
+    startsWithAny(message.toLowerCase(), [
+      'admin : nouveau tournoi en brouillon',
+      'admin: new draft tournament',
+    ]);
 
   const isPublishedTournamentNotification = (message: string) =>
-    message.toLowerCase().startsWith('nouveau tournoi :');
+    startsWithAny(message.toLowerCase(), [
+      'nouveau tournoi :',
+      'new tournament:',
+    ]);
 
   const extractTournamentName = (message: string) => {
     const match = message.match(/'([^']+)'/);
@@ -611,9 +697,9 @@ export default function Notifications() {
           {!loading &&
             filtered.map((n) => {
               const meta = getNotifMeta(n.message);
-              const isDemandeResponsable = n.message
-                .toLowerCase()
-                .startsWith('nouvelle demande :');
+              const isDemandeResponsable = isTeamManagerJoinRequestNotification(
+                n.message,
+              );
               const isTournamentNotification =
                 isDraftTournamentNotification(n.message) ||
                 isPublishedTournamentNotification(n.message);
@@ -712,7 +798,7 @@ export default function Notifications() {
                         lineHeight: 1.6,
                       }}
                     >
-                      {n.message}
+                      {translateMessage(n.message)}
                     </Typography>
 
                     {(isJoinRequestNotification(n.message) ||

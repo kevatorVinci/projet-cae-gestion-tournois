@@ -73,20 +73,20 @@ public class DemandService {
 
     Team team = teamRepo
             .findById(teamId)
-          .orElseThrow(() -> new RuntimeException("Équipe introuvable."));
+            .orElseThrow(() -> new RuntimeException("Équipe introuvable."));
 
     if (member.getTeam() != null) {
-          throw new RuntimeException("Vous avez déjà une équipe !");
+      throw new RuntimeException("Vous avez déjà une équipe !");
     }
 
     boolean hasNoResponsible = team.getPrimaryResponsible() == null
             && team.getSecondaryResponsible() == null;
     if (hasNoResponsible) {
-      throw new RuntimeException("Cette équipe n'a aucun responsable.");
+      throw new RuntimeException("L'équipe n'a pas de responsable.");
     }
 
     if (!isTeamEligibleForJoin(team)) {
-      throw new RuntimeException("Cette équipe n'est plus disponible pour les demandes.");
+      throw new RuntimeException("Cette équipe n'accepte plus de demandes.");
     }
 
     if (demandRepo.existsByMemberIdAndTeamIdAndState(
@@ -148,7 +148,7 @@ public class DemandService {
     team = teamRepo
             .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
                     currentUser.getId(), currentUser.getId())
-          .orElseThrow(() -> new SecurityException("Vous n'êtes responsable d'aucune équipe."));
+            .orElseThrow(() -> new SecurityException("Vous n'êtes responsable d'aucune équipe."));
 
     return getPendingRequestsForTeam(team.getId());
   }
@@ -175,7 +175,7 @@ public class DemandService {
 
     User user = demand.getMember();
     if (user.getTeam() != null) {
-      throw new RuntimeException("Le joueur appartient déjà à une équipe.");
+      throw new RuntimeException("Ce joueur appartient déjà à une équipe.");
     }
 
     user.setTeam(team);
@@ -204,7 +204,7 @@ public class DemandService {
   public Demand rejectDemand(Long demandId, String reason, User currentUser) {
     Demand demand = getAndVerifyDemand(demandId, currentUser);
     String normalizedReason = (reason == null || reason.isBlank())
-          ? "Aucune raison précise fournie."
+            ? "Aucun motif spécifique fourni."
             : reason.trim();
 
     demand.setState(DemandState.REJECTED);
