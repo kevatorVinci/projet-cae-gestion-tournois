@@ -4,12 +4,12 @@ import be.vinci.ipl.cae.demo.mappers.MatchMapper;
 import be.vinci.ipl.cae.demo.models.dtos.match.MatchDto;
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.services.MatchService;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST Controller providing endpoints for match operations.
