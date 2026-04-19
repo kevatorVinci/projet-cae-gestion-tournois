@@ -6,8 +6,6 @@ import be.vinci.ipl.cae.demo.annotations.IsResponsable;
 import be.vinci.ipl.cae.demo.mappers.RegisterTeamTournamentMapper;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TeamTournamentRegistrationDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentTeamRegistrationDto;
-import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
-import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.RegisterTeamTournamentService;
 import be.vinci.ipl.cae.demo.services.TeamService;
@@ -53,30 +51,28 @@ public class RegistrationTeamTournamentController {
    * Helper to fetch registrations and handle 404 for tournaments.
    *
    * @param tournamentId the tournament ID.
-   * @return the list of registrations.
+   * @return the list of mapped registration DTOs.
    */
-  private Iterable<RegistrationTeamTournament> fetchTournamentRegistrations(Long tournamentId) {
-    Iterable<RegistrationTeamTournament> registrations =
-        registrationService.getAllByTournament(tournamentId);
+  private Iterable<TeamTournamentRegistrationDto> fetchTournamentRegistrations(Long tournamentId) {
+    var registrations = registrationService.getAllByTournament(tournamentId);
     if (registrations == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournoi introuvable.");
     }
-    return registrations;
+    return registrationMapper.toEquipeTournamentRegistrationDtos(registrations);
   }
 
   /**
    * Helper to fetch registrations and handle 404 for teams.
    *
    * @param teamId the team ID.
-   * @return the list of registrations.
+   * @return the list of mapped registration DTOs.
    */
-  private Iterable<RegistrationTeamTournament> fetchTeamRegistrations(Long teamId) {
-    Iterable<RegistrationTeamTournament> registrations =
-        registrationService.getAllByTeam(teamId);
+  private Iterable<TeamTournamentRegistrationDto> fetchTeamRegistrations(Long teamId) {
+    var registrations = registrationService.getAllByTeam(teamId);
     if (registrations == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable.");
     }
-    return registrations;
+    return registrationMapper.toEquipeTournamentRegistrationDtos(registrations);
   }
 
   /**
@@ -89,8 +85,7 @@ public class RegistrationTeamTournamentController {
   @IsAdmin
   public Iterable<TeamTournamentRegistrationDto> getAllByTournament(
       @PathVariable("tournoiId") Long tournamentId) {
-    return registrationMapper.toEquipeTournamentRegistrationDtos(
-        fetchTournamentRegistrations(tournamentId));
+    return fetchTournamentRegistrations(tournamentId);
   }
 
   /**
@@ -102,8 +97,11 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/{tournoiId}/inscriptions/accepted")
   public Iterable<TournamentTeamRegistrationDto> getAcceptedByTournament(
       @PathVariable("tournoiId") Long tournamentId) {
-    return registrationMapper.toTournoiEquipeInscriptionDtos(
-        fetchTournamentRegistrations(tournamentId));
+    var registrations = registrationService.getAllByTournament(tournamentId);
+    if (registrations == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tournoi introuvable.");
+    }
+    return registrationMapper.toTournoiEquipeInscriptionDtos(registrations);
   }
 
   /**
@@ -120,8 +118,7 @@ public class RegistrationTeamTournamentController {
       @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
         teamId, currentUser, "You can only view your own team registrations");
-    return registrationMapper.toEquipeTournamentRegistrationDtos(
-        fetchTeamRegistrations(teamId));
+    return fetchTeamRegistrations(teamId);
   }
 
   /**
@@ -133,8 +130,7 @@ public class RegistrationTeamTournamentController {
   @GetMapping("/equipes/{equipeId}/inscriptions/public")
   public Iterable<TeamTournamentRegistrationDto> getPublicByTeam(
       @PathVariable("equipeId") Long teamId) {
-    return registrationMapper.toEquipeTournamentRegistrationDtos(
-        fetchTeamRegistrations(teamId));
+    return fetchTeamRegistrations(teamId);
   }
 
   /**
@@ -154,19 +150,18 @@ public class RegistrationTeamTournamentController {
       @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
         teamId, currentUser, "You can only register your own team");
-    RegistrationTeamTournament registration;
     try {
-      registration = registrationService.register(tournamentId, teamId);
+      var registration = registrationService.register(tournamentId, teamId);
+      if (registration == null) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Tournament not found, not OUVERT, or team already registered");
+      }
+      return registrationMapper.toEquipeTournamentRegistrationDto(registration);
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
-    if (registration == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Tournament not found, not OUVERT, or team already registered");
-    }
-    return registrationMapper.toEquipeTournamentRegistrationDto(registration);
   }
 
   /**
@@ -232,7 +227,7 @@ public class RegistrationTeamTournamentController {
     if (currentUser.isAdmin()) {
       return;
     }
-    Team team = teamService.getTeamById(teamId).orElse(null);
+    var team = teamService.getTeamById(teamId).orElse(null);
     if (team == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe introuvable.");
     }

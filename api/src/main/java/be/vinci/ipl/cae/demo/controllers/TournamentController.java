@@ -8,8 +8,6 @@ import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentCancelDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentCreateDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentUpdateDto;
-import be.vinci.ipl.cae.demo.models.entities.Match;
-import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.MatchService;
 import be.vinci.ipl.cae.demo.services.TournamentService;
@@ -71,7 +69,7 @@ public class TournamentController {
   public Iterable<TournamentResponseDto> getAllPublic(
       @RequestParam(required = false) String etat,
       @RequestParam(required = false) String nom) {
-    return tournoiMapperToDtos(tournoiService.getFiltered(etat, nom));
+    return tournamentMapper.toDtos(tournoiService.getFiltered(etat, nom));
   }
 
   /**
@@ -82,7 +80,7 @@ public class TournamentController {
   @GetMapping("/all")
   @IsAdmin
   public Iterable<TournamentResponseDto> getAll() {
-    return tournoiMapperToDtos(tournoiService.getAll());
+    return tournamentMapper.toDtos(tournoiService.getAll());
   }
 
   /**
@@ -109,7 +107,7 @@ public class TournamentController {
   @ResponseStatus(HttpStatus.CREATED)
   @IsAdmin
   public TournamentResponseDto create(@Valid @RequestBody TournamentCreateDto tournoi) {
-    Tournament created = tournoiService.create(tournamentMapper.toEntity(tournoi));
+    var created = tournoiService.create(tournamentMapper.toEntity(tournoi));
     if (created == null) {
       throw new ResponseStatusException(
           HttpStatus.CONFLICT, "A tournament with this name already exists");
@@ -129,8 +127,8 @@ public class TournamentController {
   public TournamentResponseDto update(
       @PathVariable Long id,
       @Valid @RequestBody TournamentUpdateDto payload) {
-    Tournament tournament = tournamentMapper.toEntity(payload);
-    Tournament updated = tournoiService.update(id, tournament);
+    var tournament = tournamentMapper.toEntity(payload);
+    var updated = tournoiService.update(id, tournament);
     if (updated == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
@@ -147,7 +145,7 @@ public class TournamentController {
   @PatchMapping("/{id}/publish")
   @IsAdmin
   public TournamentResponseDto publish(@PathVariable Long id) {
-    Tournament tournoi = tournoiService.publish(id);
+    var tournoi = tournoiService.publish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in BROUILLON state");
@@ -164,7 +162,7 @@ public class TournamentController {
   @PatchMapping("/{id}/close-registrations")
   @IsAdmin
   public TournamentResponseDto closeRegistrations(@PathVariable Long id) {
-    Tournament tournoi = tournoiService.closeRegistrations(id);
+    var tournoi = tournoiService.closeRegistrations(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
@@ -182,7 +180,7 @@ public class TournamentController {
   @PatchMapping("/{id}/start")
   @IsAdmin
   public TournamentResponseDto start(@PathVariable Long id) {
-    Tournament tournoi = tournoiService.start(id);
+    var tournoi = tournoiService.start(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in CLOTURE state");
@@ -199,7 +197,7 @@ public class TournamentController {
   @PatchMapping("/{id}/finish")
   @IsAdmin
   public TournamentResponseDto finish(@PathVariable Long id) {
-    Tournament tournoi = tournoiService.finish(id);
+    var tournoi = tournoiService.finish(id);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or not in EN_COURS state");
@@ -220,7 +218,7 @@ public class TournamentController {
       @PathVariable Long id,
       @RequestBody(required = false) TournamentCancelDto payload) {
     String reason = payload == null ? null : payload.reason();
-    Tournament tournoi = tournoiService.cancel(id, reason);
+    var tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "Tournament not found or already TERMINE/ANNULE");
@@ -241,8 +239,7 @@ public class TournamentController {
       @PathVariable Long id,
       @AuthenticationPrincipal User currentUser) {
     try {
-      List<Match> matches = matchService.generateSchedule(id, currentUser);
-      return matchMapper.toDtos(matches);
+      return matchMapper.toDtos(matchService.generateSchedule(id, currentUser));
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
@@ -285,13 +282,5 @@ public class TournamentController {
   @GetMapping("/{id}/matches")
   public List<MatchDto> getTournamentMatches(@PathVariable Long id) {
     return matchMapper.toDtos(matchService.getTournamentPublicMatches(id));
-  }
-
-  private Iterable<TournamentResponseDto> tournoiMapperToDtos(Iterable<Tournament> tournaments) {
-    List<TournamentResponseDto> result = new java.util.ArrayList<>();
-    for (Tournament tournament : tournaments) {
-      result.add(tournamentMapper.toDto(tournament));
-    }
-    return result;
   }
 }

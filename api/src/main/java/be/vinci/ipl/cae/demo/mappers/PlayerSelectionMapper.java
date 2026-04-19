@@ -2,6 +2,8 @@ package be.vinci.ipl.cae.demo.mappers;
 
 import be.vinci.ipl.cae.demo.models.dtos.playerselection.PlayerSelectionDto;
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -26,5 +28,22 @@ public class PlayerSelectionMapper {
     dto.setTeamId(selection.getTeam().getId());
     dto.setTeamName(selection.getTeam().getName());
     return dto;
+  }
+
+  /**
+   * Converts multiple entities to DTOs.
+   *
+   * @param selections The selection entities.
+   * @return The mapped DTO list.
+   */
+  public List<PlayerSelectionDto> toDtos(Iterable<PlayerSelection> selections) {
+    List<PlayerSelectionDto> dtos = new ArrayList<>();
+    if (selections == null) {
+      return dtos;
+    }
+    for (PlayerSelection selection : selections) {
+      dtos.add(toDto(selection));
+    }
+    return dtos;
   }
 }
