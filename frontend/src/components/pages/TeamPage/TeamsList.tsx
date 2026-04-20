@@ -299,10 +299,21 @@ const TeamsList = () => {
             ].map(({ value, label, icon }) => (
               <Box
                 key={value}
+                role="button"
+                tabIndex={0}
+                aria-label={label}
                 onClick={() => {
                   setActiveTab(value as 'teams' | 'players');
                   setQuery('');
                   setMessage(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveTab(value as 'teams' | 'players');
+                    setQuery('');
+                    setMessage(null);
+                  }
                 }}
                 sx={{
                   display: 'flex',
