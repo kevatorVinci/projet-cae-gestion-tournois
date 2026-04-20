@@ -26,6 +26,7 @@ import {
   EmojiEvents,
   Edit as EditIcon,
   Groups as GroupsIcon,
+  PersonRemove as PersonRemoveIcon,
 } from '@mui/icons-material';
 import {
   depromoteResponsable,
@@ -33,7 +34,8 @@ import {
   isCurrentUserResponsable,
   leaveEquipe,
   promoteResponsable,
-  updateTeamImage, // ✨ IMPORT NEW FUNCTION
+  updateTeamImage,
+  kickMember,
 } from '../../../services/teams';
 import { Equipe } from '../../../types';
 import { useNavigate } from 'react-router-dom';
@@ -87,6 +89,12 @@ export function MyTeam() {
   ];
   const [selectedNewImage, setSelectedNewImage] = useState(teamImages[0]);
   const [isUpdatingImage, setIsUpdatingImage] = useState(false);
+  const [kickConfirmOpen, setKickConfirmOpen] = useState(false);
+  const [pendingKickMember, setPendingKickMember] = useState<{
+    id: number;
+    tag?: string;
+  } | null>(null);
+  const [isMemberActionLoading, setIsMemberActionLoading] = useState(false);
 
   const currentUserId = (() => {
     const token = getAuthenticatedUser()?.token;
@@ -301,6 +309,37 @@ export function MyTeam() {
       );
     } finally {
       setMemberActionLoadingId(null);
+    }
+  };
+
+  const openKickConfirm = (memberId: number, memberTag?: string) => {
+    setPendingKickMember({ id: memberId, tag: memberTag });
+    setKickConfirmOpen(true);
+  };
+
+  const handleConfirmKick = async () => {
+    if (!pendingKickMember) return;
+
+    setIsMemberActionLoading(true);
+    try {
+      await kickMember(pendingKickMember.id);
+      await loadMyTeam();
+      setKickConfirmOpen(false);
+      setPendingKickMember(null);
+      setMessageSeverity('success');
+      setMessage(
+        `${pendingKickMember.tag || 'Le membre'} a été exclu de l'équipe.`,
+      );
+      window.dispatchEvent(new Event('team-membership-changed'));
+    } catch (err: unknown) {
+      console.error('Erreur API :', err);
+      if (handleAuthFailure(err)) return;
+      setMessageSeverity('error');
+      setMessage(
+        err instanceof Error ? err.message : "Impossible d'exclure ce membre.",
+      );
+    } finally {
+      setIsMemberActionLoading(false);
     }
   };
 
@@ -845,6 +884,37 @@ export function MyTeam() {
                         : 'Nommer responsable'}
                     </Button>
                   )}
+
+                {isResponsable && member.id !== currentUserId && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<PersonRemoveIcon sx={{ fontSize: 13 }} />}
+                    disabled={
+                      memberActionLoadingId === member.id ||
+                      isMemberActionLoading
+                    }
+                    onClick={() => {
+                      const targetMemberId = member.id;
+                      if (typeof targetMemberId !== 'number') return;
+                      openKickConfirm(targetMemberId, member.tag);
+                    }}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: 11,
+                      width: '100%',
+                      color: '#ef4444',
+                      borderColor: 'rgba(239,68,68,0.4)',
+                      mt: 0.5,
+                      '&:hover': {
+                        bgcolor: 'rgba(239,68,68,0.1)',
+                        borderColor: '#ef4444',
+                      },
+                    }}
+                  >
+                    Exclure de l&apos;équipe
+                  </Button>
+                )}
               </Paper>
             ))}
           </Box>
@@ -1141,6 +1211,71 @@ export function MyTeam() {
           </Button>
           <Button variant="contained" onClick={handleConfirmPromote}>
             Confirmer
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={kickConfirmOpen}
+        onClose={() => {
+          if (!isMemberActionLoading) {
+            setKickConfirmOpen(false);
+            setPendingKickMember(null);
+          }
+        }}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            bgcolor: '#1a2540',
+            color: 'white',
+            border: '1px solid rgba(239,68,68,0.3)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: '#ef4444', fontWeight: 700 }}>
+          Exclure un membre
+        </DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            Êtes-vous sûr de vouloir exclure{' '}
+            <strong style={{ color: 'white' }}>
+              {pendingKickMember?.tag || 'ce membre'}
+            </strong>{' '}
+            de l&apos;équipe ? Cette action est irréversible.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setKickConfirmOpen(false);
+              setPendingKickMember(null);
+            }}
+            disabled={isMemberActionLoading}
+            variant="outlined"
+            sx={{
+              color: 'white',
+              borderColor: 'rgba(255,255,255,0.35)',
+              '&:hover': { bgcolor: '#080b14', borderColor: '#c86e20' },
+            }}
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirmKick}
+            disabled={isMemberActionLoading}
+            sx={{
+              bgcolor: '#ef4444',
+              color: 'white',
+              '&:hover': { bgcolor: '#dc2626' },
+              '&.Mui-disabled': {
+                bgcolor: 'rgba(239,68,68,0.3)',
+                color: 'rgba(255,255,255,0.3)',
+              },
+            }}
+          >
+            {isMemberActionLoading ? 'Exclusion...' : 'Exclure'}
           </Button>
         </DialogActions>
       </Dialog>

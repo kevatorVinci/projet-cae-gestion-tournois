@@ -200,6 +200,24 @@ public class TeamController {
   }
 
   /**
+   * Excludes a team member.
+   *
+   * @param userId      the path user ID.
+   * @param memberId    the member ID to exclude.
+   * @param currentUser the current authenticated user.
+   */
+  @PostMapping("/{userId}/equipes/membres/{membreId}/exclure")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("isAuthenticated()")
+  public void kickMember(
+      @PathVariable Long userId,
+      @PathVariable("membreId") Long memberId,
+      @AuthenticationPrincipal User currentUser) {
+    ensureSelfTeamManagement(userId, currentUser);
+    executeTeamAction(() -> teamService.kickMember(currentUser, memberId));
+  }
+
+  /**
    * Checks if the current user is a team responsible.
    *
    * @param currentUser the current authenticated user.
