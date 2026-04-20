@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from '../../BackButton';
 import {
   Alert,
@@ -16,10 +16,13 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Avatar,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PersonIcon from '@mui/icons-material/Person';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType, AuthenticatedUser } from '../../../types';
@@ -41,7 +44,15 @@ const TeamsList = () => {
     text: string;
   } | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === 'players') {
+      setActiveTab('players');
+    }
+  }, [location.search]);
 
   useEffect(() => {
     /**
@@ -533,7 +544,9 @@ const TeamsList = () => {
                     key={player.email} // We use email as the unique key
                     onClick={() => {
                       if (player.tag) {
-                        navigate(`/players/${encodeURIComponent(player.tag)}`);
+                        navigate(`/players/${encodeURIComponent(player.tag)}`, {
+                          state: { from: 'players' },
+                        });
                       }
                     }}
                     role="button"
@@ -544,7 +557,9 @@ const TeamsList = () => {
                         (event.key === 'Enter' || event.key === ' ')
                       ) {
                         event.preventDefault();
-                        navigate(`/players/${encodeURIComponent(player.tag)}`);
+                        navigate(`/players/${encodeURIComponent(player.tag)}`, {
+                          state: { from: 'players' },
+                        });
                       }
                     }}
                     sx={{
@@ -592,25 +607,34 @@ const TeamsList = () => {
                       </Typography>
                     </Box>
 
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      disabled={!player.tag}
-                      sx={{
-                        borderColor: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                      }}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (player.tag) {
-                          navigate(
-                            `/players/${encodeURIComponent(player.tag)}`,
-                          );
-                        }
-                      }}
-                    >
-                      Voir le Profil
-                    </Button>
+                    <Tooltip title="Voir le profil" placement="top">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: 'rgba(255,255,255,0.6)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          borderRadius: 1.5,
+                          '&:hover': {
+                            color: '#e8822a',
+                            borderColor: '#e8822a',
+                            bgcolor: 'rgba(232,130,42,0.08)',
+                          },
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (player.tag) {
+                            navigate(
+                              `/players/${encodeURIComponent(player.tag)}`,
+                              {
+                                state: { from: 'players' },
+                              },
+                            );
+                          }
+                        }}
+                      >
+                        <VisibilityIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
                   </Card>
                 ))}
               </Box>

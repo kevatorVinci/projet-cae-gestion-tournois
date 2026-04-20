@@ -12,7 +12,7 @@ import {
   Chip,
 } from '@mui/material';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import AddBoxIcon from '@mui/icons-material/AddBox';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import logo from '../../assets/images/logo.png';
 import { UserContext } from '../../contexts/UserContext';
@@ -203,7 +203,7 @@ const Navbar = () => {
                   isAdminView ? (
                     <LogoutIcon sx={{ transform: 'rotate(180deg)' }} />
                   ) : (
-                    <AddBoxIcon />
+                    <AdminPanelSettingsIcon />
                   )
                 }
                 onClick={toggleAdminView}
