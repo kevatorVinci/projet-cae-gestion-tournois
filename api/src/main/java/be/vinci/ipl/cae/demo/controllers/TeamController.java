@@ -125,13 +125,7 @@ public class TeamController {
           "You can only join a team for your own account.");
     }
 
-    try {
-      teamService.requestJoinTeam(currentUser, dto.teamId());
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
-    }
+    teamService.requestJoinTeam(currentUser, dto.teamId());
   }
 
   /**

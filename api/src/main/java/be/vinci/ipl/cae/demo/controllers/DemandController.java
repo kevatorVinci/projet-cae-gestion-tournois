@@ -6,7 +6,6 @@ import be.vinci.ipl.cae.demo.models.dtos.demand.DemandDecisionDto;
 import be.vinci.ipl.cae.demo.models.dtos.demand.DemandDto;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.DemandService;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST controller for managing join demands.
@@ -48,24 +46,7 @@ public class DemandController {
   @GetMapping("/me/en-attente")
   @IsResponsable
   public Iterable<DemandDto> readPendingDemands(@AuthenticationPrincipal User currentUser) {
-    try {
-      return demandMapper.toDtos(demandService.getPendingRequestsForResponsible(currentUser));
-    } catch (RuntimeException e) {
-      handleDemandException(e);
-      return List.of();
-    }
-  }
-
-  /**
-   * Internal helper to map exceptions to HTTP status codes.
-   *
-   * @param e the exception to map.
-   */
-  private void handleDemandException(RuntimeException e) {
-    if (e instanceof SecurityException) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
-    }
-    throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+    return demandMapper.toDtos(demandService.getPendingRequestsForResponsible(currentUser));
   }
 
   /**
@@ -80,11 +61,7 @@ public class DemandController {
   public void acceptDemand(
       @PathVariable Long demandId,
       @AuthenticationPrincipal User currentUser) {
-    try {
-      demandService.acceptDemand(demandId, currentUser);
-    } catch (RuntimeException e) {
-      handleDemandException(e);
-    }
+    demandService.acceptDemand(demandId, currentUser);
   }
 
   /**
@@ -101,17 +78,13 @@ public class DemandController {
       @PathVariable Long demandId,
       @RequestBody(required = false) DemandDecisionDto body,
       @AuthenticationPrincipal User currentUser) {
-    try {
-      String rejectionReason = null;
-      if (body != null) {
-        rejectionReason = body.rejectionReason();
-        if (rejectionReason == null || rejectionReason.isBlank()) {
-          rejectionReason = body.raisonRefus();
-        }
+    String rejectionReason = null;
+    if (body != null) {
+      rejectionReason = body.rejectionReason();
+      if (rejectionReason == null || rejectionReason.isBlank()) {
+        rejectionReason = body.raisonRefus();
       }
-      demandService.rejectDemand(demandId, rejectionReason, currentUser);
-    } catch (RuntimeException e) {
-      handleDemandException(e);
     }
+    demandService.rejectDemand(demandId, rejectionReason, currentUser);
   }
 }
