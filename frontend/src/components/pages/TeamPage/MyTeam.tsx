@@ -20,6 +20,7 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
+  Switch,
 } from '@mui/material';
 import {
   ExitToApp as LeaveIcon,
@@ -706,7 +707,10 @@ export function MyTeam() {
               sx={{
                 color: 'white',
                 borderColor: 'rgba(255,255,255,0.3)',
-                '&:hover': { bgcolor: '#c86e20', borderColor: '#c86e20' },
+                '&:hover': {
+                  bgcolor: 'rgb(226, 10, 10)',
+                  borderColor: '#c86e20',
+                },
               }}
             >
               Quitter l'équipe
@@ -739,6 +743,7 @@ export function MyTeam() {
               <Paper
                 key={member.id}
                 role="listitem"
+                onClick={() => navigate(`/players/${member.id}`)}
                 sx={{
                   p: 3,
                   borderRadius: 2,
@@ -749,6 +754,7 @@ export function MyTeam() {
                   alignItems: 'center',
                   textAlign: 'center',
                   transition: 'all 0.3s ease',
+                  cursor: 'pointer',
                   '&:hover': {
                     borderColor: member.isResponsable
                       ? '#e8822a'
@@ -825,95 +831,93 @@ export function MyTeam() {
                   }}
                 />
 
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => navigate(`/players/${member.id}`)}
-                  sx={{
-                    textTransform: 'none',
-                    fontSize: 11,
-                    width: '100%',
-                    color: 'white',
-                    borderColor: 'rgba(255,255,255,0.35)',
-                    mb: 1,
-                    '&:hover': {
-                      bgcolor: '#080b14',
-                      borderColor: '#c86e20',
-                    },
-                  }}
-                >
-                  Voir details
-                </Button>
+                {isResponsable && member.id !== currentUserId && (
+                  <Box
+                    sx={{ width: '100%' }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                    }}
+                  >
+                    <FormControlLabel
+                      sx={{ width: '100%', mt: 0.5, mx: 0, mr: 0 }}
+                      control={
+                        <Switch
+                          checked={member.isResponsable}
+                          onChange={(event) => {
+                            event.stopPropagation();
+                            const targetMemberId = member.id;
+                            if (typeof targetMemberId !== 'number') {
+                              return;
+                            }
 
-                {isResponsable &&
-                  member.id !== currentUserId &&
-                  (member.isResponsable || canPromoteMore) && (
+                            if (member.isResponsable) {
+                              handleDepromote(targetMemberId, member.tag);
+                            } else {
+                              openPromoteConfirm(targetMemberId, member.tag);
+                            }
+                          }}
+                          disabled={
+                            memberActionLoadingId === member.id ||
+                            (!member.isResponsable && !canPromoteMore)
+                          }
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#e8822a',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
+                              {
+                                backgroundColor: '#e8822a',
+                              },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography
+                          variant="caption"
+                          color="white"
+                          sx={{ fontSize: 11 }}
+                        >
+                          {member.isResponsable ? 'Responsable' : 'Membre'}
+                        </Typography>
+                      }
+                    />
+
                     <Button
                       size="small"
-                      variant={member.isResponsable ? 'outlined' : 'contained'}
-                      disabled={memberActionLoadingId === member.id}
-                      onClick={() => {
+                      variant="outlined"
+                      startIcon={<PersonRemoveIcon sx={{ fontSize: 13 }} />}
+                      aria-label="Exclure de l'équipe"
+                      disabled={
+                        memberActionLoadingId === member.id ||
+                        isMemberActionLoading
+                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
                         const targetMemberId = member.id;
-                        if (typeof targetMemberId !== 'number') {
-                          return;
-                        }
-
-                        if (member.isResponsable) {
-                          handleDepromote(targetMemberId, member.tag);
-                        } else {
-                          openPromoteConfirm(targetMemberId, member.tag);
-                        }
+                        if (typeof targetMemberId !== 'number') return;
+                        openKickConfirm(targetMemberId, member.tag);
                       }}
                       sx={{
                         textTransform: 'none',
                         fontSize: 11,
-                        width: '100%',
-                        bgcolor: member.isResponsable
-                          ? 'transparent'
-                          : '#e8822a',
-                        color: 'white',
-                        borderColor: 'rgba(255,255,255,0.35)',
+                        width: '40px',
+                        minWidth: '40px',
+                        padding: '6px',
+                        justifyContent: 'center',
+                        color: '#ef4444',
+                        borderColor: 'rgba(239,68,68,0.4)',
+                        mt: 0.5,
+                        '& .MuiButton-startIcon': {
+                          marginRight: '6px',
+                          marginLeft: 0,
+                        },
                         '&:hover': {
-                          bgcolor: member.isResponsable ? '#080b14' : '#c86e20',
-                          borderColor: '#c86e20',
+                          bgcolor: 'rgba(239,68,68,0.1)',
+                          borderColor: '#ef4444',
                         },
                       }}
-                    >
-                      {member.isResponsable
-                        ? 'Retirer le rôle de responsable'
-                        : 'Nommer responsable'}
-                    </Button>
-                  )}
-
-                {isResponsable && member.id !== currentUserId && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<PersonRemoveIcon sx={{ fontSize: 13 }} />}
-                    disabled={
-                      memberActionLoadingId === member.id ||
-                      isMemberActionLoading
-                    }
-                    onClick={() => {
-                      const targetMemberId = member.id;
-                      if (typeof targetMemberId !== 'number') return;
-                      openKickConfirm(targetMemberId, member.tag);
-                    }}
-                    sx={{
-                      textTransform: 'none',
-                      fontSize: 11,
-                      width: '100%',
-                      color: '#ef4444',
-                      borderColor: 'rgba(239,68,68,0.4)',
-                      mt: 0.5,
-                      '&:hover': {
-                        bgcolor: 'rgba(239,68,68,0.1)',
-                        borderColor: '#ef4444',
-                      },
-                    }}
-                  >
-                    Exclure de l&apos;équipe
-                  </Button>
+                    />
+                  </Box>
                 )}
               </Paper>
             ))}
