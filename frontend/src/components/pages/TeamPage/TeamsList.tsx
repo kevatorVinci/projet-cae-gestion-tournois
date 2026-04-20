@@ -95,8 +95,7 @@ const TeamsList = () => {
       (member) =>
         (typeof currentUserId === 'number' && member.id === currentUserId) ||
         (!!authenticatedUser?.email &&
-          member.email === authenticatedUser.email) ||
-        (!!authenticatedUser?.tag && member.tag === authenticatedUser.tag),
+          member.email === authenticatedUser.email),
     );
   };
 

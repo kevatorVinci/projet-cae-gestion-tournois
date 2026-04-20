@@ -90,6 +90,10 @@ public class DemandService {
       throw new RuntimeException("Cette équipe n'accepte plus de demandes.");
     }
 
+    if (teamHasTagConflict(team, member.getTag())) {
+      throw new IllegalStateException("Il y a déjà un " + member.getTag() + " dans cette équipe.");
+    }
+
     if (demandRepo.existsByMemberIdAndTeamIdAndState(
         memberId, teamId, DemandState.PENDING)) {
       throw new RuntimeException("A pending request already exists for this team.");
@@ -181,6 +185,10 @@ public class DemandService {
       throw new RuntimeException("Ce joueur appartient déjà à une équipe.");
     }
 
+    if (teamHasTagConflict(team, user.getTag())) {
+      throw new IllegalStateException("Il y a déjà un " + user.getTag() + " dans cette équipe.");
+    }
+
     user.setTeam(team);
     team.getMembers().add(user);
     userRepo.save(user);
@@ -268,5 +276,25 @@ public class DemandService {
       return false;
     }
     return team.getPrimaryResponsible() != null || team.getSecondaryResponsible() != null;
+  }
+
+  /**
+   * Checks whether a team already has a member with the same tag.
+   * Comparison is case-insensitive and ignores surrounding spaces.
+   *
+   * @param team      team to inspect.
+   * @param memberTag candidate tag.
+   * @return true when a conflicting tag exists in the team.
+   */
+  private boolean teamHasTagConflict(Team team, String memberTag) {
+    if (team == null || team.getMembers() == null || memberTag == null) {
+      return false;
+    }
+
+    String normalizedTag = memberTag.trim();
+    return !normalizedTag.isEmpty() && team.getMembers().stream()
+        .map(User::getTag)
+        .filter(existingTag -> existingTag != null && !existingTag.isBlank())
+        .anyMatch(existingTag -> existingTag.trim().equalsIgnoreCase(normalizedTag));
   }
 }
