@@ -221,6 +221,38 @@ public class TeamService {
   }
 
   /**
+   * Excludes a member from the current user's team.
+   *
+   * @param currentUser the authenticated user performing the action.
+   * @param memberId    the ID of the member to exclude.
+   * @throws IllegalStateException if the member is not in the team or the user is not allowed.
+   */
+  @Transactional
+  public void kickMember(User currentUser, Long memberId) {
+    User persistedCurrentUser = loadPersistedUser(currentUser);
+    Team team = requireCurrentUserTeam(persistedCurrentUser);
+    verifyCurrentUserIsResponsible(team, persistedCurrentUser);
+
+    if (persistedCurrentUser.getId().equals(memberId)) {
+      throw new IllegalStateException("Vous ne pouvez pas vous exclure vous-même.");
+    }
+
+    User member = findMemberInTeam(team, memberId);
+
+    if (isUserResponsible(team, member) && countResponsibles(team) <= 1) {
+      throw new IllegalStateException("Impossible d'exclure le dernier responsable.");
+    }
+
+    removeResponsibleRole(team, member.getId());
+    normalizeResponsibleSlots(team);
+    team.getMembers().removeIf(teamMember -> teamMember.getId().equals(member.getId()));
+    member.setTeam(null);
+
+    userRepository.save(member);
+    teamRepository.save(team);
+  }
+
+  /**
    * Allows a user to leave their team.
    *
    * @param user             the user who wants to leave.

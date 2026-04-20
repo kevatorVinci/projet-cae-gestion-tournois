@@ -6,6 +6,7 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamService;
 import java.util.List;
+import java.util.ArrayList;
 import org.springframework.stereotype.Component;
 
 /**
@@ -60,5 +61,23 @@ public class TeamMapper {
         members,
         isResponsible
     );
+  }
+
+  /**
+   * Converts multiple teams to public DTOs.
+   *
+   * @param teams the teams to convert.
+   * @param currentUser the authenticated user.
+   * @return the list of mapped DTOs.
+   */
+  public List<TeamPublicDto> toPublicDtos(Iterable<Team> teams, User currentUser) {
+    List<TeamPublicDto> result = new ArrayList<>();
+    if (teams == null) {
+      return result;
+    }
+    for (Team team : teams) {
+      result.add(toPublicDto(team, currentUser));
+    }
+    return result;
   }
 }

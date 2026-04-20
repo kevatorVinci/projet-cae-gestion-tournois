@@ -337,7 +337,9 @@ describe('TeamsList', () => {
 
     fireEvent.click(playerCard as HTMLElement);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/players/Joueur1');
+    expect(mockNavigate).toHaveBeenCalledWith('/players/Joueur1', {
+      state: { from: 'players' },
+    });
   });
 
   test('affiche les équipes triées par ordre alphabétique', async () => {

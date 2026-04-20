@@ -11,7 +11,6 @@ import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.PlayerSelectionService;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,17 +68,13 @@ public class PlayerSelectionController {
       @RequestBody PlayerSelectionUpdateDto payload,
       @AuthenticationPrincipal User currentUser) {
     try {
-      List<PlayerSelection> updatedSelections = playerSelectionService.updateTeamSelections(
+      List<PlayerSelectionDto> dtos = playerSelectionMapper.toDtos(
+          playerSelectionService.updateTeamSelections(
           matchId,
           teamId,
           payload == null ? List.of() : payload.getMemberIds(),
           currentUser
-      );
-
-      List<PlayerSelectionDto> dtos = new ArrayList<>();
-      for (PlayerSelection selection : updatedSelections) {
-        dtos.add(playerSelectionMapper.toDto(selection));
-      }
+      ));
 
       return ResponseEntity.status(HttpStatus.CREATED).body(dtos);
     } catch (IllegalArgumentException e) {
@@ -102,14 +97,11 @@ public class PlayerSelectionController {
       @PathVariable Long matchId,
       @AuthenticationPrincipal User currentUser) {
     try {
-      List<PlayerSelection> selections = playerSelectionService.getSelectionsForMatch(
+      List<PlayerSelectionDto> dtos = playerSelectionMapper.toDtos(
+          playerSelectionService.getSelectionsForMatch(
           matchId,
           currentUser
-      );
-      List<PlayerSelectionDto> dtos = new ArrayList<>();
-      for (PlayerSelection selection : selections) {
-        dtos.add(playerSelectionMapper.toDto(selection));
-      }
+      ));
       return ResponseEntity.ok(dtos);
     } catch (IllegalArgumentException e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);

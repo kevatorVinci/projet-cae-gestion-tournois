@@ -7,6 +7,8 @@ import be.vinci.ipl.cae.demo.models.dtos.tournament.TournamentUpdateDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,6 +39,23 @@ public class TournamentMapper {
         tournament.getMaxParticipants(),
         tournament.isMatchSchedulePublished(),
         toTeamReferenceDto(tournament.getWinner()));
+  }
+
+  /**
+   * Converts multiple tournament entities to response DTOs.
+   *
+   * @param tournaments the tournament entities.
+   * @return the corresponding response DTO list.
+   */
+  public List<TournamentResponseDto> toDtos(Iterable<Tournament> tournaments) {
+    List<TournamentResponseDto> result = new ArrayList<>();
+    if (tournaments == null) {
+      return result;
+    }
+    for (Tournament tournament : tournaments) {
+      result.add(toDto(tournament));
+    }
+    return result;
   }
 
   /**

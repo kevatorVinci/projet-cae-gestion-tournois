@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -62,6 +62,7 @@ const formatMatchDateTime = (value?: string): string => {
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { authenticatedUser } = useContext(UserContext) as UserContextType;
 
   const [user, setUser] = useState<User | null>(null);
@@ -274,7 +275,7 @@ export default function MemberDetails() {
       }}
     >
       <Container maxWidth="lg">
-        <BackButton />
+        <BackButton onClick={handleBack} />
 
         <Stack spacing={4}>
           <Paper

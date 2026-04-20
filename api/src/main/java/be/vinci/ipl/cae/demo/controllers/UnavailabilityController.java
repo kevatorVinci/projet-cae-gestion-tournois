@@ -3,9 +3,8 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.mappers.UnavailabilityMapper;
 import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityCreateDto;
 import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityResponseDto;
-import be.vinci.ipl.cae.demo.models.entities.Unavailability;
-import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
+import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UnavailabilityController {
 
   private final UnavailabilityRepository indisponibiliteRepository;
+  private final UserRepository userRepository;
   private final UnavailabilityMapper unavailabilityMapper;
 
   /**
@@ -35,8 +35,10 @@ public class UnavailabilityController {
    */
   public UnavailabilityController(
       UnavailabilityRepository indisponibiliteRepository,
+      UserRepository userRepository,
       UnavailabilityMapper unavailabilityMapper) {
     this.indisponibiliteRepository = indisponibiliteRepository;
+    this.userRepository = userRepository;
     this.unavailabilityMapper = unavailabilityMapper;
   }
 
@@ -48,10 +50,13 @@ public class UnavailabilityController {
    */
   @GetMapping
   public Iterable<UnavailabilityResponseDto> getMesIndisponibilites(
-      @AuthenticationPrincipal User currentUser) {
-    ensureAuthenticated(currentUser);
+      @AuthenticationPrincipal(expression = "id") Long currentUserId) {
+    ensureAuthenticated(currentUserId);
+    var currentUser = userRepository.findById(currentUserId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
     java.util.List<UnavailabilityResponseDto> result = new java.util.ArrayList<>();
-    for (Unavailability indisponibilite : indisponibiliteRepository.findByUser(currentUser)) {
+    for (var indisponibilite : indisponibiliteRepository.findByUser(currentUser)) {
       result.add(unavailabilityMapper.toDto(indisponibilite));
     }
     return result;
@@ -66,10 +71,13 @@ public class UnavailabilityController {
    */
   @PostMapping
   public UnavailabilityResponseDto addIndisponibilite(
-      @AuthenticationPrincipal User currentUser,
+      @AuthenticationPrincipal(expression = "id") Long currentUserId,
       @RequestBody @Valid UnavailabilityCreateDto indisponibilite) {
-    ensureAuthenticated(currentUser);
-    Unavailability entity = unavailabilityMapper.toEntity(indisponibilite);
+    ensureAuthenticated(currentUserId);
+    var currentUser = userRepository.findById(currentUserId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
+    var entity = unavailabilityMapper.toEntity(indisponibilite);
     entity.setUser(currentUser);
     return unavailabilityMapper.toDto(indisponibiliteRepository.save(entity));
   }
@@ -83,10 +91,10 @@ public class UnavailabilityController {
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
       @PathVariable Long id,
-      @AuthenticationPrincipal User currentUser) {
-    ensureAuthenticated(currentUser);
+      @AuthenticationPrincipal(expression = "id") Long currentUserId) {
+    ensureAuthenticated(currentUserId);
 
-    Unavailability indisponibilite = indisponibiliteRepository
+    var indisponibilite = indisponibiliteRepository
         .findById(id)
         .orElseThrow(
             () -> new ResponseStatusException(
@@ -94,7 +102,7 @@ public class UnavailabilityController {
             )
         );
 
-    if (!indisponibilite.getUser().getId().equals(currentUser.getId())) {
+    if (!indisponibilite.getUser().getId().equals(currentUserId)) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites."
       );
@@ -106,10 +114,10 @@ public class UnavailabilityController {
   /**
    * Internal helper to check authentication.
    *
-   * @param currentUser the user to check.
+   * @param currentUserId the user id to check.
    */
-  private void ensureAuthenticated(User currentUser) {
-    if (currentUser == null) {
+  private void ensureAuthenticated(Long currentUserId) {
+    if (currentUserId == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié.");
     }
   }

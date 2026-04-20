@@ -19,10 +19,13 @@ import {
   Alert,
   FormControl,
   InputLabel,
+  InputAdornment,
   Select,
   MenuItem,
   SelectChangeEvent,
+  TextField,
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
 import BackButton from '../../BackButton';
 import {
@@ -104,6 +107,7 @@ const AdminTournamentsPage = () => {
 
   // Memory variable to store the selected filter
   const [filter, setFilter] = useState('Tous');
+  const [searchQuery, setSearchQuery] = useState('');
 
   /**
    * Function to load or reload the tournaments from the server.
@@ -252,7 +256,14 @@ const AdminTournamentsPage = () => {
    * We create a new list that contains ONLY the tournaments matching the filter.
    * Logic updated: includes a dedicated CLOTURE filter.
    */
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+
   const filteredTournaments = tournaments.filter((t) => {
+    const matchesSearch =
+      normalizedSearchQuery.length === 0 ||
+      t.nom.toLowerCase().includes(normalizedSearchQuery);
+    if (!matchesSearch) return false;
+
     if (filter === 'Tous') return true;
     if (filter === 'En attente de publication') return t.etat === 'BROUILLON';
     if (filter === 'À venir') return t.etat === 'OUVERT'; // Only open tournaments here now
@@ -360,7 +371,50 @@ const AdminTournamentsPage = () => {
 
         <Box sx={{ mt: 4 }}>
           {/* The Dropdown Filter Box */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 2,
+              mb: 3,
+              flexWrap: 'wrap',
+            }}
+          >
+            <TextField
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Rechercher un tournoi..."
+              size="small"
+              sx={{
+                minWidth: { xs: '100%', sm: 280 },
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: '#111827',
+                  color: 'white',
+                  '& fieldset': {
+                    borderColor: 'rgba(255,255,255,0.2)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#e8822a',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#e8822a',
+                  },
+                },
+                '& input::placeholder': {
+                  color: 'rgba(255,255,255,0.6)',
+                  opacity: 1,
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'rgba(255,255,255,0.55)' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
             <FormControl variant="outlined" size="small" sx={{ minWidth: 250 }}>
               <InputLabel
                 id="filter-label"

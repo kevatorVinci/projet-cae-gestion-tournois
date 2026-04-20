@@ -2,7 +2,6 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.mappers.MatchMapper;
 import be.vinci.ipl.cae.demo.models.dtos.match.MatchDto;
-import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.services.MatchService;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +39,7 @@ public class MatchController {
    */
   @GetMapping("/{id}")
   public ResponseEntity<MatchDto> getOne(@PathVariable Long id) {
-    Match match = matchService.getOne(id);
+    var match = matchService.getOne(id);
 
     if (match == null) {
       return ResponseEntity.notFound().build();

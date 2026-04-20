@@ -2,12 +2,10 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.mappers.NotificationMapper;
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.NotificationService;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,9 +43,7 @@ public class NotificationController {
    * @return list of all notifications.
    */
   @GetMapping("/users/{userId}")
-  public ResponseEntity<List<NotificationDto>> getAll(
-      @PathVariable Long userId,
-      @AuthenticationPrincipal User currentUser) {
+  public ResponseEntity<List<NotificationDto>> getAll(@PathVariable Long userId) {
     return ResponseEntity.ok(notificationMapper.toDtos(notificationService.getByUser(userId)));
   }
 
@@ -59,9 +55,7 @@ public class NotificationController {
    * @return list of unread notifications.
    */
   @GetMapping("/users/{userId}/non-lues")
-  public ResponseEntity<List<NotificationDto>> getUnread(
-      @PathVariable Long userId,
-      @AuthenticationPrincipal User currentUser) {
+  public ResponseEntity<List<NotificationDto>> getUnread(@PathVariable Long userId) {
     return ResponseEntity.ok(notificationMapper.toDtos(notificationService.getUnread(userId)));
   }
 
@@ -73,9 +67,7 @@ public class NotificationController {
    * @return the updated notification.
    */
   @PatchMapping("/{idNotification}/lue")
-  public ResponseEntity<NotificationDto> markAsRead(
-      @PathVariable Long idNotification,
-      @AuthenticationPrincipal User currentUser) {
+  public ResponseEntity<NotificationDto> markAsRead(@PathVariable Long idNotification) {
     return ResponseEntity.ok(
         notificationMapper.toDto(notificationService.markAsRead(idNotification)));
   }
@@ -88,9 +80,7 @@ public class NotificationController {
    * @return no content.
    */
   @PatchMapping("/users/{userId}/tous-lues")
-  public ResponseEntity<Void> markAllAsRead(
-      @PathVariable Long userId,
-      @AuthenticationPrincipal User currentUser) {
+  public ResponseEntity<Void> markAllAsRead(@PathVariable Long userId) {
     notificationService.markAllAsRead(userId);
     return ResponseEntity.noContent().build();
   }

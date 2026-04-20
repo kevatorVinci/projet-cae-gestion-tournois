@@ -4,20 +4,22 @@ import {
   Alert,
   Avatar,
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
   CircularProgress,
   Container,
   Divider,
+  IconButton,
   List,
   ListItem,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 
+import { Visibility as VisibilityIcon } from '@mui/icons-material';
 import { getEquipeById } from '../../../services/teams';
 import {
   fetchAcceptedTournamentRegistrations,
@@ -136,24 +138,25 @@ const MemberCard: React.FC<MemberCardProps> = ({
         }}
       />
 
-      <Button
-        size="small"
-        variant="outlined"
-        onClick={() => navigate(`/players/${member.id}`)}
-        sx={{
-          textTransform: 'none',
-          fontSize: 11,
-          width: '100%',
-          color: 'white',
-          borderColor: 'rgba(255,255,255,0.35)',
-          '&:hover': {
-            bgcolor: '#080b14',
-            borderColor: '#c86e20',
-          },
-        }}
-      >
-        Voir details
-      </Button>
+      <Tooltip title="Voir le profil" placement="top">
+        <IconButton
+          size="small"
+          onClick={() => navigate(`/players/${member.id}`)}
+          sx={{
+            mt: 0.5,
+            color: 'rgba(255,255,255,0.6)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 1.5,
+            '&:hover': {
+              color: '#e8822a',
+              borderColor: '#e8822a',
+              bgcolor: 'rgba(232,130,42,0.08)',
+            },
+          }}
+        >
+          <VisibilityIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </Tooltip>
     </Paper>
   );
 };

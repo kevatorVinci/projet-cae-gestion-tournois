@@ -1,5 +1,8 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.exceptions.ConflictException;
+import be.vinci.ipl.cae.demo.exceptions.ForbiddenException;
+import be.vinci.ipl.cae.demo.exceptions.NotFoundException;
 import be.vinci.ipl.cae.demo.models.entities.Demand;
 import be.vinci.ipl.cae.demo.models.entities.Demand.DemandState;
 import be.vinci.ipl.cae.demo.models.entities.Team;
@@ -95,7 +98,7 @@ class DemandServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
 
-    assertThrows(RuntimeException.class, () -> demandService.createJoinRequest(2L, 10L));
+    assertThrows(ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
     verify(demandRepo, never()).save(any());
   }
 
@@ -106,7 +109,7 @@ class DemandServiceTest {
   void createJoinRequestNonExistentMemberThrowsRuntime() {
     when(userRepo.findById(99L)).thenReturn(Optional.empty());
 
-    assertThrows(RuntimeException.class, () -> demandService.createJoinRequest(99L, 10L));
+    assertThrows(NotFoundException.class, () -> demandService.createJoinRequest(99L, 10L));
   }
 
   /**
@@ -117,7 +120,7 @@ class DemandServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(99L)).thenReturn(Optional.empty());
 
-    assertThrows(RuntimeException.class, () -> demandService.createJoinRequest(2L, 99L));
+    assertThrows(NotFoundException.class, () -> demandService.createJoinRequest(2L, 99L));
   }
 
   /**
@@ -131,7 +134,29 @@ class DemandServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
 
-    assertThrows(RuntimeException.class, () -> demandService.createJoinRequest(2L, 10L));
+    assertThrows(ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
+    verify(demandRepo, never()).save(any());
+  }
+
+  /**
+   * Tests that a join request is rejected when a member already has the same tag in team.
+   */
+  @Test
+  void createJoinRequestDuplicateTagInTeamThrowsIllegalState() {
+    member.setTag("Kevator");
+
+    User existingMember = new User();
+    existingMember.setId(50L);
+    existingMember.setTag("kevator");
+    team.getMembers().add(existingMember);
+
+    when(userRepo.findById(2L)).thenReturn(Optional.of(member));
+    when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
+
+    IllegalStateException ex = assertThrows(
+        IllegalStateException.class, () -> demandService.createJoinRequest(2L, 10L));
+
+    assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
     verify(demandRepo, never()).save(any());
   }
 
@@ -201,7 +226,7 @@ class DemandServiceTest {
   void acceptDemandNonExistentDemandThrowsRuntime() {
     when(demandRepo.findById(999L)).thenReturn(Optional.empty());
 
-    assertThrows(RuntimeException.class, () -> demandService.acceptDemand(999L, responsible));
+    assertThrows(NotFoundException.class, () -> demandService.acceptDemand(999L, responsible));
   }
 
   /**
@@ -211,7 +236,7 @@ class DemandServiceTest {
   void acceptDemandNonResponsibleUserThrowsSecurity() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
-    assertThrows(SecurityException.class, () -> demandService.acceptDemand(100L, member));
+    assertThrows(ForbiddenException.class, () -> demandService.acceptDemand(100L, member));
   }
 
   /**
@@ -229,6 +254,28 @@ class DemandServiceTest {
     when(demandRepo.save(any())).thenReturn(demand);
 
     assertDoesNotThrow(() -> demandService.acceptDemand(100L, secondaryResp));
+  }
+
+  /**
+   * Tests that accepting a demand fails when a duplicate tag already exists in the team.
+   */
+  @Test
+  void acceptDemandDuplicateTagInTeamThrowsIllegalState() {
+    member.setTag("Kevator");
+    User existingMember = new User();
+    existingMember.setId(51L);
+    existingMember.setTag("KEVATOR");
+    team.getMembers().add(existingMember);
+
+    when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
+
+    IllegalStateException ex = assertThrows(
+        IllegalStateException.class, () -> demandService.acceptDemand(100L, responsible));
+
+    assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
+    verify(userRepo, never()).save(any());
+    verify(teamRepo, never()).save(any());
+    verify(demandRepo, never()).save(any());
   }
 
   /**
@@ -270,7 +317,7 @@ class DemandServiceTest {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
     assertThrows(
-        SecurityException.class, () -> demandService.rejectDemand(100L, "reason", member));
+        ForbiddenException.class, () -> demandService.rejectDemand(100L, "reason", member));
   }
 
   /**
@@ -281,7 +328,7 @@ class DemandServiceTest {
     when(demandRepo.findById(999L)).thenReturn(Optional.empty());
 
     assertThrows(
-        RuntimeException.class, () -> demandService.rejectDemand(999L, "reason", responsible));
+        NotFoundException.class, () -> demandService.rejectDemand(999L, "reason", responsible));
   }
 
   /**
@@ -297,5 +344,49 @@ class DemandServiceTest {
     assertNull(member.getTeam());
     verify(userRepo, never()).save(any());
     verify(teamRepo, never()).save(any());
+  }
+
+  /**
+   * Tests that a join request is rejected when a member already has the same tag in team.
+   */
+  @Test
+  void createJoinRequestDuplicateTagInTeamThrowsConflict() {
+    member.setTag("Kevator");
+
+    User existingMember = new User();
+    existingMember.setId(50L);
+    existingMember.setTag("kevator");
+    team.getMembers().add(existingMember);
+
+    when(userRepo.findById(2L)).thenReturn(Optional.of(member));
+    when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
+
+    ConflictException ex = assertThrows(
+        ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
+
+    assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
+    verify(demandRepo, never()).save(any());
+  }
+
+  /**
+   * Tests that accepting a demand fails when a duplicate tag already exists in the team.
+   */
+  @Test
+  void acceptDemandDuplicateTagInTeamThrowsConflict() {
+    member.setTag("Kevator");
+    User existingMember = new User();
+    existingMember.setId(51L);
+    existingMember.setTag("KEVATOR");
+    team.getMembers().add(existingMember);
+
+    when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
+
+    ConflictException ex = assertThrows(
+        ConflictException.class, () -> demandService.acceptDemand(100L, responsible));
+
+    assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
+    verify(userRepo, never()).save(any());
+    verify(teamRepo, never()).save(any());
+    verify(demandRepo, never()).save(any());
   }
 }

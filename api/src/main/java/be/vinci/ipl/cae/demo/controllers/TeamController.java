@@ -6,12 +6,9 @@ import be.vinci.ipl.cae.demo.models.dtos.team.TeamCreationDto;
 import be.vinci.ipl.cae.demo.models.dtos.team.TeamJoinDto;
 import be.vinci.ipl.cae.demo.models.dtos.team.TeamPublicDto;
 import be.vinci.ipl.cae.demo.models.dtos.team.TeamUpdateDto;
-import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamService;
 import jakarta.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -54,11 +51,7 @@ public class TeamController {
    */
   @GetMapping({"", "/"})
   public Iterable<TeamPublicDto> readAllTeams(@AuthenticationPrincipal User currentUser) {
-    List<TeamPublicDto> teams = new ArrayList<>();
-    for (Team team : teamService.getAllTeams()) {
-      teams.add(teamMapper.toPublicDto(team, currentUser));
-    }
-    return teams;
+    return teamMapper.toPublicDtos(teamService.getAllTeams(), currentUser);
   }
 
   /**
@@ -72,11 +65,10 @@ public class TeamController {
   public TeamPublicDto readOneTeam(
       @PathVariable Long id,
       @AuthenticationPrincipal User currentUser) {
-    Team team = teamService.getTeamById(id)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Team not found"));
-
-    return teamMapper.toPublicDto(team, currentUser);
+    return teamService.getTeamById(id)
+      .map(team -> teamMapper.toPublicDto(team, currentUser))
+      .orElseThrow(() -> new ResponseStatusException(
+        HttpStatus.NOT_FOUND, "Team not found"));
   }
 
   /**
@@ -102,7 +94,7 @@ public class TeamController {
     }
 
     try {
-      Team team = teamService.createTeam(currentUser, dto.name(), dto.profileImage());
+      var team = teamService.createTeam(currentUser, dto.name(), dto.profileImage());
       if (team == null) {
         throw new ResponseStatusException(
             HttpStatus.CONFLICT, "Ce nom d'équipe est déjà utilisé.");
@@ -133,13 +125,7 @@ public class TeamController {
           "You can only join a team for your own account.");
     }
 
-    try {
-      teamService.requestJoinTeam(currentUser, dto.teamId());
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
-    }
+    teamService.requestJoinTeam(currentUser, dto.teamId());
   }
 
   /**
@@ -205,6 +191,24 @@ public class TeamController {
       @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> teamService.demoteTeamLeader(currentUser, memberId));
+  }
+
+  /**
+   * Excludes a team member.
+   *
+   * @param userId      the path user ID.
+   * @param memberId    the member ID to exclude.
+   * @param currentUser the current authenticated user.
+   */
+  @PostMapping("/{userId}/equipes/membres/{membreId}/exclure")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("isAuthenticated()")
+  public void kickMember(
+      @PathVariable Long userId,
+      @PathVariable("membreId") Long memberId,
+      @AuthenticationPrincipal User currentUser) {
+    ensureSelfTeamManagement(userId, currentUser);
+    executeTeamAction(() -> teamService.kickMember(currentUser, memberId));
   }
 
   /**

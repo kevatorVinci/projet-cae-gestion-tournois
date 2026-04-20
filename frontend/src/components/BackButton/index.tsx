@@ -5,16 +5,23 @@ import { SxProps, Theme } from '@mui/material/styles';
 
 type BoutonRetourProps = {
   sx?: SxProps<Theme>;
+  onClick?: () => void;
 };
 
-export default function BoutonRetour({ sx }: BoutonRetourProps) {
+export default function BoutonRetour({ sx, onClick }: BoutonRetourProps) {
   const navigate = useNavigate();
   return (
     <Button
       disableRipple
       startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 10 }} />}
       size="small"
-      onClick={() => navigate(-1)}
+      onClick={() => {
+        if (onClick) {
+          onClick();
+          return;
+        }
+        navigate(-1);
+      }}
       sx={{
         color: 'rgba(255,255,255,0.4)',
         fontSize: '0.75rem',
