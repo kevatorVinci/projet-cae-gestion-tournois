@@ -17,8 +17,8 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import Groups2Icon from '@mui/icons-material/Groups2';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import BackButton from '../../BackButton';
 import {
   fetchMatchSelections,
@@ -80,6 +80,7 @@ const TournamentMatchCompositionPage = () => {
   const [selectedByTeam, setSelectedByTeam] = useState<
     Record<number, number[]>
   >({});
+  const [userTeamId, setUserTeamId] = useState<number | null>(null);
   const [savingTeamId, setSavingTeamId] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -110,6 +111,11 @@ const TournamentMatchCompositionPage = () => {
     },
     [parsedMatchId],
   );
+
+  const openPlayerProfile = (memberId?: number) => {
+    if (!memberId) return;
+    navigate(`/players/${memberId}`);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -159,30 +165,25 @@ const TournamentMatchCompositionPage = () => {
         if (token) {
           let effectiveResponsibleTeamId: number | null = null;
 
-          if (adminFlag) {
-            setResponsibleTeamId(null);
-          } else {
-            const [responsable, myTeam] = await Promise.all([
-              isCurrentUserResponsable().catch(() => false),
-              getUserTeam().catch(() => null),
-            ]);
-            effectiveResponsibleTeamId =
-              responsable && myTeam ? myTeam.id : null;
-            setResponsibleTeamId(effectiveResponsibleTeamId);
-          }
+          const [responsable, myTeam] = await Promise.all([
+            isCurrentUserResponsable().catch(() => false),
+            getUserTeam().catch(() => null),
+          ]);
+          effectiveResponsibleTeamId = responsable && myTeam ? myTeam.id : null;
+          setResponsibleTeamId(effectiveResponsibleTeamId);
+          setUserTeamId(myTeam?.id ?? null);
 
+          // Seul le responsable peut pré-charger l'éditeur de sa team, l'admin ne peut plus.
           const editableTeamIds = [selectedMatch.team1Id, selectedMatch.team2Id]
             .filter((teamId): teamId is number => typeof teamId === 'number')
-            .filter((teamId) =>
-              adminFlag ? true : teamId === effectiveResponsibleTeamId,
-            );
+            .filter((teamId) => teamId === effectiveResponsibleTeamId);
 
           await Promise.all(
             editableTeamIds.map(async (teamId) => {
               try {
                 await loadEditor(teamId, token);
               } catch {
-                // Ignore editor loading error here; user can still see composition.
+                // Ignore editor loading error here
               }
             }),
           );
@@ -221,19 +222,47 @@ const TournamentMatchCompositionPage = () => {
     return Date.now() >= timestamp;
   }, [match?.scheduledDateTime]);
 
-  const managedTeamId = useMemo(() => {
+  const isAutoQualifiedMatch = useMemo(() => {
+    if (!match) return false;
+    return match.team1Id == null || match.team2Id == null;
+  }, [match]);
+
+  const matchResult = useMemo(() => {
     if (!match) return null;
-    const candidates = [match.team1Id, match.team2Id];
-    return candidates.includes(responsibleTeamId ?? -1)
-      ? responsibleTeamId
-      : null;
-  }, [match, responsibleTeamId]);
+    const { scoreTeam1, scoreTeam2 } = match;
+    if (typeof scoreTeam1 !== 'number' || typeof scoreTeam2 !== 'number')
+      return null;
+    const team1Name = match.team1Name ?? 'Équipe 1';
+    const team2Name = match.team2Name ?? 'Équipe 2';
+    if (scoreTeam1 === scoreTeam2) {
+      return {
+        scoreTeam1,
+        scoreTeam2,
+        winnerName: null,
+        isDraw: true,
+        team1Name,
+        team2Name,
+      };
+    }
+    const winnerName = scoreTeam1 > scoreTeam2 ? team1Name : team2Name;
+    return {
+      scoreTeam1,
+      scoreTeam2,
+      winnerName,
+      isDraw: false,
+      team1Name,
+      team2Name,
+    };
+  }, [match]);
 
   const canRequestEditor = (teamId?: number) => {
     if (!teamId) return false;
+    if (isAdminView) return false;
+    if (isAutoQualifiedMatch) return false;
+    if (matchStarted) return false;
     const token = getAuthenticatedUser()?.token;
     if (!token) return false;
-    if (isAdmin) return true;
+    // On retire isAdmin ici. Seul le responsable peut ouvrir l'éditeur de l'équipe
     return responsibleTeamId === teamId;
   };
 
@@ -241,8 +270,10 @@ const TournamentMatchCompositionPage = () => {
     if (!teamId) return false;
     if (isAdmin) return false;
     if (matchStarted) return false;
-    if (managedTeamId == null) return true;
-    return teamId !== managedTeamId;
+    // Un membre (ou responsable) peut toujours voir la composition de sa propre équipe
+    if (userTeamId === teamId) return false;
+    // La composition adverse est cachée jusqu'au début du match
+    return true;
   };
 
   const toggleMember = (teamId: number, memberId: number) => {
@@ -275,13 +306,21 @@ const TournamentMatchCompositionPage = () => {
   const saveTeam = async (teamId: number) => {
     if (!parsedMatchId) return;
 
+    if (isAutoQualifiedMatch) {
+      setFeedback(
+        "Match qualifié d'office: la composition ne peut pas être modifiée.",
+      );
+      return;
+    }
+
     const token = getAuthenticatedUser()?.token;
     if (!token) {
       setFeedback('Connecte-toi pour enregistrer la composition.');
       return;
     }
 
-    if (!isAdmin && responsibleTeamId !== teamId) {
+    // L'admin n'a plus de passe-droit pour sauvegarder une composition qui n'est pas la sienne
+    if (responsibleTeamId !== teamId) {
       setFeedback('Tu ne peux modifier que la composition de ton équipe.');
       return;
     }
@@ -308,11 +347,13 @@ const TournamentMatchCompositionPage = () => {
   const renderTeamPanel = (
     teamId: number | undefined,
     teamName: string | undefined,
-    accentColor: string,
+    isWinner: boolean,
   ) => {
     const safeTeamName = teamName ?? 'Équipe';
     const editor = teamId ? editorViews[teamId] : undefined;
     const selectedIds = teamId ? (selectedByTeam[teamId] ?? []) : [];
+    const accentColor = '#e8822a';
+    const winnerAccent = '#eab308';
 
     const teamSelections = teamId
       ? selections.filter((selection) => selection.teamId === teamId)
@@ -328,11 +369,24 @@ const TournamentMatchCompositionPage = () => {
           borderRadius: 3,
           background:
             'linear-gradient(165deg, rgba(16,24,40,0.95) 0%, rgba(15,23,42,0.88) 100%)',
-          border: `1px solid ${accentColor}66`,
-          boxShadow: `0 12px 30px ${accentColor}22`,
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 12px 30px rgba(0,0,0,0.25)',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': isWinner
+            ? {
+                content: '""',
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: '4px',
+                backgroundColor: winnerAccent,
+              }
+            : undefined,
         }}
       >
-        <CardContent>
+        <CardContent sx={{ pl: isWinner ? 3 : 2 }}>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -341,14 +395,15 @@ const TournamentMatchCompositionPage = () => {
             <Typography variant="h6" fontWeight={800} color="white">
               {safeTeamName}
             </Typography>
-            {teamId && (
+            {isWinner && (
               <Chip
-                icon={<Groups2Icon />}
-                label={`Équipe #${teamId}`}
+                icon={<EmojiEventsIcon sx={{ color: '#06111f !important' }} />}
+                label="Vainqueur"
+                size="small"
                 sx={{
-                  bgcolor: `${accentColor}22`,
-                  color: accentColor,
-                  border: `1px solid ${accentColor}55`,
+                  bgcolor: winnerAccent,
+                  color: '#06111f',
+                  fontWeight: 800,
                 }}
               />
             )}
@@ -395,10 +450,17 @@ const TournamentMatchCompositionPage = () => {
                   <Avatar
                     src={normalizeImageSrc(selection.memberProfileImageUrl)}
                     alt={selection.memberTag ?? 'Joueur'}
-                    sx={{ width: 28, height: 28 }}
+                    sx={{ width: 28, height: 28, cursor: 'pointer' }}
+                    onClick={() => openPlayerProfile(selection.memberId)}
                   />
                   <Box>
-                    <Typography variant="body2" color="white" fontWeight={700}>
+                    <Typography
+                      variant="body2"
+                      color="white"
+                      fontWeight={700}
+                      sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                      onClick={() => openPlayerProfile(selection.memberId)}
+                    >
                       {selection.memberTag ?? 'Joueur'}
                     </Typography>
                     <Typography
@@ -479,13 +541,25 @@ const TournamentMatchCompositionPage = () => {
                           <Avatar
                             src={normalizeImageSrc(member.profileImageUrl)}
                             alt={member.tag}
-                            sx={{ width: 30, height: 30 }}
+                            sx={{ width: 30, height: 30, cursor: 'pointer' }}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openPlayerProfile(member.memberId);
+                            }}
                           />
                           <Box>
                             <Typography
                               variant="body2"
                               color="white"
                               fontWeight={700}
+                              sx={{
+                                cursor: 'pointer',
+                                textDecoration: 'underline',
+                              }}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openPlayerProfile(member.memberId);
+                              }}
                             >
                               {member.tag}
                             </Typography>
@@ -530,11 +604,6 @@ const TournamentMatchCompositionPage = () => {
                 </Stack>
               )}
             </Box>
-          )}
-          {teamId && !canRequestEditor(teamId) && editor && (
-            <Alert severity="warning" sx={{ mt: 1 }}>
-              Tu ne peux modifier que la composition de ton équipe.
-            </Alert>
           )}
         </CardContent>
       </Card>
@@ -588,22 +657,33 @@ const TournamentMatchCompositionPage = () => {
             backdropFilter: 'blur(6px)',
           }}
         >
-          <CardContent>
+          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
             <Stack
               direction={{ xs: 'column', md: 'row' }}
               justifyContent="space-between"
               alignItems={{ xs: 'flex-start', md: 'center' }}
               spacing={2}
-              sx={{ mb: 3 }}
+              sx={{ mb: 4 }}
             >
               <Box>
-                <Typography variant="overline" color="rgba(255,255,255,0.65)">
+                <Typography
+                  variant="overline"
+                  color="rgba(255,255,255,0.65)"
+                  letterSpacing={1.2}
+                >
                   {tournamentName}
                 </Typography>
-                <Typography variant="h4" color="white" fontWeight={900}>
-                  Composition du match #{match.id}
+                <Typography
+                  variant="h3"
+                  color="white"
+                  fontWeight={900}
+                  sx={{ mt: 0.5, mb: 1 }}
+                >
+                  {isAutoQualifiedMatch
+                    ? "Qualification d'office"
+                    : 'Composition des équipes'}
                 </Typography>
-                <Typography variant="body2" color="rgba(255,255,255,0.72)">
+                <Typography variant="body1" color="rgba(255,255,255,0.72)">
                   {formatDateTime(match.scheduledDateTime)} · Tour {match.round}
                 </Typography>
               </Box>
@@ -612,22 +692,217 @@ const TournamentMatchCompositionPage = () => {
                 variant="outlined"
                 startIcon={<ArrowBackIcon />}
                 onClick={() => navigate(`/tournois/${id}/matchs`)}
-                sx={{ color: '#93c5fd', borderColor: 'rgba(147,197,253,0.55)' }}
+                sx={{
+                  color: '#93c5fd',
+                  borderColor: 'rgba(147,197,253,0.55)',
+                  py: 1,
+                  px: 3,
+                  borderRadius: 2,
+                }}
               >
                 Retour au bracket
               </Button>
             </Stack>
 
             {feedback && (
-              <Alert severity="info" sx={{ mb: 2 }}>
+              <Alert severity="info" sx={{ mb: 4 }}>
                 {feedback}
               </Alert>
             )}
 
-            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5}>
-              {renderTeamPanel(match.team1Id, match.team1Name, '#38bdf8')}
-              {renderTeamPanel(match.team2Id, match.team2Name, '#fb7185')}
-            </Stack>
+            {matchResult && !isAutoQualifiedMatch && (
+              <Card
+                sx={{
+                  mb: 4,
+                  borderRadius: 3,
+                  p: { xs: 2, md: 3 },
+                  background:
+                    'linear-gradient(135deg, rgba(234,179,8,0.18) 0%, rgba(10,16,30,0.85) 55%, rgba(56,189,248,0.15) 100%)',
+                  border: '1px solid rgba(234,179,8,0.35)',
+                  boxShadow: '0 18px 45px rgba(234,179,8,0.12)',
+                }}
+              >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  alignItems="center"
+                  justifyContent="space-between"
+                  spacing={{ xs: 2, sm: 3 }}
+                >
+                  <Box
+                    sx={{ textAlign: { xs: 'center', sm: 'left' }, flex: 1 }}
+                  >
+                    <Typography
+                      variant="overline"
+                      color="rgba(255,255,255,0.7)"
+                      letterSpacing={1.5}
+                    >
+                      Résultat final
+                    </Typography>
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      alignItems="center"
+                      justifyContent={{ xs: 'center', sm: 'flex-start' }}
+                      sx={{ mt: 1 }}
+                    >
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          color:
+                            matchResult.isDraw ||
+                            matchResult.scoreTeam1 >= matchResult.scoreTeam2
+                              ? '#ffffff'
+                              : 'rgba(255,255,255,0.5)',
+                          fontWeight:
+                            matchResult.isDraw ||
+                            matchResult.scoreTeam1 >= matchResult.scoreTeam2
+                              ? 900
+                              : 600,
+                        }}
+                      >
+                        {matchResult.team1Name}{' '}
+                        <Box
+                          component="span"
+                          sx={{
+                            ml: 1,
+                            color:
+                              matchResult.isDraw ||
+                              matchResult.scoreTeam1 >= matchResult.scoreTeam2
+                                ? '#ffffff'
+                                : 'rgba(255,255,255,0.5)',
+                          }}
+                        >
+                          {matchResult.scoreTeam1}
+                        </Box>
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}
+                      >
+                        —
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          color:
+                            matchResult.isDraw ||
+                            matchResult.scoreTeam2 >= matchResult.scoreTeam1
+                              ? '#ffffff'
+                              : 'rgba(255,255,255,0.5)',
+                          fontWeight:
+                            matchResult.isDraw ||
+                            matchResult.scoreTeam2 >= matchResult.scoreTeam1
+                              ? 900
+                              : 600,
+                        }}
+                      >
+                        <Box
+                          component="span"
+                          sx={{
+                            mr: 1,
+                            color:
+                              matchResult.isDraw ||
+                              matchResult.scoreTeam2 >= matchResult.scoreTeam1
+                                ? '#ffffff'
+                                : 'rgba(255,255,255,0.5)',
+                          }}
+                        >
+                          {matchResult.scoreTeam2}
+                        </Box>
+                        {matchResult.team2Name}
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  <Chip
+                    icon={
+                      <EmojiEventsIcon sx={{ color: '#06111f !important' }} />
+                    }
+                    label={
+                      matchResult.isDraw
+                        ? 'Match nul'
+                        : `Vainqueur : ${matchResult.winnerName}`
+                    }
+                    sx={{
+                      bgcolor: matchResult.isDraw
+                        ? 'rgba(148,163,184,0.85)'
+                        : '#fde047',
+                      color: '#06111f',
+                      fontWeight: 800,
+                      fontSize: '0.95rem',
+                      px: 1.25,
+                      py: 2.5,
+                      borderRadius: 2,
+                      boxShadow: '0 8px 20px rgba(234,179,8,0.25)',
+                    }}
+                  />
+                </Stack>
+              </Card>
+            )}
+
+            {isAutoQualifiedMatch ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <Card
+                  sx={{
+                    maxWidth: 500,
+                    width: '100%',
+                    textAlign: 'center',
+                    p: 5,
+                    borderRadius: 4,
+                    background:
+                      'linear-gradient(145deg, rgba(234,179,8,0.15) 0%, rgba(10,16,30,0.8) 100%)',
+                    border: '1px solid rgba(234,179,8,0.4)',
+                    boxShadow: '0 12px 40px rgba(234,179,8,0.1)',
+                  }}
+                >
+                  <Typography
+                    variant="h4"
+                    fontWeight={900}
+                    color="white"
+                    sx={{ mb: 3 }}
+                  >
+                    {match.team1Name || match.team2Name}
+                  </Typography>
+
+                  <Chip
+                    label="Qualifiée d'office"
+                    sx={{
+                      bgcolor: 'rgba(234,179,8,0.2)',
+                      color: '#fde047',
+                      mb: 4,
+                      px: 1,
+                      py: 2.5,
+                      borderRadius: 2,
+                      fontWeight: 700,
+                      fontSize: '1rem',
+                      border: '1px solid rgba(234,179,8,0.3)',
+                    }}
+                  />
+
+                  <Typography
+                    variant="body1"
+                    color="rgba(255,255,255,0.8)"
+                    lineHeight={1.6}
+                  >
+                    Cette équipe passe automatiquement au tour suivant grâce à
+                    son placement dans l'arbre du tournoi.
+                  </Typography>
+                </Card>
+              </Box>
+            ) : (
+              <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3}>
+                {renderTeamPanel(
+                  match.team1Id,
+                  match.team1Name,
+                  matchResult?.winnerName === (match.team1Name ?? 'Équipe 1'),
+                )}
+                {renderTeamPanel(
+                  match.team2Id,
+                  match.team2Name,
+                  matchResult?.winnerName === (match.team2Name ?? 'Équipe 2'),
+                )}
+              </Stack>
+            )}
           </CardContent>
         </Card>
       </Container>

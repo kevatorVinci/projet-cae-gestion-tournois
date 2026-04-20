@@ -31,6 +31,7 @@ public class PlayerSelectionService {
   private final MatchRepository matchRepository;
   private final UserRepository userRepository;
   private final TeamRepository teamRepository;
+  private final NotificationService notificationService;
 
   /**
    * Builds the service.
@@ -39,16 +40,19 @@ public class PlayerSelectionService {
    * @param matchRepository match repository.
    * @param userRepository user repository.
    * @param teamRepository team repository.
+   * @param notificationService notification service.
    */
   public PlayerSelectionService(
       PlayerSelectionRepository playerSelectionRepository,
       MatchRepository matchRepository,
       UserRepository userRepository,
-      TeamRepository teamRepository) {
+      TeamRepository teamRepository,
+      NotificationService notificationService) {
     this.playerSelectionRepository = playerSelectionRepository;
     this.matchRepository = matchRepository;
     this.userRepository = userRepository;
     this.teamRepository = teamRepository;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -90,6 +94,12 @@ public class PlayerSelectionService {
       }
     }
 
+    Set<Long> previouslySelectedMemberIds = toList(
+        playerSelectionRepository.findByMatchIdAndTeamId(matchId, teamId)
+    ).stream()
+        .map(selection -> selection.getMember().getId())
+        .collect(Collectors.toSet());
+
     playerSelectionRepository.deleteByMatchIdAndTeamId(matchId, teamId);
 
     List<PlayerSelection> savedSelections = new ArrayList<>();
@@ -103,6 +113,8 @@ public class PlayerSelectionService {
       selection.setTeam(selectedTeam);
       savedSelections.add(playerSelectionRepository.save(selection));
     }
+
+    notifyNewlySelectedMembers(savedSelections, previouslySelectedMemberIds, match, selectedTeam);
 
     return savedSelections;
   }
@@ -167,6 +179,39 @@ public class PlayerSelectionService {
   }
 
   /**
+   * Returns all matches where the given member was selected in a lineup.
+   * Only matches from published schedules are returned.
+   *
+   * @param memberId the member id.
+   * @return distinct matches the member played in.
+   */
+  public List<Match> getMatchesForMember(Long memberId) {
+    if (memberId == null) {
+      return List.of();
+    }
+
+    List<PlayerSelection> selections = toList(
+        playerSelectionRepository.findByMemberId(memberId)
+    );
+
+    Set<Long> seenMatchIds = new LinkedHashSet<>();
+    List<Match> matches = new ArrayList<>();
+    for (PlayerSelection selection : selections) {
+      Match match = selection.getMatch();
+      if (match == null || match.getTournament() == null) {
+        continue;
+      }
+      if (!match.getTournament().isMatchSchedulePublished()) {
+        continue;
+      }
+      if (seenMatchIds.add(match.getId())) {
+        matches.add(match);
+      }
+    }
+    return matches;
+  }
+
+  /**
    * Builds the editor view for one team's lineup in a match.
    *
    * @param matchId match id.
@@ -202,7 +247,8 @@ public class PlayerSelectionService {
     PlayerSelectionTeamViewDto response = new PlayerSelectionTeamViewDto();
     response.setMatchId(matchId);
     response.setTeamId(teamId);
-    response.setCanEdit(!isMatchStarted(match)
+    response.setCanEdit(!isByeMatch(match)
+        && !isMatchStarted(match)
         && (isAdmin(currentUser) || isResponsible(selectedTeam, currentUser)));
     response.setMaxPlayers(MAX_PLAYERS_PER_MATCH);
     response.setSelectedCount(selectedIds.size());
@@ -235,6 +281,12 @@ public class PlayerSelectionService {
   }
 
   private void validateCanEditSelection(Match match, Team selectedTeam, User currentUser) {
+    if (isByeMatch(match)) {
+      throw new IllegalStateException(
+          "La composition ne peut pas être modifiée pour un match qualifié d'office."
+      );
+    }
+
     if (isMatchStarted(match)) {
       throw new IllegalStateException(
           "La composition ne peut plus être modifiée après le début du match."
@@ -307,11 +359,33 @@ public class PlayerSelectionService {
         && !LocalDateTime.now().isBefore(match.getScheduledDateTime());
   }
 
+  private boolean isByeMatch(Match match) {
+    return match.getTeam1() == null || match.getTeam2() == null;
+  }
+
   private List<PlayerSelection> toList(Iterable<PlayerSelection> selections) {
     List<PlayerSelection> result = new ArrayList<>();
     for (PlayerSelection selection : selections) {
       result.add(selection);
     }
     return result;
+  }
+
+  private void notifyNewlySelectedMembers(
+      List<PlayerSelection> savedSelections,
+      Set<Long> previouslySelectedMemberIds,
+      Match match,
+      Team selectedTeam) {
+    for (PlayerSelection savedSelection : savedSelections) {
+      Long memberId = savedSelection.getMember().getId();
+      if (previouslySelectedMemberIds.contains(memberId)) {
+        continue;
+      }
+      notificationService.notifySelectedForMatch(
+          savedSelection.getMember(),
+          match,
+          selectedTeam
+      );
+    }
   }
 }

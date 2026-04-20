@@ -187,22 +187,9 @@ const AdminTournamentsPage = () => {
   const handleGeneratePlanning = async (id: number) => {
     if (!authenticatedUser?.token) return;
     setActionMessage(null);
-    const tournamentName =
-      tournaments.find((tournament) => tournament.id === id)?.nom ||
-      `Tournoi #${id}`;
-
     try {
       await generateTournamentSchedule(id, authenticatedUser.token);
-      setActionMessage({
-        type: 'success',
-        text: (
-          <>
-            Le planning du tournoi <strong>{tournamentName}</strong> a ete
-            genere. Vous pouvez maintenant le publier.
-          </>
-        ),
-      });
-      await loadTournaments();
+      navigate(`/tournois/${id}/matchs`);
     } catch (err) {
       setActionMessage({
         type: 'error',

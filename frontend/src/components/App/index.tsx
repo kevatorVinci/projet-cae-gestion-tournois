@@ -1,5 +1,11 @@
 import Box from '@mui/material/Box';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 import { AdminViewProvider } from '../../contexts/AdminViewContext';
 import Navbar from '../Navbar';
 import HomePage from '../pages/HomePage/HomePage';
@@ -30,6 +36,14 @@ import EditTournamentPage from '../pages/Tournaments/EditTournament';
 import TournamentMatchesPage from '../pages/Tournaments/TournamentMatchesPage';
 import TournamentMatchCompositionPage from '../pages/Tournaments/TournamentMatchCompositionPage';
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+};
+
 const appBlueGradient =
   'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
 
@@ -41,6 +55,7 @@ const App = () => (
         v7_relativeSplatPath: true,
       }}
     >
+      <ScrollToTop />
       <Box sx={{ minHeight: '100vh', background: appBlueGradient }}>
         <Navbar />
         <Routes>
@@ -147,7 +162,6 @@ const App = () => (
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin"
             element={

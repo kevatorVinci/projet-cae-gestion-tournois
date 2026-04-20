@@ -42,6 +42,11 @@ public class MatchMapper {
     dto.setStatus(match.getStatus());
     dto.setAdminResponsibleId(match.getAdminResponsible().getId());
 
+    if (match.getResult() != null) {
+      dto.setScoreTeam1(match.getResult().getScoreTeam1());
+      dto.setScoreTeam2(match.getResult().getScoreTeam2());
+    }
+
     return dto;
   }
 

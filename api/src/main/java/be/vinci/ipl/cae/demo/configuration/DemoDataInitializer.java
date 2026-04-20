@@ -8,25 +8,17 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Seeds the database with a rich, client-facing demo dataset.
- * Includes the full dev dataset plus extra teams with 4+ members each,
- * and two additional tournaments (one CLOTURE, one BROUILLON).
- * Activated only when the "demo" Spring profile is active.
+ * Seeds demo-only tournaments and registrations on top of the shared base dataset.
  */
 @Component
 @Profile("demo")
 public class DemoDataInitializer extends AbstractDataInitializer {
 
-  private static final int CLOSED_TOURNAMENT_TEAM_CAP = 8;
-
-  /**
-   * Executes the data initialization for the demo profile.
-   *
-   * @param args command line arguments
-   */
   @Override
+  @Transactional
   public void run(String... args) {
     final String pwd = pwdEncoder.encode("Azerty2026!");
 
@@ -34,86 +26,65 @@ public class DemoDataInitializer extends AbstractDataInitializer {
 
     if (shouldSeedBase) {
       SeedData data = seedBaseData(pwd);
-
-      Team alpha = data.alpha();
-      Team omega = data.omega();
-
-      addBotMember("alphabot@demo.com", "AlphaBot", "architecte", pwd, "neon2.jpg", alpha);
-      for (int j = 1; j <= 3; j++) {
-        addBotMember("omegabot" + j + "@demo.com",
-            "OmegaBot" + j, "gardien", pwd, "kaido.png", omega);
-      }
-
       ensureDemoTournaments(data);
     } else {
       ensureDemoTournaments(null);
     }
 
-    System.out.println("[demo] DB initialized/updated: demo tournaments verified.");
+    System.out.println(
+        "[demo] DB initialized: Upcoming tournaments ready to be planned by admin."
+    );
   }
 
   /**
-   * Ensures the specific demo tournaments are present in the database.
-   * If seed data is provided, registers teams to the Showdown tournament.
+   * Ensures the dedicated demo tournaments exist with expected team registrations.
    *
-   * @param data the seeded base data, or null if the DB was already seeded.
+   * @param data shared seed data when base seeding happened in this run, otherwise null.
    */
   private void ensureDemoTournaments(SeedData data) {
     List<Team> registrationTeams = resolveRegistrationTeams(data);
 
-    Tournament closedEight = getOrCreateTournament(
-        "Demo Closed Arena 8v8 2026",
-        "Tournoi clôturé de démonstration avec 8 équipes inscrites sur 8",
-        "2026-04-20",
-        "2026-05-05",
-        "2026-04-09",
-        "CLOTURE",
-        CLOSED_TOURNAMENT_TEAM_CAP
-    );
-    ensureRegistrations(closedEight, registrationTeams.subList(0, 8), "2026-04-07");
-
-    Tournament closedSeven = getOrCreateTournament(
-        "Demo Closed Arena 7v8 2026",
-        "Tournoi clôturé de démonstration avec 7 équipes inscrites sur 8",
-        "2026-05-10",
-        "2026-05-20",
-        "2026-05-03",
-        "CLOTURE",
-        CLOSED_TOURNAMENT_TEAM_CAP
-    );
-    ensureRegistrations(closedSeven, registrationTeams.subList(0, 7), "2026-05-01");
-
-    Tournament closedSix = getOrCreateTournament(
-        "Demo Closed Arena 6v8 2026",
-        "Tournoi clôturé de démonstration avec 6 équipes inscrites sur 8",
+    Tournament t5 = getOrCreateTournament(
+        "Demo Future Arena (5 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-06-01",
+        "2026-06-15",
         "2026-05-25",
-        "2026-06-05",
-        "2026-05-18",
         "CLOTURE",
-        CLOSED_TOURNAMENT_TEAM_CAP
+        8
     );
-    ensureRegistrations(closedSix, registrationTeams.subList(0, 6), "2026-05-16");
+    ensureRegistrations(t5, registrationTeams.subList(0, 5), "2026-05-20");
 
-    if (tournamentRepo.findByName("Summer Invitational 2026").isEmpty()) {
-      Tournament summerInvitational = makeTournament(
-          "Summer Invitational 2026",
-          "Summer tournament in preparation, not yet published",
-          "2026-07-01",
-          "2026-07-15",
-          "2026-06-20",
-          "BROUILLON",
-          12
-      );
-      tournamentRepo.save(summerInvitational);
-    }
+    Tournament t6 = getOrCreateTournament(
+        "Demo Future Arena (6 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-06-10",
+        "2026-06-25",
+        "2026-06-05",
+        "CLOTURE",
+        8
+    );
+    ensureRegistrations(t6, registrationTeams.subList(0, 6), "2026-06-01");
+
+    Tournament t7 = getOrCreateTournament(
+        "Demo Future Arena (7 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-07-01",
+        "2026-07-15",
+        "2026-06-25",
+        "CLOTURE",
+        8
+    );
+    ensureRegistrations(t7, registrationTeams.subList(0, 7), "2026-06-20");
 
     System.out.println(
-        "[demo] DB initialized: planning tournaments ready (CLOTURE 8/8, 7/8, 6/8 + 1 BROUILLON)"
+        "[demo] CLOTURE tournaments successfully seeded (5, 6, and 7 teams). "
+            + "Ready for manual planning generation."
     );
   }
 
   /**
-   * Returns an existing tournament by name or creates it if absent.
+   * Returns the existing tournament with the given name or creates it.
    */
   private Tournament getOrCreateTournament(
       String name,
@@ -138,9 +109,12 @@ public class DemoDataInitializer extends AbstractDataInitializer {
   }
 
   /**
-   * Ensures all given teams are registered once in the target tournament.
+   * Registers only teams that are still missing from the tournament.
    */
-  private void ensureRegistrations(Tournament tournament, List<Team> targetTeams, String date) {
+  private void ensureRegistrations(
+      Tournament tournament,
+      List<Team> targetTeams,
+      String date) {
     List<Team> missingTeams = new ArrayList<>();
     for (Team team : targetTeams) {
       if (inscriptionRepo.findByTournamentAndTeam(tournament, team).isEmpty()) {
@@ -153,7 +127,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
   }
 
   /**
-   * Resolves at least 8 teams for tournament registrations.
+   * Resolves at least eight teams for demo tournament registration.
    */
   private List<Team> resolveRegistrationTeams(SeedData data) {
     List<Team> teams = new ArrayList<>();
@@ -196,11 +170,11 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       }
     }
 
-    throw new IllegalStateException("Not enough teams to seed demo planning tournaments.");
+    throw new IllegalStateException("Pas assez d'équipes pour générer la démo.");
   }
 
   /**
-   * Adds a team to the target list only once.
+   * Adds a team only once based on its id.
    */
   private void addIfAbsent(List<Team> target, Set<Long> seen, Team team) {
     if (team != null && team.getId() != null && seen.add(team.getId())) {
