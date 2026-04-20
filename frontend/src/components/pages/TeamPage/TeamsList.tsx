@@ -13,8 +13,6 @@ import {
   Stack,
   TextField,
   Typography,
-  ToggleButton,
-  ToggleButtonGroup,
   Avatar,
   IconButton,
   Tooltip,
@@ -168,18 +166,6 @@ const TeamsList = () => {
     }
   };
 
-  const handleTabChange = (
-    _event: React.MouseEvent<HTMLElement>,
-    newValue: 'teams' | 'players' | null,
-  ) => {
-    if (newValue !== null) {
-      setActiveTab(newValue);
-      // We empty the search bar when changing tabs so it's clean
-      setQuery('');
-      setMessage(null);
-    }
-  };
-
   // We filter and sort the teams based on the search bar AND availability
   const filteredTeams = useMemo(
     () =>
@@ -287,39 +273,91 @@ const TeamsList = () => {
             flexWrap: 'wrap',
           }}
         >
-          {/* Toggle buttons (Teams / Players) */}
-          <ToggleButtonGroup
-            value={activeTab}
-            exclusive
-            onChange={handleTabChange}
-            aria-label="Sélection de la vue"
+          {/* Stylized tabs (Teams / Players) */}
+          <Box
             sx={{
-              backgroundColor: '#1a2540',
+              display: 'flex',
+              backgroundColor: '#0d1525',
               borderRadius: 2,
-              '& .MuiToggleButton-root': {
-                color: 'rgba(255,255,255,0.5)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                textTransform: 'none',
-                fontWeight: 'bold',
-                px: 3,
-                py: 1,
-                '&.Mui-selected': {
-                  color: 'white',
-                  backgroundColor: '#e8822a',
-                  '&:hover': {
-                    backgroundColor: '#c86e20',
-                  },
-                },
-              },
+              p: 0.5,
+              border: '1px solid rgba(255,255,255,0.08)',
+              gap: 0.5,
             }}
           >
-            <ToggleButton value="teams" aria-label="Voir les équipes">
-              <GroupsIcon sx={{ mr: 1 }} /> Teams
-            </ToggleButton>
-            <ToggleButton value="players" aria-label="Voir les joueurs">
-              <PersonIcon sx={{ mr: 1 }} /> Joueurs
-            </ToggleButton>
-          </ToggleButtonGroup>
+            {[
+              {
+                value: 'teams',
+                label: 'Teams',
+                icon: <GroupsIcon sx={{ fontSize: 18 }} />,
+              },
+              {
+                value: 'players',
+                label: 'Joueurs',
+                icon: <PersonIcon sx={{ fontSize: 18 }} />,
+              },
+            ].map(({ value, label, icon }) => (
+              <Box
+                key={value}
+                role="button"
+                tabIndex={0}
+                aria-label={label}
+                onClick={() => {
+                  setActiveTab(value as 'teams' | 'players');
+                  setQuery('');
+                  setMessage(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveTab(value as 'teams' | 'players');
+                    setQuery('');
+                    setMessage(null);
+                  }
+                }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 2.5,
+                  py: 1,
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s ease',
+                  color:
+                    activeTab === value ? 'white' : 'rgba(255,255,255,0.4)',
+                  backgroundColor:
+                    activeTab === value ? '#e8822a' : 'transparent',
+                  boxShadow:
+                    activeTab === value
+                      ? '0 2px 8px rgba(232,130,42,0.35)'
+                      : 'none',
+                  userSelect: 'none',
+                  '&:hover': {
+                    color:
+                      activeTab === value ? 'white' : 'rgba(255,255,255,0.75)',
+                    backgroundColor:
+                      activeTab === value
+                        ? '#e8822a'
+                        : 'rgba(255,255,255,0.06)',
+                  },
+                }}
+              >
+                {icon}
+                <Typography
+                  component="span"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    color: 'inherit',
+                  }}
+                >
+                  {label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
 
           {/* The Search Input */}
           <TextField
