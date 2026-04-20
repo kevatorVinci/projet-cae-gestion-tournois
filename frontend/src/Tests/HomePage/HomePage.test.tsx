@@ -44,7 +44,7 @@ describe('HomePage', () => {
     fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
     expect(
-      screen.getByText(/là où le génie affronte la bataille/i),
+      screen.getByText(/Where Genius Meets Battle/i),
     ).toBeInTheDocument();
     expect(mockNavigate).toHaveBeenNthCalledWith(1, '/register');
     expect(mockNavigate).toHaveBeenNthCalledWith(2, '/login');
