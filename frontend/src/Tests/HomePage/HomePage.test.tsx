@@ -43,9 +43,7 @@ describe('HomePage', () => {
     fireEvent.click(screen.getByRole('button', { name: /s'inscrire/i }));
     fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
-    expect(
-      screen.getByText(/Where Genius Meets Battle/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Where Genius Meets Battle/i)).toBeInTheDocument();
     expect(mockNavigate).toHaveBeenNthCalledWith(1, '/register');
     expect(mockNavigate).toHaveBeenNthCalledWith(2, '/login');
     expect(mockGetUnreadNotificationsByUser).not.toHaveBeenCalled();
