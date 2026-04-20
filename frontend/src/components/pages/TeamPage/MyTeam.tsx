@@ -21,6 +21,7 @@ import {
   Radio,
   RadioGroup,
   Switch,
+  Tooltip,
 } from '@mui/material';
 import {
   ExitToApp as LeaveIcon,
@@ -882,41 +883,45 @@ export function MyTeam() {
                       }
                     />
 
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<PersonRemoveIcon sx={{ fontSize: 13 }} />}
-                      aria-label="Exclure de l'équipe"
-                      disabled={
-                        memberActionLoadingId === member.id ||
-                        isMemberActionLoading
-                      }
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        const targetMemberId = member.id;
-                        if (typeof targetMemberId !== 'number') return;
-                        openKickConfirm(targetMemberId, member.tag);
-                      }}
-                      sx={{
-                        textTransform: 'none',
-                        fontSize: 11,
-                        width: '40px',
-                        minWidth: '40px',
-                        padding: '6px',
-                        justifyContent: 'center',
-                        color: '#ef4444',
-                        borderColor: 'rgba(239,68,68,0.4)',
-                        mt: 0.5,
-                        '& .MuiButton-startIcon': {
-                          marginRight: '6px',
-                          marginLeft: 0,
-                        },
-                        '&:hover': {
-                          bgcolor: 'rgba(239,68,68,0.1)',
-                          borderColor: '#ef4444',
-                        },
-                      }}
-                    />
+                    <Tooltip title="Bannir le membre">
+                      <span>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<PersonRemoveIcon sx={{ fontSize: 13 }} />}
+                          aria-label="Exclure de l'équipe"
+                          disabled={
+                            memberActionLoadingId === member.id ||
+                            isMemberActionLoading
+                          }
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            const targetMemberId = member.id;
+                            if (typeof targetMemberId !== 'number') return;
+                            openKickConfirm(targetMemberId, member.tag);
+                          }}
+                          sx={{
+                            textTransform: 'none',
+                            fontSize: 11,
+                            width: '40px',
+                            minWidth: '40px',
+                            padding: '6px',
+                            justifyContent: 'center',
+                            color: '#ef4444',
+                            borderColor: 'rgba(239,68,68,0.4)',
+                            mt: 0.5,
+                            '& .MuiButton-startIcon': {
+                              marginRight: '6px',
+                              marginLeft: 0,
+                            },
+                            '&:hover': {
+                              bgcolor: 'rgba(239,68,68,0.1)',
+                              borderColor: '#ef4444',
+                            },
+                          }}
+                        />
+                      </span>
+                    </Tooltip>
                   </Box>
                 )}
               </Paper>
