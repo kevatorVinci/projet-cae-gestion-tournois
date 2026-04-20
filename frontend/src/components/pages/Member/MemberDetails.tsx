@@ -20,7 +20,7 @@ import { getAuthenticatedUser } from '../../../utils/session';
 import { getAllEquipes } from '../../../services/teams';
 import {
   fetchTeamRegistrationsPublic,
-  fetchTeamMatches,
+  fetchMemberMatches,
   TeamRegistrationItem,
   TeamMatch,
 } from '../../../services/tournaments';
@@ -45,6 +45,20 @@ const capitalize = (value?: string): string => {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 };
 
+const formatMatchDateTime = (value?: string): string => {
+  if (!value) return 'Date non définie';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('fr-BE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+};
+
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -59,6 +73,30 @@ export default function MemberDetails() {
   const [matches, setMatches] = useState<TeamMatch[]>([]);
 
   const isOwnProfile = authenticatedUser?.tag === user?.tag;
+
+  const historyMatches = matches
+    .filter((match) => {
+      const normalizedStatus = (match.status ?? '').toLowerCase();
+      const hasScore =
+        typeof match.scoreTeam1 === 'number' &&
+        typeof match.scoreTeam2 === 'number';
+      const isFinishedStatus =
+        normalizedStatus === 'termine' ||
+        normalizedStatus === 'finished' ||
+        normalizedStatus === 'completed' ||
+        normalizedStatus === 'complete';
+
+      return hasScore || isFinishedStatus;
+    })
+    .sort((left, right) => {
+      const leftDate = left.scheduledDateTime
+        ? new Date(left.scheduledDateTime).getTime()
+        : 0;
+      const rightDate = right.scheduledDateTime
+        ? new Date(right.scheduledDateTime).getTime()
+        : 0;
+      return rightDate - leftDate;
+    });
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return undefined;
@@ -143,22 +181,26 @@ export default function MemberDetails() {
 
           setTeamId(foundTeamId);
 
-          if (foundTeamId) {
-            const [regs, teamMatches] = await Promise.all([
-              fetchTeamRegistrationsPublic(foundTeamId).catch(() => []),
-              fetchTeamMatches(foundTeamId).catch(() => []),
-            ]);
-            setRegistrations(regs);
-            setMatches(teamMatches);
-          }
+          const [regs, memberMatches] = await Promise.all([
+            foundTeamId
+              ? fetchTeamRegistrationsPublic(foundTeamId).catch(() => [])
+              : Promise.resolve<TeamRegistrationItem[]>([]),
+            fetchMemberMatches(finalId).catch(() => []),
+          ]);
+          setRegistrations(regs);
+          setMatches(memberMatches);
         } else {
           setUser(null);
           setTeamId(null);
+          setRegistrations([]);
+          setMatches([]);
         }
       } catch (error) {
         console.error('Erreur globale lors de la récupération:', error);
         setUser(null);
         setTeamId(null);
+        setRegistrations([]);
+        setMatches([]);
       } finally {
         setLoading(false);
       }
@@ -644,34 +686,90 @@ export default function MemberDetails() {
                   sx={{ color: '#3b82f6', fontSize: 22 }}
                 />
                 <Typography variant="h6" fontWeight={700} color="white">
-                  Matchs
+                  Historique des matchs
                 </Typography>
               </Box>
 
-              {matches.length === 0 ? (
+              {historyMatches.length === 0 ? (
                 <Typography variant="body2" color="rgba(255,255,255,0.4)">
-                  Aucun match pour le moment.
+                  Aucun match joué pour le moment.
                 </Typography>
               ) : (
                 <Stack spacing={1.5}>
-                  {matches.map((match) => {
-                    const isTeam1 = match.team1Id === teamId;
-                    const opponentName = isTeam1
-                      ? match.team2Name
-                      : match.team1Name;
-                    const isFinished =
-                      match.status === 'FINISHED' || match.status === 'TERMINE';
+                  {historyMatches.map((match) => {
+                    const isTeam1 = teamId != null && match.team1Id === teamId;
+                    const isTeam2 = teamId != null && match.team2Id === teamId;
+                    const matchTitle = isTeam1
+                      ? `vs ${match.team2Name ?? '?'}`
+                      : isTeam2
+                        ? `vs ${match.team1Name ?? '?'}`
+                        : `${match.team1Name ?? '?'} vs ${match.team2Name ?? '?'}`;
                     const tournamentName =
                       registrations.find(
                         (registration) =>
                           registration.tournoiId === match.tournamentId,
                       )?.tournoi?.nom ?? `Tournoi #${match.tournamentId}`;
-                    const resultColor = isFinished ? '#10b981' : '#e8822a';
-                    const resultLabel = isFinished ? 'Terminé' : 'En attente';
+                    const hasScore =
+                      typeof match.scoreTeam1 === 'number' &&
+                      typeof match.scoreTeam2 === 'number';
+                    let scoreLabel = 'Score non disponible';
+                    if (hasScore) {
+                      const score1 = Number(match.scoreTeam1);
+                      const score2 = Number(match.scoreTeam2);
+                      scoreLabel = isTeam1
+                        ? `${score1} - ${score2}`
+                        : isTeam2
+                          ? `${score2} - ${score1}`
+                          : `${score1} - ${score2}`;
+                    }
+
+                    let outcomeLabel = 'Résultat indisponible';
+                    let outcomeColor = '#94a3b8';
+                    let outcomeBackground = 'rgba(148,163,184,0.20)';
+                    let outcomeBorder = '1px solid rgba(148,163,184,0.35)';
+
+                    if (hasScore && (isTeam1 || isTeam2)) {
+                      const score1 = Number(match.scoreTeam1);
+                      const score2 = Number(match.scoreTeam2);
+                      const myScore = isTeam1 ? score1 : score2;
+                      const opponentScore = isTeam1 ? score2 : score1;
+
+                      if (myScore > opponentScore) {
+                        outcomeLabel = 'Victoire';
+                        outcomeColor = '#34d399';
+                        outcomeBackground = 'rgba(16,185,129,0.20)';
+                        outcomeBorder = '1px solid rgba(16,185,129,0.35)';
+                      } else if (myScore < opponentScore) {
+                        outcomeLabel = 'Défaite';
+                        outcomeColor = '#f87171';
+                        outcomeBackground = 'rgba(239,68,68,0.20)';
+                        outcomeBorder = '1px solid rgba(239,68,68,0.35)';
+                      } else {
+                        outcomeLabel = 'Nul';
+                        outcomeColor = '#93c5fd';
+                        outcomeBackground = 'rgba(59,130,246,0.20)';
+                        outcomeBorder = '1px solid rgba(59,130,246,0.35)';
+                      }
+                    }
 
                     return (
                       <Box
                         key={match.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() =>
+                          navigate(
+                            `/tournois/${match.tournamentId}/matchs/${match.id}`,
+                          )
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            navigate(
+                              `/tournois/${match.tournamentId}/matchs/${match.id}`,
+                            );
+                          }
+                        }}
                         sx={{
                           p: 1.5,
                           borderRadius: 2,
@@ -681,6 +779,13 @@ export default function MemberDetails() {
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           gap: 1,
+                          cursor: 'pointer',
+                          transition:
+                            'border-color 0.2s ease, transform 0.2s ease',
+                          '&:hover': {
+                            borderColor: '#3b82f6',
+                            transform: 'translateY(-2px)',
+                          },
                         }}
                       >
                         <Box>
@@ -689,7 +794,7 @@ export default function MemberDetails() {
                             fontWeight={700}
                             color="white"
                           >
-                            vs {opponentName ?? '?'}
+                            {matchTitle}
                           </Typography>
                           <Typography
                             variant="caption"
@@ -702,28 +807,43 @@ export default function MemberDetails() {
                           </Typography>
                         </Box>
                         <Box sx={{ textAlign: 'right' }}>
-                          {match.scheduledDateTime && (
-                            <Typography
-                              variant="body2"
-                              fontWeight={800}
-                              color="rgba(255,255,255,0.75)"
-                            >
-                              {new Date(match.scheduledDateTime).toLocaleString(
-                                'fr-BE',
-                              )}
-                            </Typography>
-                          )}
-                          <Chip
-                            label={resultLabel}
-                            size="small"
-                            sx={{
-                              bgcolor: `${resultColor}22`,
-                              color: resultColor,
-                              fontWeight: 700,
-                              fontSize: 10,
-                              border: `1px solid ${resultColor}44`,
-                            }}
-                          />
+                          <Typography
+                            variant="body2"
+                            fontWeight={800}
+                            color="rgba(255,255,255,0.75)"
+                          >
+                            {formatMatchDateTime(match.scheduledDateTime)}
+                          </Typography>
+                          <Stack
+                            direction="row"
+                            spacing={0.8}
+                            justifyContent="flex-end"
+                            alignItems="center"
+                            sx={{ mt: 0.7 }}
+                          >
+                            <Chip
+                              label={scoreLabel}
+                              size="small"
+                              sx={{
+                                bgcolor: 'rgba(59,130,246,0.20)',
+                                color: '#93c5fd',
+                                fontWeight: 700,
+                                fontSize: 10,
+                                border: '1px solid rgba(59,130,246,0.35)',
+                              }}
+                            />
+                            <Chip
+                              label={outcomeLabel}
+                              size="small"
+                              sx={{
+                                bgcolor: outcomeBackground,
+                                color: outcomeColor,
+                                fontWeight: 700,
+                                fontSize: 10,
+                                border: outcomeBorder,
+                              }}
+                            />
+                          </Stack>
                         </Box>
                       </Box>
                     );

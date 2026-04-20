@@ -57,6 +57,8 @@ public class SecurityConfiguration {
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, "/selections/match/**")
                 .permitAll()
+                .requestMatchers(HttpMethod.GET, "/selections/member/**")
+                .permitAll()
                 .requestMatchers("/indisponibilites", "/indisponibilites/**")
                 .authenticated()
                 .anyRequest()

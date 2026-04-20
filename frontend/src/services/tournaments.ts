@@ -50,6 +50,8 @@ export interface TeamMatch {
   scheduledDateTime?: string;
   status: string;
   adminResponsibleId?: number;
+  scoreTeam1?: number;
+  scoreTeam2?: number;
 }
 
 export interface MatchPlayerSelection {
@@ -473,6 +475,14 @@ export const fetchTeamMatches = async (
   equipeId: string | number,
 ): Promise<TeamMatch[]> => {
   const response = await fetch(`/api/matches/equipes/${equipeId}/matches`);
+  if (!response.ok) return [];
+  return await response.json();
+};
+
+export const fetchMemberMatches = async (
+  memberId: string | number,
+): Promise<TeamMatch[]> => {
+  const response = await fetch(`/api/selections/member/${memberId}/matches`);
   if (!response.ok) return [];
   return await response.json();
 };

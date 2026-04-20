@@ -1,8 +1,12 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.Match;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +15,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class NotificationService {
+
+  private static final DateTimeFormatter MATCH_DATETIME_FORMATTER =
+      DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
   /**
    * Repository used to access and persist notifications.
@@ -218,6 +225,55 @@ public class NotificationService {
         user,
         "Nouveau tournoi : le tournoi '" + tournamentName
             + "' vient d'être publié. Inscrivez-vous vite !"
+    );
+  }
+
+  /**
+   * Notifies a member that they are selected to participate in a match.
+   *
+   * @param user         selected member.
+   * @param match        target match.
+   * @param selectedTeam team for which the member is selected.
+   */
+  public void notifySelectedForMatch(User user, Match match, Team selectedTeam) {
+    String teamName = selectedTeam != null && selectedTeam.getName() != null
+        ? selectedTeam.getName()
+        : "votre équipe";
+
+    Team opponent = null;
+    if (match != null && selectedTeam != null && selectedTeam.getId() != null) {
+      if (match.getTeam1() != null && selectedTeam.getId().equals(match.getTeam1().getId())) {
+        opponent = match.getTeam2();
+      } else if (match.getTeam2() != null
+          && selectedTeam.getId().equals(match.getTeam2().getId())) {
+        opponent = match.getTeam1();
+      }
+    }
+
+    String opponentPart = opponent != null && opponent.getName() != null
+        ? " contre l'équipe '" + opponent.getName() + "'"
+        : "";
+
+    String tournamentPart = match != null
+        && match.getTournament() != null
+        && match.getTournament().getName() != null
+        ? " dans le tournoi '" + match.getTournament().getName() + "'"
+        : "";
+
+    LocalDateTime matchDateTime = match == null ? null : match.getScheduledDateTime();
+    String schedulePart = matchDateTime == null
+        ? ""
+        : " (" + matchDateTime.format(MATCH_DATETIME_FORMATTER) + ")";
+
+    createNotification(
+        user,
+        "Composition confirmée : vous avez été sélectionné pour représenter l'équipe '"
+            + teamName
+            + "'"
+            + opponentPart
+            + tournamentPart
+            + schedulePart
+            + "."
     );
   }
 }
