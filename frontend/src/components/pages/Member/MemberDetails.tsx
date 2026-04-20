@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -62,7 +62,6 @@ const formatMatchDateTime = (value?: string): string => {
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { authenticatedUser } = useContext(UserContext) as UserContextType;
 
   const [user, setUser] = useState<User | null>(null);
@@ -105,6 +104,10 @@ export default function MemberDetails() {
       return avatar;
     }
     return avatar.startsWith('/') ? avatar : `/${avatar}`;
+  };
+
+  const handleBack = () => {
+    navigate(-1);
   };
 
   useEffect(() => {

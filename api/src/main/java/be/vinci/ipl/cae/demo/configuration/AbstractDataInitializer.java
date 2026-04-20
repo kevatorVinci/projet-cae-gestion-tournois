@@ -165,18 +165,114 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
    */
   @SuppressWarnings("PMD.ExcessiveMethodLength")
   protected SeedData seedBaseData(String pwd) {
-    User lea = makeUser("lea@mail.com", "Lynx", "tacticien", "2025-11-12", true, pwd, "luffy.png");
-    User tom = makeUser("tom@mail.com", "Rogue", "exécuteur", "2025-12-03", false, pwd, "miles.jpg");
-    User ines = makeUser("ines@mail.com", "Pulse", "guérisseur", "2026-01-18", false, pwd, "erza.jpg");
-    User tibo = makeUser("tibo@mail.com", "Iron", "gardien", "2025-10-27", true, pwd, "kaido.png");
-    User lisa = makeUser("lisa@mail.com", "Storm", "exécuteur", "2026-01-10", false, pwd, "flash.jpg");
-    User noa = makeUser("noa@mail.com", "Flash", "architecte", "2026-02-02", false, pwd, "Pessi.jpg");
-    User tim = makeUser("tim@mail.com", "Titi", "gardien", "2026-02-03", false, pwd, "itadori.jpg");
-    User zoe = makeUser("zoe@mail.com", "Vector", "catalyseur", "2026-02-04", false, pwd, "makima.jpg");
-    User kevin = makeUser("kevin@mail.com", "Kevator", "responsable", "2026-02-10", true, pwd, "pevin.jpg");
-    User hakim = makeUser("hakim@mail.com", "Chef", "stratège", "2026-02-11", true, pwd, "garou.jpg");
-    User seymen = makeUser("seymen@mail.com", "Seymen", "analyste", "2026-02-12", true, pwd, "eren.png");
-    User uche = makeUser("uche@mail.com", "Uche", "support", "2026-02-13", true, pwd, "jjk.jpg");
+    User lea = makeUser(
+        "lea@mail.com",
+        "Lynx",
+        "tacticien",
+        "2025-11-12",
+        true,
+        pwd,
+        "luffy.png"
+    );
+    User tom = makeUser(
+        "tom@mail.com",
+        "Rogue",
+        "exécuteur",
+        "2025-12-03",
+        false,
+        pwd,
+        "miles.jpg"
+    );
+    User ines = makeUser(
+        "ines@mail.com",
+        "Pulse",
+        "guérisseur",
+        "2026-01-18",
+        false,
+        pwd,
+        "erza.jpg"
+    );
+    User tibo = makeUser(
+        "tibo@mail.com",
+        "Iron",
+        "gardien",
+        "2025-10-27",
+        true,
+        pwd,
+        "kaido.png"
+    );
+    User lisa = makeUser(
+        "lisa@mail.com",
+        "Storm",
+        "exécuteur",
+        "2026-01-10",
+        false,
+        pwd,
+        "flash.jpg"
+    );
+    User noa = makeUser(
+        "noa@mail.com",
+        "Flash",
+        "architecte",
+        "2026-02-02",
+        false,
+        pwd,
+        "Pessi.jpg"
+    );
+    User tim = makeUser(
+        "tim@mail.com",
+        "Titi",
+        "gardien",
+        "2026-02-03",
+        false,
+        pwd,
+        "itadori.jpg"
+    );
+    User zoe = makeUser(
+        "zoe@mail.com",
+        "Vector",
+        "catalyseur",
+        "2026-02-04",
+        false,
+        pwd,
+        "makima.jpg"
+    );
+    User kevin = makeUser(
+        "kevin@mail.com",
+        "Kevator",
+        "responsable",
+        "2026-02-10",
+        true,
+        pwd,
+        "pevin.jpg"
+    );
+    User hakim = makeUser(
+        "hakim@mail.com",
+        "Chef",
+        "stratège",
+        "2026-02-11",
+        true,
+        pwd,
+        "garou.jpg"
+    );
+    User seymen = makeUser(
+        "seymen@mail.com",
+        "Seymen",
+        "analyste",
+        "2026-02-12",
+        true,
+        pwd,
+        "eren.png"
+    );
+    User uche = makeUser(
+        "uche@mail.com",
+        "Uche",
+        "support",
+        "2026-02-13",
+        true,
+        pwd,
+        "jjk.jpg"
+    );
 
     userRepo.saveAll(List.of(
         lea,
@@ -312,13 +408,13 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
         uche
     ));
 
-    List<Team> dummyTeams = createDummyTeams(pwd);
-
     springArena.setWinner(omega);
     elite2025.setWinner(iota);
     summerPro.setWinner(iota);
     winterClash.setWinner(alpha);
     tournamentRepo.saveAll(List.of(springArena, elite2025, summerPro, winterClash));
+
+    List<Team> dummyTeams = createDummyTeams(pwd);
 
     List<Team> registrations = new ArrayList<>(List.of(omega, iota));
     registrations.addAll(dummyTeams.subList(0, 5));

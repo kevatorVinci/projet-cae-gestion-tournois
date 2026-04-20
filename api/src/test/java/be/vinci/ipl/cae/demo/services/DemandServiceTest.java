@@ -142,7 +142,7 @@ class DemandServiceTest {
    * Tests that a join request is rejected when a member already has the same tag in team.
    */
   @Test
-  void createJoinRequestDuplicateTagInTeamThrowsIllegalState() {
+  void createJoinRequestDuplicateTagInTeamThrowsConflictUppercaseCase() {
     member.setTag("Kevator");
 
     User existingMember = new User();
@@ -153,8 +153,8 @@ class DemandServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
 
-    IllegalStateException ex = assertThrows(
-        IllegalStateException.class, () -> demandService.createJoinRequest(2L, 10L));
+    ConflictException ex = assertThrows(
+      ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
 
     assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
     verify(demandRepo, never()).save(any());
@@ -260,7 +260,7 @@ class DemandServiceTest {
    * Tests that accepting a demand fails when a duplicate tag already exists in the team.
    */
   @Test
-  void acceptDemandDuplicateTagInTeamThrowsIllegalState() {
+  void acceptDemandDuplicateTagInTeamThrowsConflictUppercaseCase() {
     member.setTag("Kevator");
     User existingMember = new User();
     existingMember.setId(51L);
@@ -269,8 +269,8 @@ class DemandServiceTest {
 
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
-    IllegalStateException ex = assertThrows(
-        IllegalStateException.class, () -> demandService.acceptDemand(100L, responsible));
+    ConflictException ex = assertThrows(
+      ConflictException.class, () -> demandService.acceptDemand(100L, responsible));
 
     assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
     verify(userRepo, never()).save(any());

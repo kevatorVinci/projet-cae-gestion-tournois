@@ -39,7 +39,6 @@ public class NotificationController {
    * Toutes les notifications d'un membre (lues + non lues), les plus récentes en premier.
    *
    * @param userId      the user ID.
-   * @param currentUser the authenticated user.
    * @return list of all notifications.
    */
   @GetMapping("/users/{userId}")
@@ -51,7 +50,6 @@ public class NotificationController {
    * Uniquement les notifications non lues d'un membre.
    *
    * @param userId      the user ID.
-   * @param currentUser the authenticated user.
    * @return list of unread notifications.
    */
   @GetMapping("/users/{userId}/non-lues")
@@ -63,7 +61,6 @@ public class NotificationController {
    * Marque une notification spécifique comme lue.
    *
    * @param idNotification the notification ID.
-   * @param currentUser    the authenticated user.
    * @return the updated notification.
    */
   @PatchMapping("/{idNotification}/lue")
@@ -76,7 +73,6 @@ public class NotificationController {
    * Marque toutes les notifications d'un membre comme lues.
    *
    * @param userId      the user ID.
-   * @param currentUser the authenticated user.
    * @return no content.
    */
   @PatchMapping("/users/{userId}/tous-lues")
