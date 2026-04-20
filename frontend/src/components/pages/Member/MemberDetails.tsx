@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -48,6 +48,7 @@ const capitalize = (value?: string): string => {
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { authenticatedUser } = useContext(UserContext) as UserContextType;
 
   const [user, setUser] = useState<User | null>(null);
@@ -59,6 +60,15 @@ export default function MemberDetails() {
   const [matches, setMatches] = useState<TeamMatch[]>([]);
 
   const isOwnProfile = authenticatedUser?.tag === user?.tag;
+
+  const handleBack = () => {
+    const state = location.state as { from?: string } | null;
+    if (state?.from === 'players') {
+      navigate('/equipes?tab=players');
+      return;
+    }
+    navigate(-1);
+  };
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return undefined;
@@ -232,7 +242,7 @@ export default function MemberDetails() {
       }}
     >
       <Container maxWidth="lg">
-        <BackButton />
+        <BackButton onClick={handleBack} />
 
         <Stack spacing={4}>
           <Paper
