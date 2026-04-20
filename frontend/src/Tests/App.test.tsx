@@ -10,7 +10,7 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /accueil/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /connexion/i })).toBeDefined();
     expect(
-      screen.getByText(/là où le génie affronte la bataille/i),
+      screen.getByText(/where genius meets battle/i),
     ).toBeDefined();
   });
 });
