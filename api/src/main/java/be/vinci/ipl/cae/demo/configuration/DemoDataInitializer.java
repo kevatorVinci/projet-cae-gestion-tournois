@@ -10,6 +10,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Seeds demo-only tournaments and registrations on top of the shared base dataset.
+ */
 @Component
 @Profile("demo")
 public class DemoDataInitializer extends AbstractDataInitializer {
@@ -28,48 +31,90 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       ensureDemoTournaments(null);
     }
 
-    System.out.println("[demo] DB initialized: Upcoming tournaments ready to be planned by admin.");
+    System.out.println(
+        "[demo] DB initialized: Upcoming tournaments ready to be planned by admin."
+    );
   }
 
+  /**
+   * Ensures the dedicated demo tournaments exist with expected team registrations.
+   *
+   * @param data shared seed data when base seeding happened in this run, otherwise null.
+   */
   private void ensureDemoTournaments(SeedData data) {
     List<Team> registrationTeams = resolveRegistrationTeams(data);
 
-    // --- Tournoi à 5 équipes --- (CLOTURE, aucun match généré pour laisser l'admin le faire)
     Tournament t5 = getOrCreateTournament(
-        "Demo Future Arena (5 Teams)", "Tournoi asymétrique prêt à être planifié",
-        "2026-06-01", "2026-06-15", "2026-05-25", "CLOTURE", 8
+        "Demo Future Arena (5 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-06-01",
+        "2026-06-15",
+        "2026-05-25",
+        "CLOTURE",
+        8
     );
     ensureRegistrations(t5, registrationTeams.subList(0, 5), "2026-05-20");
 
-    // --- Tournoi à 6 équipes --- (CLOTURE, aucun match généré)
     Tournament t6 = getOrCreateTournament(
-        "Demo Future Arena (6 Teams)", "Tournoi asymétrique prêt à être planifié",
-        "2026-06-10", "2026-06-25", "2026-06-05", "CLOTURE", 8
+        "Demo Future Arena (6 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-06-10",
+        "2026-06-25",
+        "2026-06-05",
+        "CLOTURE",
+        8
     );
     ensureRegistrations(t6, registrationTeams.subList(0, 6), "2026-06-01");
 
-    // --- Tournoi à 7 équipes --- (CLOTURE, aucun match généré)
     Tournament t7 = getOrCreateTournament(
-        "Demo Future Arena (7 Teams)", "Tournoi asymétrique prêt à être planifié",
-        "2026-07-01", "2026-07-15", "2026-06-25", "CLOTURE", 8
+        "Demo Future Arena (7 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-07-01",
+        "2026-07-15",
+        "2026-06-25",
+        "CLOTURE",
+        8
     );
     ensureRegistrations(t7, registrationTeams.subList(0, 7), "2026-06-20");
 
-    System.out.println("[demo] CLOTURE tournaments successfully seeded (5, 6, and 7 teams). Ready for manual planning generation.");
+    System.out.println(
+        "[demo] CLOTURE tournaments successfully seeded (5, 6, and 7 teams). "
+            + "Ready for manual planning generation."
+    );
   }
 
+  /**
+   * Returns the existing tournament with the given name or creates it.
+   */
   private Tournament getOrCreateTournament(
-      String name, String description, String startDate, String endDate,
-      String registrationDeadline, String status, int maxParticipants) {
+      String name,
+      String description,
+      String startDate,
+      String endDate,
+      String registrationDeadline,
+      String status,
+      int maxParticipants) {
     return tournamentRepo.findByName(name).orElseGet(() -> {
       Tournament tournament = makeTournament(
-          name, description, startDate, endDate, registrationDeadline, status, maxParticipants
+          name,
+          description,
+          startDate,
+          endDate,
+          registrationDeadline,
+          status,
+          maxParticipants
       );
       return tournamentRepo.save(tournament);
     });
   }
 
-  private void ensureRegistrations(Tournament tournament, List<Team> targetTeams, String date) {
+  /**
+   * Registers only teams that are still missing from the tournament.
+   */
+  private void ensureRegistrations(
+      Tournament tournament,
+      List<Team> targetTeams,
+      String date) {
     List<Team> missingTeams = new ArrayList<>();
     for (Team team : targetTeams) {
       if (inscriptionRepo.findByTournamentAndTeam(tournament, team).isEmpty()) {
@@ -81,6 +126,9 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     }
   }
 
+  /**
+   * Resolves at least eight teams for demo tournament registration.
+   */
   private List<Team> resolveRegistrationTeams(SeedData data) {
     List<Team> teams = new ArrayList<>();
     Set<Long> seen = new HashSet<>();
@@ -91,28 +139,43 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       addIfAbsent(teams, seen, data.iota());
       for (Team team : data.dummyTeams()) {
         addIfAbsent(teams, seen, team);
-        if (teams.size() >= 8) return teams;
+        if (teams.size() >= 8) {
+          return teams;
+        }
       }
     }
 
     List<String> preferredTeamNames = List.of(
-        "TEAM_ALPHA", "TEAM_OMEGA", "TEAM_IOTA", "TEAM_BETA",
-        "TEAM_GAMMA", "TEAM_DELTA", "TEAM_EPSILON", "TEAM_ZETA"
+        "TEAM_ALPHA",
+        "TEAM_OMEGA",
+        "TEAM_IOTA",
+        "TEAM_BETA",
+        "TEAM_GAMMA",
+        "TEAM_DELTA",
+        "TEAM_EPSILON",
+        "TEAM_ZETA"
     );
 
     for (String name : preferredTeamNames) {
       teamRepo.findByName(name).ifPresent(team -> addIfAbsent(teams, seen, team));
-      if (teams.size() >= 8) return teams;
+      if (teams.size() >= 8) {
+        return teams;
+      }
     }
 
     for (Team team : teamRepo.findAll()) {
       addIfAbsent(teams, seen, team);
-      if (teams.size() >= 8) return teams;
+      if (teams.size() >= 8) {
+        return teams;
+      }
     }
 
     throw new IllegalStateException("Pas assez d'équipes pour générer la démo.");
   }
 
+  /**
+   * Adds a team only once based on its id.
+   */
   private void addIfAbsent(List<Team> target, Set<Long> seen, Team team) {
     if (team != null && team.getId() != null && seen.add(team.getId())) {
       target.add(team);

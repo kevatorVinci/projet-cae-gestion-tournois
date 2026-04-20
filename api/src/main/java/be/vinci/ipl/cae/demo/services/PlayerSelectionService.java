@@ -194,7 +194,7 @@ public class PlayerSelectionService {
         playerSelectionRepository.findByMemberId(memberId)
     );
 
-    LinkedHashSet<Long> seenMatchIds = new LinkedHashSet<>();
+    Set<Long> seenMatchIds = new LinkedHashSet<>();
     List<Match> matches = new ArrayList<>();
     for (PlayerSelection selection : selections) {
       Match match = selection.getMatch();
@@ -248,7 +248,7 @@ public class PlayerSelectionService {
     response.setMatchId(matchId);
     response.setTeamId(teamId);
     response.setCanEdit(!isByeMatch(match)
-      && !isMatchStarted(match)
+        && !isMatchStarted(match)
         && (isAdmin(currentUser) || isResponsible(selectedTeam, currentUser)));
     response.setMaxPlayers(MAX_PLAYERS_PER_MATCH);
     response.setSelectedCount(selectedIds.size());
