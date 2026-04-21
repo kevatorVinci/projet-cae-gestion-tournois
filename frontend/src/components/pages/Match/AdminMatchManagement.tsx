@@ -35,8 +35,13 @@ const AdminMatchManagement = ({
   const [scoreTeam2, setScoreTeam2] = useState<number | ''>('');
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // ✨ NOUVEAU : On crée une boîte pour stocker l'ancien résultat contesté
-  const [previousResult, setPreviousResult] = useState<any>(null);
+  // ✨ CORRECTION ESLINT : On remplace "any" par un type précis
+  const [previousResult, setPreviousResult] = useState<{
+    validationStatusTeam1?: string;
+    validationStatusTeam2?: string;
+    scoreTeam1?: number;
+    scoreTeam2?: number;
+  } | null>(null);
 
   const handleOpenModal = async (match: Match) => {
     setSelectedMatch(match);
@@ -45,7 +50,6 @@ const AdminMatchManagement = ({
     setSubmitError(null);
     setPreviousResult(null);
 
-    // ✨ NOUVEAU : Si le match a été contesté, on va demander au Java QUI a refusé !
     if (match.status === 'DISPUTED') {
       try {
         const response = await fetch(`/api/results/match/${match.id}`, {
@@ -54,7 +58,6 @@ const AdminMatchManagement = ({
         if (response.ok) {
           const data = await response.json();
           setPreviousResult(data);
-          // Petite astuce : on pré-remplit les scores avec l'ancien résultat pour aider l'admin !
           setScoreTeam1(data.scoreTeam1);
           setScoreTeam2(data.scoreTeam2);
         }
@@ -73,7 +76,6 @@ const AdminMatchManagement = ({
   const isMatchInProgress = (scheduledDateTime: string, status: string) => {
     const matchDate = new Date(scheduledDateTime);
     const now = new Date();
-    // Le match s'affiche s'il est passé ET qu'il n'est pas terminé
     return matchDate <= now && status !== 'FINISHED' && status !== 'COMPLETED';
   };
 
@@ -109,9 +111,13 @@ const AdminMatchManagement = ({
 
       handleCloseModal();
       onRefresh();
-    } catch (error: any) {
+
+      // ✨ CORRECTION ESLINT : On remplace "any" par "unknown"
+    } catch (error: unknown) {
       console.error(error);
-      setSubmitError(`Impossible de contacter le Java : ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erreur inconnue';
+      setSubmitError(`Impossible de contacter le Java : ${errorMessage}`);
     }
   };
 
@@ -139,12 +145,10 @@ const AdminMatchManagement = ({
             `Tournoi #${match.tournamentId}`;
 
           const isWaitingForCaptains = match.status === 'WAITING_VALIDATION';
-          // ✨ NOUVEAU : On détecte si le match est contesté
           const isDisputed = match.status === 'DISPUTED';
 
           return (
             <Grid item xs={12} key={match.id}>
-              {/* ✨ NOUVEAU : La bordure passe au rouge si contesté */}
               <Card
                 sx={{
                   backgroundColor: '#111827',
@@ -181,7 +185,6 @@ const AdminMatchManagement = ({
                       )}
                     </Typography>
 
-                    {/* ✨ NOUVEAU : Le badge affiche "Contesté" en rouge */}
                     <Chip
                       label={
                         isWaitingForCaptains
@@ -207,7 +210,6 @@ const AdminMatchManagement = ({
                     />
                   </Box>
 
-                  {/* ✨ NOUVEAU : Le bouton change de couleur selon la situation */}
                   {isWaitingForCaptains ? (
                     <Button
                       variant="contained"

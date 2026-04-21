@@ -124,6 +124,7 @@ const AdminTournamentsPage = () => {
    *
    * @param {React.MouseEvent<HTMLElement>} _event - The click event (ignored).
    * @param {'tournaments' | 'matches' | null} newView - The newly selected view.
+   * @return {void}
    */
   const handleViewChange = (
     _event: React.MouseEvent<HTMLElement>,
@@ -136,6 +137,8 @@ const AdminTournamentsPage = () => {
 
   /**
    * Function to load or reload the tournaments from the server database.
+   *
+   * @return {Promise<void>}
    */
   const loadTournaments = useCallback(async () => {
     if (!authenticatedUser?.token) return;
@@ -184,6 +187,8 @@ const AdminTournamentsPage = () => {
   /**
    * Loads all matches for active tournaments FROM THE DATABASE.
    * This is triggered when the admin clicks the "Matchs en cours" toggle.
+   *
+   * @return {Promise<void>}
    */
   const loadAllMatches = useCallback(async () => {
     if (!authenticatedUser?.token) return;
@@ -232,6 +237,9 @@ const AdminTournamentsPage = () => {
 
   /**
    * Function to publish a tournament when the green button is clicked.
+   *
+   * @param {number} id L'identifiant du tournoi.
+   * @return {Promise<void>}
    */
   const handlePublish = async (id: number) => {
     if (!authenticatedUser?.token) return;
@@ -252,6 +260,12 @@ const AdminTournamentsPage = () => {
     }
   };
 
+  /**
+   * Function to generate a tournament schedule.
+   *
+   * @param {number} id L'identifiant du tournoi.
+   * @return {Promise<void>}
+   */
   const handleGeneratePlanning = async (id: number) => {
     if (!authenticatedUser?.token) return;
     setActionMessage(null);
@@ -282,6 +296,12 @@ const AdminTournamentsPage = () => {
     }
   };
 
+  /**
+   * Function to publish a tournament schedule.
+   *
+   * @param {number} id L'identifiant du tournoi.
+   * @return {Promise<void>}
+   */
   const handlePublishPlanning = async (id: number) => {
     if (!authenticatedUser?.token) return;
     setActionMessage(null);
@@ -312,12 +332,24 @@ const AdminTournamentsPage = () => {
     }
   };
 
+  /**
+   * Formats a date string.
+   *
+   * @param {string} dateValue La date brute.
+   * @return {string} La date formatée.
+   */
   const formatDate = (dateValue: string) => {
     const parsedDate = new Date(dateValue);
     if (Number.isNaN(parsedDate.getTime())) return dateValue;
     return parsedDate.toLocaleDateString('fr-BE');
   };
 
+  /**
+   * Handles filter changes.
+   *
+   * @param {SelectChangeEvent} event L'événement du select.
+   * @return {void}
+   */
   const handleFilterChange = (event: SelectChangeEvent) => {
     setFilter(event.target.value as string);
   };
@@ -710,7 +742,6 @@ const AdminTournamentsPage = () => {
 
         {/* --- VUE 2 : LES MATCHS EN COURS --- */}
         {activeView === 'matches' && authenticatedUser?.token && (
-          // ✨ On envoie le token de sécurité et la méthode pour recharger la page
           <AdminMatchManagement
             matches={allMatches}
             tournaments={tournaments}
