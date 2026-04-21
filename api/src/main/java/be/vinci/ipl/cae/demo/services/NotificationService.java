@@ -229,6 +229,55 @@ public class NotificationService {
   }
 
   /**
+   * Notifies a member that they are selected to participate in a match.
+   *
+   * @param user         selected member.
+   * @param match        target match.
+   * @param selectedTeam team for which the member is selected.
+   */
+  public void notifySelectedForMatch(User user, Match match, Team selectedTeam) {
+    String teamName = selectedTeam != null && selectedTeam.getName() != null
+        ? selectedTeam.getName()
+        : "votre équipe";
+
+    Team opponent = null;
+    if (match != null && selectedTeam != null && selectedTeam.getId() != null) {
+      if (match.getTeam1() != null && selectedTeam.getId().equals(match.getTeam1().getId())) {
+        opponent = match.getTeam2();
+      } else if (match.getTeam2() != null
+          && selectedTeam.getId().equals(match.getTeam2().getId())) {
+        opponent = match.getTeam1();
+      }
+    }
+
+    String opponentPart = opponent != null && opponent.getName() != null
+        ? " contre l'équipe '" + opponent.getName() + "'"
+        : "";
+
+    String tournamentPart = match != null
+        && match.getTournament() != null
+        && match.getTournament().getName() != null
+        ? " dans le tournoi '" + match.getTournament().getName() + "'"
+        : "";
+
+    LocalDateTime matchDateTime = match == null ? null : match.getScheduledDateTime();
+    String schedulePart = matchDateTime == null
+        ? ""
+        : " (" + matchDateTime.format(MATCH_DATETIME_FORMATTER) + ")";
+
+    createNotification(
+        user,
+        "Composition confirmée : vous avez été sélectionné pour représenter l'équipe '"
+            + teamName
+            + "'"
+            + opponentPart
+            + tournamentPart
+            + schedulePart
+            + "."
+    );
+  }
+
+  /**
    * Notifies all members of a team that they have forfeited and are eliminated.
    *
    * @param members the list of team members to notify
