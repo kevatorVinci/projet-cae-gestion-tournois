@@ -226,9 +226,8 @@ public class NotificationService {
    *
    * @param members        the list of team members to notify.
    * @param tournamentName the name of the tournament.
-   * @param teamName       the name of the forfeiting team.
    */
-  public void notifyForfeit(List<User> members, String tournamentName, String teamName) {
+  public void notifyForfeit(List<User> members, String tournamentName) {
     for (User member : members) {
       createNotification(
           member,

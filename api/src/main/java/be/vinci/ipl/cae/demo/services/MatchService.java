@@ -195,25 +195,25 @@ public class MatchService {
    * @param teamId    the ID of the team declaring forfeit.
    * @param adminUser the user responsible for the forfeit.
    */
-  public MatchResult declareForfeit(Long matchId, Long teamId, User adminUser) {
-  Match match = matchRepository.findById(matchId)
-      .orElseThrow(() -> new IllegalStateException("Match introuvable."));
+    public MatchResult declareForfeit(Long matchId, Long teamId, User adminUser) {
+    Match match = matchRepository.findById(matchId)
+        .orElseThrow(() -> new IllegalStateException("Match introuvable."));
 
-  boolean isTeam1 = match.getTeam1() != null
-      && match.getTeam1().getId().equals(teamId);
-  boolean isTeam2 = match.getTeam2() != null
-      && match.getTeam2().getId().equals(teamId);
+    boolean isTeam1 = match.getTeam1() != null
+        && match.getTeam1().getId().equals(teamId);
+    boolean isTeam2 = match.getTeam2() != null
+        && match.getTeam2().getId().equals(teamId);
 
-  if (!isTeam1 && !isTeam2) {
-    throw new IllegalStateException("Cette équipe ne participe pas à ce match.");
-  }
+    if (!isTeam1 && !isTeam2) {
+      throw new IllegalStateException("Cette équipe ne participe pas à ce match.");
+    }
 
-  MatchResult result = match.getResult() != null
-      ? match.getResult()
-      : new MatchResult();
-  result.setMatch(match);
-  result.setEncodingDate(LocalDateTime.now());
-  result.setAdminEncoder(adminUser);
+    MatchResult result = match.getResult() != null
+        ? match.getResult()
+        : new MatchResult();
+    result.setMatch(match);
+    result.setEncodingDate(LocalDateTime.now());
+    result.setAdminEncoder(adminUser);
 
     if (isTeam1) {
       result.setForfeitTeam1(true);
@@ -232,7 +232,6 @@ public class MatchService {
     match.setStatus("FINISHED");
     matchRepository.save(match);
 
-
     Team forfeitingTeam = isTeam1 ? match.getTeam1() : match.getTeam2();
     String tournamentName = match.getTournament() != null
         ? match.getTournament().getName()
@@ -240,10 +239,11 @@ public class MatchService {
 
     List<User> members = forfeitingTeam.getMembers();
     if (members != null && !members.isEmpty()) {
-      notificationService.notifyForfeit(members, tournamentName, forfeitingTeam.getName());
+      notificationService.notifyForfeit(members, tournamentName);
     }
 
-  return matchResultRepository.save(result);
-}
+    return matchResultRepository.save(result);
+  }
+
 
 }
