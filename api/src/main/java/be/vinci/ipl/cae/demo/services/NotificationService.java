@@ -1,8 +1,12 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +15,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class NotificationService {
+
+  private static final DateTimeFormatter MATCH_DATETIME_FORMATTER =
+      DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
   /**
    * Repository used to access and persist notifications.

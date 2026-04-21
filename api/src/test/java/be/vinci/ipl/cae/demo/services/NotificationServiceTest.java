@@ -1,6 +1,9 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.Match;
+import be.vinci.ipl.cae.demo.models.entities.Team;
+import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -233,5 +237,42 @@ class NotificationServiceTest {
     ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
     verify(notificationRepository).save(captor.capture());
     assertTrue(captor.getValue().getMessage().contains("Aucune raison fournie"));
+  }
+
+  /**
+   * Tests the match selection notification message.
+   */
+  @Test
+  void notifySelectedForMatchMessageContainsContext() {
+    when(notificationRepository.save(any())).thenReturn(notification);
+
+    Team selectedTeam = new Team();
+    selectedTeam.setId(10L);
+    selectedTeam.setName("Team Alpha");
+
+    Team opponent = new Team();
+    opponent.setId(11L);
+    opponent.setName("Team Omega");
+
+    Tournament tournament = new Tournament();
+    tournament.setName("Spring Cup");
+
+    Match match = new Match();
+    match.setTeam1(selectedTeam);
+    match.setTeam2(opponent);
+    match.setTournament(tournament);
+    match.setScheduledDateTime(LocalDateTime.of(2026, 6, 1, 20, 0));
+
+    notificationService.notifySelectedForMatch(user, match, selectedTeam);
+
+    ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+    verify(notificationRepository).save(captor.capture());
+
+    String message = captor.getValue().getMessage();
+    assertTrue(message.startsWith("Composition confirmée"));
+    assertTrue(message.contains("Team Alpha"));
+    assertTrue(message.contains("Team Omega"));
+    assertTrue(message.contains("Spring Cup"));
+    assertTrue(message.contains("01/06/2026 à 20:00"));
   }
 }

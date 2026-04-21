@@ -3,11 +3,15 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.models.dtos.match.MatchResultCreateDto;
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.MatchResult;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.MatchResultRepository;
+import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDateTime;
+import java.util.List;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +24,7 @@ public class MatchResultService {
   private final MatchResultRepository matchResultRepository;
   private final MatchRepository matchRepository;
   private final UserRepository userRepository;
+  private final NotificationRepository notificationRepository;
 
   /**
    * Constructor.
@@ -27,21 +32,24 @@ public class MatchResultService {
    * @param matchResultRepository the result repository
    * @param matchRepository       the match repository
    * @param userRepository        the user repository
+   * @param notificationRepository the notification repository
    */
   public MatchResultService(
-      MatchResultRepository matchResultRepository,
-      MatchRepository matchRepository,
-      UserRepository userRepository) {
+        MatchResultRepository matchResultRepository,
+        MatchRepository matchRepository,
+        UserRepository userRepository,
+        NotificationRepository notificationRepository) {
     this.matchResultRepository = matchResultRepository;
     this.matchRepository = matchRepository;
     this.userRepository = userRepository;
+    this.notificationRepository = notificationRepository;
   }
 
   /**
-   * Encodes a new result for a specific match.
+   * Encodes a new result for a specific match and prepares notifications.
    *
    * @param matchId the match id
-   * @param dto     the data transfer object
+   * @param dto     the data transfer object containing the score
    * @return the saved result
    */
   @Transactional
@@ -64,9 +72,66 @@ public class MatchResultService {
     result.setValidationStatusTeam1("PENDING");
     result.setValidationStatusTeam2("PENDING");
 
-    match.setStatus("FINISHED");
+    match.setStatus("WAITING_VALIDATION");
     matchRepository.save(match);
 
+    MatchResult savedResult = matchResultRepository.save(result);
+
+    User leaderTeam1 = match.getTeam1() != null ? match.getTeam1().getPrimaryResponsible() : null;
+    User leaderTeam2 = match.getTeam2() != null ? match.getTeam2().getPrimaryResponsible() : null;
+
+    if (leaderTeam1 != null) {
+      String team2Name = match.getTeam2() != null ? match.getTeam2().getName() : "une équipe";
+      Notification notifTeam1 = new Notification();
+      notifTeam1.setUser(leaderTeam1);
+      notifTeam1.setMessage("Le score du match #" + matchId + " contre " + team2Name
+          + " a été encodé. Vous avez 2 heures pour valider ou contester.");
+      notificationRepository.save(notifTeam1);
+    }
+
+    if (leaderTeam2 != null) {
+      String team1Name = match.getTeam1() != null ? match.getTeam1().getName() : "une équipe";
+      Notification notifTeam2 = new Notification();
+      notifTeam2.setUser(leaderTeam2);
+      notifTeam2.setMessage("Le score du match #" + matchId + " contre " + team1Name
+          + " a été encodé. Vous avez 2 heures pour valider ou contester.");
+      notificationRepository.save(notifTeam2);
+    }
+
+    return savedResult;
+  }
+
+  /**
+   * Validates or rejects a match result by a team captain.
+   *
+   * @param matchId the ID of the match to validate.
+   * @param teamId the ID of the team validating.
+   * @param isAccepted true if the score is accepted, false if rejected.
+   * @return the updated MatchResult.
+   */
+  @Transactional
+  public MatchResult validateResultByCaptain(Long matchId, Long teamId, boolean isAccepted) {
+    MatchResult result = matchResultRepository.findById(matchId).orElse(null);
+    if (result == null) {
+      return null;
+    }
+
+    Match match = result.getMatch();
+
+    if (match.getTeam1() != null && match.getTeam1().getId().equals(teamId)) {
+      result.setValidationStatusTeam1(isAccepted ? "VALIDATED" : "REJECTED");
+    } else if (match.getTeam2() != null && match.getTeam2().getId().equals(teamId)) {
+      result.setValidationStatusTeam2(isAccepted ? "VALIDATED" : "REJECTED");
+    }
+
+    if (!isAccepted) {
+      match.setStatus("DISPUTED");
+    } else if ("VALIDATED".equals(result.getValidationStatusTeam1())
+        && "VALIDATED".equals(result.getValidationStatusTeam2())) {
+      match.setStatus("FINISHED");
+    }
+
+    matchRepository.save(match);
     return matchResultRepository.save(result);
   }
 
@@ -78,5 +143,31 @@ public class MatchResultService {
    */
   public MatchResult getResultForMatch(Long matchId) {
     return matchResultRepository.findById(matchId).orElse(null);
+  }
+
+  /**
+   * This robot runs every 5 minutes (300000 milliseconds).
+   * It checks for results older than 2 hours and validates them automatically.
+   */
+  @Scheduled(fixedRate = 300000)
+  @Transactional
+  public void autoValidateResults() {
+    LocalDateTime twoHoursAgo = LocalDateTime.now().minusHours(2);
+
+    List<MatchResult> pendingResults = matchResultRepository
+        .findPendingResultsOlderThan(twoHoursAgo);
+
+    for (MatchResult res : pendingResults) {
+      res.setValidationStatusTeam1("VALIDATED");
+      res.setValidationStatusTeam2("VALIDATED");
+
+      res.getMatch().setStatus("FINISHED");
+      matchRepository.save(res.getMatch());
+
+      matchResultRepository.save(res);
+
+      System.out.println("🤖 ROBOT : Le match #" + res.getMatch().getId()
+          + " a été validé automatiquement après 2 heures !");
+    }
   }
 }

@@ -268,6 +268,33 @@ export async function depromoteResponsable(membreId: number): Promise<void> {
   }
 }
 
+export async function kickMember(membreId: number): Promise<void> {
+  const token = getRequiredAuthToken();
+  const resolvedUserId = resolveUserId();
+
+  const response = await fetch(
+    `${API_BASE}/equipes/${resolvedUserId}/equipes/membres/${membreId}/exclure`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: token,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error(
+        'Votre session a expiré. Reconnectez-vous pour exclure un membre.',
+      );
+    }
+
+    throw new Error(
+      await parseError(response, "Impossible d'exclure ce membre."),
+    );
+  }
+}
+
 export async function getUserTeam(): Promise<Equipe | null> {
   try {
     const userId = resolveUserId();

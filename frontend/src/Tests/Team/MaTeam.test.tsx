@@ -229,9 +229,11 @@ describe('MyTeam', () => {
       </MemoryRouter>,
     );
 
-    const promoteBtn = await screen.findByRole('button', {
-      name: /nommer responsable/i,
-    });
+    const joueur2Name = await screen.findByText(/joueur2/i);
+    const joueur2Card = joueur2Name.closest('.MuiPaper-root');
+    expect(joueur2Card).not.toBeNull();
+
+    const promoteBtn = within(joueur2Card as HTMLElement).getByRole('checkbox');
     fireEvent.click(promoteBtn);
 
     const confirmBtn = await screen.findByRole('button', {
@@ -269,9 +271,13 @@ describe('MyTeam', () => {
       </MemoryRouter>,
     );
 
-    const depromoteBtn = await screen.findByRole('button', {
-      name: /retirer le rôle de responsable/i,
-    });
+    const joueur2Name = await screen.findByText(/joueur2/i);
+    const joueur2Card = joueur2Name.closest('.MuiPaper-root');
+    expect(joueur2Card).not.toBeNull();
+
+    const depromoteBtn = within(joueur2Card as HTMLElement).getByRole(
+      'checkbox',
+    );
 
     fireEvent.click(depromoteBtn);
 

@@ -5,6 +5,7 @@ import {
   Box,
   Typography,
   Button,
+  Stack,
   Card,
   CardContent,
   Container,
@@ -26,6 +27,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SecurityIcon from '@mui/icons-material/Security';
 import EventIcon from '@mui/icons-material/Event';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { NotificationItem } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import {
@@ -36,6 +38,7 @@ import {
 } from '../../../services/notifications';
 import {
   fetchAllTournaments,
+  fetchTournamentMatches,
   fetchPublicTournaments,
 } from '../../../services/tournaments';
 
@@ -46,7 +49,8 @@ type NotifType =
   | 'equipe'
   | 'bienvenue'
   | 'admin'
-  | 'tournoi';
+  | 'tournoi'
+  | 'score';
 
 interface NotifMeta {
   type: NotifType;
@@ -59,6 +63,45 @@ interface NotifMeta {
 
 const startsWithAny = (message: string, prefixes: string[]): boolean =>
   prefixes.some((prefix) => message.startsWith(prefix));
+
+const isMatchSelectionNotification = (message: string) =>
+  startsWithAny(message.toLowerCase(), [
+    'composition confirmée :',
+    'lineup confirmed:',
+  ]);
+
+const parseMatchSelectionNotification = (message: string) => {
+  const match = message.match(
+    /^Composition confirmée : vous avez été sélectionné pour représenter l'équipe '([^']+)'(?: contre l'équipe '([^']+)')?(?: dans le tournoi '([^']+)')?(?: \(([^)]+)\))?\.$/,
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    teamName: match[1],
+    opponentName: match[2] ?? null,
+    tournamentName: match[3] ?? null,
+    matchSchedule: match[4] ?? null,
+  };
+};
+
+const parseFrNotificationDateTime = (value?: string | null): number | null => {
+  if (!value) return null;
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4}) à (\d{2}):(\d{2})$/);
+  if (!match) return null;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  return new Date(year, month - 1, day, hour, minute).getTime();
+};
+
+const normalizeName = (value?: string | null): string =>
+  (value ?? '').trim().toLowerCase();
 
 const translateMessage = (message: string): string => {
   if (message.startsWith('Welcome:')) {
@@ -187,7 +230,10 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (startsWithAny(m, ['nouveau tournoi :', 'new tournament:'])) {
+  if (
+    startsWithAny(m, ['nouveau tournoi :', 'new tournament:']) ||
+    isMatchSelectionNotification(m)
+  ) {
     return {
       type: 'tournoi',
       color: '#06b6d4',
@@ -195,6 +241,17 @@ const getNotifMeta = (message: string): NotifMeta => {
       border: 'rgba(6,182,212,0.45)',
       icon: <EventIcon sx={{ fontSize: 16, color: '#06b6d4' }} />,
       label: 'Tournoi',
+    };
+  }
+
+  if (startsWithAny(m, ['le score du match'])) {
+    return {
+      type: 'score',
+      color: '#f59e0b',
+      leftBar: '#f59e0b',
+      border: 'rgba(245,158,11,0.45)',
+      icon: <EmojiEventsIcon sx={{ fontSize: 16, color: '#f59e0b' }} />,
+      label: 'Validation de Score',
     };
   }
 
@@ -213,7 +270,14 @@ export default function Notifications() {
   const isAdmin = Boolean(getAuthenticatedUser()?.admin);
   const [tab, setTab] = useState(0);
   const [typeFilter, setTypeFilter] = useState<
-    'tous' | 'demande' | 'accepte' | 'refus' | 'equipe' | 'admin' | 'tournoi'
+    | 'tous'
+    | 'demande'
+    | 'accepte'
+    | 'refus'
+    | 'equipe'
+    | 'admin'
+    | 'tournoi'
+    | 'score'
   >('tous');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -294,6 +358,7 @@ export default function Notifications() {
     return parsed.toLocaleString('fr-BE');
   };
 
+  // ✨ VOICI LA FONCTION QUI MANQUAIT ! On l'a remise à sa place.
   const isJoinRequestNotification = (message: string) => {
     const normalized = message.toLowerCase();
     return startsWithAny(normalized, [
@@ -325,13 +390,28 @@ export default function Notifications() {
       'new tournament:',
     ]);
 
+  const isScoreValidationNotification = (message: string) =>
+    startsWithAny(message.toLowerCase(), ['le score du match']);
+
+  const extractMatchId = (message: string) => {
+    const match = message.match(/#(\d+)/);
+    return match ? match[1] : null;
+  };
+
   const extractTournamentName = (message: string) => {
+    const fromSelection = message.match(/dans le tournoi '([^']+)'/i);
+    if (fromSelection?.[1]) {
+      return fromSelection[1];
+    }
+
     const match = message.match(/'([^']+)'/);
     return match?.[1] ?? null;
   };
 
   const redirectToTournamentFromNotification = async (message: string) => {
-    const tournoiName = extractTournamentName(message);
+    const parsedSelection = parseMatchSelectionNotification(message);
+    const tournoiName =
+      parsedSelection?.tournamentName ?? extractTournamentName(message);
     if (!tournoiName) {
       setError('Impossible de trouver le tournoi lié à cette notification.');
       return;
@@ -374,6 +454,41 @@ export default function Notifications() {
 
       if (!target) {
         setError('Tournoi public introuvable pour cette notification.');
+        return;
+      }
+
+      if (parsedSelection) {
+        const matches = await fetchTournamentMatches(target.id);
+        const expectedTime = parseFrNotificationDateTime(
+          parsedSelection.matchSchedule,
+        );
+        const teamA = normalizeName(parsedSelection.teamName);
+        const teamB = normalizeName(parsedSelection.opponentName);
+
+        const linkedMatch = matches.find((match) => {
+          const m1 = normalizeName(match.team1Name);
+          const m2 = normalizeName(match.team2Name);
+          const sameTeams =
+            (m1 === teamA && m2 === teamB) || (m1 === teamB && m2 === teamA);
+
+          if (!sameTeams) {
+            return false;
+          }
+
+          if (!expectedTime || !match.scheduledDateTime) {
+            return true;
+          }
+
+          const matchTime = new Date(match.scheduledDateTime).getTime();
+          return Math.abs(matchTime - expectedTime) <= 60_000;
+        });
+
+        if (linkedMatch) {
+          navigate(`/tournois/${target.id}/matchs/${linkedMatch.id}`);
+          return;
+        }
+
+        navigate(`/tournois/${target.id}/matchs`);
         return;
       }
 
@@ -535,7 +650,8 @@ export default function Notifications() {
                   | 'refus'
                   | 'equipe'
                   | 'admin'
-                  | 'tournoi',
+                  | 'tournoi'
+                  | 'score',
               )
             }
             renderValue={(selected) => {
@@ -593,6 +709,15 @@ export default function Notifications() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <EventIcon sx={{ fontSize: 18, color: '#06b6d4' }} />
                     <span>Tournoi</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'score') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                    <span>Scores à valider</span>
                   </Box>
                 );
               }
@@ -666,6 +791,13 @@ export default function Notifications() {
                 <span>Tournoi</span>
               </Box>
             </MenuItem>
+
+            <MenuItem value="score">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                <span>Scores à valider</span>
+              </Box>
+            </MenuItem>
           </Select>
         </FormControl>
 
@@ -700,23 +832,72 @@ export default function Notifications() {
               const isDemandeResponsable = isTeamManagerJoinRequestNotification(
                 n.message,
               );
+
               const isTournamentNotification =
                 isDraftTournamentNotification(n.message) ||
-                isPublishedTournamentNotification(n.message);
+                isPublishedTournamentNotification(n.message) ||
+                isMatchSelectionNotification(n.message);
+
+              const parsedSelectionMessage = parseMatchSelectionNotification(
+                n.message,
+              );
+
+              let primaryAction: { label: string; onClick: () => void } | null =
+                null;
+              if (isTournamentNotification) {
+                primaryAction = {
+                  label: isMatchSelectionNotification(n.message)
+                    ? 'Voir le match'
+                    : 'Voir le tournoi',
+                  onClick: () =>
+                    redirectToTournamentFromNotification(n.message),
+                };
+              } else if (isAcceptedNotification(n.message)) {
+                primaryAction = {
+                  label: 'Voir mon équipe',
+                  onClick: () => navigate('/maTeam'),
+                };
+              } else if (isDemandeResponsable) {
+                primaryAction = {
+                  label: 'Voir les demandes',
+                  onClick: () => navigate('/equipes/demande'),
+                };
+              }
+
+              const hasCtaRow = Boolean(primaryAction) || !n.estLue;
+              const cardClickable = Boolean(primaryAction);
+
+              const metaSchedule =
+                parsedSelectionMessage &&
+                [
+                  parsedSelectionMessage.tournamentName,
+                  parsedSelectionMessage.matchSchedule,
+                ]
+                  .filter(Boolean)
+                  .join(' · ');
 
               return (
                 <Card
                   key={n.idNotification}
+                  onClick={
+                    cardClickable && primaryAction
+                      ? primaryAction.onClick
+                      : undefined
+                  }
                   sx={{
-                    bgcolor: '#111827',
-                    border: n.estLue
-                      ? '1px solid rgba(255,255,255,0.07)'
-                      : `1px solid ${meta.border}`,
+                    bgcolor: n.estLue ? '#111827' : 'rgba(232,130,42,0.04)',
+                    border: '1px solid rgba(255,255,255,0.07)',
                     borderRadius: 2,
                     position: 'relative',
                     overflow: 'hidden',
-                    transition: 'border-color 0.2s',
-                    '&:hover': { borderColor: meta.border },
+                    cursor: cardClickable ? 'pointer' : 'default',
+                    transition: 'all 0.2s ease',
+                    '&:hover': cardClickable
+                      ? {
+                          bgcolor: 'rgba(255,255,255,0.03)',
+                          borderColor: 'rgba(232,130,42,0.35)',
+                        }
+                      : undefined,
                   }}
                 >
                   <Box
@@ -725,36 +906,27 @@ export default function Notifications() {
                       left: 0,
                       top: 0,
                       bottom: 0,
-                      width: 3,
+                      width: n.estLue ? 3 : 4,
                       bgcolor: meta.leftBar,
-                      opacity: n.estLue ? 0.35 : 1,
+                      opacity: n.estLue ? 0.4 : 1,
+                      transition: 'all 0.2s ease',
                     }}
                   />
 
-                  {!n.estLue && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 16,
-                        right: 16,
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: meta.color,
-                        boxShadow: `0 0 8px ${meta.color}cc`,
-                      }}
-                    />
-                  )}
-
                   <CardContent
-                    sx={{ pl: 3, pr: 3, py: 2, '&:last-child': { pb: 2 } }}
+                    sx={{
+                      pl: 2.5,
+                      pr: 2,
+                      py: 2,
+                      '&:last-child': { pb: 2 },
+                    }}
                   >
                     <Box
                       sx={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
-                        mb: 0.5,
+                        mb: 1,
                       }}
                     >
                       <Box
@@ -766,13 +938,8 @@ export default function Notifications() {
                       >
                         {meta.icon}
                         <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: 700,
-                            color: n.estLue
-                              ? 'rgba(255,255,255,0.6)'
-                              : meta.color,
-                          }}
+                          variant="caption"
+                          sx={{ color: 'rgba(255,255,255,0.5)' }}
                         >
                           {meta.label}
                         </Typography>
@@ -798,97 +965,112 @@ export default function Notifications() {
                         lineHeight: 1.6,
                       }}
                     >
-                      {translateMessage(n.message)}
+                      {translateMessage(n.message).replace(
+                        /match #\d+ /,
+                        'match ',
+                      )}
                     </Typography>
 
                     {(isJoinRequestNotification(n.message) ||
                       isAcceptedNotification(n.message) ||
                       isTournamentNotification ||
+                      isScoreValidationNotification(n.message) ||
                       !n.estLue) && (
                       <Box sx={{ display: 'flex', gap: 2.5 }}>
+                        {isScoreValidationNotification(n.message) && (
+                          <Typography
+                            variant="caption"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Évite de cliquer sur la carte en même temps
+                              const matchId = extractMatchId(n.message);
+                              if (matchId) {
+                                navigate(`/match/${matchId}/validation`);
+                              } else {
+                                navigate('/maTeam');
+                              }
+                            }}
+                            sx={{
+                              color: '#f59e0b',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              letterSpacing: '0.02em',
+                              '&:hover': {
+                                textDecoration: 'underline',
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            Aller valider le score
+                          </Typography>
+                        )}
+
                         {isTournamentNotification && (
                           <Typography
                             variant="caption"
-                            onClick={() =>
-                              redirectToTournamentFromNotification(n.message)
-                            }
                             sx={{
-                              color: '#06b6d4',
-                              cursor: 'pointer',
-                              fontWeight: 600,
-                              letterSpacing: '0.02em',
-                              '&:hover': {
-                                textDecoration: 'underline',
-                                opacity: 0.8,
-                              },
+                              color: 'rgba(255,255,255,0.55)',
                             }}
                           >
-                            Voir le tournoi
+                            {metaSchedule}
                           </Typography>
                         )}
+                      </Box>
+                    )}
 
-                        {isAcceptedNotification(n.message) && (
-                          <Typography
-                            variant="caption"
-                            onClick={() => navigate('/maTeam')}
-                            sx={{
-                              color: '#22c55e',
-                              cursor: 'pointer',
-                              fontWeight: 600,
-                              letterSpacing: '0.02em',
-                              '&:hover': {
-                                textDecoration: 'underline',
-                                opacity: 0.8,
-                              },
-                            }}
-                          >
-                            Voir mon équipe
-                          </Typography>
-                        )}
-
-                        {isDemandeResponsable && (
-                          <Typography
-                            variant="caption"
-                            onClick={() => navigate('/equipes/demande')}
-                            sx={{
-                              color: '#3b82f6',
-                              cursor: 'pointer',
-                              fontWeight: 600,
-                              letterSpacing: '0.02em',
-                              '&:hover': {
-                                textDecoration: 'underline',
-                                opacity: 0.8,
-                              },
-                            }}
-                          >
-                            Voir les demandes d'adhésion
-                          </Typography>
-                        )}
-
+                    {hasCtaRow && (
+                      <Stack
+                        direction="row"
+                        justifyContent="flex-end"
+                        spacing={1}
+                        sx={{ mt: 1.5 }}
+                      >
                         {!n.estLue && (
-                          <Typography
-                            variant="caption"
-                            onClick={() =>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={(event) => {
+                              event.stopPropagation();
                               markOneRead(
                                 n.idNotification ??
                                   (n as unknown as { id: number }).id,
-                              )
-                            }
+                              );
+                            }}
                             sx={{
-                              color: 'rgba(255,255,255,0.75)',
-                              cursor: 'pointer',
+                              color: 'rgba(255,255,255,0.5)',
+                              textTransform: 'none',
                               fontWeight: 600,
-                              letterSpacing: '0.02em',
                               '&:hover': {
-                                textDecoration: 'underline',
-                                opacity: 0.8,
+                                color: '#ffffff',
+                                bgcolor: 'rgba(255,255,255,0.04)',
                               },
                             }}
                           >
                             Marquer comme lu
-                          </Typography>
+                          </Button>
                         )}
-                      </Box>
+
+                        {primaryAction && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              primaryAction!.onClick();
+                            }}
+                            sx={{
+                              color: '#e8822a',
+                              textTransform: 'none',
+                              fontWeight: 700,
+                              '&:hover': {
+                                bgcolor: 'rgba(232,130,42,0.08)',
+                              },
+                            }}
+                          >
+                            {primaryAction.label}
+                          </Button>
+                        )}
+                      </Stack>
                     )}
                   </CardContent>
                 </Card>

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from '../../BackButton';
 import {
   Alert,
@@ -13,13 +13,14 @@ import {
   Stack,
   TextField,
   Typography,
-  ToggleButton,
-  ToggleButtonGroup,
   Avatar,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PersonIcon from '@mui/icons-material/Person';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { getAllEquipes, joinEquipe } from '../../../services/teams';
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType, AuthenticatedUser } from '../../../types';
@@ -41,7 +42,15 @@ const TeamsList = () => {
     text: string;
   } | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { authenticatedUser }: UserContextType = useContext(UserContext);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === 'players') {
+      setActiveTab('players');
+    }
+  }, [location.search]);
 
   useEffect(() => {
     /**
@@ -95,8 +104,7 @@ const TeamsList = () => {
       (member) =>
         (typeof currentUserId === 'number' && member.id === currentUserId) ||
         (!!authenticatedUser?.email &&
-          member.email === authenticatedUser.email) ||
-        (!!authenticatedUser?.tag && member.tag === authenticatedUser.tag),
+          member.email === authenticatedUser.email),
     );
   };
 
@@ -155,18 +163,6 @@ const TeamsList = () => {
             ? err.message
             : "Erreur lors de l'envoi de la demande.",
       });
-    }
-  };
-
-  const handleTabChange = (
-    _event: React.MouseEvent<HTMLElement>,
-    newValue: 'teams' | 'players' | null,
-  ) => {
-    if (newValue !== null) {
-      setActiveTab(newValue);
-      // We empty the search bar when changing tabs so it's clean
-      setQuery('');
-      setMessage(null);
     }
   };
 
@@ -277,39 +273,91 @@ const TeamsList = () => {
             flexWrap: 'wrap',
           }}
         >
-          {/* Toggle buttons (Teams / Players) */}
-          <ToggleButtonGroup
-            value={activeTab}
-            exclusive
-            onChange={handleTabChange}
-            aria-label="Sélection de la vue"
+          {/* Stylized tabs (Teams / Players) */}
+          <Box
             sx={{
-              backgroundColor: '#1a2540',
+              display: 'flex',
+              backgroundColor: '#0d1525',
               borderRadius: 2,
-              '& .MuiToggleButton-root': {
-                color: 'rgba(255,255,255,0.5)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                textTransform: 'none',
-                fontWeight: 'bold',
-                px: 3,
-                py: 1,
-                '&.Mui-selected': {
-                  color: 'white',
-                  backgroundColor: '#e8822a',
-                  '&:hover': {
-                    backgroundColor: '#c86e20',
-                  },
-                },
-              },
+              p: 0.5,
+              border: '1px solid rgba(255,255,255,0.08)',
+              gap: 0.5,
             }}
           >
-            <ToggleButton value="teams" aria-label="Voir les équipes">
-              <GroupsIcon sx={{ mr: 1 }} /> Teams
-            </ToggleButton>
-            <ToggleButton value="players" aria-label="Voir les joueurs">
-              <PersonIcon sx={{ mr: 1 }} /> Joueurs
-            </ToggleButton>
-          </ToggleButtonGroup>
+            {[
+              {
+                value: 'teams',
+                label: 'Teams',
+                icon: <GroupsIcon sx={{ fontSize: 18 }} />,
+              },
+              {
+                value: 'players',
+                label: 'Joueurs',
+                icon: <PersonIcon sx={{ fontSize: 18 }} />,
+              },
+            ].map(({ value, label, icon }) => (
+              <Box
+                key={value}
+                role="button"
+                tabIndex={0}
+                aria-label={label}
+                onClick={() => {
+                  setActiveTab(value as 'teams' | 'players');
+                  setQuery('');
+                  setMessage(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveTab(value as 'teams' | 'players');
+                    setQuery('');
+                    setMessage(null);
+                  }
+                }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 2.5,
+                  py: 1,
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s ease',
+                  color:
+                    activeTab === value ? 'white' : 'rgba(255,255,255,0.4)',
+                  backgroundColor:
+                    activeTab === value ? '#e8822a' : 'transparent',
+                  boxShadow:
+                    activeTab === value
+                      ? '0 2px 8px rgba(232,130,42,0.35)'
+                      : 'none',
+                  userSelect: 'none',
+                  '&:hover': {
+                    color:
+                      activeTab === value ? 'white' : 'rgba(255,255,255,0.75)',
+                    backgroundColor:
+                      activeTab === value
+                        ? '#e8822a'
+                        : 'rgba(255,255,255,0.06)',
+                  },
+                }}
+              >
+                {icon}
+                <Typography
+                  component="span"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    color: 'inherit',
+                  }}
+                >
+                  {label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
 
           {/* The Search Input */}
           <TextField
@@ -534,7 +582,9 @@ const TeamsList = () => {
                     key={player.email} // We use email as the unique key
                     onClick={() => {
                       if (player.tag) {
-                        navigate(`/players/${encodeURIComponent(player.tag)}`);
+                        navigate(`/players/${encodeURIComponent(player.tag)}`, {
+                          state: { from: 'players' },
+                        });
                       }
                     }}
                     role="button"
@@ -545,7 +595,9 @@ const TeamsList = () => {
                         (event.key === 'Enter' || event.key === ' ')
                       ) {
                         event.preventDefault();
-                        navigate(`/players/${encodeURIComponent(player.tag)}`);
+                        navigate(`/players/${encodeURIComponent(player.tag)}`, {
+                          state: { from: 'players' },
+                        });
                       }
                     }}
                     sx={{
@@ -593,25 +645,34 @@ const TeamsList = () => {
                       </Typography>
                     </Box>
 
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      disabled={!player.tag}
-                      sx={{
-                        borderColor: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                      }}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (player.tag) {
-                          navigate(
-                            `/players/${encodeURIComponent(player.tag)}`,
-                          );
-                        }
-                      }}
-                    >
-                      Voir le Profil
-                    </Button>
+                    <Tooltip title="Voir le profil" placement="top">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: 'rgba(255,255,255,0.6)',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          borderRadius: 1.5,
+                          '&:hover': {
+                            color: '#e8822a',
+                            borderColor: '#e8822a',
+                            bgcolor: 'rgba(232,130,42,0.08)',
+                          },
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (player.tag) {
+                            navigate(
+                              `/players/${encodeURIComponent(player.tag)}`,
+                              {
+                                state: { from: 'players' },
+                              },
+                            );
+                          }
+                        }}
+                      >
+                        <VisibilityIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
                   </Card>
                 ))}
               </Box>

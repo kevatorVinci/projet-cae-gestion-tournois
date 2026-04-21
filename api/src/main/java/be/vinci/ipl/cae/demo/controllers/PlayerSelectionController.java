@@ -1,12 +1,16 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.annotations.IsAdminOrResponsable;
+import be.vinci.ipl.cae.demo.mappers.MatchMapper;
 import be.vinci.ipl.cae.demo.mappers.PlayerSelectionMapper;
+import be.vinci.ipl.cae.demo.models.dtos.match.MatchDto;
 import be.vinci.ipl.cae.demo.models.dtos.playerselection.PlayerSelectionDto;
 import be.vinci.ipl.cae.demo.models.dtos.playerselection.PlayerSelectionTeamViewDto;
 import be.vinci.ipl.cae.demo.models.dtos.playerselection.PlayerSelectionUpdateDto;
+import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.PlayerSelectionService;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,18 +33,22 @@ public class PlayerSelectionController {
 
   private final PlayerSelectionService playerSelectionService;
   private final PlayerSelectionMapper playerSelectionMapper;
+  private final MatchMapper matchMapper;
 
   /**
    * Constructor.
    *
    * @param playerSelectionService the service
-   * @param playerSelectionMapper  the mapper
+   * @param playerSelectionMapper  the selection mapper
+   * @param matchMapper            the match mapper
    */
   public PlayerSelectionController(
       PlayerSelectionService playerSelectionService,
-      PlayerSelectionMapper playerSelectionMapper) {
+      PlayerSelectionMapper playerSelectionMapper,
+      MatchMapper matchMapper) {
     this.playerSelectionService = playerSelectionService;
     this.playerSelectionMapper = playerSelectionMapper;
+    this.matchMapper = matchMapper;
   }
 
   /**
@@ -98,6 +106,22 @@ public class PlayerSelectionController {
     } catch (IllegalArgumentException e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
     }
+  }
+
+  /**
+   * Returns every published match where the given member was selected.
+   *
+   * @param memberId the member id.
+   * @return matches the member has played in.
+   */
+  @GetMapping("/member/{memberId}/matches")
+  public ResponseEntity<List<MatchDto>> getMatchesForMember(@PathVariable Long memberId) {
+    List<Match> matches = playerSelectionService.getMatchesForMember(memberId);
+    List<MatchDto> dtos = new ArrayList<>();
+    for (Match match : matches) {
+      dtos.add(matchMapper.toDto(match));
+    }
+    return ResponseEntity.ok(dtos);
   }
 
   /**

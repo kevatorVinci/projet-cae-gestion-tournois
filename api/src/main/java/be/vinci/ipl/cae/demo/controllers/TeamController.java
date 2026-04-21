@@ -125,13 +125,7 @@ public class TeamController {
           "You can only join a team for your own account.");
     }
 
-    try {
-      teamService.requestJoinTeam(currentUser, dto.teamId());
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
-    }
+    teamService.requestJoinTeam(currentUser, dto.teamId());
   }
 
   /**
@@ -197,6 +191,24 @@ public class TeamController {
       @AuthenticationPrincipal User currentUser) {
     ensureSelfTeamManagement(userId, currentUser);
     executeTeamAction(() -> teamService.demoteTeamLeader(currentUser, memberId));
+  }
+
+  /**
+   * Excludes a team member.
+   *
+   * @param userId      the path user ID.
+   * @param memberId    the member ID to exclude.
+   * @param currentUser the current authenticated user.
+   */
+  @PostMapping("/{userId}/equipes/membres/{membreId}/exclure")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("isAuthenticated()")
+  public void kickMember(
+      @PathVariable Long userId,
+      @PathVariable("membreId") Long memberId,
+      @AuthenticationPrincipal User currentUser) {
+    ensureSelfTeamManagement(userId, currentUser);
+    executeTeamAction(() -> teamService.kickMember(currentUser, memberId));
   }
 
   /**

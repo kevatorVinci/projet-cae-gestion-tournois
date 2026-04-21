@@ -36,4 +36,12 @@ public interface PlayerSelectionRepository
    * @param teamId  the team ID.
    */
   void deleteByMatchIdAndTeamId(Long matchId, Long teamId);
+
+  /**
+   * Finds all selections where a given member was lined up.
+   *
+   * @param memberId the member ID.
+   * @return selections referencing this member.
+   */
+  Iterable<PlayerSelection> findByMemberId(Long memberId);
 }

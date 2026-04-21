@@ -1,5 +1,8 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.exceptions.ConflictException;
+import be.vinci.ipl.cae.demo.exceptions.ForbiddenException;
+import be.vinci.ipl.cae.demo.exceptions.NotFoundException;
 import be.vinci.ipl.cae.demo.models.entities.Demand;
 import be.vinci.ipl.cae.demo.models.entities.Demand.DemandState;
 import be.vinci.ipl.cae.demo.models.entities.Team;
@@ -69,30 +72,38 @@ public class DemandService {
   public Demand createJoinRequest(Long memberId, Long teamId) {
     User member = userRepo
         .findById(memberId)
-        .orElseThrow(() -> new RuntimeException("Player not found"));
+        .orElseThrow(() -> new NotFoundException("Joueur introuvable."));
 
     Team team = teamRepo
         .findById(teamId)
-        .orElseThrow(() -> new RuntimeException("Team not found"));
+        .orElseThrow(() -> new NotFoundException("Équipe introuvable."));
 
     if (member.getTeam() != null) {
-      throw new RuntimeException("Vous avez déjà une équipe !");
+      throw new ConflictException("Vous avez déjà une équipe !");
     }
 
     boolean hasNoResponsible = team.getPrimaryResponsible() == null
         && team.getSecondaryResponsible() == null;
 
     if (hasNoResponsible) {
-      throw new RuntimeException("L'équipe n'a pas de responsable.");
+      throw new ConflictException("L'équipe n'a pas de responsable.");
     }
 
     if (!isTeamEligibleForJoin(team)) {
-      throw new RuntimeException("Cette équipe n'accepte plus de demandes.");
+      throw new ConflictException("Cette équipe n'accepte plus de demandes.");
+    }
+
+    if (teamHasTagConflict(team, member.getTag())) {
+      throw new ConflictException("Il y a déjà un " + member.getTag() + " dans cette équipe.");
+    }
+
+    if (teamHasTagConflict(team, member.getTag())) {
+      throw new IllegalStateException("Il y a déjà un " + member.getTag() + " dans cette équipe.");
     }
 
     if (demandRepo.existsByMemberIdAndTeamIdAndState(
         memberId, teamId, DemandState.PENDING)) {
-      throw new RuntimeException("A pending request already exists for this team.");
+      throw new ConflictException("Une demande en attente existe déjà pour cette équipe.");
     }
 
     Demand demand = new Demand();
@@ -137,7 +148,7 @@ public class DemandService {
   @Transactional
   public Iterable<Demand> getPendingRequestsForResponsible(User currentUser) {
     if (currentUser == null) {
-      throw new SecurityException("Utilisateur non authentifié.");
+      throw new ForbiddenException("Utilisateur non authentifié.");
     }
 
     Team team = currentUser.getTeam();
@@ -151,7 +162,7 @@ public class DemandService {
         .findByPrimaryResponsibleIdOrSecondaryResponsibleId(
             currentUser.getId(), currentUser.getId()
         )
-        .orElseThrow(() -> new SecurityException("You are not responsible for any team."));
+        .orElseThrow(() -> new ForbiddenException("Vous n'êtes responsable d'aucune équipe."));
 
     return getPendingRequestsForTeam(team.getId());
   }
@@ -170,7 +181,7 @@ public class DemandService {
     Team team = demand.getTeam();
 
     if (!isTeamEligibleForJoin(team)) {
-      throw new RuntimeException("L'équipe cible n'est plus disponible.");
+      throw new ConflictException("L'équipe cible n'est plus disponible.");
     }
 
     demand.setState(DemandState.ACCEPTED);
@@ -178,7 +189,15 @@ public class DemandService {
 
     User user = demand.getMember();
     if (user.getTeam() != null) {
-      throw new RuntimeException("Ce joueur appartient déjà à une équipe.");
+      throw new ConflictException("Ce joueur appartient déjà à une équipe.");
+    }
+
+    if (teamHasTagConflict(team, user.getTag())) {
+      throw new ConflictException("Il y a déjà un " + user.getTag() + " dans cette équipe.");
+    }
+
+    if (teamHasTagConflict(team, user.getTag())) {
+      throw new IllegalStateException("Il y a déjà un " + user.getTag() + " dans cette équipe.");
     }
 
     user.setTeam(team);
@@ -233,7 +252,7 @@ public class DemandService {
   private Demand getAndVerifyDemand(Long demandId, User currentUser) {
     Demand demand = demandRepo
         .findById(demandId)
-        .orElseThrow(() -> new RuntimeException("Request not found"));
+        .orElseThrow(() -> new NotFoundException("Demande introuvable."));
     verifyUserIsResponsible(demand.getTeam(), currentUser);
     return demand;
   }
@@ -243,7 +262,7 @@ public class DemandService {
    *
    * @param team        team to validate.
    * @param currentUser current user.
-   * @throws SecurityException if the user is not responsible for the team.
+   * @throws ForbiddenException if the user is not responsible for the team.
    */
   private void verifyUserIsResponsible(Team team, User currentUser) {
     boolean isPrimary = team.getPrimaryResponsible() != null
@@ -253,7 +272,7 @@ public class DemandService {
         && team.getSecondaryResponsible().getId().equals(currentUser.getId());
 
     if (!isPrimary && !isSecondary) {
-      throw new SecurityException("Seul le responsable de l'équipe peut gérer les membres.");
+      throw new ForbiddenException("Seul le responsable de l'équipe peut gérer les membres.");
     }
   }
 
@@ -268,5 +287,25 @@ public class DemandService {
       return false;
     }
     return team.getPrimaryResponsible() != null || team.getSecondaryResponsible() != null;
+  }
+
+  /**
+   * Checks whether a team already has a member with the same tag.
+   * Comparison is case-insensitive and ignores surrounding spaces.
+   *
+   * @param team      team to inspect.
+   * @param memberTag candidate tag.
+   * @return true when a conflicting tag exists in the team.
+   */
+  private boolean teamHasTagConflict(Team team, String memberTag) {
+    if (team == null || team.getMembers() == null || memberTag == null) {
+      return false;
+    }
+
+    String normalizedTag = memberTag.trim();
+    return !normalizedTag.isEmpty() && team.getMembers().stream()
+        .map(User::getTag)
+        .filter(existingTag -> existingTag != null && !existingTag.isBlank())
+        .anyMatch(existingTag -> existingTag.trim().equalsIgnoreCase(normalizedTag));
   }
 }

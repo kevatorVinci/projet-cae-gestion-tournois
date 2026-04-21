@@ -18,4 +18,6 @@ public class MatchDto {
   private LocalDateTime scheduledDateTime;
   private String status;
   private Long adminResponsibleId;
+  private Integer scoreTeam1;
+  private Integer scoreTeam2;
 }
