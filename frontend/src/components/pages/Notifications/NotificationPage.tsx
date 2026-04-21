@@ -49,7 +49,8 @@ type NotifType =
   | 'equipe'
   | 'bienvenue'
   | 'admin'
-  | 'tournoi';
+  | 'tournoi'
+  | 'score';
 
 interface NotifMeta {
   type: NotifType;
@@ -243,6 +244,17 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
+  if (startsWithAny(m, ['le score du match'])) {
+    return {
+      type: 'score',
+      color: '#f59e0b',
+      leftBar: '#f59e0b',
+      border: 'rgba(245,158,11,0.45)',
+      icon: <EmojiEventsIcon sx={{ fontSize: 16, color: '#f59e0b' }} />,
+      label: 'Validation de Score',
+    };
+  }
+
   return {
     type: 'bienvenue',
     color: '#e8822a',
@@ -258,7 +270,14 @@ export default function Notifications() {
   const isAdmin = Boolean(getAuthenticatedUser()?.admin);
   const [tab, setTab] = useState(0);
   const [typeFilter, setTypeFilter] = useState<
-    'tous' | 'demande' | 'accepte' | 'refus' | 'equipe' | 'admin' | 'tournoi'
+    | 'tous'
+    | 'demande'
+    | 'accepte'
+    | 'refus'
+    | 'equipe'
+    | 'admin'
+    | 'tournoi'
+    | 'score'
   >('tous');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -339,6 +358,17 @@ export default function Notifications() {
     return parsed.toLocaleString('fr-BE');
   };
 
+  // ✨ VOICI LA FONCTION QUI MANQUAIT ! On l'a remise à sa place.
+  const isJoinRequestNotification = (message: string) => {
+    const normalized = message.toLowerCase();
+    return startsWithAny(normalized, [
+      'nouvelle demande :',
+      'demande envoyée :',
+      'new request:',
+      'application sent:',
+    ]);
+  };
+
   const isTeamManagerJoinRequestNotification = (message: string) =>
     startsWithAny(message.toLowerCase(), [
       'nouvelle demande :',
@@ -360,10 +390,13 @@ export default function Notifications() {
       'new tournament:',
     ]);
 
-  const isTournamentRelatedNotification = (message: string) =>
-    isDraftTournamentNotification(message) ||
-    isPublishedTournamentNotification(message) ||
-    isMatchSelectionNotification(message);
+  const isScoreValidationNotification = (message: string) =>
+    startsWithAny(message.toLowerCase(), ['le score du match']);
+
+  const extractMatchId = (message: string) => {
+    const match = message.match(/#(\d+)/);
+    return match ? match[1] : null;
+  };
 
   const extractTournamentName = (message: string) => {
     const fromSelection = message.match(/dans le tournoi '([^']+)'/i);
@@ -617,7 +650,8 @@ export default function Notifications() {
                   | 'refus'
                   | 'equipe'
                   | 'admin'
-                  | 'tournoi',
+                  | 'tournoi'
+                  | 'score',
               )
             }
             renderValue={(selected) => {
@@ -675,6 +709,15 @@ export default function Notifications() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <EventIcon sx={{ fontSize: 18, color: '#06b6d4' }} />
                     <span>Tournoi</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'score') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                    <span>Scores à valider</span>
                   </Box>
                 );
               }
@@ -748,6 +791,13 @@ export default function Notifications() {
                 <span>Tournoi</span>
               </Box>
             </MenuItem>
+
+            <MenuItem value="score">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                <span>Scores à valider</span>
+              </Box>
+            </MenuItem>
           </Select>
         </FormControl>
 
@@ -782,9 +832,12 @@ export default function Notifications() {
               const isDemandeResponsable = isTeamManagerJoinRequestNotification(
                 n.message,
               );
-              const isTournamentNotification = isTournamentRelatedNotification(
-                n.message,
-              );
+
+              const isTournamentNotification =
+                isDraftTournamentNotification(n.message) ||
+                isPublishedTournamentNotification(n.message) ||
+                isMatchSelectionNotification(n.message);
+
               const parsedSelectionMessage = parseMatchSelectionNotification(
                 n.message,
               );
@@ -901,38 +954,57 @@ export default function Notifications() {
                       </Typography>
                     </Box>
 
-                    {parsedSelectionMessage ? (
-                      <Stack spacing={0.5}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'rgba(255,255,255,0.92)',
-                            lineHeight: 1.55,
-                          }}
-                        >
-                          Vous avez été sélectionné pour représenter{' '}
-                          <Box
-                            component="span"
-                            sx={{ color: '#ffffff', fontWeight: 700 }}
-                          >
-                            {parsedSelectionMessage.teamName}
-                          </Box>
-                          {parsedSelectionMessage.opponentName && (
-                            <>
-                              {' '}
-                              contre{' '}
-                              <Box
-                                component="span"
-                                sx={{ color: '#ffffff', fontWeight: 700 }}
-                              >
-                                {parsedSelectionMessage.opponentName}
-                              </Box>
-                            </>
-                          )}
-                          .
-                        </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mb:
+                          isJoinRequestNotification(n.message) || !n.estLue
+                            ? 1.5
+                            : 0,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {translateMessage(n.message).replace(
+                        /match #\d+ /,
+                        'match ',
+                      )}
+                    </Typography>
 
-                        {metaSchedule && (
+                    {(isJoinRequestNotification(n.message) ||
+                      isAcceptedNotification(n.message) ||
+                      isTournamentNotification ||
+                      isScoreValidationNotification(n.message) ||
+                      !n.estLue) && (
+                      <Box sx={{ display: 'flex', gap: 2.5 }}>
+                        {isScoreValidationNotification(n.message) && (
+                          <Typography
+                            variant="caption"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Évite de cliquer sur la carte en même temps
+                              const matchId = extractMatchId(n.message);
+                              if (matchId) {
+                                navigate(`/match/${matchId}/validation`);
+                              } else {
+                                navigate('/maTeam');
+                              }
+                            }}
+                            sx={{
+                              color: '#f59e0b',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              letterSpacing: '0.02em',
+                              '&:hover': {
+                                textDecoration: 'underline',
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            Aller valider le score
+                          </Typography>
+                        )}
+
+                        {isTournamentNotification && (
                           <Typography
                             variant="caption"
                             sx={{
@@ -942,17 +1014,7 @@ export default function Notifications() {
                             {metaSchedule}
                           </Typography>
                         )}
-                      </Stack>
-                    ) : (
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255,255,255,0.92)',
-                          lineHeight: 1.55,
-                        }}
-                      >
-                        {translateMessage(n.message)}
-                      </Typography>
+                      </Box>
                     )}
 
                     {hasCtaRow && (
@@ -994,7 +1056,7 @@ export default function Notifications() {
                             endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
                             onClick={(event) => {
                               event.stopPropagation();
-                              primaryAction.onClick();
+                              primaryAction!.onClick();
                             }}
                             sx={{
                               color: '#e8822a',

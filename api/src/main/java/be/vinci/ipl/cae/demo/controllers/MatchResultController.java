@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -30,8 +31,8 @@ public class MatchResultController {
    * @param matchResultMapper  the mapper for results
    */
   public MatchResultController(
-      MatchResultService matchResultService,
-      MatchResultMapper matchResultMapper) {
+        MatchResultService matchResultService,
+        MatchResultMapper matchResultMapper) {
     this.matchResultService = matchResultService;
     this.matchResultMapper = matchResultMapper;
   }
@@ -45,14 +46,18 @@ public class MatchResultController {
    */
   @PostMapping("/match/{matchId}")
   public ResponseEntity<MatchResultDto> createResult(
-      @PathVariable Long matchId,
-      @RequestBody MatchResultCreateDto createDto) {
+        @PathVariable Long matchId,
+        @RequestBody MatchResultCreateDto createDto) {
+
+    // Calls the service to encode the result
     var savedResult = matchResultService.encodeResult(matchId, createDto);
 
+    // If the match or admin is not found, return a bad request
     if (savedResult == null) {
       return ResponseEntity.badRequest().build();
     }
 
+    // Return the created result with a 201 status
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(matchResultMapper.toDto(savedResult));
   }
@@ -65,12 +70,43 @@ public class MatchResultController {
    */
   @GetMapping("/match/{matchId}")
   public ResponseEntity<MatchResultDto> getResult(@PathVariable Long matchId) {
+
+    // Calls the service to get the result
     var result = matchResultService.getResultForMatch(matchId);
 
+    // If no result is found, return a 404 not found
     if (result == null) {
       return ResponseEntity.notFound().build();
     }
 
+    // Return the found result
     return ResponseEntity.ok(matchResultMapper.toDto(result));
+  }
+
+  /**
+   * Validates or disputes a match result.
+   * This is the endpoint called by the React frontend when a captain clicks "Accept" or "Dispute".
+   *
+   * @param matchId    the ID of the match
+   * @param teamId     the ID of the team validating
+   * @param isAccepted true if accepted, false if disputed
+   * @return a response entity with the updated match result
+   */
+  @PostMapping("/match/{matchId}/validate/{teamId}")
+  public ResponseEntity<MatchResultDto> validateResult(
+        @PathVariable Long matchId,
+        @PathVariable Long teamId,
+        @RequestParam boolean isAccepted) {
+
+    // Calls the service to update the validation status
+    var updatedResult = matchResultService.validateResultByCaptain(matchId, teamId, isAccepted);
+
+    // If the result doesn't exist, return a 404 not found
+    if (updatedResult == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    // Returns the updated result to the frontend
+    return ResponseEntity.ok(matchResultMapper.toDto(updatedResult));
   }
 }

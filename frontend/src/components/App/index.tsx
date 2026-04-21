@@ -36,16 +36,20 @@ import EditTournamentPage from '../pages/Tournaments/EditTournament';
 import TournamentMatchesPage from '../pages/Tournaments/TournamentMatchesPage';
 import TournamentMatchCompositionPage from '../pages/Tournaments/TournamentMatchCompositionPage';
 
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [pathname]);
-  return null;
-};
+// ✨ IMPORT DE LA NOUVELLE PAGE DE VALIDATION
+import MatchValidationPage from '../pages/Match/MatchValidationPage';
 
 const appBlueGradient =
   'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
+
+// ✨ CORRECTION : Création du composant ScrollToTop manquant
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 const App = () => (
   <AdminViewProvider>
@@ -55,6 +59,7 @@ const App = () => (
         v7_relativeSplatPath: true,
       }}
     >
+      {/* ScrollToTop va maintenant fonctionner ! */}
       <ScrollToTop />
       <Box sx={{ minHeight: '100vh', background: appBlueGradient }}>
         <Navbar />
@@ -138,6 +143,16 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/match/:id/validation"
+            element={
+              <ProtectedRoute>
+                <MatchValidationPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/admin/tournaments/create"
             element={

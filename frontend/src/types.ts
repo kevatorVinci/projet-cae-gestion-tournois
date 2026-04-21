@@ -7,7 +7,7 @@ export interface Equipe {
   isResponsable?: boolean;
 }
 
-interface User {
+export interface User {
   id?: number;
   email?: string;
   password?: string;
@@ -25,21 +25,21 @@ interface User {
   profileImage?: string;
 }
 
-interface NotificationItem {
+export interface NotificationItem {
   idNotification: number;
   message: string;
   dateEnvoi: string;
   estLue: boolean;
 }
 
-interface DemandeDecisionResult {
+export interface DemandeDecisionResult {
   id?: number;
   tag?: string;
   specialty?: string;
   profileImageUrl?: string;
 }
 
-interface DemandePendingItem {
+export interface DemandePendingItem {
   idDemande: number;
   membreId: number;
   membreEmail?: string;
@@ -54,7 +54,7 @@ interface DemandePendingItem {
   raisonRefus?: string;
 }
 
-interface AuthenticatedUser {
+export interface AuthenticatedUser {
   email: string;
   token: string;
   password?: string;
@@ -66,9 +66,9 @@ interface AuthenticatedUser {
   banReason?: string;
 }
 
-type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
+export type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
-interface UserContextType {
+export interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
   registerUser: (newUser: User) => Promise<void>;
   loginUser: (user: User, rememberMe: boolean) => Promise<void>;
@@ -76,7 +76,7 @@ interface UserContextType {
   updateUser: (updatedData: Partial<AuthenticatedUser>) => void;
 }
 
-interface Tournoi {
+export interface Tournoi {
   id: number;
   nom: string;
   description?: string;
@@ -89,13 +89,15 @@ interface Tournoi {
   planningMatchPublie?: boolean;
 }
 
-export type {
-  User,
-  AuthenticatedUser,
-  MaybeAuthenticatedUser,
-  UserContextType,
-  NotificationItem,
-  DemandeDecisionResult,
-  DemandePendingItem,
-  Tournoi,
-};
+export interface Match {
+  id: number;
+  tournamentId: number;
+  team1Id: number;
+  team2Id: number;
+  team1Name: string;
+  team2Name: string;
+  round: number;
+  scheduledDateTime: string;
+  status: string;
+  adminResponsibleId: number;
+}
