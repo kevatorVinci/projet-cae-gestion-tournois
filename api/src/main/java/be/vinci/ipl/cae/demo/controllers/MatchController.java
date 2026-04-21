@@ -63,25 +63,25 @@ public class MatchController {
     return ResponseEntity.ok(matchMapper.toDtos(matchService.getMatchesByTeam(equipeId)));
   }
 
-/**
- * Endpoint to declare a forfeit for a team in a match.
- *
- * @param matchId the ID of the match.
- * @param teamId  the ID of the forfeiting team.
- * @return 200 OK if successful.
- */
-@PostMapping("/{matchId}/forfeit/{teamId}")
-@PreAuthorize("isAuthenticated()")
-public ResponseEntity<Void> declareForfeit(
-    @PathVariable Long matchId,
-    @PathVariable Long teamId,
-    @AuthenticationPrincipal User currentUser) {
+  /**
+   * Endpoint to declare a forfeit for a team in a match.
+   *
+   * @param matchId the ID of the match.
+   * @param teamId  the ID of the forfeiting team.
+   * @return 200 OK if successful.
+   */
+  @PostMapping("/{matchId}/forfeit/{teamId}")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<Void> declareForfeit(
+      @PathVariable Long matchId,
+      @PathVariable Long teamId,
+      @AuthenticationPrincipal User currentUser) {
 
-  try {
-    matchService.declareForfeit(matchId, teamId, currentUser);
-    return ResponseEntity.ok().build();
-  } catch (IllegalStateException e) {
-    return ResponseEntity.badRequest().build();
-  }
-  }
+      try {
+        matchService.declareForfeit(matchId, teamId, currentUser);
+        return ResponseEntity.ok().build();
+      } catch (IllegalStateException e) {
+        return ResponseEntity.badRequest().build();
+      }
+    }
 }

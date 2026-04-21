@@ -215,33 +215,33 @@ public class MatchService {
   result.setEncodingDate(LocalDateTime.now());
   result.setAdminEncoder(adminUser);
 
-  if (isTeam1) {
-    result.setForfeitTeam1(true);
-    result.setScoreTeam1(0);
-    result.setScoreTeam2(5);
-    result.setValidationStatusTeam1("VALIDATED");
-    result.setValidationStatusTeam2("VALIDATED");
-  } else {
-    result.setForfeitTeam2(true);
-    result.setScoreTeam1(5);
-    result.setScoreTeam2(0);
-    result.setValidationStatusTeam1("VALIDATED");
-    result.setValidationStatusTeam2("VALIDATED");
-  }
+    if (isTeam1) {
+      result.setForfeitTeam1(true);
+      result.setScoreTeam1(0);
+      result.setScoreTeam2(5);
+      result.setValidationStatusTeam1("VALIDATED");
+      result.setValidationStatusTeam2("VALIDATED");
+    } else {
+      result.setForfeitTeam2(true);
+      result.setScoreTeam1(5);
+      result.setScoreTeam2(0);
+      result.setValidationStatusTeam1("VALIDATED");
+      result.setValidationStatusTeam2("VALIDATED");
+    }
 
-  match.setStatus("FINISHED");
-  matchRepository.save(match);
+    match.setStatus("FINISHED");
+    matchRepository.save(match);
 
-  // 🔔 Send notifications BEFORE returning
-  Team forfeitingTeam = isTeam1 ? match.getTeam1() : match.getTeam2();
-  String tournamentName = match.getTournament() != null
-      ? match.getTournament().getName()
-      : "Tournoi";
 
-  List<User> members = forfeitingTeam.getMembers();
-  if (members != null && !members.isEmpty()) {
-    notificationService.notifyForfeit(members, tournamentName, forfeitingTeam.getName());
-  }
+    Team forfeitingTeam = isTeam1 ? match.getTeam1() : match.getTeam2();
+    String tournamentName = match.getTournament() != null
+        ? match.getTournament().getName()
+        : "Tournoi";
+
+    List<User> members = forfeitingTeam.getMembers();
+    if (members != null && !members.isEmpty()) {
+      notificationService.notifyForfeit(members, tournamentName, forfeitingTeam.getName());
+    }
 
   return matchResultRepository.save(result);
 }

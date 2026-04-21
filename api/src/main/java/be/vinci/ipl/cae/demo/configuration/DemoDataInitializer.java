@@ -94,7 +94,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
     ensureRegistrations(closedSix, registrationTeams.subList(0, 6), "2026-05-16");
 
-    // --- FORFEIT TOURNAMENT CODE MOVED INSIDE THE METHOD ---
     Tournament forfeitTournament = getOrCreateTournament(
         "Forfeit",
         "Tournoi de test pour la fonctionnalité de forfait",
@@ -123,8 +122,12 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         "[demo] DB initialized: planning tournaments ready (CLOTURE 8/8, 7/8, 6/8 + 1 BROUILLON)"
     );
 
-    System.out.println("[demo] Tournoi 'Forfeit' vérifié/créé avec 4 équipes pour tester le forfait.");
-    System.out.println("[demo] DB initialized: planning tournaments ready.");
+    System.out.println(
+      "[demo] Tournoi 'Forfeit' vérifié/créé avec 4 équipes pour tester le forfait."
+    );
+    System.out.println(
+      "[demo] DB initialized: planning tournaments ready."
+    );
   }
 
   

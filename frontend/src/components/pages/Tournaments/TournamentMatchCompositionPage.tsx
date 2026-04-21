@@ -35,7 +35,7 @@ import {
   MatchTeamSelectionView,
   TeamMatch,
   updateMatchTeamSelection,
-  declareForfeit
+  declareForfeit,
 } from '../../../services/tournaments';
 import { getUserTeam, isCurrentUserResponsable } from '../../../services/teams';
 import { useAdminView } from '../../../contexts/useAdminView';
