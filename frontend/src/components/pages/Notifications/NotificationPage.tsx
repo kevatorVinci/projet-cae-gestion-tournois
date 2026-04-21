@@ -46,7 +46,8 @@ type NotifType =
   | 'equipe'
   | 'bienvenue'
   | 'admin'
-  | 'tournoi';
+  | 'tournoi'
+  | 'score';
 
 interface NotifMeta {
   type: NotifType;
@@ -198,6 +199,17 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
+  if (startsWithAny(m, ['le score du match'])) {
+    return {
+      type: 'score',
+      color: '#f59e0b',
+      leftBar: '#f59e0b',
+      border: 'rgba(245,158,11,0.45)',
+      icon: <EmojiEventsIcon sx={{ fontSize: 16, color: '#f59e0b' }} />,
+      label: 'Validation de Score',
+    };
+  }
+
   return {
     type: 'bienvenue',
     color: '#e8822a',
@@ -213,7 +225,14 @@ export default function Notifications() {
   const isAdmin = Boolean(getAuthenticatedUser()?.admin);
   const [tab, setTab] = useState(0);
   const [typeFilter, setTypeFilter] = useState<
-    'tous' | 'demande' | 'accepte' | 'refus' | 'equipe' | 'admin' | 'tournoi'
+    | 'tous'
+    | 'demande'
+    | 'accepte'
+    | 'refus'
+    | 'equipe'
+    | 'admin'
+    | 'tournoi'
+    | 'score'
   >('tous');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -324,6 +343,14 @@ export default function Notifications() {
       'nouveau tournoi :',
       'new tournament:',
     ]);
+
+  const isScoreValidationNotification = (message: string) =>
+    startsWithAny(message.toLowerCase(), ['le score du match']);
+
+  const extractMatchId = (message: string) => {
+    const match = message.match(/#(\d+)/);
+    return match ? match[1] : null;
+  };
 
   const extractTournamentName = (message: string) => {
     const match = message.match(/'([^']+)'/);
@@ -535,7 +562,8 @@ export default function Notifications() {
                   | 'refus'
                   | 'equipe'
                   | 'admin'
-                  | 'tournoi',
+                  | 'tournoi'
+                  | 'score',
               )
             }
             renderValue={(selected) => {
@@ -593,6 +621,15 @@ export default function Notifications() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <EventIcon sx={{ fontSize: 18, color: '#06b6d4' }} />
                     <span>Tournoi</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'score') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                    <span>Scores à valider</span>
                   </Box>
                 );
               }
@@ -664,6 +701,13 @@ export default function Notifications() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <EventIcon sx={{ fontSize: 18, color: '#06b6d4' }} />
                 <span>Tournoi</span>
+              </Box>
+            </MenuItem>
+
+            <MenuItem value="score">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                <span>Scores à valider</span>
               </Box>
             </MenuItem>
           </Select>
@@ -787,6 +831,7 @@ export default function Notifications() {
                       </Typography>
                     </Box>
 
+                    {/* ✨ NOUVEAU : On cache le #1 ici avec le .replace ! */}
                     <Typography
                       variant="body2"
                       color="text.secondary"
@@ -798,14 +843,44 @@ export default function Notifications() {
                         lineHeight: 1.6,
                       }}
                     >
-                      {translateMessage(n.message)}
+                      {translateMessage(n.message).replace(
+                        /match #\d+ /,
+                        'match ',
+                      )}
                     </Typography>
 
                     {(isJoinRequestNotification(n.message) ||
                       isAcceptedNotification(n.message) ||
                       isTournamentNotification ||
+                      isScoreValidationNotification(n.message) ||
                       !n.estLue) && (
                       <Box sx={{ display: 'flex', gap: 2.5 }}>
+                        {isScoreValidationNotification(n.message) && (
+                          <Typography
+                            variant="caption"
+                            onClick={() => {
+                              const matchId = extractMatchId(n.message);
+                              if (matchId) {
+                                navigate(`/match/${matchId}/validation`);
+                              } else {
+                                navigate('/maTeam');
+                              }
+                            }}
+                            sx={{
+                              color: '#f59e0b',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              letterSpacing: '0.02em',
+                              '&:hover': {
+                                textDecoration: 'underline',
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            Aller valider le score
+                          </Typography>
+                        )}
+
                         {isTournamentNotification && (
                           <Typography
                             variant="caption"

@@ -30,6 +30,9 @@ import EditTournamentPage from '../pages/Tournaments/EditTournament';
 import TournamentMatchesPage from '../pages/Tournaments/TournamentMatchesPage';
 import TournamentMatchCompositionPage from '../pages/Tournaments/TournamentMatchCompositionPage';
 
+// ✨ IMPORT DE LA NOUVELLE PAGE DE VALIDATION
+import MatchValidationPage from '../pages/Match/MatchValidationPage';
+
 const appBlueGradient =
   'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
 
@@ -123,6 +126,17 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+
+          {/* ✨ NOUVELLE ROUTE : PAGE DE VALIDATION DES MATCHS */}
+          <Route
+            path="/match/:id/validation"
+            element={
+              <ProtectedRoute>
+                <MatchValidationPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/admin/tournaments/create"
             element={

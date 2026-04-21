@@ -91,8 +91,13 @@ export interface Tournoi {
 
 export interface Match {
   id: number;
-  team1: Equipe | null;
-  team2: Equipe | null;
-  status: string; 
+  tournamentId: number;
+  team1Id: number;
+  team2Id: number;
+  team1Name: string;
+  team2Name: string;
+  round: number;
   scheduledDateTime: string;
+  status: string;
+  adminResponsibleId: number;
 }

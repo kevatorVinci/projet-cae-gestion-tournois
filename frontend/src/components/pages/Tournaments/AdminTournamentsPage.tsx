@@ -37,8 +37,10 @@ import {
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
 
+// Importing our newly created component and its Match type!
 import { Match } from '../../../types';
 import AdminMatchManagement from '../Match/AdminMatchManagement';
+
 type EtatStyle = {
   label: string;
   accent: string;
@@ -96,7 +98,9 @@ const AdminTournamentsPage = () => {
   const navigate = useNavigate();
 
   // State to manage which view is currently active (Tournaments list OR Match Management)
-  const [activeView, setActiveView] = useState<'tournaments' | 'matches'>('tournaments');
+  const [activeView, setActiveView] = useState<'tournaments' | 'matches'>(
+    'tournaments',
+  );
 
   // Memory variables for the list, statuses, and filters
   const [tournaments, setTournaments] = useState<Tournoi[]>([]);
@@ -186,27 +190,27 @@ const AdminTournamentsPage = () => {
     try {
       // We only care about tournaments that are running or closed (ready to run)
       const activeTournaments = tournaments.filter(
-        (t) => t.etat === 'EN_COURS' || t.etat === 'CLOTURE'
+        (t) => t.etat === 'EN_COURS' || t.etat === 'CLOTURE',
       );
-      
+
       let matchesAcc: Match[] = [];
-      
+
       // Loops through these tournaments and fetches their matches from the backend Database
       for (const t of activeTournaments) {
         try {
           // We tell TypeScript: "Trust me, this is our Match[] array"
           const tMatches = (await fetchTournamentMatchesAdmin(
             t.id,
-            authenticatedUser.token
+            authenticatedUser.token,
           )) as unknown as Match[];
-          
+
           // Adds the newly fetched matches from DB to our big array
           matchesAcc = [...matchesAcc, ...tMatches];
         } catch (e) {
           // Ignore error for a single tournament if it fails
         }
       }
-      
+
       // Updates the React state with all collected matches
       setAllMatches(matchesAcc);
     } catch (err) {
@@ -396,7 +400,8 @@ const AdminTournamentsPage = () => {
             Gestion des Tournois
           </Typography>
           <Typography variant="h6" color="text.secondary" mb={4}>
-            Espace administrateur : création de tournois et encodage des résultats.
+            Espace administrateur : création de tournois et encodage des
+            résultats.
           </Typography>
 
           {/* --- LE BASCULEUR (TOGGLE) --- */}
@@ -424,12 +429,12 @@ const AdminTournamentsPage = () => {
                     color: 'white',
                     '&:hover': {
                       backgroundColor: '#e8822a',
-                    }
+                    },
                   },
                   '&:hover': {
                     backgroundColor: 'rgba(255,255,255,0.1)',
-                  }
-                }
+                  },
+                },
               }}
             >
               <ToggleButton value="tournaments" aria-label="Liste des tournois">
@@ -451,7 +456,9 @@ const AdminTournamentsPage = () => {
         {/* --- VUE 1 : LES TOURNOIS --- */}
         {activeView === 'tournaments' && (
           <Box sx={{ mt: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}
+            >
               <Button
                 variant="contained"
                 onClick={() => navigate('/admin/tournaments/create')}
@@ -465,7 +472,11 @@ const AdminTournamentsPage = () => {
                 + Créer un tournoi
               </Button>
 
-              <FormControl variant="outlined" size="small" sx={{ minWidth: 250 }}>
+              <FormControl
+                variant="outlined"
+                size="small"
+                sx={{ minWidth: 250 }}
+              >
                 <InputLabel
                   id="filter-label"
                   sx={{
@@ -501,7 +512,9 @@ const AdminTournamentsPage = () => {
                   }}
                 >
                   <MenuItem value="Tous">Tous</MenuItem>
-                  <MenuItem value="En attente de publication">En attente de publication</MenuItem>
+                  <MenuItem value="En attente de publication">
+                    En attente de publication
+                  </MenuItem>
                   <MenuItem value="À venir">À venir</MenuItem>
                   <MenuItem value="Clôturés">Clôturés</MenuItem>
                   <MenuItem value="En cours">En cours</MenuItem>
@@ -566,7 +579,11 @@ const AdminTournamentsPage = () => {
                         }}
                       >
                         <Box>
-                          <Typography variant="h6" color="white" fontWeight={700}>
+                          <Typography
+                            variant="h6"
+                            color="white"
+                            fontWeight={700}
+                          >
                             {tournament.nom}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
@@ -692,11 +709,15 @@ const AdminTournamentsPage = () => {
         )}
 
         {/* --- VUE 2 : LES MATCHS EN COURS --- */}
-        {activeView === 'matches' && (
-          // We call our updated component, which receives data from the Database!
-          <AdminMatchManagement matches={allMatches} />
+        {activeView === 'matches' && authenticatedUser?.token && (
+          // ✨ On envoie le token de sécurité et la méthode pour recharger la page
+          <AdminMatchManagement
+            matches={allMatches}
+            tournaments={tournaments}
+            token={authenticatedUser.token}
+            onRefresh={loadAllMatches}
+          />
         )}
-
       </Container>
     </Box>
   );
