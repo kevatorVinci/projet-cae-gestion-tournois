@@ -35,6 +35,7 @@ import {
   MatchTeamSelectionView,
   TeamMatch,
   updateMatchTeamSelection,
+  declareForfeit
 } from '../../../services/tournaments';
 import { getUserTeam, isCurrentUserResponsable } from '../../../services/teams';
 import { useAdminView } from '../../../contexts/useAdminView';
@@ -75,10 +76,16 @@ const TournamentMatchCompositionPage = () => {
   const [tournamentName, setTournamentName] = useState('');
   const [match, setMatch] = useState<TeamMatch | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [responsibleTeamId, setResponsibleTeamId] = useState<number | null>(null);
+  const [responsibleTeamId, setResponsibleTeamId] = useState<number | null>(
+    null,
+  );
   const [selections, setSelections] = useState<MatchPlayerSelection[]>([]);
-  const [editorViews, setEditorViews] = useState<Record<number, MatchTeamSelectionView>>({});
-  const [selectedByTeam, setSelectedByTeam] = useState<Record<number, number[]>>({});
+  const [editorViews, setEditorViews] = useState<
+    Record<number, MatchTeamSelectionView>
+  >({});
+  const [selectedByTeam, setSelectedByTeam] = useState<
+    Record<number, number[]>
+  >({});
   const [savingTeamId, setSavingTeamId] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -88,7 +95,8 @@ const TournamentMatchCompositionPage = () => {
   const [forfeitingTeamName, setForfeitingTeamName] = useState<string>('');
 
   const parsedMatchId = toMatchId(matchId);
-  const effectiveAdminFlag = isAdminView && getAuthenticatedUser()?.admin === true;
+  const effectiveAdminFlag =
+    isAdminView && getAuthenticatedUser()?.admin === true;
 
   const refreshSelections = useCallback(
     async (token?: string) => {
@@ -147,7 +155,8 @@ const TournamentMatchCompositionPage = () => {
         }
 
         const selectedMatch =
-          matchList.find((item) => toMatchId(item.id) === parsedMatchId) ?? null;
+          matchList.find((item) => toMatchId(item.id) === parsedMatchId) ??
+          null;
 
         if (!selectedMatch) {
           setError('Match introuvable dans ce tournoi.');
@@ -168,13 +177,16 @@ const TournamentMatchCompositionPage = () => {
               isCurrentUserResponsable().catch(() => false),
               getUserTeam().catch(() => null),
             ]);
-            effectiveResponsibleTeamId = responsable && myTeam ? myTeam.id : null;
+            effectiveResponsibleTeamId =
+              responsable && myTeam ? myTeam.id : null;
             setResponsibleTeamId(effectiveResponsibleTeamId);
           }
 
           const editableTeamIds = [selectedMatch.team1Id, selectedMatch.team2Id]
             .filter((teamId): teamId is number => typeof teamId === 'number')
-            .filter((teamId) => (adminFlag ? true : teamId === effectiveResponsibleTeamId));
+            .filter((teamId) =>
+              adminFlag ? true : teamId === effectiveResponsibleTeamId,
+            );
 
           await Promise.all(
             editableTeamIds.map(async (teamId) => {
@@ -186,7 +198,10 @@ const TournamentMatchCompositionPage = () => {
             }),
           );
 
-          for (const nonEditableTeamId of [selectedMatch.team1Id, selectedMatch.team2Id]
+          for (const nonEditableTeamId of [
+            selectedMatch.team1Id,
+            selectedMatch.team2Id,
+          ]
             .filter((teamId): teamId is number => typeof teamId === 'number')
             .filter((teamId) => !editableTeamIds.includes(teamId))) {
             setEditorViews((prev) => {
@@ -198,7 +213,9 @@ const TournamentMatchCompositionPage = () => {
         }
       } catch (e) {
         setError(
-          e instanceof Error ? e.message : 'Impossible de charger la page de composition.',
+          e instanceof Error
+            ? e.message
+            : 'Impossible de charger la page de composition.',
         );
       } finally {
         setLoading(false);
@@ -218,7 +235,9 @@ const TournamentMatchCompositionPage = () => {
   const managedTeamId = useMemo(() => {
     if (!match) return null;
     const candidates = [match.team1Id, match.team2Id];
-    return candidates.includes(responsibleTeamId ?? -1) ? responsibleTeamId : null;
+    return candidates.includes(responsibleTeamId ?? -1)
+      ? responsibleTeamId
+      : null;
   }, [match, responsibleTeamId]);
 
   const canRequestEditor = (teamId?: number) => {
@@ -288,7 +307,9 @@ const TournamentMatchCompositionPage = () => {
       setFeedback('Composition enregistrée avec succès.');
     } catch (e) {
       setFeedback(
-        e instanceof Error ? e.message : 'Impossible de sauvegarder cette composition.',
+        e instanceof Error
+          ? e.message
+          : 'Impossible de sauvegarder cette composition.',
       );
     } finally {
       setSavingTeamId(null);
@@ -302,11 +323,25 @@ const TournamentMatchCompositionPage = () => {
   };
 
   const handleConfirmForfeit = async () => {
-    // TODO: call the forfeit API endpoint when available
-    setFeedback(`L'équipe ${forfeitingTeamName} a déclaré forfait.`);
-    setForfeitDialogOpen(false);
-    setForfeitingTeamId(null);
-    setForfeitingTeamName('');
+    const token = getAuthenticatedUser()?.token;
+    if (!token || !forfeitingTeamId) return;
+
+    try {
+      await declareForfeit(parsedMatchId!, forfeitingTeamId, token);
+      setFeedback(
+        `L'équipe ${forfeitingTeamName} a déclaré forfait. Score: 0 - 5.`,
+      );
+      // Refresh the match data
+      await refreshSelections(token);
+    } catch (e) {
+      setFeedback(
+        e instanceof Error ? e.message : 'Impossible de déclarer forfait.',
+      );
+    } finally {
+      setForfeitDialogOpen(false);
+      setForfeitingTeamId(null);
+      setForfeitingTeamName('');
+    }
   };
 
   const renderTeamPanel = (
@@ -344,7 +379,11 @@ const TournamentMatchCompositionPage = () => {
         }}
       >
         <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Typography variant="h6" fontWeight={800} color="white">
               {safeTeamName}
             </Typography>
@@ -363,16 +402,25 @@ const TournamentMatchCompositionPage = () => {
 
           <Divider sx={{ my: 1.75, borderColor: 'rgba(255,255,255,0.12)' }} />
 
-          <Typography variant="subtitle2" color="rgba(255,255,255,0.75)" sx={{ mb: 1 }}>
+          <Typography
+            variant="subtitle2"
+            color="rgba(255,255,255,0.75)"
+            sx={{ mb: 1 }}
+          >
             Composition actuelle
           </Typography>
 
           {hiddenForViewer ? (
             <Alert severity="info" sx={{ mb: 2 }}>
-              La composition adverse sera visible une fois l'heure du match arrivée.
+              La composition adverse sera visible une fois l'heure du match
+              arrivée.
             </Alert>
           ) : teamSelections.length === 0 ? (
-            <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              color="rgba(255,255,255,0.7)"
+              sx={{ mb: 2 }}
+            >
               Aucune composition enregistrée.
             </Typography>
           ) : (
@@ -399,7 +447,10 @@ const TournamentMatchCompositionPage = () => {
                     <Typography variant="body2" color="white" fontWeight={700}>
                       {selection.memberTag ?? 'Joueur'}
                     </Typography>
-                    <Typography variant="caption" color="rgba(255,255,255,0.65)">
+                    <Typography
+                      variant="caption"
+                      color="rgba(255,255,255,0.65)"
+                    >
                       {selection.memberSpecialty ?? 'Spécialité non renseignée'}
                     </Typography>
                   </Box>
@@ -441,8 +492,15 @@ const TournamentMatchCompositionPage = () => {
               ) : (
                 <Stack spacing={1.25}>
                   {/* Sélection header with forfeit link on the other side */}
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="subtitle2" color="rgba(255,255,255,0.75)">
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      color="rgba(255,255,255,0.75)"
+                    >
                       Sélection ({selectedIds.length}/{editor.maxPlayers})
                     </Typography>
                     {canForfeit && (
@@ -495,10 +553,17 @@ const TournamentMatchCompositionPage = () => {
                             sx={{ width: 30, height: 30 }}
                           />
                           <Box>
-                            <Typography variant="body2" color="white" fontWeight={700}>
+                            <Typography
+                              variant="body2"
+                              color="white"
+                              fontWeight={700}
+                            >
                               {member.tag}
                             </Typography>
-                            <Typography variant="caption" color="rgba(255,255,255,0.65)">
+                            <Typography
+                              variant="caption"
+                              color="rgba(255,255,255,0.65)"
+                            >
                               {member.specialty ?? 'Spécialité non renseignée'}
                             </Typography>
                           </Box>
@@ -517,7 +582,9 @@ const TournamentMatchCompositionPage = () => {
                     variant="contained"
                     onClick={() => saveTeam(teamId)}
                     disabled={
-                      savingTeamId === teamId || !editor.canEdit || !canRequestEditor(teamId)
+                      savingTeamId === teamId ||
+                      !editor.canEdit ||
+                      !canRequestEditor(teamId)
                     }
                     sx={{
                       bgcolor: accentColor,
@@ -527,7 +594,9 @@ const TournamentMatchCompositionPage = () => {
                       '&.Mui-disabled': { bgcolor: 'rgba(148,163,184,0.4)' },
                     }}
                   >
-                    {savingTeamId === teamId ? 'Enregistrement...' : 'Enregistrer la composition'}
+                    {savingTeamId === teamId
+                      ? 'Enregistrement...'
+                      : 'Enregistrer la composition'}
                   </Button>
                 </Stack>
               )}

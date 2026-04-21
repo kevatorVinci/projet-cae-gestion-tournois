@@ -220,4 +220,20 @@ public class NotificationService {
             + "' vient d'être publié. Inscrivez-vous vite !"
     );
   }
+
+  /**
+ * Notifies all members of a team that they have forfeited and are eliminated.
+ *
+ * @param members        the list of team members to notify.
+ * @param tournamentName the name of the tournament.
+ * @param teamName       the name of the forfeiting team.
+ */
+public void notifyForfeit(List<User> members, String tournamentName, String teamName) {
+  for (User member : members) {
+    createNotification(
+        member,
+        "🏳️ Forfait — " + tournamentName + " : Votre équipe a déclaré forfait. Vous êtes éliminés du tournoi."
+    );
+  }
+}
 }

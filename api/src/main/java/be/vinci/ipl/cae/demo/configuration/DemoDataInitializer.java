@@ -94,6 +94,18 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
     ensureRegistrations(closedSix, registrationTeams.subList(0, 6), "2026-05-16");
 
+    // --- FORFEIT TOURNAMENT CODE MOVED INSIDE THE METHOD ---
+    Tournament forfeitTournament = getOrCreateTournament(
+        "Forfeit",
+        "Tournoi de test pour la fonctionnalité de forfait",
+        "2026-04-01",
+        "2026-05-31",
+        "2026-04-25",
+        "EN_COURS",
+        4
+    );
+    ensureRegistrations(forfeitTournament, registrationTeams.subList(0, 4), "2026-05-01");
+
     if (tournamentRepo.findByName("Summer Invitational 2026").isEmpty()) {
       Tournament summerInvitational = makeTournament(
           "Summer Invitational 2026",
@@ -110,7 +122,12 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     System.out.println(
         "[demo] DB initialized: planning tournaments ready (CLOTURE 8/8, 7/8, 6/8 + 1 BROUILLON)"
     );
+
+    System.out.println("[demo] Tournoi 'Forfeit' vérifié/créé avec 4 équipes pour tester le forfait.");
+    System.out.println("[demo] DB initialized: planning tournaments ready.");
   }
+
+  
 
   /**
    * Returns an existing tournament by name or creates it if absent.
@@ -207,4 +224,5 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       target.add(team);
     }
   }
+
 }

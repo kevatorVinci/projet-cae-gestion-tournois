@@ -1,12 +1,14 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Match;
+import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.InscriptionEquipeTournoiRepository;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
+import be.vinci.ipl.cae.demo.repositories.MatchResultRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,23 +23,30 @@ import org.springframework.stereotype.Service;
 public class MatchService {
 
   private final MatchRepository matchRepository;
+  private final MatchResultRepository matchResultRepository;
   private final TournamentRepository tournamentRepository;
   private final InscriptionEquipeTournoiRepository inscriptionRepository;
+  private final NotificationService notificationService;
 
   /**
    * Constructor.
    *
    * @param matchRepository       the repository for matches.
+   * @param matchResultRepository the repository for match results.
    * @param tournamentRepository  the repository for tournaments.
    * @param inscriptionRepository the repository for registrations.
    */
   public MatchService(
       MatchRepository matchRepository,
+      MatchResultRepository matchResultRepository,
       TournamentRepository tournamentRepository,
-      InscriptionEquipeTournoiRepository inscriptionRepository) {
+      InscriptionEquipeTournoiRepository inscriptionRepository,
+      NotificationService notificationService) {
     this.matchRepository = matchRepository;
+    this.matchResultRepository = matchResultRepository;
     this.tournamentRepository = tournamentRepository;
     this.inscriptionRepository = inscriptionRepository;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -177,4 +186,64 @@ public class MatchService {
             && match.getTournament().isMatchSchedulePublished())
         .toList();
   }
+
+  /**
+   * Declares a forfeit for a team in a match.
+   * The forfeiting team loses 0-5 and is eliminated.
+   *
+   * @param matchId   the ID of the match.
+   * @param teamId    the ID of the team declaring forfeit.
+   * @param adminUser the user responsible for the forfeit.
+   */
+  public MatchResult declareForfeit(Long matchId, Long teamId, User adminUser) {
+  Match match = matchRepository.findById(matchId)
+      .orElseThrow(() -> new IllegalStateException("Match introuvable."));
+
+  boolean isTeam1 = match.getTeam1() != null
+      && match.getTeam1().getId().equals(teamId);
+  boolean isTeam2 = match.getTeam2() != null
+      && match.getTeam2().getId().equals(teamId);
+
+  if (!isTeam1 && !isTeam2) {
+    throw new IllegalStateException("Cette équipe ne participe pas à ce match.");
+  }
+
+  MatchResult result = match.getResult() != null
+      ? match.getResult()
+      : new MatchResult();
+  result.setMatch(match);
+  result.setEncodingDate(LocalDateTime.now());
+  result.setAdminEncoder(adminUser);
+
+  if (isTeam1) {
+    result.setForfeitTeam1(true);
+    result.setScoreTeam1(0);
+    result.setScoreTeam2(5);
+    result.setValidationStatusTeam1("VALIDATED");
+    result.setValidationStatusTeam2("VALIDATED");
+  } else {
+    result.setForfeitTeam2(true);
+    result.setScoreTeam1(5);
+    result.setScoreTeam2(0);
+    result.setValidationStatusTeam1("VALIDATED");
+    result.setValidationStatusTeam2("VALIDATED");
+  }
+
+  match.setStatus("FINISHED");
+  matchRepository.save(match);
+
+  // 🔔 Send notifications BEFORE returning
+  Team forfeitingTeam = isTeam1 ? match.getTeam1() : match.getTeam2();
+  String tournamentName = match.getTournament() != null
+      ? match.getTournament().getName()
+      : "Tournoi";
+
+  List<User> members = forfeitingTeam.getMembers();
+  if (members != null && !members.isEmpty()) {
+    notificationService.notifyForfeit(members, tournamentName, forfeitingTeam.getName());
+  }
+
+  return matchResultRepository.save(result);
+}
+
 }

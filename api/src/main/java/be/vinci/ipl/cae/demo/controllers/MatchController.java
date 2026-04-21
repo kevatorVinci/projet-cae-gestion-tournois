@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import be.vinci.ipl.cae.demo.models.entities.User;
+import org.springframework.web.bind.annotation.PostMapping;
 
 /**
  * REST Controller providing endpoints for match operations.
@@ -57,5 +61,27 @@ public class MatchController {
   @GetMapping("/equipes/{equipeId}/matches")
   public ResponseEntity<List<MatchDto>> getMatchesByTeam(@PathVariable Long equipeId) {
     return ResponseEntity.ok(matchMapper.toDtos(matchService.getMatchesByTeam(equipeId)));
+  }
+
+/**
+ * Endpoint to declare a forfeit for a team in a match.
+ *
+ * @param matchId the ID of the match.
+ * @param teamId  the ID of the forfeiting team.
+ * @return 200 OK if successful.
+ */
+@PostMapping("/{matchId}/forfeit/{teamId}")
+@PreAuthorize("isAuthenticated()")
+public ResponseEntity<Void> declareForfeit(
+    @PathVariable Long matchId,
+    @PathVariable Long teamId,
+    @AuthenticationPrincipal User currentUser) {
+
+  try {
+    matchService.declareForfeit(matchId, teamId, currentUser);
+    return ResponseEntity.ok().build();
+  } catch (IllegalStateException e) {
+    return ResponseEntity.badRequest().build();
+  }
   }
 }
