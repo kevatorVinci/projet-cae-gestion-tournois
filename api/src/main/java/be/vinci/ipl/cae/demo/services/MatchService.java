@@ -10,6 +10,7 @@ import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -110,7 +111,9 @@ public class MatchService {
   }
 
   /**
-   * Generates the first-round schedule for a tournament.
+   * Generates the first-round schedule for a tournament using standard bracket seeding.
+   * Teams are placed using the classic single-elimination bracket order so that top seeds
+   * receive byes when the number of teams is not a power of two.
    *
    * @param tournamentId the unique identifier of the tournament.
    * @param admin        the admin user responsible for the schedule.
@@ -131,37 +134,77 @@ public class MatchService {
         .map(RegistrationTeamTournament::getTeam)
         .collect(Collectors.toList());
 
-    if (teams.size() < 2) {
+    int teamCount = teams.size();
+    if (teamCount < 2) {
       throw new IllegalStateException(
           "Not enough registered teams (minimum 2).");
     }
 
+    Collections.shuffle(teams);
+
+    int bracketSize = nextPowerOfTwo(teamCount);
+    int[] seeds = bracketSeeds(bracketSize);
+
     LocalDateTime matchDate = tournament.getStartDate().atTime(10, 0);
     List<Match> matches = new ArrayList<>();
 
-    for (int i = 0; i + 1 < teams.size(); i += 2) {
+    for (int i = 0; i < bracketSize; i += 2) {
+      int seed1 = seeds[i];
+      int seed2 = seeds[i + 1];
+
+      Team team1 = seed1 <= teamCount ? teams.get(seed1 - 1) : null;
+      Team team2 = seed2 <= teamCount ? teams.get(seed2 - 1) : null;
+
+      if (team1 == null && team2 == null) {
+        continue;
+      }
+      // Ensure team1 is always the real team for bye matches
+      if (team1 == null) {
+        team1 = team2;
+        team2 = null;
+      }
+
       Match match = new Match();
       match.setTournament(tournament);
-      match.setTeam1(teams.get(i));
-      match.setTeam2(teams.get(i + 1));
+      match.setTeam1(team1);
+      match.setTeam2(team2);
       match.setRound(1);
       match.setScheduledDateTime(matchDate);
       match.setAdminResponsible(admin);
       matches.add(matchRepository.save(match));
     }
 
-    if (teams.size() % 2 != 0) {
-      Match byeMatch = new Match();
-      byeMatch.setTournament(tournament);
-      byeMatch.setTeam1(teams.get(teams.size() - 1));
-      byeMatch.setTeam2(null);
-      byeMatch.setRound(1);
-      byeMatch.setScheduledDateTime(matchDate);
-      byeMatch.setAdminResponsible(admin);
-      matches.add(matchRepository.save(byeMatch));
-    }
-
     return matches;
+  }
+
+  /**
+   * Returns the smallest power of two greater than or equal to n.
+   */
+  private int nextPowerOfTwo(int n) {
+    int power = 1;
+    while (power < n) {
+      power <<= 1;
+    }
+    return power;
+  }
+
+  /**
+   * Generates the standard single-elimination bracket seed order for a given bracket size.
+   * Example for size 8: [1, 8, 4, 5, 2, 7, 3, 6] → matches (1v8), (4v5), (2v7), (3v6).
+   */
+  private int[] bracketSeeds(int size) {
+    int[] seeds = {1};
+    while (seeds.length < size) {
+      int len = seeds.length;
+      int nextSize = len * 2;
+      int[] expanded = new int[nextSize];
+      for (int i = 0; i < len; i++) {
+        expanded[i * 2] = seeds[i];
+        expanded[i * 2 + 1] = nextSize + 1 - seeds[i];
+      }
+      seeds = expanded;
+    }
+    return seeds;
   }
 
   /**

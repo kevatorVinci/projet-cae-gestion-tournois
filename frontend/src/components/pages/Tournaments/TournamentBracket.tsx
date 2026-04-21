@@ -1,9 +1,15 @@
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TeamMatch } from '../../../services/tournaments';
 
 const BRACKET_CARD_HEIGHT = 108;
 const BRACKET_BASE_GAP = 18;
 const BRACKET_STRIDE = BRACKET_CARD_HEIGHT + 2 * BRACKET_BASE_GAP; // 144
+
+const IDEAL_CARD_WIDTH = 260;
+const MIN_CARD_WIDTH = 200;
+const IDEAL_GAP = 48;
+const MIN_GAP = 20;
 
 type BracketSlot = {
   id: number | string;
@@ -18,16 +24,13 @@ type BracketSlot = {
   topY: number;
 };
 
-// Generates a unique and consistent color based on the team name
-const getTeamColor = (name: string): string => {
-  if (!name || name === '?') return '#94a3b8';
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 85%, 65%)`;
-};
+const STATUS_ACCENT = {
+  FINISHED: '#10b981',
+  TO_PLAY: '#e8822a',
+  PENDING: 'rgba(148,163,184,0.5)',
+  BYE: '#eab308',
+  SELECTED: '#e8822a',
+} as const;
 
 // Utility function to infer who advances to the next round
 const getWinnerName = (slot: BracketSlot): string => {
@@ -51,49 +54,36 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
     Number.MAX_SAFE_INTEGER,
   );
 
-  const round1 = matches.filter((match) => (match.round ?? 1) === minRound);
-
-  const realRaw = round1
-    .filter((m) => m.team2Id != null || m.team2Name != null)
+  const round1 = matches
+    .filter((match) => (match.round ?? 1) === minRound)
     .sort((a, b) => {
       if (a.scheduledDateTime && b.scheduledDateTime) {
-        return (
+        const diff =
           new Date(a.scheduledDateTime).getTime() -
-          new Date(b.scheduledDateTime).getTime()
-        );
+          new Date(b.scheduledDateTime).getTime();
+        if (diff !== 0) return diff;
       }
       return String(a.id).localeCompare(String(b.id));
     });
 
-  const byeRaw =
-    round1.find((m) => m.team2Id == null && m.team2Name == null) ?? null;
+  if (round1.length === 0) return [];
 
-  if (realRaw.length === 0) return [];
+  const round1Slots: BracketSlot[] = round1.map((match, i) => {
+    const isBye = match.team2Id == null && match.team2Name == null;
+    return {
+      id: match.id,
+      round: 1,
+      team1Name: match.team1Name ?? '?',
+      team2Name: isBye ? '' : (match.team2Name ?? '?'),
+      score1: match.scoreTeam1,
+      score2: match.scoreTeam2,
+      dateMatch: match.scheduledDateTime,
+      status: match.status,
+      isBye,
+      topY: i * BRACKET_STRIDE,
+    };
+  });
 
-  const realSlots: BracketSlot[] = realRaw.map((match, i) => ({
-    id: match.id,
-    round: 1,
-    team1Name: match.team1Name ?? '?',
-    team2Name: match.team2Name ?? '?',
-    dateMatch: match.scheduledDateTime,
-    status: match.status,
-    isBye: false,
-    topY: i * BRACKET_STRIDE,
-  }));
-
-  const byeSlot: BracketSlot | null = byeRaw
-    ? {
-        id: byeRaw.id,
-        round: 1,
-        team1Name: byeRaw.team1Name ?? '?',
-        team2Name: '',
-        status: byeRaw.status,
-        isBye: true,
-        topY: realSlots.length * BRACKET_STRIDE,
-      }
-    : null;
-
-  const round1Slots = byeSlot ? [...realSlots, byeSlot] : realSlots;
   const tree: BracketSlot[][] = [round1Slots];
 
   let prevRound: BracketSlot[] = round1Slots;
@@ -163,6 +153,8 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
           round: roundNumber,
           team1Name: realMatch.team1Name ?? expectedT1,
           team2Name: realMatch.team2Name ?? expectedT2,
+          score1: realMatch.scoreTeam1,
+          score2: realMatch.scoreTeam2,
           dateMatch: realMatch.scheduledDateTime,
           status: realMatch.status,
           isBye: false,
@@ -242,17 +234,54 @@ const TournamentBracket = ({
 }: Props) => {
   const bracketTree = buildBracketTree(matches);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const { cardWidth, gapPx } = useMemo(() => {
+    const rounds = bracketTree.length;
+    if (rounds === 0 || containerWidth === 0) {
+      return { cardWidth: IDEAL_CARD_WIDTH, gapPx: IDEAL_GAP };
+    }
+    const idealTotal = rounds * IDEAL_CARD_WIDTH + (rounds - 1) * IDEAL_GAP;
+    if (idealTotal <= containerWidth) {
+      return { cardWidth: IDEAL_CARD_WIDTH, gapPx: IDEAL_GAP };
+    }
+    const available = containerWidth - (rounds - 1) * MIN_GAP;
+    const computed = Math.floor(available / rounds);
+    if (computed >= MIN_CARD_WIDTH) {
+      return { cardWidth: computed, gapPx: MIN_GAP };
+    }
+    return { cardWidth: MIN_CARD_WIDTH, gapPx: MIN_GAP };
+  }, [containerWidth, bracketTree.length]);
+
   if (bracketTree.length === 0) return null;
 
   return (
-    <Box sx={{ overflow: 'auto', pb: 12, pt: 1, minHeight: '60vh' }}>
+    <Box
+      ref={containerRef}
+      sx={{
+        overflow: 'auto',
+        pb: 12,
+        pt: 1,
+        minHeight: '60vh',
+        width: '100%',
+      }}
+    >
       <Box
         sx={{
-          minWidth: 980,
           position: 'relative',
           display: 'flex',
           alignItems: 'flex-start',
-          gap: 6,
+          gap: `${gapPx}px`,
           pb: 5,
         }}
       >
@@ -266,7 +295,8 @@ const TournamentBracket = ({
             <Box
               key={`round-${roundIndex + 1}`}
               sx={{
-                width: 260,
+                width: `${cardWidth}px`,
+                flexShrink: 0,
                 mt: `${columnTopY}px`,
                 position: 'relative',
                 zIndex: roundIndex === 0 ? 3 : 1,
@@ -310,9 +340,9 @@ const TournamentBracket = ({
                     const yMax = Math.max(y1, y2, yTarget);
                     const spineHeight = yMax - yMin;
 
-                    const startX = 260;
-                    const elbowX = 284;
-                    const endX = 308;
+                    const startX = cardWidth;
+                    const elbowX = cardWidth + gapPx / 2;
+                    const endX = cardWidth + gapPx;
 
                     return (
                       <Box
@@ -397,9 +427,37 @@ const TournamentBracket = ({
 
                   const s1 = match.score1 ?? 0;
                   const s2 = match.score2 ?? 0;
-                  const isWinner1 = s1 > s2;
-                  const isWinner2 = s2 > s1;
-                  const isDraw = s1 === s2;
+                  const isWinner1 = isFinished && s1 > s2;
+                  const isWinner2 = isFinished && s2 > s1;
+                  const isDraw = isFinished && s1 === s2;
+
+                  const baseAccent = isBye
+                    ? STATUS_ACCENT.BYE
+                    : isPlaceholder
+                      ? STATUS_ACCENT.PENDING
+                      : isFinished
+                        ? STATUS_ACCENT.FINISHED
+                        : STATUS_ACCENT.TO_PLAY;
+                  const accentColor = isSelected
+                    ? STATUS_ACCENT.SELECTED
+                    : baseAccent;
+                  const accentWidth = isSelected ? 6 : 4;
+
+                  const getTeamTextColor = (isWinner: boolean) => {
+                    if (isBye) return '#ffffff';
+                    if (isPlaceholder) return 'rgba(203,213,225,0.75)';
+                    if (isFinished) {
+                      if (isDraw) return '#ffffff';
+                      return isWinner ? '#ffffff' : 'rgba(255,255,255,0.45)';
+                    }
+                    return 'rgba(255,255,255,0.85)';
+                  };
+                  const getTeamTextWeight = (isWinner: boolean) => {
+                    if (isFinished && !isDraw) return isWinner ? 700 : 500;
+                    if (isBye) return 700;
+                    return 600;
+                  };
+
                   const triggerSelect = () => {
                     if (isMatchSelectable && onMatchSelect) {
                       onMatchSelect(numericMatchId);
@@ -427,20 +485,16 @@ const TournamentBracket = ({
                       }
                       sx={{
                         height: BRACKET_CARD_HEIGHT,
-                        width: 260,
-                        p: 1.2,
+                        width: `${cardWidth}px`,
+                        pl: `${accentWidth + 10}px`,
+                        pr: 1.2,
+                        py: 1.2,
                         boxSizing: 'border-box',
                         borderRadius: 1.5,
-                        border: isSelected
-                          ? '2px solid #e8822a'
-                          : isPlaceholder
-                            ? '2px dashed rgba(255,255,255,0.22)'
-                            : isBye
-                              ? '2px solid rgba(234,179,8,0.45)'
-                              : '2px solid rgba(255,255,255,0.28)',
-                        backgroundColor: isBye
-                          ? 'rgba(234,179,8,0.05)'
-                          : 'rgba(255,255,255,0.02)',
+                        border: isPlaceholder
+                          ? '1px dashed rgba(148,163,184,0.35)'
+                          : '1px solid rgba(255,255,255,0.08)',
+                        backgroundColor: 'rgba(255,255,255,0.02)',
                         position: 'absolute',
                         left: 0,
                         top: `${top}px`,
@@ -448,13 +502,28 @@ const TournamentBracket = ({
                         flexDirection: 'column',
                         cursor: isMatchSelectable ? 'pointer' : 'default',
                         transition: 'all 0.18s ease',
+                        overflow: 'hidden',
                         boxShadow: isSelected
-                          ? '0 0 0 1px rgba(232,130,42,0.45), 0 10px 24px rgba(232,130,42,0.16)'
+                          ? '0 0 0 1px rgba(232,130,42,0.35), 0 8px 22px rgba(232,130,42,0.22)'
                           : 'none',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: `${accentWidth}px`,
+                          backgroundColor: accentColor,
+                          transition: 'all 0.18s ease',
+                        },
                         '&:hover': isMatchSelectable
                           ? {
-                              borderColor: 'rgba(232,130,42,0.75)',
-                              backgroundColor: 'rgba(232,130,42,0.06)',
+                              backgroundColor: 'rgba(232,130,42,0.04)',
+                              '&::before': {
+                                width: '6px',
+                                backgroundColor: STATUS_ACCENT.SELECTED,
+                                boxShadow: '0 0 12px rgba(232,130,42,0.55)',
+                              },
                             }
                           : undefined,
                       }}
@@ -467,21 +536,23 @@ const TournamentBracket = ({
                           alignItems="center"
                         >
                           <Typography
-                            fontWeight={700}
                             variant="body2"
-                            sx={{ color: getTeamColor(match.team1Name) }}
+                            sx={{
+                              color: getTeamTextColor(isWinner1),
+                              fontWeight: getTeamTextWeight(isWinner1),
+                            }}
                           >
                             {match.team1Name}
                           </Typography>
                           {isFinished && !isBye && (
                             <Typography
-                              fontWeight={800}
                               variant="body2"
                               sx={{
+                                fontWeight: isWinner1 || isDraw ? 800 : 600,
                                 color:
                                   isWinner1 || isDraw
                                     ? '#ffffff'
-                                    : 'rgba(255,255,255,0.4)',
+                                    : 'rgba(255,255,255,0.45)',
                               }}
                             >
                               {s1}
@@ -493,7 +564,7 @@ const TournamentBracket = ({
                         {isBye ? (
                           <Typography
                             variant="caption"
-                            sx={{ color: '#fde047', opacity: 0.75 }}
+                            sx={{ color: '#fde047', opacity: 0.8 }}
                           >
                             Qualifiée d'office
                           </Typography>
@@ -504,21 +575,23 @@ const TournamentBracket = ({
                             alignItems="center"
                           >
                             <Typography
-                              fontWeight={700}
                               variant="body2"
-                              sx={{ color: getTeamColor(match.team2Name) }}
+                              sx={{
+                                color: getTeamTextColor(isWinner2),
+                                fontWeight: getTeamTextWeight(isWinner2),
+                              }}
                             >
                               {match.team2Name}
                             </Typography>
                             {isFinished && (
                               <Typography
-                                fontWeight={800}
                                 variant="body2"
                                 sx={{
+                                  fontWeight: isWinner2 || isDraw ? 800 : 600,
                                   color:
                                     isWinner2 || isDraw
                                       ? '#ffffff'
-                                      : 'rgba(255,255,255,0.4)',
+                                      : 'rgba(255,255,255,0.45)',
                                 }}
                               >
                                 {s2}
@@ -545,43 +618,12 @@ const TournamentBracket = ({
                                   : 'À jouer'
                           }
                           sx={{
-                            bgcolor: isBye
-                              ? 'rgba(234,179,8,0.18)'
-                              : isPlaceholder
-                                ? 'rgba(148,163,184,0.15)'
-                                : isFinished
-                                  ? 'rgba(16,185,129,0.15)'
-                                  : 'rgba(232,130,42,0.15)',
-                            color: isBye
-                              ? '#fde047'
-                              : isPlaceholder
-                                ? '#cbd5e1'
-                                : isFinished
-                                  ? '#10b981'
-                                  : '#e8822a',
+                            bgcolor: `${accentColor}22`,
+                            color: accentColor,
+                            fontWeight: 700,
+                            border: `1px solid ${accentColor}44`,
                           }}
                         />
-
-                        {isMatchSelectable && (
-                          <Button
-                            size="small"
-                            variant="text"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              triggerSelect();
-                            }}
-                            sx={{
-                              minWidth: 0,
-                              px: 0.75,
-                              color: '#93c5fd',
-                              textTransform: 'none',
-                              fontSize: '0.72rem',
-                              lineHeight: 1,
-                            }}
-                          >
-                            Voir le detail
-                          </Button>
-                        )}
                       </Stack>
 
                       {!isBye && (

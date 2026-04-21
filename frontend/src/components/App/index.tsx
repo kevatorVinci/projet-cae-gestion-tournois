@@ -1,5 +1,11 @@
 import Box from '@mui/material/Box';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 import { AdminViewProvider } from '../../contexts/AdminViewContext';
 import Navbar from '../Navbar';
 import HomePage from '../pages/HomePage/HomePage';
@@ -44,6 +50,7 @@ const App = () => (
         v7_relativeSplatPath: true,
       }}
     >
+      <ScrollToTop />
       <Box sx={{ minHeight: '100vh', background: appBlueGradient }}>
         <Navbar />
         <Routes>
@@ -161,7 +168,6 @@ const App = () => (
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin"
             element={

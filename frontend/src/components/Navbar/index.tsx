@@ -11,8 +11,8 @@ import {
   Badge,
   Chip,
 } from '@mui/material';
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import AddBoxIcon from '@mui/icons-material/AddBox';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import logo from '../../assets/images/logo.png';
 import { UserContext } from '../../contexts/UserContext';
@@ -105,6 +105,20 @@ const Navbar = () => {
     }
   };
 
+  const isActive = (path: string, exact = false) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+
+    if (exact) {
+      return location.pathname === path;
+    }
+
+    return (
+      location.pathname === path || location.pathname.startsWith(`${path}/`)
+    );
+  };
+
   return (
     <AppBar position="static" sx={{ backgroundColor: '#1a2540' }}>
       <Toolbar>
@@ -139,32 +153,75 @@ const Navbar = () => {
         {/* --- TABS (right-aligned) --- */}
         {!isAdminView ? (
           <>
-            <Button color="inherit" onClick={() => navigate('/')}>
-              Accueil
-            </Button>
-            <Button color="inherit" onClick={() => navigate('/tournois')}>
-              Tournois
-            </Button>
-            <Button color="inherit" onClick={() => navigate('/equipes')}>
-              Teams
-            </Button>
-            {authenticatedUser && hasTeam && (
-              <Button color="inherit" onClick={() => navigate('/maTeam')}>
-                MaTeam
+            {[
+              { label: 'Accueil', path: '/' },
+              { label: 'Tournois', path: '/tournois' },
+              { label: 'Teams', path: '/equipes' },
+              ...(authenticatedUser && hasTeam
+                ? [{ label: 'MaTeam', path: '/maTeam' }]
+                : []),
+            ].map(({ label, path }) => (
+              <Button
+                key={path}
+                color="inherit"
+                onClick={() => navigate(path)}
+                sx={{
+                  position: 'relative',
+                  color: isActive(path) ? '#e8822a' : 'white',
+                  fontWeight: isActive(path) ? 700 : 400,
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 6,
+                    left: '20%',
+                    width: '60%',
+                    height: '2px',
+                    borderRadius: '2px',
+                    backgroundColor: '#e8822a',
+                    opacity: isActive(path) ? 1 : 0,
+                    transition: 'opacity 0.2s ease',
+                  },
+                }}
+              >
+                {label}
               </Button>
-            )}
+            ))}
           </>
         ) : (
           <>
-            <Button
-              color="inherit"
-              onClick={() => navigate('/admin/tournaments')}
-            >
-              Gestion des tournois
-            </Button>
-            <Button color="inherit" onClick={() => navigate('/admin')}>
-              Admin
-            </Button>
+            {[
+              {
+                label: 'Gestion des tournois',
+                path: '/admin/tournaments',
+                exact: false,
+              },
+              { label: 'Admin', path: '/admin', exact: true },
+            ].map(({ label, path, exact }) => (
+              <Button
+                key={path}
+                color="inherit"
+                onClick={() => navigate(path)}
+                sx={{
+                  position: 'relative',
+                  color: isActive(path, exact) ? '#e8822a' : 'white',
+                  fontWeight: isActive(path, exact) ? 700 : 400,
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 6,
+                    left: '20%',
+                    width: '60%',
+                    height: '2px',
+                    borderRadius: '2px',
+                    backgroundColor: '#e8822a',
+                    opacity: isActive(path, exact) ? 1 : 0,
+                    transition: 'opacity 0.2s ease',
+                  },
+                }}
+              >
+                {label}
+              </Button>
+            ))}
           </>
         )}
 
@@ -203,7 +260,7 @@ const Navbar = () => {
                   isAdminView ? (
                     <LogoutIcon sx={{ transform: 'rotate(180deg)' }} />
                   ) : (
-                    <AddBoxIcon />
+                    <AdminPanelSettingsIcon />
                   )
                 }
                 onClick={toggleAdminView}
@@ -244,7 +301,14 @@ const Navbar = () => {
                   aria-label="notifications"
                   onClick={() => navigate('/notifications')}
                 >
-                  <NotificationsNoneIcon />
+                  <NotificationsIcon
+                    sx={{
+                      color: isActive('/notifications')
+                        ? '#e8822a'
+                        : 'rgba(255,255,255,0.7)',
+                      transition: 'color 0.2s',
+                    }}
+                  />
                 </IconButton>
               </Badge>
             )}
@@ -261,8 +325,14 @@ const Navbar = () => {
                 sx={{
                   width: 45,
                   height: 45,
-                  border: '2px solid white',
-                  transition: 'transform 0.2s',
+                  border: isActive('/profil')
+                    ? '2px solid #e8822a'
+                    : '2px solid rgba(255,255,255,0.4)',
+                  boxShadow: isActive('/profil')
+                    ? '0 0 0 3px rgba(232,130,42,0.25)'
+                    : 'none',
+                  transition:
+                    'transform 0.2s, border-color 0.2s, box-shadow 0.2s',
                   '&:hover': { transform: 'scale(1.1)' },
                 }}
               />

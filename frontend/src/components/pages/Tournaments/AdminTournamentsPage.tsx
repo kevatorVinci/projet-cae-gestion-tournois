@@ -19,12 +19,14 @@ import {
   Alert,
   FormControl,
   InputLabel,
+  InputAdornment,
   Select,
   MenuItem,
   SelectChangeEvent,
   ToggleButtonGroup,
   ToggleButton,
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
 import BackButton from '../../BackButton';
 import {
@@ -118,6 +120,7 @@ const AdminTournamentsPage = () => {
 
   // Memory variable to store the selected filter for tournaments
   const [filter, setFilter] = useState('Tous');
+  const [searchQuery, setSearchQuery] = useState('');
 
   /**
    * Handles switching between the "Tournaments" and "Matches" views.
@@ -269,22 +272,9 @@ const AdminTournamentsPage = () => {
   const handleGeneratePlanning = async (id: number) => {
     if (!authenticatedUser?.token) return;
     setActionMessage(null);
-    const tournamentName =
-      tournaments.find((tournament) => tournament.id === id)?.nom ||
-      `Tournoi #${id}`;
-
     try {
       await generateTournamentSchedule(id, authenticatedUser.token);
-      setActionMessage({
-        type: 'success',
-        text: (
-          <>
-            Le planning du tournoi <strong>{tournamentName}</strong> a ete
-            genere. Vous pouvez maintenant le publier.
-          </>
-        ),
-      });
-      await loadTournaments();
+      navigate(`/tournois/${id}/matchs`);
     } catch (err) {
       setActionMessage({
         type: 'error',
@@ -355,6 +345,11 @@ const AdminTournamentsPage = () => {
   };
 
   const filteredTournaments = tournaments.filter((t) => {
+    const matchesSearch =
+      normalizedSearchQuery.length === 0 ||
+      t.nom.toLowerCase().includes(normalizedSearchQuery);
+    if (!matchesSearch) return false;
+
     if (filter === 'Tous') return true;
     if (filter === 'En attente de publication') return t.etat === 'BROUILLON';
     if (filter === 'À venir') return t.etat === 'OUVERT';

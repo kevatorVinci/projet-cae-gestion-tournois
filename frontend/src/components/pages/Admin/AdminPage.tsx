@@ -20,8 +20,13 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import AdminIcon from '@mui/icons-material/AdminPanelSettings';
+import RemoveAdminIcon from '@mui/icons-material/RemoveModerator';
+import BanIcon from '@mui/icons-material/PersonRemove';
 
 import { UserContext } from '../../../contexts/UserContext';
 import { AuthenticatedUser, UserContextType } from '../../../types';
@@ -304,24 +309,56 @@ export default function AdminPage() {
                     <Box
                       sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}
                     >
-                      <Button
-                        variant={user.admin ? 'outlined' : 'contained'}
-                        color={user.admin ? 'error' : 'primary'}
-                        onClick={() =>
-                          handleToggleAdmin(user.email, user.admin ?? false)
+                      <Tooltip
+                        title={
+                          user.admin ? 'Retirer le rôle Admin' : 'Nommer Admin'
                         }
                       >
-                        {user.admin ? 'Retirer Admin' : 'Nommer Admin'}
-                      </Button>
+                        <IconButton
+                          onClick={() =>
+                            handleToggleAdmin(user.email, user.admin ?? false)
+                          }
+                          sx={{
+                            color: user.admin
+                              ? '#e8822a'
+                              : 'rgba(255,255,255,0.5)',
+                            border: `1px solid ${
+                              user.admin ? '#e8822a' : 'rgba(255,255,255,0.2)'
+                            }`,
+                            borderRadius: 1.5,
+                            '&:hover': {
+                              bgcolor: user.admin
+                                ? 'rgba(232,130,42,0.12)'
+                                : 'rgba(255,255,255,0.08)',
+                              borderColor: '#e8822a',
+                              color: '#e8822a',
+                            },
+                          }}
+                        >
+                          {user.admin ? (
+                            <RemoveAdminIcon sx={{ fontSize: 20 }} />
+                          ) : (
+                            <AdminIcon sx={{ fontSize: 20 }} />
+                          )}
+                        </IconButton>
+                      </Tooltip>
 
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={() => openBanDialog(user.email)}
-                        sx={{ fontWeight: 'bold' }}
-                      >
-                        Bannir
-                      </Button>
+                      <Tooltip title="Bannir définitivement">
+                        <IconButton
+                          onClick={() => openBanDialog(user.email)}
+                          sx={{
+                            color: '#ef4444',
+                            border: '1px solid rgba(239,68,68,0.4)',
+                            borderRadius: 1.5,
+                            '&:hover': {
+                              bgcolor: 'rgba(239,68,68,0.1)',
+                              borderColor: '#ef4444',
+                            },
+                          }}
+                        >
+                          <BanIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   )}
                 </TableCell>
