@@ -195,7 +195,7 @@ public class MatchService {
    * @param teamId    the ID of the team declaring forfeit.
    * @param adminUser the user responsible for the forfeit.
    */
-    public MatchResult declareForfeit(Long matchId, Long teamId, User adminUser) {
+  public MatchResult declareForfeit(Long matchId, Long teamId, User adminUser) {
     Match match = matchRepository.findById(matchId)
         .orElseThrow(() -> new IllegalStateException("Match introuvable."));
 
@@ -244,6 +244,4 @@ public class MatchService {
 
     return matchResultRepository.save(result);
   }
-
-
 }
