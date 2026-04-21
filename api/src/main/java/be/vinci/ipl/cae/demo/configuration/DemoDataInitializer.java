@@ -55,6 +55,28 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
     ensureRegistrations(t5, registrationTeams.subList(0, 5), "2026-05-20");
 
+    Tournament t6 = getOrCreateTournament(
+        "Demo Future Arena (6 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-06-10",
+        "2026-06-25",
+        "2026-06-05",
+        "CLOTURE",
+        8
+    );
+    ensureRegistrations(t6, registrationTeams.subList(0, 6), "2026-06-01");
+
+    Tournament t7 = getOrCreateTournament(
+        "Demo Future Arena (7 Teams)",
+        "Tournoi asymétrique prêt à être planifié",
+        "2026-07-01",
+        "2026-07-15",
+        "2026-06-25",
+        "CLOTURE",
+        8
+    );
+    ensureRegistrations(t7, registrationTeams.subList(0, 7), "2026-06-20");
+
     Tournament forfeitTournament = getOrCreateTournament(
         "Forfeit",
         "Tournoi de test pour la fonctionnalité de forfait",
@@ -66,24 +88,9 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
     ensureRegistrations(forfeitTournament, registrationTeams.subList(0, 4), "2026-05-01");
 
-    if (tournamentRepo.findByName("Summer Invitational 2026").isEmpty()) {
-      Tournament summerInvitational = makeTournament(
-          "Summer Invitational 2026",
-          "Summer tournament in preparation, not yet published",
-          "2026-07-01",
-          "2026-07-15",
-          "2026-06-20",
-          "BROUILLON",
-          12
-      );
-      tournamentRepo.save(summerInvitational);
-    }
     System.out.println(
         "[demo] CLOTURE tournaments successfully seeded (5, 6, and 7 teams). "
             + "Ready for manual planning generation."
-    );
-    System.out.println(
-      "[demo] DB initialized: planning tournaments ready."
     );
   }
 
@@ -185,5 +192,4 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       target.add(team);
     }
   }
-
 }
