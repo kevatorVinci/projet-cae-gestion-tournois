@@ -358,6 +358,17 @@ export default function Notifications() {
     return parsed.toLocaleString('fr-BE');
   };
 
+  // ✨ VOICI LA FONCTION QUI MANQUAIT ! On l'a remise à sa place.
+  const isJoinRequestNotification = (message: string) => {
+    const normalized = message.toLowerCase();
+    return startsWithAny(normalized, [
+      'nouvelle demande :',
+      'demande envoyée :',
+      'new request:',
+      'application sent:',
+    ]);
+  };
+
   const isTeamManagerJoinRequestNotification = (message: string) =>
     startsWithAny(message.toLowerCase(), [
       'nouvelle demande :',
@@ -821,9 +832,12 @@ export default function Notifications() {
               const isDemandeResponsable = isTeamManagerJoinRequestNotification(
                 n.message,
               );
-              const isTournamentNotification = isTournamentRelatedNotification(
-                n.message,
-              );
+
+              const isTournamentNotification =
+                isDraftTournamentNotification(n.message) ||
+                isPublishedTournamentNotification(n.message) ||
+                isMatchSelectionNotification(n.message);
+
               const parsedSelectionMessage = parseMatchSelectionNotification(
                 n.message,
               );
@@ -940,7 +954,6 @@ export default function Notifications() {
                       </Typography>
                     </Box>
 
-                    {/* ✨ NOUVEAU : On cache le #1 ici avec le .replace ! */}
                     <Typography
                       variant="body2"
                       color="text.secondary"
@@ -967,7 +980,8 @@ export default function Notifications() {
                         {isScoreValidationNotification(n.message) && (
                           <Typography
                             variant="caption"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation(); // Évite de cliquer sur la carte en même temps
                               const matchId = extractMatchId(n.message);
                               if (matchId) {
                                 navigate(`/match/${matchId}/validation`);
@@ -1000,17 +1014,7 @@ export default function Notifications() {
                             {metaSchedule}
                           </Typography>
                         )}
-                      </Stack>
-                    ) : (
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255,255,255,0.92)',
-                          lineHeight: 1.55,
-                        }}
-                      >
-                        {translateMessage(n.message)}
-                      </Typography>
+                      </Box>
                     )}
 
                     {hasCtaRow && (
@@ -1052,7 +1056,7 @@ export default function Notifications() {
                             endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
                             onClick={(event) => {
                               event.stopPropagation();
-                              primaryAction.onClick();
+                              primaryAction!.onClick();
                             }}
                             sx={{
                               color: '#e8822a',

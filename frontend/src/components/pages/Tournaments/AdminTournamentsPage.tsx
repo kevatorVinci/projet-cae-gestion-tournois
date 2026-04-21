@@ -19,14 +19,13 @@ import {
   Alert,
   FormControl,
   InputLabel,
-  InputAdornment,
   Select,
   MenuItem,
   SelectChangeEvent,
   ToggleButtonGroup,
   ToggleButton,
+  TextField,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 
 import BackButton from '../../BackButton';
 import {
@@ -345,9 +344,10 @@ const AdminTournamentsPage = () => {
   };
 
   const filteredTournaments = tournaments.filter((t) => {
+    const normalizedSearch = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      normalizedSearchQuery.length === 0 ||
-      t.nom.toLowerCase().includes(normalizedSearchQuery);
+      normalizedSearch.length === 0 ||
+      t.nom.toLowerCase().includes(normalizedSearch);
     if (!matchesSearch) return false;
 
     if (filter === 'Tous') return true;
@@ -431,7 +431,6 @@ const AdminTournamentsPage = () => {
             résultats.
           </Typography>
 
-          {/* --- LE BASCULEUR (TOGGLE) --- */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
             <ToggleButtonGroup
               value={activeView}
@@ -480,24 +479,48 @@ const AdminTournamentsPage = () => {
           </Alert>
         )}
 
-        {/* --- VUE 1 : LES TOURNOIS --- */}
         {activeView === 'tournaments' && (
           <Box sx={{ mt: 4 }}>
             <Box
-              sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                mb: 3,
+                gap: 2,
+                flexWrap: 'wrap',
+              }}
             >
-              <Button
-                variant="contained"
-                onClick={() => navigate('/admin/tournaments/create')}
-                sx={{
-                  backgroundColor: '#e8822a',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  '&:hover': { backgroundColor: '#c86e20' },
-                }}
-              >
-                + Créer un tournoi
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2, flex: 1, minWidth: '300px' }}>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/admin/tournaments/create')}
+                  sx={{
+                    backgroundColor: '#e8822a',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    '&:hover': { backgroundColor: '#c86e20' },
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  + Créer un tournoi
+                </Button>
+                <TextField
+                  placeholder="Rechercher un tournoi..."
+                  size="small"
+                  fullWidth
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{
+                    backgroundColor: '#111827',
+                    borderRadius: 1,
+                    '& .MuiOutlinedInput-root': {
+                      color: 'white',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                      '&:hover fieldset': { borderColor: '#e8822a' },
+                    },
+                  }}
+                />
+              </Box>
 
               <FormControl
                 variant="outlined"
@@ -565,7 +588,7 @@ const AdminTournamentsPage = () => {
                 <CircularProgress sx={{ color: '#e8822a' }} />
               </Box>
             )}
-            {error && <Typography color="error">{error}</Typography>}
+            {error && <Alert severity="error">{error}</Alert>}
             {!loading && !error && sortedTournaments.length === 0 && (
               <Typography color="text.secondary">
                 Aucun tournoi ne correspond à ce filtre.
@@ -735,7 +758,6 @@ const AdminTournamentsPage = () => {
           </Box>
         )}
 
-        {/* --- VUE 2 : LES MATCHS EN COURS --- */}
         {activeView === 'matches' && authenticatedUser?.token && (
           <AdminMatchManagement
             matches={allMatches}

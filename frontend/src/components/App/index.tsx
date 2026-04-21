@@ -42,6 +42,15 @@ import MatchValidationPage from '../pages/Match/MatchValidationPage';
 const appBlueGradient =
   'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
 
+// ✨ CORRECTION : Création du composant ScrollToTop manquant
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 const App = () => (
   <AdminViewProvider>
     <Router
@@ -50,6 +59,7 @@ const App = () => (
         v7_relativeSplatPath: true,
       }}
     >
+      {/* ScrollToTop va maintenant fonctionner ! */}
       <ScrollToTop />
       <Box sx={{ minHeight: '100vh', background: appBlueGradient }}>
         <Navbar />
@@ -134,7 +144,6 @@ const App = () => (
             }
           />
 
-          {/* ✨ NOUVELLE ROUTE : PAGE DE VALIDATION DES MATCHS */}
           <Route
             path="/match/:id/validation"
             element={
