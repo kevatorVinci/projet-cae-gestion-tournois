@@ -117,20 +117,13 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       );
       tournamentRepo.save(summerInvitational);
     }
-
     System.out.println(
         "[demo] DB initialized: planning tournaments ready (CLOTURE 8/8, 7/8, 6/8 + 1 BROUILLON)"
-    );
-
-    System.out.println(
-      "[demo] Tournoi 'Forfeit' vérifié/créé avec 4 équipes pour tester le forfait."
     );
     System.out.println(
       "[demo] DB initialized: planning tournaments ready."
     );
   }
-
-  
 
   /**
    * Returns an existing tournament by name or creates it if absent.

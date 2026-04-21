@@ -45,7 +45,6 @@ public class UnavailabilityController {
   /**
    * Gets all blackout periods for the authenticated user.
    *
-   * @param currentUser authenticated user.
    * @return list of periods.
    */
   @GetMapping
@@ -65,7 +64,6 @@ public class UnavailabilityController {
   /**
    * Saves a new blackout period.
    *
-   * @param currentUser     authenticated user.
    * @param indisponibilite new period sent by the frontend.
    * @return saved period.
    */
@@ -86,7 +84,6 @@ public class UnavailabilityController {
    * Deletes a blackout period by ID.
    *
    * @param id          period identifier.
-   * @param currentUser authenticated user.
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
