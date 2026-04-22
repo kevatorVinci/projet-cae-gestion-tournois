@@ -854,6 +854,7 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
   /**
    * Snapshot of seeded base entities reused by profile-specific initializers.
    */
+  // CPD-OFF
   protected record SeedData(
       User lea,
       User tom,
@@ -875,4 +876,5 @@ public abstract class AbstractDataInitializer implements CommandLineRunner {
       Tournament easterCup,
       Tournament elite2026) {
   }
+  // CPD-ON
 }

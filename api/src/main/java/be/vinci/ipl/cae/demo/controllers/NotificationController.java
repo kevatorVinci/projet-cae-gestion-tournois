@@ -62,7 +62,7 @@ public class NotificationController {
    *
    * @param idNotification the notification ID.
    * @return the updated notification.
-  */
+    */
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<NotificationDto> markAsRead(@PathVariable Long idNotification) {
     return ResponseEntity.ok(

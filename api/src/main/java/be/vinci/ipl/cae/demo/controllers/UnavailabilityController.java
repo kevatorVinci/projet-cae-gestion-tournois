@@ -1,12 +1,12 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.mappers.UnavailabilityMapper;
+import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityCreateDto;
+import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityResponseDto;
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityCreateDto;
-import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityResponseDto;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.PlayerSelectionRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
@@ -146,7 +146,9 @@ public class UnavailabilityController {
    * @param user the player who became unavailable.
    * @param unavailability the newly saved unavailable period.
    */
-  private void removeSelectionsConflictingWithUnavailability(User user, Unavailability unavailability) {
+  private void removeSelectionsConflictingWithUnavailability(
+      User user,
+      Unavailability unavailability) {
     if (user == null || unavailability == null) {
       return;
     }

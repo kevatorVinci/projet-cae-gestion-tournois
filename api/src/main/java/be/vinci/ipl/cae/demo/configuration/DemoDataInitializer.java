@@ -410,12 +410,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       User admin,
       String status1,
       String status2) {
-    MatchResult result = new MatchResult();
-    result.setMatch(match);
-    result.setScoreTeam1(score1);
-    result.setScoreTeam2(score2);
-    result.setEncodingDate(LocalDateTime.now());
-    result.setAdminEncoder(admin);
+    MatchResult result = createMatchResult(match, score1, score2, admin);
     result.setValidationStatusTeam1(status1);
     result.setValidationStatusTeam2(status2);
     return matchResultRepo.save(result);
@@ -545,6 +540,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     }
   }
 
+  // CPD-OFF
   private record ChecklistUsers(
       User min4Lead,
       User min4P2,
@@ -561,7 +557,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       User sigmaUnavailable,
       User sigmaP3,
       User tagDup) {
-    }
+  }
 
   private record ChecklistTeams(
       Team teamMin4Ok,
@@ -569,7 +565,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       Team teamDualLead,
       Team teamSigmaShort,
       Team teamTagDupOk) {
-    }
+  }
 
   private record ChecklistTournaments(
       Tournament devOpenSlots,
@@ -577,5 +573,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       Tournament devFull,
       Tournament devOdd,
       Tournament forfeitTourney) {
-    }
+  }
+  // CPD-ON
 }
