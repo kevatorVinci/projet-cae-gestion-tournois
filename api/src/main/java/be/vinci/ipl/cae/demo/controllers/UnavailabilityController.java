@@ -73,7 +73,7 @@ public class UnavailabilityController {
     var currentUser = userRepository.findById(currentUserId)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
-    java.util.List<UnavailabilityResponseDto> result = new java.util.ArrayList<>();
+    List<UnavailabilityResponseDto> result = new ArrayList<>();
     for (var indisponibilite : indisponibiliteRepository.findByUser(currentUser)) {
       result.add(unavailabilityMapper.toDto(indisponibilite));
     }
