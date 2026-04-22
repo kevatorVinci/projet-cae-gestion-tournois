@@ -114,7 +114,9 @@ const AdminTournamentsPage = () => {
       setLoading(true);
       setError(null);
 
-      const data: Tournoi[] = await fetchAllTournaments(authenticatedUser.token);
+      const data: Tournoi[] = await fetchAllTournaments(
+        authenticatedUser.token,
+      );
       setTournaments(data);
 
       try {
@@ -245,8 +247,8 @@ const AdminTournamentsPage = () => {
         type: 'success',
         text: (
           <>
-            Le planning du tournoi <strong>{tournamentName}</strong> a ete publie
-            : il est visible pour tous les joueurs.
+            Le planning du tournoi <strong>{tournamentName}</strong> a ete
+            publie : il est visible pour tous les joueurs.
           </>
         ),
       });
@@ -415,9 +417,7 @@ const AdminTournamentsPage = () => {
                     fontSize: '0.875rem',
                     transition: 'all 0.2s ease',
                     color:
-                      activeView === value
-                        ? 'white'
-                        : 'rgba(255,255,255,0.45)',
+                      activeView === value ? 'white' : 'rgba(255,255,255,0.45)',
                     background:
                       activeView === value
                         ? 'linear-gradient(180deg, #ffa33d 0%, #e8822a 100%)'
@@ -622,11 +622,7 @@ const AdminTournamentsPage = () => {
                       }}
                     >
                       <Box>
-                        <Typography
-                          variant="h6"
-                          color="white"
-                          fontWeight={700}
-                        >
+                        <Typography variant="h6" color="white" fontWeight={700}>
                           {tournament.nom}
                         </Typography>
 
