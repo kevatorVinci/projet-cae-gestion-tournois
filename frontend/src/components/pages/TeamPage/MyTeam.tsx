@@ -697,7 +697,7 @@ export function MyTeam() {
                     '&:hover': { bgcolor: '#16a34a' },
                   }}
                 >
-                  Gérer les Tournois
+                  Gérer sélection
                 </Button>
               </>
             )}
