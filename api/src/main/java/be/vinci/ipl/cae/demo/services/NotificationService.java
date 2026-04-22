@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
@@ -291,6 +292,70 @@ public class NotificationService {
               + tournamentName
               + " : Votre équipe a déclaré forfait. Vous êtes éliminés du tournoi."
       );
+    }
+  }
+
+  /**
+   * Notifies the affected player and team responsibles that a selection was removed because of
+   * an unavailability period.
+   *
+   * @param unavailableUser the unavailable player.
+   * @param selection the removed selection.
+   */
+  public void notifySelectionRemovedDueToUnavailability(
+      User unavailableUser,
+      PlayerSelection selection) {
+    if (unavailableUser == null || selection == null) {
+      return;
+    }
+
+    Match match = selection.getMatch();
+    Team team = selection.getTeam();
+
+    String matchDateLabel = match != null && match.getScheduledDateTime() != null
+        ? match.getScheduledDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        : "une date inconnue";
+    String teamName = team != null && team.getName() != null ? team.getName() : "votre équipe";
+
+    createNotification(
+        unavailableUser,
+        "Indisponibilité prise en compte : votre sélection pour le match du "
+            + matchDateLabel
+            + " avec l'équipe '"
+            + teamName
+            + "' a été retirée."
+    );
+
+    String message = "Indisponibilité détectée : "
+        + unavailableUser.getTag()
+        + " n'est plus disponible pour le match du "
+        + matchDateLabel
+        + " dans l'équipe '"
+        + teamName
+        + "'. La sélection a été retirée.";
+
+    notifyTeamResponsibles(team, message);
+  }
+
+  /**
+   * Sends a notification to the responsibles of a team, without duplicating the same user.
+   *
+   * @param team the affected team.
+   * @param message the message to send.
+   */
+  private void notifyTeamResponsibles(Team team, String message) {
+    if (team == null || message == null || message.isBlank()) {
+      return;
+    }
+
+    if (team.getPrimaryResponsible() != null) {
+      createNotification(team.getPrimaryResponsible(), message);
+    }
+
+    if (team.getSecondaryResponsible() != null
+        && (team.getPrimaryResponsible() == null
+        || !team.getSecondaryResponsible().getId().equals(team.getPrimaryResponsible().getId()))) {
+      createNotification(team.getSecondaryResponsible(), message);
     }
   }
 }
