@@ -24,8 +24,8 @@ import {
   SelectChangeEvent,
   TextField,
 } from '@mui/material';
-import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
-import SportsEsportsRoundedIcon from '@mui/icons-material/SportsEsportsRounded';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 import BackButton from '../../BackButton';
 import {
@@ -37,8 +37,6 @@ import {
 } from '../../../services/tournaments';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
-
-// Importing our newly created component and its Match type!
 import { Match } from '../../../types';
 import AdminMatchManagement from '../Match/AdminMatchManagement';
 
@@ -88,22 +86,14 @@ const ETAT_STYLES: Record<Tournoi['etat'], EtatStyle> = {
   },
 };
 
-/**
- * Admin version of the Tournaments page.
- * Lists all tournaments, allows filtering, and provides a toggle to switch to match management.
- *
- * @return {JSX.Element} the admin tournament management page
- */
 const AdminTournamentsPage = () => {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
   const navigate = useNavigate();
 
-  // State to manage which view is currently active (Tournaments list OR Match Management)
   const [activeView, setActiveView] = useState<'tournaments' | 'matches'>(
     'tournaments',
   );
 
-  // Memory variables for the list, statuses, and filters
   const [tournaments, setTournaments] = useState<Tournoi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,26 +103,18 @@ const AdminTournamentsPage = () => {
   } | null>(null);
   const [planningGeneratedByTournament, setPlanningGeneratedByTournament] =
     useState<Record<number, boolean>>({});
-
-  // State specifically for our fetched matches from the database!
   const [allMatches, setAllMatches] = useState<Match[]>([]);
-
-  // Memory variable to store the selected filter for tournaments
   const [filter, setFilter] = useState('Tous');
   const [searchQuery, setSearchQuery] = useState('');
 
-  /**
-   * Function to load or reload the tournaments from the server database.
-   *
-   * @return {Promise<void>}
-   */
   const loadTournaments = useCallback(async () => {
     if (!authenticatedUser?.token) return;
+
     try {
       setLoading(true);
-      const data: Tournoi[] = await fetchAllTournaments(
-        authenticatedUser.token,
-      );
+      setError(null);
+
+      const data: Tournoi[] = await fetchAllTournaments(authenticatedUser.token);
       setTournaments(data);
 
       try {
@@ -163,72 +145,55 @@ const AdminTournamentsPage = () => {
       } catch {
         setPlanningGeneratedByTournament({});
       }
-    } catch (err) {
+    } catch {
       setError('Impossible de charger les tournois.');
     } finally {
       setLoading(false);
     }
-  }, [authenticatedUser]);
+  }, [authenticatedUser?.token]);
 
-  /**
-   * Loads all matches for active tournaments FROM THE DATABASE.
-   * This is triggered when the admin clicks the "Matchs en cours" toggle.
-   *
-   * @return {Promise<void>}
-   */
   const loadAllMatches = useCallback(async () => {
     if (!authenticatedUser?.token) return;
+
     try {
-      // We only care about tournaments that are running or closed (ready to run)
       const activeTournaments = tournaments.filter(
         (t) => t.etat === 'EN_COURS' || t.etat === 'CLOTURE',
       );
 
       let matchesAcc: Match[] = [];
 
-      // Loops through these tournaments and fetches their matches from the backend Database
       for (const t of activeTournaments) {
         try {
-          // We tell TypeScript: "Trust me, this is our Match[] array"
           const tMatches = (await fetchTournamentMatchesAdmin(
             t.id,
             authenticatedUser.token,
           )) as unknown as Match[];
 
-          // Adds the newly fetched matches from DB to our big array
           matchesAcc = [...matchesAcc, ...tMatches];
-        } catch (e) {
-          // Ignore error for a single tournament if it fails
+        } catch {
+          // ignore une erreur sur un tournoi spécifique
         }
       }
 
-      // Updates the React state with all collected matches
       setAllMatches(matchesAcc);
     } catch (err) {
       console.error('Erreur lors du chargement des matchs', err);
     }
-  }, [authenticatedUser, tournaments]);
+  }, [authenticatedUser?.token, tournaments]);
 
-  // UseEffect for loading tournaments on component mount
   useEffect(() => {
     loadTournaments();
   }, [loadTournaments]);
 
-  // UseEffect for loading matches from DB whenever the view changes to 'matches'
   useEffect(() => {
     if (activeView === 'matches') {
       loadAllMatches();
     }
   }, [activeView, loadAllMatches]);
 
-  /**
-   * Function to publish a tournament when the green button is clicked.
-   *
-   * @param {number} id L'identifiant du tournoi.
-   * @return {Promise<void>}
-   */
   const handlePublish = async (id: number) => {
     if (!authenticatedUser?.token) return;
+
     setActionMessage(null);
 
     try {
@@ -238,7 +203,7 @@ const AdminTournamentsPage = () => {
         text: 'Le tournoi est maintenant publié et ouvert aux inscriptions ! 🎉',
       });
       await loadTournaments();
-    } catch (err) {
+    } catch {
       setActionMessage({
         type: 'error',
         text: 'Erreur lors de la publication du tournoi. Vérifiez votre connexion.',
@@ -246,15 +211,11 @@ const AdminTournamentsPage = () => {
     }
   };
 
-  /**
-   * Function to generate a tournament schedule.
-   *
-   * @param {number} id L'identifiant du tournoi.
-   * @return {Promise<void>}
-   */
   const handleGeneratePlanning = async (id: number) => {
     if (!authenticatedUser?.token) return;
+
     setActionMessage(null);
+
     try {
       await generateTournamentSchedule(id, authenticatedUser.token);
       navigate(`/tournois/${id}/matchs`);
@@ -269,15 +230,11 @@ const AdminTournamentsPage = () => {
     }
   };
 
-  /**
-   * Function to publish a tournament schedule.
-   *
-   * @param {number} id L'identifiant du tournoi.
-   * @return {Promise<void>}
-   */
   const handlePublishPlanning = async (id: number) => {
     if (!authenticatedUser?.token) return;
+
     setActionMessage(null);
+
     const tournamentName =
       tournaments.find((tournament) => tournament.id === id)?.nom ||
       `Tournoi #${id}`;
@@ -288,8 +245,8 @@ const AdminTournamentsPage = () => {
         type: 'success',
         text: (
           <>
-            Le planning du tournoi <strong>{tournamentName}</strong> a ete
-            publie: il est visible pour tous les joueurs.
+            Le planning du tournoi <strong>{tournamentName}</strong> a ete publie
+            : il est visible pour tous les joueurs.
           </>
         ),
       });
@@ -305,24 +262,12 @@ const AdminTournamentsPage = () => {
     }
   };
 
-  /**
-   * Formats a date string.
-   *
-   * @param {string} dateValue La date brute.
-   * @return {string} La date formatée.
-   */
   const formatDate = (dateValue: string) => {
     const parsedDate = new Date(dateValue);
     if (Number.isNaN(parsedDate.getTime())) return dateValue;
     return parsedDate.toLocaleDateString('fr-BE');
   };
 
-  /**
-   * Handles filter changes.
-   *
-   * @param {SelectChangeEvent} event L'événement du select.
-   * @return {void}
-   */
   const handleFilterChange = (event: SelectChangeEvent) => {
     setFilter(event.target.value as string);
   };
@@ -332,6 +277,7 @@ const AdminTournamentsPage = () => {
     const matchesSearch =
       normalizedSearch.length === 0 ||
       t.nom.toLowerCase().includes(normalizedSearch);
+
     if (!matchesSearch) return false;
 
     if (filter === 'Tous') return true;
@@ -340,6 +286,7 @@ const AdminTournamentsPage = () => {
     if (filter === 'Clôturés') return t.etat === 'CLOTURE';
     if (filter === 'En cours') return t.etat === 'EN_COURS';
     if (filter === 'Passés') return t.etat === 'TERMINE' || t.etat === 'ANNULE';
+
     return true;
   });
 
@@ -358,6 +305,7 @@ const AdminTournamentsPage = () => {
     return [...filteredTournaments].sort((a, b) => {
       const priorityA = statusPriority[a.etat] ?? 99;
       const priorityB = statusPriority[b.etat] ?? 99;
+
       if (priorityA !== priorityB) {
         return priorityA - priorityB;
       }
@@ -366,6 +314,7 @@ const AdminTournamentsPage = () => {
       const dateB = new Date(b.dateDebut);
       const distanceA = Math.abs(dateA.getTime() - today.getTime());
       const distanceB = Math.abs(dateB.getTime() - today.getTime());
+
       if (distanceA !== distanceB) {
         return distanceA - distanceB;
       }
@@ -410,7 +359,8 @@ const AdminTournamentsPage = () => {
           >
             Gestion des Tournois
           </Typography>
-          <Typography variant="h6" color="text.secondary" mb={4}>
+
+          <Typography variant="h6" color="text.secondary" mb={3}>
             Espace administrateur : création de tournois et encodage des
             résultats.
           </Typography>
@@ -418,86 +368,90 @@ const AdminTournamentsPage = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
             <Box
               sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                p: '6px',
+                display: 'flex',
+                backgroundColor: '#0d1525',
                 borderRadius: '18px',
-                background: '#121a2b',
-                border: '1px solid rgba(255,255,255,0.06)',
-                boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.18)',
+                p: 0.5,
+                border: '1px solid rgba(255,255,255,0.08)',
+                gap: 0.5,
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
               }}
             >
-              <Button
-                onClick={() => setActiveView('tournaments')}
-                startIcon={<EmojiEventsRoundedIcon sx={{ fontSize: 18 }} />}
-                sx={{
-                  minWidth: 135,
-                  px: 2.2,
-                  py: 1,
-                  borderRadius: '14px',
-                  textTransform: 'none',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  letterSpacing: '0.01em',
-                  color:
-                    activeView === 'tournaments'
-                      ? '#fff'
-                      : 'rgba(255,255,255,0.52)',
-                  background:
-                    activeView === 'tournaments'
-                      ? 'linear-gradient(180deg, #ffa640 0%, #f28a24 100%)'
-                      : 'transparent',
-                  boxShadow:
-                    activeView === 'tournaments'
-                      ? '0 0 0 1px rgba(255,174,92,0.22), 0 4px 14px rgba(242,138,36,0.42), inset 0 1px 0 rgba(255,255,255,0.22)'
-                      : 'none',
-                  '&:hover': {
+              {[
+                {
+                  value: 'tournaments',
+                  label: 'Tournois',
+                  icon: <EmojiEventsIcon sx={{ fontSize: 18 }} />,
+                },
+                {
+                  value: 'matches',
+                  label: 'Matchs en cours',
+                  icon: <SportsEsportsIcon sx={{ fontSize: 18 }} />,
+                },
+              ].map(({ value, label, icon }) => (
+                <Box
+                  key={value}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={label}
+                  onClick={() =>
+                    setActiveView(value as 'tournaments' | 'matches')
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setActiveView(value as 'tournaments' | 'matches');
+                    }
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2.5,
+                    py: 1,
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    transition: 'all 0.2s ease',
+                    color:
+                      activeView === value
+                        ? 'white'
+                        : 'rgba(255,255,255,0.45)',
                     background:
-                      activeView === 'tournaments'
-                        ? 'linear-gradient(180deg, #ffb052 0%, #f28a24 100%)'
-                        : 'rgba(255,255,255,0.04)',
-                  },
-                }}
-              >
-                Tournois
-              </Button>
-
-              <Button
-                onClick={() => setActiveView('matches')}
-                startIcon={<SportsEsportsRoundedIcon sx={{ fontSize: 18 }} />}
-                sx={{
-                  minWidth: 170,
-                  px: 2.2,
-                  py: 1,
-                  borderRadius: '14px',
-                  textTransform: 'none',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  letterSpacing: '0.01em',
-                  color:
-                    activeView === 'matches'
-                      ? '#fff'
-                      : 'rgba(255,255,255,0.52)',
-                  background:
-                    activeView === 'matches'
-                      ? 'linear-gradient(180deg, #ffa640 0%, #f28a24 100%)'
-                      : 'transparent',
-                  boxShadow:
-                    activeView === 'matches'
-                      ? '0 0 0 1px rgba(255,174,92,0.22), 0 4px 14px rgba(242,138,36,0.42), inset 0 1px 0 rgba(255,255,255,0.22)'
-                      : 'none',
-                  '&:hover': {
-                    background:
-                      activeView === 'matches'
-                        ? 'linear-gradient(180deg, #ffb052 0%, #f28a24 100%)'
-                        : 'rgba(255,255,255,0.04)',
-                  },
-                }}
-              >
-                Matchs en cours
-              </Button>
+                      activeView === value
+                        ? 'linear-gradient(180deg, #ffa33d 0%, #e8822a 100%)'
+                        : 'transparent',
+                    boxShadow:
+                      activeView === value
+                        ? '0 2px 10px rgba(232,130,42,0.35), inset 0 1px 0 rgba(255,255,255,0.2)'
+                        : 'none',
+                    userSelect: 'none',
+                    '&:hover': {
+                      color:
+                        activeView === value
+                          ? 'white'
+                          : 'rgba(255,255,255,0.75)',
+                      background:
+                        activeView === value
+                          ? 'linear-gradient(180deg, #ffa33d 0%, #e8822a 100%)'
+                          : 'rgba(255,255,255,0.06)',
+                    },
+                  }}
+                >
+                  {icon}
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.875rem',
+                      color: 'inherit',
+                    }}
+                  >
+                    {label}
+                  </Typography>
+                </Box>
+              ))}
             </Box>
           </Box>
         </Box>
@@ -533,6 +487,7 @@ const AdminTournamentsPage = () => {
                 >
                   + Créer un tournoi
                 </Button>
+
                 <TextField
                   placeholder="Rechercher un tournoi..."
                   size="small"
@@ -544,8 +499,15 @@ const AdminTournamentsPage = () => {
                     borderRadius: 1,
                     '& .MuiOutlinedInput-root': {
                       color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                      '&:hover fieldset': { borderColor: '#e8822a' },
+                      '& fieldset': {
+                        borderColor: 'rgba(255,255,255,0.2)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#e8822a',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#e8822a',
+                      },
                     },
                   }}
                 />
@@ -565,6 +527,7 @@ const AdminTournamentsPage = () => {
                 >
                   État
                 </InputLabel>
+
                 <Select
                   labelId="filter-label"
                   value={filter}
@@ -617,7 +580,9 @@ const AdminTournamentsPage = () => {
                 <CircularProgress sx={{ color: '#e8822a' }} />
               </Box>
             )}
+
             {error && <Alert severity="error">{error}</Alert>}
+
             {!loading && !error && sortedTournaments.length === 0 && (
               <Typography color="text.secondary">
                 Aucun tournoi ne correspond à ce filtre.
@@ -626,164 +591,164 @@ const AdminTournamentsPage = () => {
 
             {!loading &&
               !error &&
-              sortedTournaments.map((tournament) =>
-                (() => {
-                  const etatStyle = ETAT_STYLES[tournament.etat];
-                  const hasGeneratedPlanning =
-                    planningGeneratedByTournament[tournament.id] ||
-                    tournament.planningMatchPublie;
+              sortedTournaments.map((tournament) => {
+                const etatStyle = ETAT_STYLES[tournament.etat];
+                const hasGeneratedPlanning =
+                  planningGeneratedByTournament[tournament.id] ||
+                  tournament.planningMatchPublie;
 
-                  return (
-                    <Card
-                      key={tournament.id}
-                      onClick={() => navigate(`/tournois/${tournament.id}`)}
+                return (
+                  <Card
+                    key={tournament.id}
+                    onClick={() => navigate(`/tournois/${tournament.id}`)}
+                    sx={{
+                      mb: 2,
+                      backgroundColor: '#111827',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderLeft: `4px solid ${etatStyle.accent}`,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        borderColor: etatStyle.accent,
+                      },
+                    }}
+                  >
+                    <CardContent
                       sx={{
-                        mb: 2,
-                        backgroundColor: '#111827',
-                        border: '1px solid rgba(255,255,255,0.07)',
-                        borderLeft: `4px solid ${etatStyle.accent}`,
-                        cursor: 'pointer',
-                        '&:hover': {
-                          borderColor: etatStyle.accent,
-                        },
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 2,
                       }}
                     >
-                      <CardContent
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          flexWrap: 'wrap',
-                          gap: 2,
-                        }}
-                      >
-                        <Box>
-                          <Typography
-                            variant="h6"
-                            color="white"
-                            fontWeight={700}
-                          >
-                            {tournament.nom}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Du {formatDate(tournament.dateDebut)} au{' '}
-                            {formatDate(tournament.dateFin)}
-                          </Typography>
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          color="white"
+                          fontWeight={700}
+                        >
+                          {tournament.nom}
+                        </Typography>
 
-                          <Chip
-                            label={etatStyle.label}
-                            size="small"
+                        <Typography variant="body2" color="text.secondary">
+                          Du {formatDate(tournament.dateDebut)} au{' '}
+                          {formatDate(tournament.dateFin)}
+                        </Typography>
+
+                        <Chip
+                          label={etatStyle.label}
+                          size="small"
+                          sx={{
+                            mt: 1,
+                            backgroundColor: etatStyle.chipBg,
+                            color: etatStyle.chipText,
+                            fontWeight: 'bold',
+                          }}
+                        />
+                      </Box>
+
+                      {tournament.etat === 'BROUILLON' && (
+                        <Box
+                          sx={{ display: 'flex', gap: 2 }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              navigate(
+                                `/admin/tournaments/edit/${tournament.id}`,
+                              )
+                            }
                             sx={{
-                              mt: 1,
-                              backgroundColor: etatStyle.chipBg,
-                              color: etatStyle.chipText,
-                              fontWeight: 'bold',
+                              color: '#e8822a',
+                              borderColor: '#e8822a',
+                              '&:hover': {
+                                backgroundColor: 'rgba(232, 130, 42, 0.1)',
+                              },
                             }}
-                          />
-                        </Box>
-
-                        {tournament.etat === 'BROUILLON' && (
-                          <Box
-                            sx={{ display: 'flex', gap: 2 }}
-                            onClick={(event) => event.stopPropagation()}
                           >
-                            <Button
-                              variant="outlined"
-                              onClick={() =>
-                                navigate(
-                                  `/admin/tournaments/edit/${tournament.id}`,
-                                )
-                              }
-                              sx={{
-                                color: '#e8822a',
-                                borderColor: '#e8822a',
-                                '&:hover': {
-                                  backgroundColor: 'rgba(232, 130, 42, 0.1)',
-                                },
-                              }}
-                            >
-                              Modifier
-                            </Button>
+                            Modifier
+                          </Button>
+
+                          <Button
+                            variant="contained"
+                            onClick={() => handlePublish(tournament.id)}
+                            sx={{
+                              backgroundColor: '#4caf50',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              '&:hover': { backgroundColor: '#388e3c' },
+                            }}
+                          >
+                            Publier
+                          </Button>
+                        </Box>
+                      )}
+
+                      {(tournament.etat === 'CLOTURE' ||
+                        tournament.etat === 'EN_COURS') && (
+                        <Box
+                          sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {!hasGeneratedPlanning && (
                             <Button
                               variant="contained"
-                              onClick={() => handlePublish(tournament.id)}
+                              onClick={() =>
+                                handleGeneratePlanning(tournament.id)
+                              }
                               sx={{
-                                backgroundColor: '#4caf50',
+                                backgroundColor: '#3b82f6',
                                 color: 'white',
                                 fontWeight: 'bold',
-                                '&:hover': { backgroundColor: '#388e3c' },
+                                '&:hover': { backgroundColor: '#2563eb' },
                               }}
                             >
-                              Publier
+                              Générer planning
                             </Button>
-                          </Box>
-                        )}
+                          )}
 
-                        {(tournament.etat === 'CLOTURE' ||
-                          tournament.etat === 'EN_COURS') && (
-                          <Box
-                            sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            {!hasGeneratedPlanning && (
+                          {hasGeneratedPlanning &&
+                            !tournament.planningMatchPublie && (
                               <Button
                                 variant="contained"
                                 onClick={() =>
-                                  handleGeneratePlanning(tournament.id)
+                                  handlePublishPlanning(tournament.id)
                                 }
                                 sx={{
-                                  backgroundColor: '#3b82f6',
+                                  backgroundColor: '#7c3aed',
                                   color: 'white',
                                   fontWeight: 'bold',
-                                  '&:hover': { backgroundColor: '#2563eb' },
+                                  '&:hover': { backgroundColor: '#6d28d9' },
                                 }}
                               >
-                                Générer planning
+                                Publier planning
                               </Button>
                             )}
 
-                            {hasGeneratedPlanning &&
-                              !tournament.planningMatchPublie && (
-                                <Button
-                                  variant="contained"
-                                  onClick={() =>
-                                    handlePublishPlanning(tournament.id)
-                                  }
-                                  sx={{
-                                    backgroundColor: '#7c3aed',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    '&:hover': { backgroundColor: '#6d28d9' },
-                                  }}
-                                >
-                                  Publier planning
-                                </Button>
-                              )}
-
-                            <Button
-                              variant="outlined"
-                              onClick={() =>
-                                navigate(`/tournois/${tournament.id}/matchs`)
-                              }
-                              disabled={!hasGeneratedPlanning}
-                              sx={{
-                                color: '#60a5fa',
-                                borderColor: '#60a5fa',
-                                opacity: hasGeneratedPlanning ? 1 : 0.6,
-                                '&:hover': {
-                                  backgroundColor: 'rgba(96,165,250,0.12)',
-                                },
-                              }}
-                            >
-                              Voir planning
-                            </Button>
-                          </Box>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })(),
-              )}
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              navigate(`/tournois/${tournament.id}/matchs`)
+                            }
+                            disabled={!hasGeneratedPlanning}
+                            sx={{
+                              color: '#60a5fa',
+                              borderColor: '#60a5fa',
+                              opacity: hasGeneratedPlanning ? 1 : 0.6,
+                              '&:hover': {
+                                backgroundColor: 'rgba(96,165,250,0.12)',
+                              },
+                            }}
+                          >
+                            Voir planning
+                          </Button>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
           </Box>
         )}
 
