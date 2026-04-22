@@ -1,6 +1,5 @@
 package be.vinci.ipl.cae.demo.configuration;
 
-
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import be.vinci.ipl.cae.demo.models.entities.Team;
@@ -24,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Profile("demo")
 public class DemoDataInitializer extends AbstractDataInitializer {
 
-
   @Override
   @Transactional
   public void run(String... args) {
@@ -45,7 +43,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
-
   /**
    * Generates demo data covering the main checklist scenarios.
    */
@@ -58,7 +55,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
 
     createChecklistMatches(baseData, teams, tournaments);
   }
-
 
   private User buildMin4Lead(String pwd) {
     return createDemoUser("min4.lead@demo.com", "Min4Lead", "tacticien", pwd);
@@ -143,7 +139,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
-
   private ChecklistTeams createChecklistTeams(ChecklistUsers users) {
     Team teamMin4Ok = createChecklistTeam(
         "TEAMMIN4OK",
@@ -198,7 +193,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         teamTagDupOk
     );
   }
-
 
   private ChecklistTournaments createChecklistTournaments(
       SeedData baseData,
@@ -296,7 +290,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
-
   private void createChecklistMatches(
       SeedData baseData,
       ChecklistTeams teams,
@@ -305,7 +298,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     LocalDateTime april12 = LocalDateTime.of(2026, 4, 12, 18, 0);
     LocalDateTime april14 = LocalDateTime.of(2026, 4, 14, 18, 0);
     LocalDateTime april16 = LocalDateTime.of(2026, 4, 16, 18, 0);
-    LocalDateTime futureMatch = LocalDateTime.of(2026, 4, 25, 18, 0);
 
     Match waitingValidationMatch = createMatch(
         tournaments.forfeitTourney(),
@@ -361,6 +353,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         "VALIDATED"
     );
 
+    final LocalDateTime futureMatch = LocalDateTime.of(2026, 4, 25, 18, 0);
     createMatch(
         tournaments.forfeitTourney(),
         teams.teamDualLead(),
@@ -371,7 +364,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         "PENDING"
     );
   }
-
 
   private User createDemoUser(String email, String tag, String specialty, String pwd) {
     return saveUser(
@@ -387,7 +379,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
-
   private Team createChecklistTeam(
       String name,
       User primaryResponsible,
@@ -398,11 +389,9 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     return team;
   }
 
-
   private User saveUser(User user) {
     return userRepo.save(user);
   }
-
 
   private void setTeamForUsers(Team team, User... users) {
     for (User user : users) {
@@ -410,7 +399,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       userRepo.save(user);
     }
   }
-
 
   /**
    * Creates a match result with custom validation statuses.
@@ -432,7 +420,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     result.setValidationStatusTeam2(status2);
     return matchResultRepo.save(result);
   }
-
 
   private void ensureDemoTournaments(SeedData data) {
     List<Team> registrationTeams = resolveRegistrationTeams(data);
@@ -471,7 +458,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     ensureRegistrations(t7, registrationTeams.subList(0, 7), "2026-06-20");
   }
 
-
   private Tournament getOrCreateTournament(
       String name,
       String description,
@@ -494,7 +480,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     });
   }
 
-
   private void ensureRegistrations(
       Tournament tournament,
       List<Team> targetTeams,
@@ -509,7 +494,6 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       registerTeams(tournament, missingTeams, date);
     }
   }
-
 
   private List<Team> resolveRegistrationTeams(SeedData data) {
     List<Team> teams = new ArrayList<>();
@@ -555,13 +539,11 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     throw new IllegalStateException("Pas assez d'équipes pour générer la démo.");
   }
 
-
   private void addIfAbsent(List<Team> target, Set<Long> seen, Team team) {
     if (team != null && team.getId() != null && seen.add(team.getId())) {
       target.add(team);
     }
   }
-
 
   private record ChecklistUsers(
       User min4Lead,
@@ -579,8 +561,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       User sigmaUnavailable,
       User sigmaP3,
       User tagDup) {
-  }
-
+    }
 
   private record ChecklistTeams(
       Team teamMin4Ok,
@@ -588,8 +569,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       Team teamDualLead,
       Team teamSigmaShort,
       Team teamTagDupOk) {
-  }
-
+    }
 
   private record ChecklistTournaments(
       Tournament devOpenSlots,
@@ -597,5 +577,5 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       Tournament devFull,
       Tournament devOdd,
       Tournament forfeitTourney) {
-  }
+    }
 }
