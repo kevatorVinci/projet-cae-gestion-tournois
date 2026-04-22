@@ -60,53 +60,87 @@ public class DemoDataInitializer extends AbstractDataInitializer {
   }
 
 
-  private ChecklistUsers createChecklistUsers(String pwd) {
-    return new ChecklistUsers(
-        createMin4Users(pwd),
-        createMin3Users(pwd),
-        createDualUsers(pwd),
-        createSigmaUsers(pwd),
-        createTagDupUser(pwd)
-    );
+  private User buildMin4Lead(String pwd) {
+    return createDemoUser("min4.lead@demo.com", "Min4Lead", "tacticien", pwd);
   }
 
-  private User[] createMin4Users(String pwd) {
-    User min4Lead = createDemoUser("min4.lead@demo.com", "Min4Lead", "tacticien", pwd);
-    User min4P2 = createDemoUser("min4.p2@demo.com", "Min4P2", "exécuteur", pwd);
-    User min4P3 = createDemoUser("min4.p3@demo.com", "Min4P3", "gardien", pwd);
-    User min4P4 = createDemoUser("min4.p4@demo.com", "Min4P4", "guérisseur", pwd);
-    return new User[]{min4Lead, min4P2, min4P3, min4P4};
+  private User buildMin4P2(String pwd) {
+    return createDemoUser("min4.p2@demo.com", "Min4P2", "exécuteur", pwd);
   }
 
-  private User[] createMin3Users(String pwd) {
-    User min3Lead = createDemoUser("min3.lead@demo.com", "Min3Lead", "tacticien", pwd);
-    User min3P2 = createDemoUser("min3.p2@demo.com", "Min3P2", "exécuteur", pwd);
-    User min3P3 = createDemoUser("min3.p3@demo.com", "Min3P3", "gardien", pwd);
-    return new User[]{min3Lead, min3P2, min3P3};
+  private User buildMin4P3(String pwd) {
+    return createDemoUser("min4.p3@demo.com", "Min4P3", "gardien", pwd);
   }
 
-  private User[] createDualUsers(String pwd) {
-    User dualLead1 = createDemoUser("dual.lead1@demo.com", "DualLead1", "architecte", pwd);
-    User dualLead2 = createDemoUser("dual.lead2@demo.com", "DualLead2", "tacticien", pwd);
-    User dualP3 = createDemoUser("dual.p3@demo.com", "DualP3", "exécuteur", pwd);
-    User dualP4 = createDemoUser("dual.p4@demo.com", "DualP4", "gardien", pwd);
-    return new User[]{dualLead1, dualLead2, dualP3, dualP4};
+  private User buildMin4P4(String pwd) {
+    return createDemoUser("min4.p4@demo.com", "Min4P4", "guérisseur", pwd);
   }
 
-  private User[] createSigmaUsers(String pwd) {
-    User sigmaLead = createDemoUser("sigma.lead@demo.com", "SigmaLead", "tacticien", pwd);
-    User sigmaUnavailable = createDemoUser(
-        "sigma.unavailable@demo.com", "SigmaOff", "exécuteur", pwd
-    );
-    User sigmaP3 = createDemoUser("sigma.p3@demo.com", "SigmaP3", "gardien", pwd);
-    return new User[]{sigmaLead, sigmaUnavailable, sigmaP3};
+  private User buildMin3Lead(String pwd) {
+    return createDemoUser("min3.lead@demo.com", "Min3Lead", "tacticien", pwd);
   }
 
-  private User createTagDupUser(String pwd) {
+  private User buildMin3P2(String pwd) {
+    return createDemoUser("min3.p2@demo.com", "Min3P2", "exécuteur", pwd);
+  }
+
+  private User buildMin3P3(String pwd) {
+    return createDemoUser("min3.p3@demo.com", "Min3P3", "gardien", pwd);
+  }
+
+  private User buildDualLead1(String pwd) {
+    return createDemoUser("dual.lead1@demo.com", "DualLead1", "architecte", pwd);
+  }
+
+  private User buildDualLead2(String pwd) {
+    return createDemoUser("dual.lead2@demo.com", "DualLead2", "tacticien", pwd);
+  }
+
+  private User buildDualP3(String pwd) {
+    return createDemoUser("dual.p3@demo.com", "DualP3", "exécuteur", pwd);
+  }
+
+  private User buildDualP4(String pwd) {
+    return createDemoUser("dual.p4@demo.com", "DualP4", "gardien", pwd);
+  }
+
+  private User buildSigmaLead(String pwd) {
+    return createDemoUser("sigma.lead@demo.com", "SigmaLead", "tacticien", pwd);
+  }
+
+  private User buildSigmaUnavailable(String pwd) {
+    return createDemoUser("sigma.unavailable@demo.com", "SigmaOff", "exécuteur", pwd);
+  }
+
+  private User buildSigmaP3(String pwd) {
+    return createDemoUser("sigma.p3@demo.com", "SigmaP3", "gardien", pwd);
+  }
+
+  private User buildTagDup(String pwd) {
     createDemoUser("demand.pending@demo.com", "PendingPlayer", "exécuteur", pwd);
     createDemoUser("demand.accepted@demo.com", "AcceptedPlayer", "gardien", pwd);
     createDemoUser("demand.rejected@demo.com", "RejectedPlayer", "tacticien", pwd);
     return createDemoUser("tagdup@demo.com", "Rogue", "architecte", pwd);
+  }
+
+  private ChecklistUsers createChecklistUsers(String pwd) {
+    return new ChecklistUsers(
+        buildMin4Lead(pwd),
+        buildMin4P2(pwd),
+        buildMin4P3(pwd),
+        buildMin4P4(pwd),
+        buildMin3Lead(pwd),
+        buildMin3P2(pwd),
+        buildMin3P3(pwd),
+        buildDualLead1(pwd),
+        buildDualLead2(pwd),
+        buildDualP3(pwd),
+        buildDualP4(pwd),
+        buildSigmaLead(pwd),
+        buildSigmaUnavailable(pwd),
+        buildSigmaP3(pwd),
+        buildTagDup(pwd)
+    );
   }
 
 
