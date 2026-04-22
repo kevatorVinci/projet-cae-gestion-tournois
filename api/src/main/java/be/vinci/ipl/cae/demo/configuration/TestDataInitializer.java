@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
+    
 /**
  * Seeds the database with a minimal dataset for automated testing.
  * Activated only when the "test" Spring profile is active.

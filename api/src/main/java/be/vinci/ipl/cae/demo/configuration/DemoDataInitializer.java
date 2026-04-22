@@ -77,6 +77,17 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
     ensureRegistrations(t7, registrationTeams.subList(0, 7), "2026-06-20");
 
+    Tournament forfeitTournament = getOrCreateTournament(
+        "Forfeit",
+        "Tournoi de test pour la fonctionnalité de forfait",
+        "2026-04-01",
+        "2026-05-31",
+        "2026-04-25",
+        "EN_COURS",
+        4
+    );
+    ensureRegistrations(forfeitTournament, registrationTeams.subList(0, 4), "2026-05-01");
+
     System.out.println(
         "[demo] CLOTURE tournaments successfully seeded (5, 6, and 7 teams). "
             + "Ready for manual planning generation."

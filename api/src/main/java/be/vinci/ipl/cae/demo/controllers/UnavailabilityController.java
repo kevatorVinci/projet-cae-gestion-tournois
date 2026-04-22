@@ -83,7 +83,7 @@ public class UnavailabilityController {
   /**
    * Deletes a blackout period by ID.
    *
-    * @param id period identifier.
+   * @param id          period identifier.
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
