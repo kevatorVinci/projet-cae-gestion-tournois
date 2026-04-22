@@ -22,10 +22,10 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
-  ToggleButtonGroup,
-  ToggleButton,
   TextField,
 } from '@mui/material';
+import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
+import SportsEsportsRoundedIcon from '@mui/icons-material/SportsEsportsRounded';
 
 import BackButton from '../../BackButton';
 import {
@@ -120,22 +120,6 @@ const AdminTournamentsPage = () => {
   // Memory variable to store the selected filter for tournaments
   const [filter, setFilter] = useState('Tous');
   const [searchQuery, setSearchQuery] = useState('');
-
-  /**
-   * Handles switching between the "Tournaments" and "Matches" views.
-   *
-   * @param {React.MouseEvent<HTMLElement>} _event - The click event (ignored).
-   * @param {'tournaments' | 'matches' | null} newView - The newly selected view.
-   * @return {void}
-   */
-  const handleViewChange = (
-    _event: React.MouseEvent<HTMLElement>,
-    newView: 'tournaments' | 'matches' | null,
-  ) => {
-    if (newView !== null) {
-      setActiveView(newView);
-    }
-  };
 
   /**
    * Function to load or reload the tournaments from the server database.
@@ -432,44 +416,89 @@ const AdminTournamentsPage = () => {
           </Typography>
 
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-            <ToggleButtonGroup
-              value={activeView}
-              exclusive
-              onChange={handleViewChange}
-              aria-label="Sélection de la vue"
+            <Box
               sx={{
-                backgroundColor: 'rgba(30, 58, 95, 0.5)',
-                borderRadius: '8px',
-                padding: '4px',
-                border: '1px solid rgba(255,255,255,0.1)',
-                '& .MuiToggleButton-root': {
-                  color: 'rgba(255,255,255,0.7)',
-                  border: 'none',
-                  textTransform: 'none',
-                  fontWeight: 'bold',
-                  padding: '8px 24px',
-                  borderRadius: '6px !important',
-                  transition: 'all 0.2s',
-                  '&.Mui-selected': {
-                    backgroundColor: '#e8822a',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#e8822a',
-                    },
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  },
-                },
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                p: '6px',
+                borderRadius: '18px',
+                background: '#121a2b',
+                border: '1px solid rgba(255,255,255,0.06)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.18)',
               }}
             >
-              <ToggleButton value="tournaments" aria-label="Liste des tournois">
+              <Button
+                onClick={() => setActiveView('tournaments')}
+                startIcon={<EmojiEventsRoundedIcon sx={{ fontSize: 18 }} />}
+                sx={{
+                  minWidth: 135,
+                  px: 2.2,
+                  py: 1,
+                  borderRadius: '14px',
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  letterSpacing: '0.01em',
+                  color:
+                    activeView === 'tournaments'
+                      ? '#fff'
+                      : 'rgba(255,255,255,0.52)',
+                  background:
+                    activeView === 'tournaments'
+                      ? 'linear-gradient(180deg, #ffa640 0%, #f28a24 100%)'
+                      : 'transparent',
+                  boxShadow:
+                    activeView === 'tournaments'
+                      ? '0 0 0 1px rgba(255,174,92,0.22), 0 4px 14px rgba(242,138,36,0.42), inset 0 1px 0 rgba(255,255,255,0.22)'
+                      : 'none',
+                  '&:hover': {
+                    background:
+                      activeView === 'tournaments'
+                        ? 'linear-gradient(180deg, #ffb052 0%, #f28a24 100%)'
+                        : 'rgba(255,255,255,0.04)',
+                  },
+                }}
+              >
                 Tournois
-              </ToggleButton>
-              <ToggleButton value="matches" aria-label="Liste des matchs">
+              </Button>
+
+              <Button
+                onClick={() => setActiveView('matches')}
+                startIcon={<SportsEsportsRoundedIcon sx={{ fontSize: 18 }} />}
+                sx={{
+                  minWidth: 170,
+                  px: 2.2,
+                  py: 1,
+                  borderRadius: '14px',
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  letterSpacing: '0.01em',
+                  color:
+                    activeView === 'matches'
+                      ? '#fff'
+                      : 'rgba(255,255,255,0.52)',
+                  background:
+                    activeView === 'matches'
+                      ? 'linear-gradient(180deg, #ffa640 0%, #f28a24 100%)'
+                      : 'transparent',
+                  boxShadow:
+                    activeView === 'matches'
+                      ? '0 0 0 1px rgba(255,174,92,0.22), 0 4px 14px rgba(242,138,36,0.42), inset 0 1px 0 rgba(255,255,255,0.22)'
+                      : 'none',
+                  '&:hover': {
+                    background:
+                      activeView === 'matches'
+                        ? 'linear-gradient(180deg, #ffb052 0%, #f28a24 100%)'
+                        : 'rgba(255,255,255,0.04)',
+                  },
+                }}
+              >
                 Matchs en cours
-              </ToggleButton>
-            </ToggleButtonGroup>
+              </Button>
+            </Box>
           </Box>
         </Box>
 
