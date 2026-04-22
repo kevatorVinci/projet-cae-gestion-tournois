@@ -5,6 +5,7 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Seeds the database for the development environment.
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class DevDataInitializer extends AbstractDataInitializer {
 
   @Override
+  @Transactional
   public void run(String... args) {
     String devPwd = pwdEncoder.encode("Azerty2026!");
 
