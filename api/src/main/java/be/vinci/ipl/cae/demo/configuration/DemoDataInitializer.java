@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.configuration;
 
+
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import be.vinci.ipl.cae.demo.models.entities.Team;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+
 /**
  * Seeds demo-only tournaments, massive test scenarios, and registrations
  * on top of the shared base dataset.
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile("demo")
 public class DemoDataInitializer extends AbstractDataInitializer {
+
 
   @Override
   @Transactional
@@ -42,6 +45,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
+
   /**
    * Generates demo data covering the main checklist scenarios.
    */
@@ -55,139 +59,56 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     createChecklistMatches(baseData, teams, tournaments);
   }
 
+
   private ChecklistUsers createChecklistUsers(String pwd) {
-    User min4Lead = createDemoUser(
-        "min4.lead@demo.com",
-        "Min4Lead",
-        "tacticien",
-        pwd
-    );
-    User min4P2 = createDemoUser(
-        "min4.p2@demo.com",
-        "Min4P2",
-        "exécuteur",
-        pwd
-    );
-    User min4P3 = createDemoUser(
-        "min4.p3@demo.com",
-        "Min4P3",
-        "gardien",
-        pwd
-    );
-    User min4P4 = createDemoUser(
-        "min4.p4@demo.com",
-        "Min4P4",
-        "guérisseur",
-        pwd
-    );
-
-    User min3Lead = createDemoUser(
-        "min3.lead@demo.com",
-        "Min3Lead",
-        "tacticien",
-        pwd
-    );
-    User min3P2 = createDemoUser(
-        "min3.p2@demo.com",
-        "Min3P2",
-        "exécuteur",
-        pwd
-    );
-    User min3P3 = createDemoUser(
-        "min3.p3@demo.com",
-        "Min3P3",
-        "gardien",
-        pwd
-    );
-
-    User dualLead1 = createDemoUser(
-        "dual.lead1@demo.com",
-        "DualLead1",
-        "architecte",
-        pwd
-    );
-    User dualLead2 = createDemoUser(
-        "dual.lead2@demo.com",
-        "DualLead2",
-        "tacticien",
-        pwd
-    );
-    User dualP3 = createDemoUser(
-        "dual.p3@demo.com",
-        "DualP3",
-        "exécuteur",
-        pwd
-    );
-    User dualP4 = createDemoUser(
-        "dual.p4@demo.com",
-        "DualP4",
-        "gardien",
-        pwd
-    );
-
-    User sigmaLead = createDemoUser(
-        "sigma.lead@demo.com",
-        "SigmaLead",
-        "tacticien",
-        pwd
-    );
-    User sigmaUnavailable = createDemoUser(
-        "sigma.unavailable@demo.com",
-        "SigmaOff",
-        "exécuteur",
-        pwd
-    );
-    User sigmaP3 = createDemoUser(
-        "sigma.p3@demo.com",
-        "SigmaP3",
-        "gardien",
-        pwd
-    );
-
-    User tagDup = createDemoUser(
-        "tagdup@demo.com",
-        "Rogue",
-        "architecte",
-        pwd
-    );
-
-    createDemoUser(
-        "demand.pending@demo.com",
-        "PendingPlayer",
-        "exécuteur",
-        pwd
-    );
-    createDemoUser(
-        "demand.accepted@demo.com",
-        "AcceptedPlayer",
-        "gardien",
-        pwd
-    );
-    createDemoUser(
-        "demand.rejected@demo.com",
-        "RejectedPlayer",
-        "tacticien",
-        pwd
-    );
-
     return new ChecklistUsers(
-        min4Lead,
-        min4P2,
-        min4P3,
-        min4P4,
-        min3Lead,
-        min3P2,
-        min3P3,
-        dualLead1,
-        dualLead2,
-        dualP3,
-        dualP4,
-        sigmaLead,
-        sigmaUnavailable,
-        sigmaP3,
-        tagDup
+        createMin4Users(pwd),
+        createMin3Users(pwd),
+        createDualUsers(pwd),
+        createSigmaUsers(pwd),
+        createTagDupUser(pwd)
     );
   }
+
+  private User[] createMin4Users(String pwd) {
+    User min4Lead = createDemoUser("min4.lead@demo.com", "Min4Lead", "tacticien", pwd);
+    User min4P2 = createDemoUser("min4.p2@demo.com", "Min4P2", "exécuteur", pwd);
+    User min4P3 = createDemoUser("min4.p3@demo.com", "Min4P3", "gardien", pwd);
+    User min4P4 = createDemoUser("min4.p4@demo.com", "Min4P4", "guérisseur", pwd);
+    return new User[]{min4Lead, min4P2, min4P3, min4P4};
+  }
+
+  private User[] createMin3Users(String pwd) {
+    User min3Lead = createDemoUser("min3.lead@demo.com", "Min3Lead", "tacticien", pwd);
+    User min3P2 = createDemoUser("min3.p2@demo.com", "Min3P2", "exécuteur", pwd);
+    User min3P3 = createDemoUser("min3.p3@demo.com", "Min3P3", "gardien", pwd);
+    return new User[]{min3Lead, min3P2, min3P3};
+  }
+
+  private User[] createDualUsers(String pwd) {
+    User dualLead1 = createDemoUser("dual.lead1@demo.com", "DualLead1", "architecte", pwd);
+    User dualLead2 = createDemoUser("dual.lead2@demo.com", "DualLead2", "tacticien", pwd);
+    User dualP3 = createDemoUser("dual.p3@demo.com", "DualP3", "exécuteur", pwd);
+    User dualP4 = createDemoUser("dual.p4@demo.com", "DualP4", "gardien", pwd);
+    return new User[]{dualLead1, dualLead2, dualP3, dualP4};
+  }
+
+  private User[] createSigmaUsers(String pwd) {
+    User sigmaLead = createDemoUser("sigma.lead@demo.com", "SigmaLead", "tacticien", pwd);
+    User sigmaUnavailable = createDemoUser(
+        "sigma.unavailable@demo.com", "SigmaOff", "exécuteur", pwd
+    );
+    User sigmaP3 = createDemoUser("sigma.p3@demo.com", "SigmaP3", "gardien", pwd);
+    return new User[]{sigmaLead, sigmaUnavailable, sigmaP3};
+  }
+
+  private User createTagDupUser(String pwd) {
+    createDemoUser("demand.pending@demo.com", "PendingPlayer", "exécuteur", pwd);
+    createDemoUser("demand.accepted@demo.com", "AcceptedPlayer", "gardien", pwd);
+    createDemoUser("demand.rejected@demo.com", "RejectedPlayer", "tacticien", pwd);
+    return createDemoUser("tagdup@demo.com", "Rogue", "architecte", pwd);
+  }
+
 
   private ChecklistTeams createChecklistTeams(ChecklistUsers users) {
     Team teamMin4Ok = createChecklistTeam(
@@ -243,6 +164,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         teamTagDupOk
     );
   }
+
 
   private ChecklistTournaments createChecklistTournaments(
       SeedData baseData,
@@ -340,6 +262,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
+
   private void createChecklistMatches(
       SeedData baseData,
       ChecklistTeams teams,
@@ -415,6 +338,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
+
   private User createDemoUser(String email, String tag, String specialty, String pwd) {
     return saveUser(
         makeUser(
@@ -429,6 +353,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
   }
 
+
   private Team createChecklistTeam(
       String name,
       User primaryResponsible,
@@ -439,9 +364,11 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     return team;
   }
 
+
   private User saveUser(User user) {
     return userRepo.save(user);
   }
+
 
   private void setTeamForUsers(Team team, User... users) {
     for (User user : users) {
@@ -449,6 +376,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       userRepo.save(user);
     }
   }
+
 
   /**
    * Creates a match result with custom validation statuses.
@@ -470,6 +398,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     result.setValidationStatusTeam2(status2);
     return matchResultRepo.save(result);
   }
+
 
   private void ensureDemoTournaments(SeedData data) {
     List<Team> registrationTeams = resolveRegistrationTeams(data);
@@ -508,6 +437,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     ensureRegistrations(t7, registrationTeams.subList(0, 7), "2026-06-20");
   }
 
+
   private Tournament getOrCreateTournament(
       String name,
       String description,
@@ -530,6 +460,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     });
   }
 
+
   private void ensureRegistrations(
       Tournament tournament,
       List<Team> targetTeams,
@@ -544,6 +475,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       registerTeams(tournament, missingTeams, date);
     }
   }
+
 
   private List<Team> resolveRegistrationTeams(SeedData data) {
     List<Team> teams = new ArrayList<>();
@@ -589,11 +521,13 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     throw new IllegalStateException("Pas assez d'équipes pour générer la démo.");
   }
 
+
   private void addIfAbsent(List<Team> target, Set<Long> seen, Team team) {
     if (team != null && team.getId() != null && seen.add(team.getId())) {
       target.add(team);
     }
   }
+
 
   private record ChecklistUsers(
       User min4Lead,
@@ -613,6 +547,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       User tagDup) {
   }
 
+
   private record ChecklistTeams(
       Team teamMin4Ok,
       Team teamMin3Ko,
@@ -620,6 +555,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       Team teamSigmaShort,
       Team teamTagDupOk) {
   }
+
 
   private record ChecklistTournaments(
       Tournament devOpenSlots,
