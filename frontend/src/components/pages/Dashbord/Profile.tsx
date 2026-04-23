@@ -7,18 +7,30 @@ import {
   Button,
   Grid,
   Stack,
+  Chip,
+  CircularProgress,
+  Alert,
+  Divider,
 } from '@mui/material';
 import {
   AddCircleOutline as CreateIcon,
   GroupAdd as JoinIcon,
   Edit as EditIcon,
   CalendarMonth as CalendarIcon,
+  EmojiEvents as EmojiEventsIcon,
+  SportsMartialArts as SportsMartialArtsIcon,
 } from '@mui/icons-material';
 import { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../../contexts/UserContext';
 import { Equipe, UserContextType } from '../../../types';
 import { getUserTeam } from '../../../services/teams';
+import {
+  fetchMemberMatches,
+  fetchTournamentById,
+  TeamMatch,
+} from '../../../services/tournaments';
+import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 import BackButton from '../../BackButton';
 
 const Profile = () => {
@@ -26,6 +38,14 @@ const Profile = () => {
   const { authenticatedUser }: UserContextType = useContext(UserContext);
   const [hasTeam, setHasTeam] = useState(false);
   const [team, setTeam] = useState<Equipe | null>(null);
+  const [memberMatches, setMemberMatches] = useState<TeamMatch[]>([]);
+  const [participatedTournaments, setParticipatedTournaments] = useState<
+    { id: number; nom: string; etat?: string; dateDebut?: string }[]
+  >([]);
+  const [participationsLoading, setParticipationsLoading] = useState(true);
+  const [participationsError, setParticipationsError] = useState<string | null>(
+    null,
+  );
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return undefined;
@@ -36,20 +56,113 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    if (authenticatedUser) {
-      getUserTeam()
-        .then((currentTeam) => {
-          setTeam(currentTeam);
-          setHasTeam(!!currentTeam);
-        })
-        .catch(() => {
-          setTeam(null);
-          setHasTeam(false);
-        });
-    } else {
-      setTeam(null);
-      setHasTeam(false);
-    }
+    const loadProfileParticipation = async () => {
+      setParticipationsLoading(true);
+      setParticipationsError(null);
+
+      let currentTeam: Equipe | null = null;
+
+      try {
+        currentTeam = await getUserTeam();
+        setTeam(currentTeam);
+        setHasTeam(!!currentTeam);
+      } catch {
+        setTeam(null);
+        setHasTeam(false);
+      }
+
+      const resolvedUserId = (() => {
+        const directId = (authenticatedUser as { id?: number } | undefined)?.id;
+        if (typeof directId === 'number' && Number.isFinite(directId)) {
+          return directId;
+        }
+
+        const token = authenticatedUser?.token || getAuthenticatedUser()?.token;
+        if (!token) return null;
+
+        const payload = decodeJwtPayload(token);
+        const candidateId =
+          typeof payload?.id === 'number'
+            ? payload.id
+            : typeof payload?.userId === 'number'
+              ? payload.userId
+              : Number(payload?.sub);
+
+        return Number.isFinite(candidateId) ? candidateId : null;
+      })();
+
+      if (resolvedUserId == null) {
+        setMemberMatches([]);
+        setParticipatedTournaments([]);
+        setParticipationsLoading(false);
+        return;
+      }
+
+      try {
+        const matches = await fetchMemberMatches(resolvedUserId);
+        const finishedMatches = matches
+          .filter((match) => {
+            const normalizedStatus = (match.status ?? '').toLowerCase();
+            const hasScore =
+              typeof match.scoreTeam1 === 'number' &&
+              typeof match.scoreTeam2 === 'number';
+            return (
+              hasScore ||
+              normalizedStatus === 'termine' ||
+              normalizedStatus === 'finished' ||
+              normalizedStatus === 'completed' ||
+              normalizedStatus === 'complete'
+            );
+          })
+          .sort((left, right) => {
+            const leftDate = left.scheduledDateTime
+              ? new Date(left.scheduledDateTime).getTime()
+              : 0;
+            const rightDate = right.scheduledDateTime
+              ? new Date(right.scheduledDateTime).getTime()
+              : 0;
+            return rightDate - leftDate;
+          });
+
+        setMemberMatches(finishedMatches);
+
+        const uniqueTournamentIds = [
+          ...new Set(finishedMatches.map((match) => match.tournamentId)),
+        ];
+        const tournaments = await Promise.all(
+          uniqueTournamentIds.map(async (tournamentId) => {
+            try {
+              return await fetchTournamentById(tournamentId);
+            } catch {
+              return null;
+            }
+          }),
+        );
+
+        setParticipatedTournaments(
+          tournaments.filter(
+            (
+              tournament,
+            ): tournament is {
+              id: number;
+              nom: string;
+              etat?: string;
+              dateDebut?: string;
+            } => tournament !== null,
+          ),
+        );
+      } catch {
+        setMemberMatches([]);
+        setParticipatedTournaments([]);
+        setParticipationsError(
+          'Impossible de charger vos tournois et matchs pour le moment.',
+        );
+      } finally {
+        setParticipationsLoading(false);
+      }
+    };
+
+    loadProfileParticipation();
   }, [authenticatedUser]);
 
   const userTag = authenticatedUser?.tag || 'Joueur';
@@ -62,6 +175,41 @@ const Profile = () => {
     normalizeAvatarUrl(authenticatedUser?.profileImage) ||
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${userTag}`;
 
+  const formatDate = (value?: string) => {
+    if (!value) return 'Date non définie';
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) return value;
+    return parsedDate.toLocaleDateString('fr-BE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const formatDateTime = (value?: string) => {
+    if (!value) return 'Date non définie';
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) return value;
+    return parsedDate.toLocaleString('fr-BE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  };
+
+  const sortedParticipatedTournaments = [...participatedTournaments].sort(
+    (left, right) => {
+      const leftDate = left.dateDebut ? new Date(left.dateDebut).getTime() : 0;
+      const rightDate = right.dateDebut
+        ? new Date(right.dateDebut).getTime()
+        : 0;
+      return rightDate - leftDate;
+    },
+  );
+
   return (
     <Box
       sx={{
@@ -72,7 +220,6 @@ const Profile = () => {
         background: 'transparent',
       }}
     >
-      {/* Midnight-blue gradient on top instead of a background image */}
       <Box
         sx={{
           position: 'absolute',
@@ -82,7 +229,6 @@ const Profile = () => {
           pointerEvents: 'none',
         }}
       />
-      {/* Very subtle SVG grid */}
       <Box
         component="svg"
         sx={{
@@ -115,7 +261,7 @@ const Profile = () => {
         <rect width="100%" height="100%" fill="url(#grid)" />
       </Box>
 
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         {/* 1. WELCOME BANNER */}
         <Paper
           elevation={0}
@@ -184,7 +330,6 @@ const Profile = () => {
             </Box>
           </Stack>
 
-          {/* Profile action buttons */}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Button
               variant="contained"
@@ -193,14 +338,11 @@ const Profile = () => {
               sx={{
                 backgroundColor: '#e8822a',
                 color: 'white',
-                '&:hover': {
-                  backgroundColor: '#c86e20',
-                },
+                '&:hover': { backgroundColor: '#c86e20' },
               }}
             >
               Mes indisponibilités
             </Button>
-
             <Button
               variant="outlined"
               startIcon={<EditIcon />}
@@ -220,10 +362,324 @@ const Profile = () => {
           </Stack>
         </Paper>
 
+        {/* ── Tournois & Matchs (Design from MemberDetails) ── */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: 3,
+            mb: 4,
+          }}
+        >
+          {/* Tournois */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: '#111827',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}
+            >
+              <EmojiEventsIcon sx={{ color: '#e8822a', fontSize: 22 }} />
+              <Typography variant="h6" fontWeight={700} color="white">
+                Tournois participés
+              </Typography>
+            </Box>
+
+            {participationsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress sx={{ color: '#e8822a' }} />
+              </Box>
+            ) : participationsError ? (
+              <Alert severity="warning">{participationsError}</Alert>
+            ) : sortedParticipatedTournaments.length === 0 ? (
+              <Typography variant="body2" color="rgba(255,255,255,0.4)">
+                Aucun tournoi pour le moment.
+              </Typography>
+            ) : (
+              <Stack spacing={1.5}>
+                {sortedParticipatedTournaments.map((tournament) => {
+                  const etat = tournament.etat;
+                  const chipColor =
+                    etat === 'EN_COURS'
+                      ? '#e8822a'
+                      : etat === 'TERMINE'
+                        ? '#10b981'
+                        : etat === 'ANNULE'
+                          ? '#ef4444'
+                          : '#3b82f6';
+
+                  const etatLabel =
+                    etat === 'EN_COURS'
+                      ? 'En cours'
+                      : etat === 'TERMINE'
+                        ? 'Terminé'
+                        : etat === 'ANNULE'
+                          ? 'Annulé'
+                          : etat === 'CLOTURE'
+                            ? 'Clôturé'
+                            : 'Ouvert';
+
+                  return (
+                    <Box
+                      key={tournament.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/tournois/${tournament.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          navigate(`/tournois/${tournament.id}`);
+                        }
+                      }}
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        bgcolor: 'rgba(255,255,255,0.02)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 1,
+                        transition: 'border-color 0.2s, transform 0.2s',
+                        '&:hover': {
+                          borderColor: chipColor,
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    >
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          color="white"
+                        >
+                          {tournament.nom}
+                        </Typography>
+                        {tournament.dateDebut && (
+                          <Typography
+                            variant="caption"
+                            color="rgba(255,255,255,0.45)"
+                          >
+                            {formatDate(tournament.dateDebut)}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Chip
+                        label={etatLabel}
+                        size="small"
+                        sx={{
+                          bgcolor: `${chipColor}22`,
+                          color: chipColor,
+                          fontWeight: 700,
+                          fontSize: 10,
+                          border: `1px solid ${chipColor}44`,
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Paper>
+
+          {/* Matchs */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: '#111827',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}
+            >
+              <SportsMartialArtsIcon sx={{ color: '#3b82f6', fontSize: 22 }} />
+              <Typography variant="h6" fontWeight={700} color="white">
+                Historique des matchs
+              </Typography>
+            </Box>
+
+            {participationsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress sx={{ color: '#e8822a' }} />
+              </Box>
+            ) : memberMatches.length === 0 ? (
+              <Typography variant="body2" color="rgba(255,255,255,0.4)">
+                Aucun match joué pour le moment.
+              </Typography>
+            ) : (
+              <Stack spacing={1.5}>
+                {memberMatches.map((match) => {
+                  const isTeam1 =
+                    team?.id != null && match.team1Id === team?.id;
+                  const isTeam2 =
+                    team?.id != null && match.team2Id === team?.id;
+
+                  const matchTitle = isTeam1
+                    ? `vs ${match.team2Name ?? '?'}`
+                    : isTeam2
+                      ? `vs ${match.team1Name ?? '?'}`
+                      : `${match.team1Name ?? '?'} vs ${match.team2Name ?? '?'}`;
+
+                  const tournamentObj = participatedTournaments.find(
+                    (t) => t.id === match.tournamentId,
+                  );
+                  const tournamentName =
+                    tournamentObj?.nom ?? `Tournoi #${match.tournamentId}`;
+
+                  const hasScore =
+                    typeof match.scoreTeam1 === 'number' &&
+                    typeof match.scoreTeam2 === 'number';
+
+                  let scoreLabel = 'Score indisponible';
+                  if (hasScore) {
+                    const score1 = Number(match.scoreTeam1);
+                    const score2 = Number(match.scoreTeam2);
+                    scoreLabel = isTeam1
+                      ? `${score1} - ${score2}`
+                      : isTeam2
+                        ? `${score2} - ${score1}`
+                        : `${score1} - ${score2}`;
+                  }
+
+                  let outcomeLabel = 'Résultat indisponible';
+                  let outcomeColor = '#94a3b8';
+                  let outcomeBackground = 'rgba(148,163,184,0.20)';
+                  let outcomeBorder = '1px solid rgba(148,163,184,0.35)';
+
+                  if (hasScore && (isTeam1 || isTeam2)) {
+                    const score1 = Number(match.scoreTeam1);
+                    const score2 = Number(match.scoreTeam2);
+                    const myScore = isTeam1 ? score1 : score2;
+                    const opponentScore = isTeam1 ? score2 : score1;
+
+                    if (myScore > opponentScore) {
+                      outcomeLabel = 'Victoire';
+                      outcomeColor = '#34d399';
+                      outcomeBackground = 'rgba(16,185,129,0.20)';
+                      outcomeBorder = '1px solid rgba(16,185,129,0.35)';
+                    } else if (myScore < opponentScore) {
+                      outcomeLabel = 'Défaite';
+                      outcomeColor = '#f87171';
+                      outcomeBackground = 'rgba(239,68,68,0.20)';
+                      outcomeBorder = '1px solid rgba(239,68,68,0.35)';
+                    } else {
+                      outcomeLabel = 'Nul';
+                      outcomeColor = '#93c5fd';
+                      outcomeBackground = 'rgba(59,130,246,0.20)';
+                      outcomeBorder = '1px solid rgba(59,130,246,0.35)';
+                    }
+                  }
+
+                  return (
+                    <Box
+                      key={match.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        navigate(
+                          `/tournois/${match.tournamentId}/matchs/${match.id}`,
+                        )
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          navigate(
+                            `/tournois/${match.tournamentId}/matchs/${match.id}`,
+                          );
+                        }
+                      }}
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        bgcolor: 'rgba(255,255,255,0.02)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 1,
+                        cursor: 'pointer',
+                        transition:
+                          'border-color 0.2s ease, transform 0.2s ease',
+                        '&:hover': {
+                          borderColor: '#3b82f6',
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    >
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          color="white"
+                        >
+                          {matchTitle}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="rgba(255,255,255,0.45)"
+                        >
+                          {tournamentName}
+                          {match.round != null ? ` · Tour ${match.round}` : ''}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={800}
+                          color="rgba(255,255,255,0.75)"
+                        >
+                          {formatDateTime(match.scheduledDateTime)}
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={0.8}
+                          justifyContent="flex-end"
+                          alignItems="center"
+                          sx={{ mt: 0.7 }}
+                        >
+                          <Chip
+                            label={scoreLabel}
+                            size="small"
+                            sx={{
+                              bgcolor: 'rgba(59,130,246,0.20)',
+                              color: '#93c5fd',
+                              fontWeight: 700,
+                              fontSize: 10,
+                              border: '1px solid rgba(59,130,246,0.35)',
+                            }}
+                          />
+                          <Chip
+                            label={outcomeLabel}
+                            size="small"
+                            sx={{
+                              bgcolor: outcomeBackground,
+                              color: outcomeColor,
+                              fontWeight: 700,
+                              fontSize: 10,
+                              border: outcomeBorder,
+                            }}
+                          />
+                        </Stack>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Paper>
+        </Box>
+
         {/* 3. ACTION GRID (Create / Join) */}
         {!hasTeam && (
           <Grid container spacing={3}>
-            {/* CREATE CARD */}
             <Grid item xs={12} md={6}>
               <Paper
                 variant="outlined"
@@ -281,7 +737,6 @@ const Profile = () => {
               </Paper>
             </Grid>
 
-            {/* CARTE REJOINDRE */}
             <Grid item xs={12} md={6}>
               <Paper
                 variant="outlined"
