@@ -136,6 +136,11 @@ const TournamentMatchCompositionPage = () => {
     navigate(`/players/${memberId}`);
   };
 
+  const openTeamDetails = (teamId?: number) => {
+    if (!teamId) return;
+    navigate(`/equipes/${teamId}`);
+  };
+
   useEffect(() => {
     const load = async () => {
       if (!id || !parsedMatchId) {
@@ -468,7 +473,21 @@ const TournamentMatchCompositionPage = () => {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography variant="h6" fontWeight={800} color="white">
+            <Typography
+              variant="h6"
+              fontWeight={800}
+              color="white"
+              onClick={() => openTeamDetails(teamId)}
+              sx={{
+                cursor: teamId ? 'pointer' : 'default',
+                '&:hover': teamId
+                  ? {
+                      color: '#e8822a',
+                      textDecoration: 'underline',
+                    }
+                  : undefined,
+              }}
+            >
               {safeTeamName}
             </Typography>
             {isWinner && (
@@ -858,6 +877,7 @@ const TournamentMatchCompositionPage = () => {
                     >
                       <Typography
                         variant="h4"
+                        onClick={() => openTeamDetails(match.team1Id)}
                         sx={{
                           color:
                             matchResult.isDraw ||
@@ -869,6 +889,12 @@ const TournamentMatchCompositionPage = () => {
                             matchResult.scoreTeam1 >= matchResult.scoreTeam2
                               ? 900
                               : 600,
+                          cursor: match.team1Id ? 'pointer' : 'default',
+                          '&:hover': match.team1Id
+                            ? {
+                                color: '#e8822a',
+                              }
+                            : undefined,
                         }}
                       >
                         {matchResult.team1Name}{' '}
@@ -894,6 +920,7 @@ const TournamentMatchCompositionPage = () => {
                       </Typography>
                       <Typography
                         variant="h4"
+                        onClick={() => openTeamDetails(match.team2Id)}
                         sx={{
                           color:
                             matchResult.isDraw ||
@@ -905,6 +932,12 @@ const TournamentMatchCompositionPage = () => {
                             matchResult.scoreTeam2 >= matchResult.scoreTeam1
                               ? 900
                               : 600,
+                          cursor: match.team2Id ? 'pointer' : 'default',
+                          '&:hover': match.team2Id
+                            ? {
+                                color: '#e8822a',
+                              }
+                            : undefined,
                         }}
                       >
                         <Box
@@ -970,7 +1003,21 @@ const TournamentMatchCompositionPage = () => {
                     variant="h4"
                     fontWeight={900}
                     color="white"
-                    sx={{ mb: 3 }}
+                    onClick={() =>
+                      openTeamDetails(match.team1Id ?? match.team2Id)
+                    }
+                    sx={{
+                      mb: 3,
+                      cursor:
+                        match.team1Id || match.team2Id ? 'pointer' : 'default',
+                      '&:hover':
+                        match.team1Id || match.team2Id
+                          ? {
+                              color: '#e8822a',
+                              textDecoration: 'underline',
+                            }
+                          : undefined,
+                    }}
                   >
                     {match.team1Name || match.team2Name}
                   </Typography>
