@@ -10,8 +10,8 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.PlayerSelectionRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import be.vinci.ipl.cae.demo.services.PlayerSelectionCleanupService;
 import be.vinci.ipl.cae.demo.services.NotificationService;
+import be.vinci.ipl.cae.demo.services.PlayerSelectionCleanupService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,9 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Controller handling availability blackout periods.
- */
+/** Controller handling availability blackout periods. */
 @RestController
 @RequestMapping("/indisponibilites")
 public class UnavailabilityController {
@@ -71,9 +69,13 @@ public class UnavailabilityController {
   public Iterable<UnavailabilityResponseDto> getMesIndisponibilites(
       @AuthenticationPrincipal(expression = "id") Long currentUserId) {
     ensureAuthenticated(currentUserId);
-    var currentUser = userRepository.findById(currentUserId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
+    var currentUser =
+        userRepository
+            .findById(currentUserId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
     List<UnavailabilityResponseDto> result = new ArrayList<>();
     for (var indisponibilite : indisponibiliteRepository.findByUser(currentUser)) {
       result.add(unavailabilityMapper.toDto(indisponibilite));
@@ -92,9 +94,13 @@ public class UnavailabilityController {
       @AuthenticationPrincipal(expression = "id") Long currentUserId,
       @RequestBody @Valid UnavailabilityCreateDto indisponibilite) {
     ensureAuthenticated(currentUserId);
-    var currentUser = userRepository.findById(currentUserId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
+    var currentUser =
+        userRepository
+            .findById(currentUserId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
     var entity = unavailabilityMapper.toEntity(indisponibilite);
     entity.setUser(currentUser);
     Unavailability saved = indisponibiliteRepository.save(entity);
@@ -105,26 +111,24 @@ public class UnavailabilityController {
   /**
    * Deletes a blackout period by ID.
    *
-   * @param id          period identifier.
+   * @param id period identifier.
    */
   @DeleteMapping("/{id}")
   public void deleteIndisponibilite(
-      @PathVariable Long id,
-      @AuthenticationPrincipal(expression = "id") Long currentUserId) {
+      @PathVariable Long id, @AuthenticationPrincipal(expression = "id") Long currentUserId) {
     ensureAuthenticated(currentUserId);
 
-    var indisponibilite = indisponibiliteRepository
-        .findById(id)
-        .orElseThrow(
-            () -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Indisponibilite introuvable"
-            )
-        );
+    var indisponibilite =
+        indisponibiliteRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Indisponibilite introuvable"));
 
     if (!indisponibilite.getUser().getId().equals(currentUserId)) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites."
-      );
+          HttpStatus.FORBIDDEN, "Vous ne pouvez supprimer que vos propres indisponibilites.");
     }
 
     indisponibiliteRepository.delete(indisponibilite);
@@ -148,8 +152,7 @@ public class UnavailabilityController {
    * @param unavailability the newly saved unavailable period.
    */
   private void removeSelectionsConflictingWithUnavailability(
-      User user,
-      Unavailability unavailability) {
+      User user, Unavailability unavailability) {
     if (user == null || unavailability == null) {
       return;
     }
@@ -189,9 +192,6 @@ public class UnavailabilityController {
     }
 
     playerSelectionCleanupService.removeMemberFromSelectionsForUnavailabilityPeriod(
-        user.getId(),
-        startDate,
-        endDate
-    );
+        user.getId(), startDate, endDate);
   }
 }

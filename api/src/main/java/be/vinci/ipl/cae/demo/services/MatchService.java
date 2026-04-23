@@ -17,9 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
-/**
- * Service class handling the business logic for matches.
- */
+/** Service class handling the business logic for matches. */
 @Service
 public class MatchService {
 
@@ -29,6 +27,7 @@ public class MatchService {
   private final InscriptionEquipeTournoiRepository inscriptionRepository;
   private final NotificationService notificationService;
 
+  /** Builds the match service. */
   public MatchService(
       MatchRepository matchRepository,
       MatchResultRepository matchResultRepository,
@@ -42,59 +41,70 @@ public class MatchService {
     this.notificationService = notificationService;
   }
 
+  /** Finds one match by id. */
   public Match getOne(Long id) {
     return matchRepository.findById(id).orElse(null);
   }
 
+  /** Persists one match. */
   public Match saveOne(Match match) {
     return matchRepository.save(match);
   }
 
+  /** Publishes the schedule of a tournament. */
   public void publishTournamentSchedule(Long tournamentId) {
-    Tournament tournament = tournamentRepository.findById(tournamentId)
-        .orElseThrow(() -> new IllegalStateException("Tournoi introuvable."));
+    Tournament tournament =
+        tournamentRepository
+            .findById(tournamentId)
+            .orElseThrow(() -> new IllegalStateException("Tournoi introuvable."));
 
-    List<Match> matches = matchRepository
-        .findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
+    List<Match> matches =
+        matchRepository.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
 
     if (matches.isEmpty()) {
-      throw new IllegalStateException("Aucun planning généré. Générez les matchs avant publication.");
+      throw new IllegalStateException(
+          "Aucun planning généré. Générez les matchs avant publication.");
     }
 
     tournament.setMatchSchedulePublished(true);
     tournamentRepository.save(tournament);
   }
 
+  /** Returns all matches of a tournament. */
   public List<Match> getTournamentMatches(Long tournamentId) {
-    return matchRepository
-        .findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
+    return matchRepository.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
   }
 
+  /** Returns public matches only when schedule is published. */
   public List<Match> getTournamentPublicMatches(Long tournamentId) {
-    Tournament tournament = tournamentRepository.findById(tournamentId)
-        .orElseThrow(() -> new IllegalStateException("Tournoi introuvable."));
+    Tournament tournament =
+        tournamentRepository
+            .findById(tournamentId)
+            .orElseThrow(() -> new IllegalStateException("Tournoi introuvable."));
 
     if (!tournament.isMatchSchedulePublished()) {
       return List.of();
     }
-    return matchRepository
-        .findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
+    return matchRepository.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
   }
 
+  /** Generates an elimination schedule for a tournament. */
   public List<Match> generateSchedule(Long tournamentId, User admin) {
-    Tournament tournament = tournamentRepository.findById(tournamentId)
-        .orElseThrow(() -> new IllegalStateException("Tournament not found."));
+    Tournament tournament =
+        tournamentRepository
+            .findById(tournamentId)
+            .orElseThrow(() -> new IllegalStateException("Tournament not found."));
 
-    List<Match> existing = matchRepository
-        .findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
+    List<Match> existing =
+        matchRepository.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournamentId);
     if (!existing.isEmpty()) {
       throw new IllegalStateException("Schedule has already been generated.");
     }
 
-    List<Team> teams = inscriptionRepository.findByTournament(tournament)
-        .stream()
-        .map(RegistrationTeamTournament::getTeam)
-        .collect(Collectors.toList());
+    List<Team> teams =
+        inscriptionRepository.findByTournament(tournament).stream()
+            .map(RegistrationTeamTournament::getTeam)
+            .collect(Collectors.toList());
 
     int teamCount = teams.size();
     if (teamCount < 2) {
@@ -160,30 +170,30 @@ public class MatchService {
     return seeds;
   }
 
+  /** Returns all matches where the team participates. */
   public List<Match> getMatchesByTeam(Long teamId) {
-    return matchRepository.findByTeam1IdOrTeam2Id(teamId, teamId)
-        .stream()
-        .filter(match -> match.getTournament() != null
-            && match.getTournament().isMatchSchedulePublished())
+    return matchRepository.findByTeam1IdOrTeam2Id(teamId, teamId).stream()
+        .filter(
+            match ->
+                match.getTournament() != null && match.getTournament().isMatchSchedulePublished())
         .toList();
   }
 
+  /** Declares a forfeit and encodes the resulting score. */
   public MatchResult declareForfeit(Long matchId, Long teamId, User adminUser) {
-    Match match = matchRepository.findById(matchId)
-        .orElseThrow(() -> new IllegalStateException("Match introuvable."));
+    Match match =
+        matchRepository
+            .findById(matchId)
+            .orElseThrow(() -> new IllegalStateException("Match introuvable."));
 
-    boolean isTeam1 = match.getTeam1() != null
-        && match.getTeam1().getId().equals(teamId);
-    boolean isTeam2 = match.getTeam2() != null
-        && match.getTeam2().getId().equals(teamId);
+    boolean isTeam1 = match.getTeam1() != null && match.getTeam1().getId().equals(teamId);
+    boolean isTeam2 = match.getTeam2() != null && match.getTeam2().getId().equals(teamId);
 
     if (!isTeam1 && !isTeam2) {
       throw new IllegalStateException("Cette équipe ne participe pas à ce match.");
     }
 
-    MatchResult result = match.getResult() != null
-        ? match.getResult()
-        : new MatchResult();
+    MatchResult result = match.getResult() != null ? match.getResult() : new MatchResult();
     result.setMatch(match);
     result.setEncodingDate(LocalDateTime.now());
     result.setAdminEncoder(adminUser);
@@ -204,16 +214,15 @@ public class MatchService {
 
     match.setStatus("FINISHED");
     matchRepository.save(match);
-    
+
     MatchResult savedResult = matchResultRepository.save(result);
 
     // 🔥 NOUVEAUTÉ : Forfait = L'autre équipe gagne et avance
     advanceWinnerToNextRound(match, savedResult);
 
     Team forfeitingTeam = isTeam1 ? match.getTeam1() : match.getTeam2();
-    String tournamentName = match.getTournament() != null
-        ? match.getTournament().getName()
-        : "Tournoi";
+    String tournamentName =
+        match.getTournament() != null ? match.getTournament().getName() : "Tournoi";
 
     List<User> members = forfeitingTeam.getMembers();
     if (members != null && !members.isEmpty()) {
@@ -223,9 +232,11 @@ public class MatchService {
     return savedResult;
   }
 
-  // --- NOUVELLE MÉTHODE PRIVÉE POUR FAIRE AVANCER LES GAGNANTS (Forfaits) ---
-  private void advanceWinnerToNextRound(Match match, MatchResult result) {
-    if (match == null || result == null || match.getTournament() == null) return;
+  /** Advances the winner of a finished match into the next bracket round. */
+  public void advanceWinnerToNextRound(Match match, MatchResult result) {
+    if (match == null || result == null || match.getTournament() == null) {
+      return;
+    }
 
     Team winner = null;
     if (result.getScoreTeam1() > result.getScoreTeam2()) {
@@ -234,23 +245,25 @@ public class MatchService {
       winner = match.getTeam2();
     }
 
-    if (winner == null) return; 
+    if (winner == null) {
+      return;
+    }
 
     Integer currentRound = match.getRound();
-    if (currentRound == null) return;
+    if (currentRound == null) {
+      return;
+    }
     int nextRound = currentRound + 1;
 
-    List<Match> allMatches = matchRepository.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(
-        match.getTournament().getId()
-    );
+    List<Match> allMatches =
+        matchRepository.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(
+            match.getTournament().getId());
 
-    List<Match> currentRoundMatches = allMatches.stream()
-        .filter(m -> currentRound.equals(m.getRound()))
-        .toList();
+    List<Match> currentRoundMatches =
+        allMatches.stream().filter(m -> currentRound.equals(m.getRound())).toList();
 
-    List<Match> nextRoundMatches = allMatches.stream()
-        .filter(m -> Integer.valueOf(nextRound).equals(m.getRound()))
-        .toList();
+    List<Match> nextRoundMatches =
+        allMatches.stream().filter(m -> Integer.valueOf(nextRound).equals(m.getRound())).toList();
 
     int matchIndex = -1;
     for (int i = 0; i < currentRoundMatches.size(); i++) {
@@ -260,10 +273,14 @@ public class MatchService {
       }
     }
 
-    if (matchIndex == -1 || nextRoundMatches.isEmpty()) return;
+    if (matchIndex == -1 || nextRoundMatches.isEmpty()) {
+      return;
+    }
 
     int targetMatchIndex = matchIndex / 2;
-    if (targetMatchIndex >= nextRoundMatches.size()) return;
+    if (targetMatchIndex >= nextRoundMatches.size()) {
+      return;
+    }
 
     Match nextMatch = nextRoundMatches.get(targetMatchIndex);
 
@@ -275,5 +292,4 @@ public class MatchService {
 
     matchRepository.save(nextMatch);
   }
-  // -------------------------------------------------------------
 }

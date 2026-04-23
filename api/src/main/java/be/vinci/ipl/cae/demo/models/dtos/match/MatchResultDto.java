@@ -3,9 +3,7 @@ package be.vinci.ipl.cae.demo.models.dtos.match;
 import java.time.LocalDateTime;
 import lombok.Data;
 
-/**
- * DTO representing a match result.
- */
+/** DTO representing a match result. */
 @Data
 public class MatchResultDto {
   private Long matchId;

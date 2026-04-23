@@ -17,9 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/**
- * JwtAuthenticationFilter to handle user authentication.
- */
+/** JwtAuthenticationFilter to handle user authentication. */
 @Configuration
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -37,17 +35,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   /**
    * Filters internal requests to manage JWT authentication.
    *
-   * @param request     the HTTP request.
-   * @param response    the HTTP response.
+   * @param request the HTTP request.
+   * @param response the HTTP response.
    * @param filterChain the filter chain.
    * @throws ServletException if a servlet error occurs.
-   * @throws IOException      if an I/O error occurs.
+   * @throws IOException if an I/O error occurs.
    */
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      FilterChain filterChain) throws ServletException, IOException {
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
 
     String token = request.getHeader("Authorization");
 
@@ -75,9 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           UsernamePasswordAuthenticationToken authentication =
               new UsernamePasswordAuthenticationToken(user, null, authorities);
 
-          authentication.setDetails(
-              new WebAuthenticationDetailsSource().buildDetails(request)
-          );
+          authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }

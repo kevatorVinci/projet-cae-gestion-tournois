@@ -4,9 +4,7 @@ import be.vinci.ipl.cae.demo.models.dtos.match.MatchResultDto;
 import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for MatchResult entity.
- */
+/** Mapper for MatchResult entity. */
 @Component
 public class MatchResultMapper {
 

@@ -15,9 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/**
- * Entity representing the final result of a match.
- */
+/** Entity representing the final result of a match. */
 @Data
 @NoArgsConstructor
 @Entity
@@ -62,6 +60,8 @@ public class MatchResult {
 
   @Column(name = "is_definitive", nullable = false)
   private boolean isDefinitive = false;
+
+  /** Associates this result to a match and keeps the shared key in sync. */
   public void setMatch(Match match) {
     this.match = match;
     if (match != null) {

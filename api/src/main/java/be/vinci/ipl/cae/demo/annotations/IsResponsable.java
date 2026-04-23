@@ -6,11 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.springframework.security.access.prepost.PreAuthorize;
 
-/**
- * Restricts access to responsible users only.
- */
+/** Restricts access to responsible users only. */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("hasRole('RESPONSABLE')")
-public @interface IsResponsable {
-}
+public @interface IsResponsable {}

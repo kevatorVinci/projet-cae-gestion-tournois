@@ -27,9 +27,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Controller managing tournament endpoints.
- */
+/** Controller managing tournament endpoints. */
 @RestController
 @RequestMapping("/tournois")
 public class TournamentController {
@@ -42,10 +40,10 @@ public class TournamentController {
   /**
    * Creates the controller with its service dependencies.
    *
-   * @param tournoiService    the tournament service to inject.
-   * @param tournamentMapper  the tournament mapper to inject.
-   * @param matchService      the match service to inject.
-   * @param matchMapper       the match mapper to inject.
+   * @param tournoiService the tournament service to inject.
+   * @param tournamentMapper the tournament mapper to inject.
+   * @param matchService the match service to inject.
+   * @param matchMapper the match mapper to inject.
    */
   public TournamentController(
       TournamentService tournoiService,
@@ -62,13 +60,12 @@ public class TournamentController {
    * Returns public tournaments filtered by optional state and/or name search.
    *
    * @param etat optional state filter.
-   * @param nom  optional name fragment for search.
+   * @param nom optional name fragment for search.
    * @return filtered list of public tournaments.
    */
   @GetMapping("/")
   public Iterable<TournamentResponseDto> getAllPublic(
-      @RequestParam(required = false) String etat,
-      @RequestParam(required = false) String nom) {
+      @RequestParam(required = false) String etat, @RequestParam(required = false) String nom) {
     return tournamentMapper.toDtos(tournoiService.getFiltered(etat, nom));
   }
 
@@ -118,15 +115,14 @@ public class TournamentController {
   /**
    * Updates a tournament. Only allowed in BROUILLON state.
    *
-   * @param id      the tournament identifier.
+   * @param id the tournament identifier.
    * @param payload the new tournament data.
    * @return the updated tournament.
    */
   @PutMapping("/{id}")
   @IsAdmin
   public TournamentResponseDto update(
-      @PathVariable Long id,
-      @Valid @RequestBody TournamentUpdateDto payload) {
+      @PathVariable Long id, @Valid @RequestBody TournamentUpdateDto payload) {
     var tournament = tournamentMapper.toEntity(payload);
     var updated = tournoiService.update(id, tournament);
     if (updated == null) {
@@ -215,8 +211,7 @@ public class TournamentController {
   @PatchMapping("/{id}/cancel")
   @IsAdmin
   public TournamentResponseDto cancel(
-      @PathVariable Long id,
-      @RequestBody(required = false) TournamentCancelDto payload) {
+      @PathVariable Long id, @RequestBody(required = false) TournamentCancelDto payload) {
     String reason = payload == null ? null : payload.reason();
     var tournoi = tournoiService.cancel(id, reason);
     if (tournoi == null) {
@@ -229,15 +224,14 @@ public class TournamentController {
   /**
    * Generates the first-round match schedule for a tournament.
    *
-   * @param id          the tournament identifier.
+   * @param id the tournament identifier.
    * @param currentUser the authenticated admin user.
    * @return the list of created match DTOs.
    */
   @PostMapping("/{id}/schedule")
   @IsAdmin
   public List<MatchDto> generateSchedule(
-      @PathVariable Long id,
-      @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long id, @AuthenticationPrincipal User currentUser) {
     try {
       return matchMapper.toDtos(matchService.generateSchedule(id, currentUser));
     } catch (IllegalStateException e) {

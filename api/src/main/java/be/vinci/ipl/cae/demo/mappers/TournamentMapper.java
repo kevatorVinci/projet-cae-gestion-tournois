@@ -11,9 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for tournament DTO conversions.
- */
+/** Mapper for tournament DTO conversions. */
 @Component
 public class TournamentMapper {
 
@@ -92,13 +90,14 @@ public class TournamentMapper {
       return new Tournament();
     }
 
-    TournamentCreateDto createDto = new TournamentCreateDto(
-        dto.name(),
-        dto.description(),
-        dto.startDate(),
-        dto.endDate(),
-        dto.registrationDeadline(),
-        dto.maxParticipants());
+    TournamentCreateDto createDto =
+        new TournamentCreateDto(
+            dto.name(),
+            dto.description(),
+            dto.startDate(),
+            dto.endDate(),
+            dto.registrationDeadline(),
+            dto.maxParticipants());
 
     return toEntity(createDto);
   }

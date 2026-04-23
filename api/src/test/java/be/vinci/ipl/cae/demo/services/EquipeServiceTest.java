@@ -1,9 +1,17 @@
 package be.vinci.ipl.cae.demo.services;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,37 +19,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-/**
- * Unit tests for TeamService using Mockito.
- */
+/** Unit tests for TeamService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class EquipeServiceTest {
 
-  @Mock
-  private TeamRepository teamRepo;
-  @Mock
-  private UserRepository userRepo;
-  @Mock
-  private NotificationService notificationService;
+  @Mock private TeamRepository teamRepo;
+  @Mock private UserRepository userRepo;
+  @Mock private NotificationService notificationService;
 
-  @InjectMocks
-  private TeamService teamService;
+  @InjectMocks private TeamService teamService;
 
   private User responsible;
   private Team team;
 
-  /**
-   * Set up mock data before each test.
-   */
+  /** Set up mock data before each test. */
   @BeforeEach
   void setUp() {
     responsible = new User();
@@ -57,9 +48,7 @@ class EquipeServiceTest {
     responsible.setTeam(team);
   }
 
-  /**
-   * Tests successful team creation.
-   */
+  /** Tests successful team creation. */
   @Test
   void createTeamOk() {
     User freeUser = new User();
@@ -75,9 +64,7 @@ class EquipeServiceTest {
     assertNotNull(result);
   }
 
-  /**
-   * Tests that the team profile image can be updated by the responsible.
-   */
+  /** Tests that the team profile image can be updated by the responsible. */
   @Test
   void updateTeamImageOk() {
     when(userRepo.findById(1L)).thenReturn(Optional.of(responsible));

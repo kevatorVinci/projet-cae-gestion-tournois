@@ -7,9 +7,7 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repository for managing unavailable periods in the database.
- */
+/** Repository for managing unavailable periods in the database. */
 @Repository
 public interface UnavailabilityRepository extends CrudRepository<Unavailability, Long> {
 
@@ -30,10 +28,7 @@ public interface UnavailabilityRepository extends CrudRepository<Unavailability,
    * @return true when at least one blackout period covers the date.
    */
   boolean existsByUserAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-      User user,
-      LocalDate startDate,
-      LocalDate endDate
-  );
+      User user, LocalDate startDate, LocalDate endDate);
 
   /**
    * Returns the first unavailability period that covers the provided date.
@@ -43,9 +38,7 @@ public interface UnavailabilityRepository extends CrudRepository<Unavailability,
    * @param endDate date upper bound (inclusive).
    * @return matching period when found.
    */
-  Optional<Unavailability> findFirstByUserAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateAsc(
-      User user,
-      LocalDate startDate,
-      LocalDate endDate
-  );
+  Optional<Unavailability>
+      findFirstByUserAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateAsc(
+          User user, LocalDate startDate, LocalDate endDate);
 }

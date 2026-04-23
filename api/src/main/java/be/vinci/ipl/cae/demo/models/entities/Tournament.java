@@ -22,9 +22,7 @@ import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entity representing a tournament lifecycle and its team registrations.
- */
+/** Entity representing a tournament lifecycle and its team registrations. */
 @Entity
 @Table(name = "tournois")
 @Data
@@ -35,77 +33,57 @@ public class Tournament {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /**
-   * The unique name of the tournament.
-   */
+  /** The unique name of the tournament. */
   @Column(name = "nom", unique = true)
   @NotBlank
   @JsonProperty("nom")
   private String name;
 
-  /**
-   * Detailed description of the tournament.
-   */
+  /** Detailed description of the tournament. */
   private String description;
 
-  /**
-   * The date when the tournament starts.
-   */
+  /** The date when the tournament starts. */
   @Column(name = "date_debut")
   @NotNull
   @JsonProperty("dateDebut")
   private LocalDate startDate;
 
-  /**
-   * The date when the tournament ends.
-   */
+  /** The date when the tournament ends. */
   @Column(name = "date_fin")
   @NotNull
   @JsonProperty("dateFin")
   private LocalDate endDate;
 
-  /**
-   * The deadline for teams to register.
-   */
+  /** The deadline for teams to register. */
   @Column(name = "date_limite_inscription")
   @NotNull
   @JsonProperty("dateLimiteInscription")
   private LocalDate registrationDeadline;
 
-  /**
-   * Current status of the tournament (e.g., PENDING, ONGOING, FINISHED).
-   */
+  /** Current status of the tournament (e.g., PENDING, ONGOING, FINISHED). */
   @Column(name = "etat")
   @JsonProperty("etat")
   private String status;
 
-  /**
-   * Maximum number of participating teams allowed.
-   */
+  /** Maximum number of participating teams allowed. */
   @Column(name = "nombres_participants_max")
   @Min(value = 2, message = "Un tournoi doit avoir au moins 2 équipes participantes.")
   @JsonProperty("nombresParticipantsMax")
   private Integer maxParticipants;
 
-  /**
-   * Whether generated matches are visible to non-admin users.
-   */
+  /** Whether generated matches are visible to non-admin users. */
   @Column(name = "planning_match_publie", nullable = false)
   @JsonProperty("planningMatchPublie")
   private boolean matchSchedulePublished = false;
 
-  /**
-   * The team that won the tournament.
-   */
+  /** The team that won the tournament. */
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "id_gagnant")
   @JsonIgnoreProperties({"members", "registrations", "primaryResponsible", "secondaryResponsible"})
   @JsonProperty("gagnant")
   private Team winner;
 
-  /**
-   * List of team registrations for this tournament.
-   */
+  /** List of team registrations for this tournament. */
   @OneToMany(mappedBy = "tournament", fetch = FetchType.LAZY)
   @JsonManagedReference("tournoi-inscriptions")
   private List<RegistrationTeamTournament> registrations = new ArrayList<>();

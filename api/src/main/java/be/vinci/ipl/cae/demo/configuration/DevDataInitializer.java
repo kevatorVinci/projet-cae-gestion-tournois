@@ -7,9 +7,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Seeds the database for the development environment.
- */
+/** Seeds the database for the development environment. */
 @Component
 @Profile("dev")
 public class DevDataInitializer extends AbstractDataInitializer {
@@ -43,22 +41,18 @@ public class DevDataInitializer extends AbstractDataInitializer {
       return;
     }
 
-    List<Team> fourTeams = List.of(
-        data.alpha(),
-        data.omega(),
-        data.iota(),
-        data.dummyTeams().get(0)
-    );
+    List<Team> fourTeams =
+        List.of(data.alpha(), data.omega(), data.iota(), data.dummyTeams().get(0));
 
-    Tournament forfeitTournament = makeTournament(
-        "Forfeit",
-        "Tournoi de test pour la fonctionnalité de forfait",
-        "2026-04-01",
-        "2026-05-31",
-        "2026-04-25",
-        "EN_COURS",
-        4
-    );
+    Tournament forfeitTournament =
+        makeTournament(
+            "Forfeit",
+            "Tournoi de test pour la fonctionnalité de forfait",
+            "2026-04-01",
+            "2026-05-31",
+            "2026-04-25",
+            "EN_COURS",
+            4);
 
     forfeitTournament = tournamentRepo.save(forfeitTournament);
 

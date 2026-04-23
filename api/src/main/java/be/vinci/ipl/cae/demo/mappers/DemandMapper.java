@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper component to convert Demand entities into Data Transfer Objects.
- */
+/** Mapper component to convert Demand entities into Data Transfer Objects. */
 @Component
 public class DemandMapper {
 
@@ -35,8 +33,7 @@ public class DemandMapper {
         demand.getState(),
         demand.getRequestDate(),
         demand.getProcessingDate(),
-        demand.getRejectionReason()
-    );
+        demand.getRejectionReason());
   }
 
   /**

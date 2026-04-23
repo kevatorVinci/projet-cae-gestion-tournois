@@ -20,9 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Controller handling team registrations to tournaments.
- */
+/** Controller handling team registrations to tournaments. */
 @RestController
 @RequestMapping("/tournois")
 public class RegistrationTeamTournamentController {
@@ -35,8 +33,8 @@ public class RegistrationTeamTournamentController {
    * Creates the controller with required services.
    *
    * @param registrationService the registration service.
-   * @param teamService         the team service.
-   * @param registrationMapper  the mapper for registrations.
+   * @param teamService the team service.
+   * @param registrationMapper the mapper for registrations.
    */
   public RegistrationTeamTournamentController(
       RegisterTeamTournamentService registrationService,
@@ -107,15 +105,14 @@ public class RegistrationTeamTournamentController {
   /**
    * Returns all registrations for one team. Accessible to responsible users or admins.
    *
-   * @param teamId      the ID of the team.
+   * @param teamId the ID of the team.
    * @param currentUser the current logged-in user.
    * @return a list of DTOs.
    */
   @GetMapping("/equipes/{equipeId}/inscriptions")
   @IsAdminOrResponsable
   public Iterable<TeamTournamentRegistrationDto> getAllByTeam(
-      @PathVariable("equipeId") Long teamId,
-      @AuthenticationPrincipal User currentUser) {
+      @PathVariable("equipeId") Long teamId, @AuthenticationPrincipal User currentUser) {
     ensureCurrentUserResponsibleForTeam(
         teamId, currentUser, "You can only view your own team registrations");
     return fetchTeamRegistrations(teamId);
@@ -137,8 +134,8 @@ public class RegistrationTeamTournamentController {
    * Registers a team for a tournament. Reserved for the team's responsible user.
    *
    * @param tournamentId the ID of the tournament.
-   * @param teamId       the ID of the team.
-   * @param currentUser  the current user.
+   * @param teamId the ID of the team.
+   * @param currentUser the current user.
    * @return the created registration.
    */
   @PostMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
@@ -148,19 +145,16 @@ public class RegistrationTeamTournamentController {
       @PathVariable("tournoiId") Long tournamentId,
       @PathVariable("equipeId") Long teamId,
       @AuthenticationPrincipal User currentUser) {
-    ensureCurrentUserResponsibleForTeam(
-        teamId, currentUser, "You can only register your own team");
+    ensureCurrentUserResponsibleForTeam(teamId, currentUser, "You can only register your own team");
     try {
       var registration = registrationService.register(tournamentId, teamId);
       if (registration == null) {
         throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Tournament not found, not OUVERT, or team already registered");
+            HttpStatus.BAD_REQUEST, "Tournament not found, not OUVERT, or team already registered");
       }
       return registrationMapper.toEquipeTournamentRegistrationDto(registration);
     } catch (IllegalArgumentException ex) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
   }
 
@@ -170,8 +164,8 @@ public class RegistrationTeamTournamentController {
    * <p>This endpoint is currently not used by the frontend application.
    *
    * @param tournamentId the ID of the tournament.
-   * @param teamId       the ID of the team.
-   * @param currentUser  the current user.
+   * @param teamId the ID of the team.
+   * @param currentUser the current user.
    */
   @DeleteMapping("/{tournoiId}/inscriptions/equipes/{equipeId}")
   @IsAdminOrResponsable
@@ -181,8 +175,7 @@ public class RegistrationTeamTournamentController {
       @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "A responsible cannot unregister a team from a tournament");
+          HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
     }
 
     ensureCurrentUserResponsibleForTeam(
@@ -202,7 +195,7 @@ public class RegistrationTeamTournamentController {
    * <p>This endpoint is currently not used by the frontend application.
    *
    * @param registrationId the ID of the registration.
-   * @param currentUser    the current user.
+   * @param currentUser the current user.
    */
   @DeleteMapping("/inscriptions/{inscriptionId}")
   @IsAdminOrResponsable
@@ -211,8 +204,7 @@ public class RegistrationTeamTournamentController {
       @AuthenticationPrincipal User currentUser) {
     if (!currentUser.isAdmin()) {
       throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "A responsible cannot unregister a team from a tournament");
+          HttpStatus.FORBIDDEN, "A responsible cannot unregister a team from a tournament");
     }
     boolean success = registrationService.unregister(registrationId);
     if (!success) {
