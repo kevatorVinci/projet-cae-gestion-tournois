@@ -17,7 +17,6 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
-  FormControlLabel,
   Stack,
   Typography,
 } from '@mui/material';
@@ -97,6 +96,10 @@ const TournamentMatchCompositionPage = () => {
   const [savingTeamId, setSavingTeamId] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [maxRound, setMaxRound] = useState(1);
+  const [selectionDialogOpen, setSelectionDialogOpen] = useState(false);
+  const [selectionDialogTeamId, setSelectionDialogTeamId] = useState<
+    number | null
+  >(null);
 
   // Forfeit dialog state
   const [forfeitDialogOpen, setForfeitDialogOpen] = useState(false);
@@ -572,159 +575,37 @@ const TournamentMatchCompositionPage = () => {
 
           {teamId && canRequestEditor(teamId) && (
             <Box sx={{ mt: 1 }}>
-              {!editor ? (
-                <Button
-                  variant="outlined"
-                  startIcon={<EditNoteIcon />}
-                  onClick={async () => {
-                    const token = getAuthenticatedUser()?.token;
-                    if (!token) return;
-                    try {
-                      await loadEditor(teamId, token);
-                    } catch (e) {
-                      setFeedback(
-                        e instanceof Error
-                          ? e.message
-                          : 'Impossible de charger les membres éditables.',
-                      );
-                    }
-                  }}
-                  sx={{
-                    borderColor: `${accentColor}88`,
-                    color: accentColor,
-                    '&:hover': {
-                      borderColor: accentColor,
-                      bgcolor: `${accentColor}22`,
-                    },
-                  }}
-                >
-                  Charger les membres
-                </Button>
-              ) : (
-                <Stack spacing={1.25}>
-                  <Typography
-                    variant="subtitle2"
-                    color="rgba(255,255,255,0.75)"
-                  >
-                    Sélection ({selectedIds.length}/{editor.maxPlayers})
-                  </Typography>
-
-                  {[...editor.members]
-                    .sort(
-                      (a, b) =>
-                        Number(Boolean(a.unavailable)) -
-                        Number(Boolean(b.unavailable)),
-                    )
-                    .map((member) => (
-                      <FormControlLabel
-                        key={member.memberId}
-                        sx={{
-                          m: 0,
-                          px: 1,
-                          py: 0.6,
-                          borderRadius: 1.5,
-                          opacity: member.unavailable ? 0.55 : 1,
-                          bgcolor: member.unavailable
-                            ? 'rgba(148,163,184,0.12)'
-                            : selectedIds.includes(member.memberId)
-                              ? `${accentColor}26`
-                              : 'rgba(255,255,255,0.04)',
-                          border: member.unavailable
-                            ? '1px solid rgba(148,163,184,0.35)'
-                            : selectedIds.includes(member.memberId)
-                              ? `1px solid ${accentColor}77`
-                              : '1px solid rgba(255,255,255,0.08)',
-                        }}
-                        control={
-                          <Checkbox
-                            checked={selectedIds.includes(member.memberId)}
-                            onChange={() =>
-                              toggleMember(teamId, member.memberId)
-                            }
-                            disabled={
-                              savingTeamId === teamId ||
-                              !editor.canEdit ||
-                              Boolean(member.unavailable)
-                            }
-                          />
-                        }
-                        label={
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                          >
-                            <Avatar
-                              src={normalizeImageSrc(member.profileImageUrl)}
-                              alt={member.tag}
-                              sx={{ width: 30, height: 30, cursor: 'pointer' }}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openPlayerProfile(member.memberId);
-                              }}
-                            />
-                            <Box>
-                              <Typography
-                                variant="body2"
-                                color="white"
-                                fontWeight={700}
-                                sx={{
-                                  cursor: 'pointer',
-                                  textDecoration: 'underline',
-                                }}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  openPlayerProfile(member.memberId);
-                                }}
-                              >
-                                {member.tag}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="rgba(255,255,255,0.65)"
-                              >
-                                {member.unavailable
-                                  ? member.unavailableStartDate &&
-                                    member.unavailableEndDate
-                                    ? `Indisponible du ${formatShortDate(member.unavailableStartDate)} au ${formatShortDate(member.unavailableEndDate)}`
-                                    : 'Indisponible pour ce match'
-                                  : (member.specialty ??
-                                    'Spécialité non renseignée')}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        }
-                      />
-                    ))}
-
-                  {!editor.canEdit && (
-                    <Alert severity="warning">
-                      Composition verrouillée: le match a déjà commencé.
-                    </Alert>
-                  )}
-
-                  <Button
-                    variant="contained"
-                    onClick={() => saveTeam(teamId)}
-                    disabled={
-                      savingTeamId === teamId ||
-                      !editor.canEdit ||
-                      !canRequestEditor(teamId)
-                    }
-                    sx={{
-                      bgcolor: accentColor,
-                      color: '#06111f',
-                      fontWeight: 800,
-                      '&:hover': { bgcolor: accentColor },
-                      '&.Mui-disabled': { bgcolor: 'rgba(148,163,184,0.4)' },
-                    }}
-                  >
-                    {savingTeamId === teamId
-                      ? 'Enregistrement...'
-                      : 'Enregistrer la composition'}
-                  </Button>
-                </Stack>
-              )}
+              <Button
+                variant="outlined"
+                startIcon={<EditNoteIcon />}
+                onClick={async () => {
+                  const token = getAuthenticatedUser()?.token;
+                  if (!token) return;
+                  try {
+                    await loadEditor(teamId, token);
+                    setSelectionDialogTeamId(teamId);
+                    setSelectionDialogOpen(true);
+                  } catch (e) {
+                    setFeedback(
+                      e instanceof Error
+                        ? e.message
+                        : 'Impossible de charger les membres éditables.',
+                    );
+                  }
+                }}
+                sx={{
+                  borderColor: `${accentColor}88`,
+                  color: accentColor,
+                  '&:hover': {
+                    borderColor: accentColor,
+                    bgcolor: `${accentColor}22`,
+                  },
+                }}
+              >
+                {editor
+                  ? `Modifier la composition (${selectedIds.length}/${editor.maxPlayers})`
+                  : 'Modifier la composition'}
+              </Button>
             </Box>
           )}
         </CardContent>
@@ -1064,6 +945,223 @@ const TournamentMatchCompositionPage = () => {
           </CardContent>
         </Card>
       </Container>
+
+      {/* Selection Dialog */}
+      {selectionDialogTeamId !== null &&
+        (() => {
+          const dTeamId = selectionDialogTeamId;
+          const dEditor = editorViews[dTeamId];
+          const dSelectedIds = selectedByTeam[dTeamId] ?? [];
+          const accentColor = '#e8822a';
+
+          return (
+            <Dialog
+              open={selectionDialogOpen}
+              onClose={() => setSelectionDialogOpen(false)}
+              fullWidth
+              maxWidth="sm"
+              PaperProps={{
+                sx: {
+                  bgcolor: '#0f1729',
+                  color: 'white',
+                  border: '1px solid rgba(232,130,42,0.35)',
+                  borderRadius: 3,
+                },
+              }}
+            >
+              <DialogTitle sx={{ color: 'white', fontWeight: 700 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <EditNoteIcon sx={{ color: accentColor }} />
+                  <span>Modifier la composition</span>
+                  {dEditor && (
+                    <Chip
+                      label={`${dSelectedIds.length} / ${dEditor.maxPlayers}`}
+                      size="small"
+                      sx={{
+                        bgcolor: accentColor,
+                        color: 'white',
+                        fontWeight: 700,
+                        ml: 1,
+                      }}
+                    />
+                  )}
+                </Stack>
+              </DialogTitle>
+
+              <DialogContent
+                dividers
+                sx={{ borderColor: 'rgba(255,255,255,0.1)', p: 1 }}
+              >
+                {!dEditor ? (
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'center', py: 3 }}
+                  >
+                    <CircularProgress size={24} sx={{ color: accentColor }} />
+                  </Box>
+                ) : (
+                  <Stack spacing={0.75} sx={{ p: 1 }}>
+                    {!dEditor.canEdit && (
+                      <Alert severity="warning" sx={{ mb: 1 }}>
+                        Composition verrouillée : le match a déjà commencé.
+                      </Alert>
+                    )}
+
+                    {[...dEditor.members]
+                      .sort(
+                        (a, b) =>
+                          Number(Boolean(a.unavailable)) -
+                          Number(Boolean(b.unavailable)),
+                      )
+                      .map((member) => (
+                        <Box
+                          key={member.memberId}
+                          onClick={() => {
+                            if (
+                              !member.unavailable &&
+                              dEditor.canEdit &&
+                              savingTeamId !== dTeamId
+                            ) {
+                              toggleMember(dTeamId, member.memberId);
+                            }
+                          }}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1.5,
+                            px: 1.5,
+                            py: 1,
+                            borderRadius: 2,
+                            cursor:
+                              member.unavailable || !dEditor.canEdit
+                                ? 'default'
+                                : 'pointer',
+                            opacity: member.unavailable ? 0.55 : 1,
+                            bgcolor: member.unavailable
+                              ? 'rgba(148,163,184,0.12)'
+                              : dSelectedIds.includes(member.memberId)
+                                ? `${accentColor}26`
+                                : 'rgba(255,255,255,0.03)',
+                            border: member.unavailable
+                              ? '1px solid rgba(148,163,184,0.35)'
+                              : dSelectedIds.includes(member.memberId)
+                                ? `1px solid ${accentColor}77`
+                                : '1px solid rgba(255,255,255,0.07)',
+                            transition: 'all 0.15s ease',
+                            '&:hover':
+                              !member.unavailable && dEditor.canEdit
+                                ? {
+                                    bgcolor: `${accentColor}18`,
+                                    borderColor: `${accentColor}55`,
+                                  }
+                                : undefined,
+                          }}
+                        >
+                          <Checkbox
+                            checked={dSelectedIds.includes(member.memberId)}
+                            disabled={
+                              savingTeamId === dTeamId ||
+                              !dEditor.canEdit ||
+                              Boolean(member.unavailable)
+                            }
+                            onChange={() =>
+                              toggleMember(dTeamId, member.memberId)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            sx={{
+                              color: 'rgba(255,255,255,0.4)',
+                              '&.Mui-checked': { color: accentColor },
+                              p: 0.5,
+                            }}
+                          />
+                          <Avatar
+                            src={normalizeImageSrc(member.profileImageUrl)}
+                            alt={member.tag}
+                            sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPlayerProfile(member.memberId);
+                            }}
+                          />
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              variant="body2"
+                              color="white"
+                              fontWeight={700}
+                              sx={{
+                                cursor: 'pointer',
+                                '&:hover': { textDecoration: 'underline' },
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPlayerProfile(member.memberId);
+                              }}
+                            >
+                              {member.tag}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="rgba(255,255,255,0.55)"
+                            >
+                              {member.unavailable
+                                ? member.unavailableStartDate &&
+                                  member.unavailableEndDate
+                                  ? `Indisponible du ${formatShortDate(member.unavailableStartDate)} au ${formatShortDate(member.unavailableEndDate)}`
+                                  : 'Indisponible pour ce match'
+                                : (member.specialty ??
+                                  'Spécialité non renseignée')}
+                            </Typography>
+                          </Box>
+
+                          {dSelectedIds.includes(member.memberId) && (
+                            <Chip
+                              label="Sélectionné"
+                              size="small"
+                              sx={{
+                                bgcolor: `${accentColor}33`,
+                                color: accentColor,
+                                fontWeight: 700,
+                                fontSize: 10,
+                                border: `1px solid ${accentColor}55`,
+                              }}
+                            />
+                          )}
+                        </Box>
+                      ))}
+                  </Stack>
+                )}
+              </DialogContent>
+
+              <DialogActions sx={{ p: 2, gap: 1 }}>
+                <Button
+                  onClick={() => setSelectionDialogOpen(false)}
+                  variant="outlined"
+                  sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  variant="contained"
+                  disabled={savingTeamId === dTeamId || !dEditor?.canEdit}
+                  onClick={async () => {
+                    await saveTeam(dTeamId);
+                    setSelectionDialogOpen(false);
+                  }}
+                  sx={{
+                    bgcolor: accentColor,
+                    color: '#06111f',
+                    fontWeight: 800,
+                    '&:hover': { bgcolor: '#c86e20' },
+                    '&.Mui-disabled': { bgcolor: 'rgba(148,163,184,0.4)' },
+                  }}
+                >
+                  {savingTeamId === dTeamId
+                    ? 'Enregistrement...'
+                    : 'Enregistrer la composition'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          );
+        })()}
 
       {/* Forfeit Confirmation Dialog */}
       <Dialog
