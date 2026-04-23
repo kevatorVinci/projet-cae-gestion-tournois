@@ -100,6 +100,10 @@ const AdminMatchManagement = ({ matches, tournaments, token, onRefresh }: AdminM
     return matchDate <= now && status !== 'FINISHED' && status !== 'COMPLETED';
   };
 
+<<<<<<< HEAD
+=======
+  // ✨ NOUVEAU : Fonction pour détecter les matchs finis !
+>>>>>>> 9e7762c331dd75866010d49f0421beae9533f53b
   const isMatchFinished = (status: string) => {
     return status === 'FINISHED' || status === 'COMPLETED';
   };
@@ -144,6 +148,11 @@ const AdminMatchManagement = ({ matches, tournaments, token, onRefresh }: AdminM
   };
 
   const inProgressMatches = matches.filter((match) => isMatchInProgress(match.scheduledDateTime, match.status));
+<<<<<<< HEAD
+=======
+  
+  // ✨ NOUVEAU : Liste des matchs terminés
+>>>>>>> 9e7762c331dd75866010d49f0421beae9533f53b
   const finishedMatches = matches.filter((match) => isMatchFinished(match.status));
 
   const t1IdForFilter = selectedMatch?.team1Id || (selectedMatch as any)?.team1?.id;
@@ -249,8 +258,13 @@ const AdminMatchManagement = ({ matches, tournaments, token, onRefresh }: AdminM
                   <Card sx={{ 
                     backgroundColor: '#111827', 
                     border: '1px solid rgba(255,255,255,0.05)', 
+<<<<<<< HEAD
                     borderLeft: '4px solid #10b981',
                     opacity: 0.7 
+=======
+                    borderLeft: '4px solid #10b981', // Bordure verte !
+                    opacity: 0.7 // Un peu transparent pour montrer que c'est fini
+>>>>>>> 9e7762c331dd75866010d49f0421beae9533f53b
                   }}>
                     <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Box textAlign="left">
@@ -267,7 +281,15 @@ const AdminMatchManagement = ({ matches, tournaments, token, onRefresh }: AdminM
                         <Chip 
                           label="Résultat Validé" 
                           size="small" 
+<<<<<<< HEAD
                           sx={{ mt: 1, backgroundColor: 'rgba(16,185,129,0.2)', color: '#10b981' }} 
+=======
+                          sx={{ 
+                            mt: 1, 
+                            backgroundColor: 'rgba(16,185,129,0.2)', 
+                            color: '#10b981' 
+                          }} 
+>>>>>>> 9e7762c331dd75866010d49f0421beae9533f53b
                         />
                       </Box>
 
