@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -27,7 +28,7 @@ public class MatchResult {
   @Column(name = "match_id")
   private Long id;
 
-  @OneToOne
+  @OneToOne(cascade = CascadeType.MERGE)
   @MapsId
   @JoinColumn(name = "match_id")
   @ToString.Exclude
@@ -58,4 +59,11 @@ public class MatchResult {
 
   @Column(name = "validation_status_team2", nullable = false)
   private String validationStatusTeam2 = "PENDING";
+
+  public void setMatch(Match match) {
+    this.match = match;
+    if (match != null) {
+      this.id = match.getId();
+    }
+  }
 }
