@@ -16,7 +16,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import { User, UserContextType } from '../../../types';
-import { getAuthenticatedUser } from '../../../utils/session';
+import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 import { getRoundLabelFromMax } from '../../../utils/bracketLabels';
 import { getAllEquipes } from '../../../services/teams';
 import {
@@ -81,6 +81,41 @@ const findUserByParam = (
   );
 };
 
+const resolveMemberId = (
+  decodedId: string,
+  candidate: { id?: number; tag?: string } | null | undefined,
+  token: string,
+): number | null => {
+  if (typeof candidate?.id === 'number' && Number.isFinite(candidate.id)) {
+    return candidate.id;
+  }
+
+  if (!token) return null;
+
+  const payload = decodeJwtPayload(token);
+  const candidateId =
+    typeof payload?.id === 'number'
+      ? payload.id
+      : typeof payload?.userId === 'number'
+        ? payload.userId
+        : Number(payload?.sub);
+
+  if (!Number.isFinite(candidateId)) return null;
+
+  if (candidate?.tag) {
+    const normalizedCandidateTag = candidate.tag.toLowerCase();
+    const normalizedRouteId = decodedId.toLowerCase();
+    if (
+      normalizedCandidateTag === normalizedRouteId ||
+      String(candidateId) === decodedId
+    ) {
+      return candidateId;
+    }
+  }
+
+  return null;
+};
+
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -95,6 +130,11 @@ export default function MemberDetails() {
   >([]);
 
   const isOwnProfile = authenticatedUser?.tag === user?.tag;
+  const maxRound = matches.reduce(
+    (highestRound, currentMatch) =>
+      Math.max(highestRound, currentMatch.round ?? 1),
+    1,
+  );
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return undefined;
@@ -199,7 +239,13 @@ export default function MemberDetails() {
 
         // 3. COMPILER LES DONNÉES
         if (foundUser || foundUserInTeam) {
-          const finalId = foundUser?.id || foundUserInTeam?.id || 0;
+          const token =
+            authenticatedUser?.token || getAuthenticatedUser()?.token || '';
+          const foundUserCandidate = foundUser ?? undefined;
+          const finalId =
+            resolveMemberId(decodedId, foundUserCandidate, token) ||
+            foundUserInTeam?.id ||
+            0;
           const finalTag =
             foundUser?.tag || foundUserInTeam?.tag || 'Joueur Inconnu';
           const finalSpecialty =
@@ -901,7 +947,7 @@ export default function MemberDetails() {
                           >
                             {tournamentName}
                             {match.round != null
-                              ? ` · ${getRoundLabelFromMax(match.round, Math.max(...historyMatches.map((m) => m.round ?? 1)))}`
+                              ? ` · ${getRoundLabelFromMax(match.round, maxRound)}`
                               : ''}
                           </Typography>
                         </Box>

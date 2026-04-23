@@ -15,6 +15,9 @@ import {
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import WavingHandIcon from '@mui/icons-material/WavingHand';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { UserContext } from '../../../contexts/UserContext';
 import { UserContextType, Tournoi } from '../../../types';
 import backgroundImage from '../../../assets/images/background.png';
@@ -32,8 +35,70 @@ const formatDate = (dateValue: string) => {
 const sortByDateAsc = (a: Tournoi, b: Tournoi) =>
   new Date(a.dateDebut).getTime() - new Date(b.dateDebut).getTime();
 
-const sortByDateDesc = (a: Tournoi, b: Tournoi) =>
-  new Date(b.dateDebut).getTime() - new Date(a.dateDebut).getTime();
+// ── Compteur individuel ────────────────────────────────────────────────────────
+type StatCardProps = {
+  icon: React.ReactNode;
+  value: number;
+  label: string;
+  color: string;
+  onClick?: () => void;
+};
+
+const StatCard = ({ icon, value, label, color, onClick }: StatCardProps) => (
+  <Box
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onClick={onClick}
+    onKeyDown={(event) => {
+      if (!onClick) return;
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onClick();
+      }
+    }}
+    sx={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1.5,
+      px: 2.5,
+      py: 1.8,
+      borderRadius: 3,
+      bgcolor: 'rgba(17,24,39,0.75)',
+      border: `1px solid ${color}33`,
+      borderLeft: `4px solid ${color}`,
+      cursor: onClick ? 'pointer' : 'default',
+      transition: 'transform 0.15s ease, border-color 0.15s ease',
+      '&:hover': onClick
+        ? {
+            transform: 'translateY(-2px)',
+            borderColor: `${color}88`,
+          }
+        : undefined,
+    }}
+  >
+    <Box sx={{ color, display: 'flex', fontSize: 28 }}>{icon}</Box>
+    <Box>
+      <Typography
+        sx={{
+          fontFamily: '"Orbitron", sans-serif',
+          fontWeight: 900,
+          fontSize: '1.5rem',
+          color: 'white',
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </Typography>
+      <Typography
+        variant="caption"
+        sx={{ color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}
+      >
+        {label}
+      </Typography>
+    </Box>
+  </Box>
+);
 
 type TournamentCardProps = {
   tournament: Tournoi;
@@ -212,17 +277,36 @@ const HomePage = () => {
     [allTournaments],
   );
 
-  const passes = useMemo(
-    () =>
-      allTournaments
-        .filter((t) => t.etat === 'TERMINE')
-        .sort(sortByDateDesc)
-        .slice(0, 3),
+  // ── Compteurs ─────────────────────────────────────────────────────────────
+  const totalTournaments = allTournaments.length;
+
+  const totalEnCours = useMemo(
+    () => allTournaments.filter((t) => t.etat === 'EN_COURS').length,
     [allTournaments],
   );
 
+  const totalAVenir = useMemo(
+    () =>
+      allTournaments.filter((t) => t.etat === 'OUVERT' || t.etat === 'CLOTURE')
+        .length,
+    [allTournaments],
+  );
+  // ──────────────────────────────────────────────────────────────────────────
+
   const goToTournament = useCallback(
     (id: number | string) => navigate(`/tournois/${id}`),
+    [navigate],
+  );
+
+  const goToTournamentsWithFilter = useCallback(
+    (etat?: 'TOUS' | 'EN_COURS' | 'A_VENIR' | 'PASSES') => {
+      if (!etat || etat === 'TOUS') {
+        navigate('/tournois');
+        return;
+      }
+
+      navigate(`/tournois?etat=${etat}`);
+    },
     [navigate],
   );
 
@@ -268,7 +352,7 @@ const HomePage = () => {
 
   return (
     <Box sx={{ background: 'transparent', minHeight: '100vh' }}>
-      {/* ── HERO compact ──────────────────────────────────────── */}
+      {/* ── HERO ──────────────────────────────────────────────── */}
       <Box
         sx={{
           position: 'relative',
@@ -324,7 +408,6 @@ const HomePage = () => {
           </Typography>
 
           {authenticatedUser ? (
-            // ── Bienvenue agrandi avec icône MUI ──────────────
             <Box
               sx={{
                 display: 'flex',
@@ -344,7 +427,6 @@ const HomePage = () => {
                 sx={{
                   color: '#e8822a',
                   fontWeight: 800,
-                  // ↓ Taille augmentée par rapport à la version précédente
                   fontSize: { xs: '1.3rem', md: '1.7rem' },
                   fontFamily: '"Orbitron", sans-serif',
                   letterSpacing: '0.01em',
@@ -410,91 +492,97 @@ const HomePage = () => {
             <CircularProgress sx={{ color: '#e8822a' }} />
           </Box>
         ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, 1fr)' },
-              gap: 4,
-              alignItems: 'start',
-            }}
-          >
-            {/* En cours */}
-            <Box>
-              <SectionHeader
-                title="En cours"
-                linkLabel="Voir tout"
-                linkColor="#e8822a"
-                onLinkClick={() => navigate('/tournois?etat=EN_COURS')}
+          <>
+            {/* ── COMPTEURS ─────────────────────────────────────── */}
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              sx={{ mb: 4 }}
+            >
+              <StatCard
+                icon={<PlayCircleOutlineIcon fontSize="inherit" />}
+                value={totalEnCours}
+                label="En cours"
+                color="#e8822a"
+                onClick={() => goToTournamentsWithFilter('EN_COURS')}
               />
-              {enCours.length === 0 ? (
-                <EmptyState message="Aucun tournoi en cours." />
-              ) : (
-                <Stack spacing={2}>
-                  {enCours.map((t) => (
-                    <TournamentCard
-                      key={t.id}
-                      tournament={t}
-                      label="En cours"
-                      color="#e8822a"
-                      onClick={() => goToTournament(t.id)}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </Box>
+              <StatCard
+                icon={<CalendarMonthIcon fontSize="inherit" />}
+                value={totalAVenir}
+                label="À venir"
+                color="#3b82f6"
+                onClick={() => goToTournamentsWithFilter('A_VENIR')}
+              />
+              <StatCard
+                icon={<EmojiEventsIcon fontSize="inherit" />}
+                value={totalTournaments}
+                label="Tournois au total"
+                color="#a855f7"
+                onClick={() => goToTournamentsWithFilter('TOUS')}
+              />
+            </Stack>
 
-            {/* A venir */}
-            <Box>
-              <SectionHeader
-                title="Prochains tournois"
-                linkLabel="Voir tout"
-                linkColor="#3b82f6"
-                onLinkClick={() => navigate('/tournois?etat=OUVERT')}
-              />
-              {aVenir.length === 0 ? (
-                <EmptyState message="Aucun tournoi à venir." />
-              ) : (
-                <Stack spacing={2}>
-                  {aVenir.map((t) => (
-                    <TournamentCard
-                      key={t.id}
-                      tournament={t}
-                      label="A venir"
-                      color="#3b82f6"
-                      showMaxTeams
-                      onClick={() => goToTournament(t.id)}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </Box>
+            {/* ── GRILLE : seulement En cours + À venir ─────────── */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+                gap: 4,
+                alignItems: 'start',
+              }}
+            >
+              {/* En cours */}
+              <Box>
+                <SectionHeader
+                  title="En cours"
+                  linkLabel="Voir tout"
+                  linkColor="#e8822a"
+                  onLinkClick={() => goToTournamentsWithFilter('EN_COURS')}
+                />
+                {enCours.length === 0 ? (
+                  <EmptyState message="Aucun tournoi en cours." />
+                ) : (
+                  <Stack spacing={2}>
+                    {enCours.map((t) => (
+                      <TournamentCard
+                        key={t.id}
+                        tournament={t}
+                        label="En cours"
+                        color="#e8822a"
+                        onClick={() => goToTournament(t.id)}
+                      />
+                    ))}
+                  </Stack>
+                )}
+              </Box>
 
-            {/* Passes */}
-            <Box>
-              <SectionHeader
-                title="Tournois passés"
-                linkLabel="Voir tout"
-                linkColor="#10b981"
-                onLinkClick={() => navigate('/tournois?etat=TERMINE')}
-              />
-              {passes.length === 0 ? (
-                <EmptyState message="Aucun tournoi terminé." />
-              ) : (
-                <Stack spacing={2}>
-                  {passes.map((t) => (
-                    <TournamentCard
-                      key={t.id}
-                      tournament={t}
-                      label="Terminé"
-                      color="#10b981"
-                      showWinner
-                      onClick={() => goToTournament(t.id)}
-                    />
-                  ))}
-                </Stack>
-              )}
+              {/* À venir */}
+              <Box>
+                <SectionHeader
+                  title="Prochains tournois"
+                  linkLabel="Voir tout"
+                  linkColor="#3b82f6"
+                  onLinkClick={() => goToTournamentsWithFilter('A_VENIR')}
+                />
+                {aVenir.length === 0 ? (
+                  <EmptyState message="Aucun tournoi à venir." />
+                ) : (
+                  <Stack spacing={2}>
+                    {aVenir.map((t) => (
+                      <TournamentCard
+                        key={t.id}
+                        tournament={t}
+                        label="À venir"
+                        color="#3b82f6"
+                        showMaxTeams
+                        onClick={() => goToTournament(t.id)}
+                      />
+                    ))}
+                  </Stack>
+                )}
+              </Box>
             </Box>
-          </Box>
+          </>
         )}
       </Container>
     </Box>
