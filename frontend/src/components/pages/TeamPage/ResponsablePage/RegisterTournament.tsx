@@ -31,7 +31,6 @@ import {
 import { getUserTeam } from '../../../../services/teams';
 import { getAuthenticatedUser } from '../../../../utils/session';
 
-
 type SelectionStatusFilter = 'ALL' | 'TO_COMPLETE' | 'COMPLETE';
 type TournamentStateFilter =
   | 'ALL'
@@ -42,7 +41,6 @@ type TournamentStateFilter =
   | 'ANNULE';
 type MatchStateFilter = 'ALL' | 'NOT_FINISHED' | 'FINISHED';
 
-
 type MatchSelectionRow = {
   match: TeamMatch;
   tournamentName: string;
@@ -52,10 +50,8 @@ type MatchSelectionRow = {
   maxPlayers: number | null;
 };
 
-
 const normalize = (value?: string): string =>
   (value || '').trim().toLowerCase();
-
 
 const isFinishedMatch = (match: TeamMatch): boolean => {
   const status = normalize(match.status);
@@ -75,7 +71,6 @@ const isFinishedMatch = (match: TeamMatch): boolean => {
   );
 };
 
-
 const formatDateTime = (value?: string): string => {
   if (!value) return 'Date non définie';
   const parsed = new Date(value);
@@ -89,7 +84,6 @@ const formatDateTime = (value?: string): string => {
     hour12: false,
   });
 };
-
 
 const statusChipColor = (etat?: string): string => {
   const normalized = (etat || '').toUpperCase();
@@ -109,14 +103,15 @@ const darkInputSx = {
   },
   '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.65)' },
   // Colore aussi l'icône du date picker en blanc
-  '& .MuiInputAdornment-root .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.65)' },
+  '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+    color: 'rgba(255,255,255,0.65)',
+  },
   // Colore le texte dans le champ input[type=date] nativement
   '& input[type="date"]::-webkit-calendar-picker-indicator': {
     filter: 'invert(1) opacity(0.6)',
     cursor: 'pointer',
   },
 };
-
 
 export function TournoisResponsable() {
   const navigate = useNavigate();
@@ -135,7 +130,7 @@ export function TournoisResponsable() {
 
   // ── NOUVEAUX états pour le filtre de date ──────────────────────────────────
   const [dateFrom, setDateFrom] = useState<string>(''); // format "YYYY-MM-DD"
-  const [dateTo, setDateTo] = useState<string>('');     // format "YYYY-MM-DD"
+  const [dateTo, setDateTo] = useState<string>(''); // format "YYYY-MM-DD"
   // ──────────────────────────────────────────────────────────────────────────
 
   const loadData = useCallback(async () => {
@@ -307,7 +302,15 @@ export function TournoisResponsable() {
 
       return true;
     });
-  }, [rows, search, selectionFilter, matchFilter, tournamentFilter, dateFrom, dateTo]);
+  }, [
+    rows,
+    search,
+    selectionFilter,
+    matchFilter,
+    tournamentFilter,
+    dateFrom,
+    dateTo,
+  ]);
 
   return (
     <Box
@@ -347,7 +350,11 @@ export function TournoisResponsable() {
         >
           <CardContent>
             {/* Ligne 1 : recherche texte + filtres dropdown */}
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={2}
+              sx={{ mb: 2 }}
+            >
               <TextField
                 fullWidth
                 size="small"
@@ -370,9 +377,15 @@ export function TournoisResponsable() {
                   }
                   sx={{
                     color: 'white',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.18)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.32)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#22c55e' },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.18)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.32)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#22c55e',
+                    },
                   }}
                 >
                   <MenuItem value="ALL">Tous les matchs</MenuItem>
@@ -389,17 +402,27 @@ export function TournoisResponsable() {
                   value={selectionFilter}
                   label="Filtre sélection"
                   onChange={(event: SelectChangeEvent<SelectionStatusFilter>) =>
-                    setSelectionFilter(event.target.value as SelectionStatusFilter)
+                    setSelectionFilter(
+                      event.target.value as SelectionStatusFilter,
+                    )
                   }
                   sx={{
                     color: 'white',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.18)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.32)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#22c55e' },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.18)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.32)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#22c55e',
+                    },
                   }}
                 >
                   <MenuItem value="ALL">Tous</MenuItem>
-                  <MenuItem value="TO_COMPLETE">Sans sélection / incomplète</MenuItem>
+                  <MenuItem value="TO_COMPLETE">
+                    Sans sélection / incomplète
+                  </MenuItem>
                   <MenuItem value="COMPLETE">Sélection complète</MenuItem>
                 </Select>
               </FormControl>
@@ -412,13 +435,21 @@ export function TournoisResponsable() {
                   value={tournamentFilter}
                   label="Filtre tournoi"
                   onChange={(event: SelectChangeEvent<TournamentStateFilter>) =>
-                    setTournamentFilter(event.target.value as TournamentStateFilter)
+                    setTournamentFilter(
+                      event.target.value as TournamentStateFilter,
+                    )
                   }
                   sx={{
                     color: 'white',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.18)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.32)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#22c55e' },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.18)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.32)',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#22c55e',
+                    },
                   }}
                 >
                   <MenuItem value="ALL">Tous les tournois</MenuItem>
@@ -432,7 +463,11 @@ export function TournoisResponsable() {
             </Stack>
 
             {/* ── Ligne 2 : filtre par plage de dates ── */}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              alignItems="center"
+            >
               <TextField
                 size="small"
                 type="date"
@@ -458,7 +493,10 @@ export function TournoisResponsable() {
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={() => { setDateFrom(''); setDateTo(''); }}
+                  onClick={() => {
+                    setDateFrom('');
+                    setDateTo('');
+                  }}
                   sx={{
                     color: 'rgba(255,255,255,0.7)',
                     borderColor: 'rgba(255,255,255,0.25)',

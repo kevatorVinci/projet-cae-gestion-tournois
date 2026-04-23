@@ -55,20 +55,6 @@ const mockRegistrations = [
   },
 ];
 
-const mockMatches = [
-  {
-    id: 44,
-    tournamentId: 12,
-    team1Name: 'Les Tacticiens',
-    team2Name: 'Les Champions',
-    round: 1,
-    scheduledDateTime: '2026-03-21T18:30:00.000Z',
-    status: 'TERMINE',
-    scoreTeam1: 2,
-    scoreTeam2: 1,
-  },
-];
-
 const mockHistoryMatches = [
   {
     id: 44,
