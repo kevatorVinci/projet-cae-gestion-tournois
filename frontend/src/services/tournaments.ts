@@ -572,3 +572,20 @@ export const unregisterTeam = async (
     );
   }
 };
+
+export const declareForfeit = async (
+  matchId: number,
+  teamId: number,
+  token: string,
+): Promise<void> => {
+  const response = await fetch(`/api/matches/${matchId}/forfeit/${teamId}`, {
+    method: 'POST',
+    headers: {
+      Authorization: token,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Impossible de déclarer forfait.');
+  }
+};

@@ -11,6 +11,11 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   FormControlLabel,
   Stack,
@@ -30,6 +35,7 @@ import {
   MatchTeamSelectionView,
   TeamMatch,
   updateMatchTeamSelection,
+  declareForfeit,
 } from '../../../services/tournaments';
 import { getUserTeam, isCurrentUserResponsable } from '../../../services/teams';
 import { useAdminView } from '../../../contexts/useAdminView';
@@ -92,6 +98,11 @@ const TournamentMatchCompositionPage = () => {
   const [savingTeamId, setSavingTeamId] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [maxRound, setMaxRound] = useState(1);
+
+  // Forfeit dialog state
+  const [forfeitDialogOpen, setForfeitDialogOpen] = useState(false);
+  const [forfeitingTeamId, setForfeitingTeamId] = useState<number | null>(null);
+  const [forfeitingTeamName, setForfeitingTeamName] = useState<string>('');
 
   const parsedMatchId = toMatchId(matchId);
   const effectiveAdminFlag =
@@ -373,6 +384,34 @@ const TournamentMatchCompositionPage = () => {
     }
   };
 
+  const openForfeitDialog = (teamId: number, teamName: string) => {
+    setForfeitingTeamId(teamId);
+    setForfeitingTeamName(teamName);
+    setForfeitDialogOpen(true);
+  };
+
+  const handleConfirmForfeit = async () => {
+    const token = getAuthenticatedUser()?.token;
+    if (!token || !forfeitingTeamId) return;
+
+    try {
+      await declareForfeit(parsedMatchId!, forfeitingTeamId, token);
+      setFeedback(
+        `L'équipe ${forfeitingTeamName} a déclaré forfait. Score: 0 - 5.`,
+      );
+      // Refresh the match data
+      await refreshSelections(token);
+    } catch (e) {
+      setFeedback(
+        e instanceof Error ? e.message : 'Impossible de déclarer forfait.',
+      );
+    } finally {
+      setForfeitDialogOpen(false);
+      setForfeitingTeamId(null);
+      setForfeitingTeamName('');
+    }
+  };
+
   const renderTeamPanel = (
     teamId: number | undefined,
     teamName: string | undefined,
@@ -389,6 +428,13 @@ const TournamentMatchCompositionPage = () => {
       : [];
 
     const hiddenForViewer = shouldHideTeamSelection(teamId);
+
+    // Only the responsable of this specific team can see the forfeit option
+    const canForfeit =
+      !isAdmin &&
+      teamId !== undefined &&
+      responsibleTeamId === teamId &&
+      editor !== undefined;
 
     return (
       <Card
@@ -536,12 +582,37 @@ const TournamentMatchCompositionPage = () => {
                 </Button>
               ) : (
                 <Stack spacing={1.25}>
-                  <Typography
-                    variant="subtitle2"
-                    color="rgba(255,255,255,0.75)"
+                  {/* Sélection header with forfeit link on the other side */}
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
                   >
-                    Sélection ({selectedIds.length}/{editor.maxPlayers})
-                  </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      color="rgba(255,255,255,0.75)"
+                    >
+                      Sélection ({selectedIds.length}/{editor.maxPlayers})
+                    </Typography>
+                    {canForfeit && (
+                      <Typography
+                        variant="caption"
+                        onClick={() => openForfeitDialog(teamId, safeTeamName)}
+                        sx={{
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          fontWeight: 900,
+                          letterSpacing: '0.02em',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                            opacity: 0.8,
+                          },
+                        }}
+                      >
+                        Déclarer forfait
+                      </Typography>
+                    )}
+                  </Stack>
 
                   {[...editor.members]
                     .sort((a, b) => Number(Boolean(a.unavailable)) - Number(Boolean(b.unavailable)))
@@ -952,6 +1023,52 @@ const TournamentMatchCompositionPage = () => {
           </CardContent>
         </Card>
       </Container>
+
+      {/* Forfeit Confirmation Dialog */}
+      <Dialog
+        open={forfeitDialogOpen}
+        onClose={() => setForfeitDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: '#1a2540',
+            color: 'white',
+            border: '1px solid rgba(255,255,255,0.12)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: '#ef4444', fontWeight: 700 }}>
+          Déclarer forfait
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'rgba(255,255,255,0.7)' }}>
+            Êtes-vous sûr de vouloir déclarer forfait pour l'équipe{' '}
+            <strong style={{ color: 'white' }}>{forfeitingTeamName}</strong> ?
+            <br />
+            <br />
+            Cette action entraînera la défaite de votre équipe dans ce match.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={() => setForfeitDialogOpen(false)}
+            sx={{ color: 'rgba(255,255,255,0.7)' }}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleConfirmForfeit}
+            variant="contained"
+            sx={{
+              bgcolor: '#ef4444',
+              color: 'white',
+              fontWeight: 700,
+              '&:hover': { bgcolor: '#dc2626' },
+            }}
+          >
+            Oui, déclarer forfait
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
