@@ -98,21 +98,11 @@ public class MatchResultService {
     if (team == null) return;
 
     if (team.getPrimaryResponsible() != null) {
-      Notification n = new Notification();
-      n.setUser(team.getPrimaryResponsible());
-      n.setMessage(message);
-      n.setSentDate(LocalDateTime.now());
-      n.setIsRead(false);
-      notificationRepository.save(n);
+      notificationService.createNotification(team.getPrimaryResponsible(), message);
     }
 
     if (team.getSecondaryResponsible() != null) {
-      Notification n = new Notification();
-      n.setUser(team.getSecondaryResponsible());
-      n.setMessage(message);
-      n.setSentDate(LocalDateTime.now());
-      n.setIsRead(false); 
-      notificationRepository.save(n);
+      notificationService.createNotification(team.getSecondaryResponsible(), message);
     }
   }
 
