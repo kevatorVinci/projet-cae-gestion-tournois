@@ -103,8 +103,6 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
       String(a.id).localeCompare(String(b.id)),
     );
 
-    let matchIndexCursor = 0;
-
     for (let j = 0; j < Math.ceil(prevRound.length / 2); j++) {
       const p1 = prevRound[j * 2];
       const p2 = prevRound[j * 2 + 1];
@@ -138,17 +136,13 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
         );
       });
 
-      if (
-        realMatchIndex === -1 &&
-        matchIndexCursor < currentRoundMatches.length
-      ) {
-        realMatchIndex = matchIndexCursor;
+      if (realMatchIndex === -1 && currentRoundMatches.length > 0) {
+        realMatchIndex = 0;
       }
 
       let realMatch: TeamMatch | undefined = undefined;
       if (realMatchIndex !== -1) {
         realMatch = currentRoundMatches.splice(realMatchIndex, 1)[0];
-        matchIndexCursor++;
       }
 
       if (realMatch) {

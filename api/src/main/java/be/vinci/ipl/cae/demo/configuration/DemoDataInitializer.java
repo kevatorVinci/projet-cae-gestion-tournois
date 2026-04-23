@@ -146,12 +146,13 @@ public class DemoDataInitializer extends AbstractDataInitializer {
         "PENDING"
     );
 
+    // R1 - Mai 7 : 16h05 et 18h05 (2h d'écart avec OMEGA/ALPHA à 14h05)
     Match matchBetaGamma = createMatch(
       data.springBattle(),
       data.dummyTeams().get(0),
       data.dummyTeams().get(1),
       1,
-      demoDateTime.plusHours(4),
+      LocalDateTime.of(2026, 5, 7, 16, 5),
       data.lea(),
       "PENDING"
     );
@@ -162,41 +163,40 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       data.dummyTeams().get(2),
       data.dummyTeams().get(3),
       1,
-      demoDateTime.plusHours(5),
+      LocalDateTime.of(2026, 5, 7, 18, 5),
       data.lea(),
       "PENDING"
     );
     addSelectionsForMatch(matchEpsilonZeta);
 
-    // R2 : gagnant(DELTA/IOTA) vs gagnant(OMEGA/ALPHA)
+    // R2 - Mai 9 (2 matchs à 2h d'écart)
     createMatch(
       data.springBattle(),
       null,
       null,
       2,
-      demoDateTime.plusHours(7),
+      LocalDateTime.of(2026, 5, 9, 14, 0),
       data.lea(),
       "PENDING"
     );
 
-    // R2 : gagnant(BETA/GAMMA) vs gagnant(EPSILON/ZETA)
     createMatch(
       data.springBattle(),
       null,
       null,
       2,
-      demoDateTime.plusHours(7).plusMinutes(90),
+      LocalDateTime.of(2026, 5, 9, 16, 0),
       data.lea(),
       "PENDING"
     );
 
-    // Finale (R3)
+    // Finale (R3) - Mai 12
     createMatch(
       data.springBattle(),
       null,
       null,
       3,
-      demoDateTime.plusHours(10),
+      LocalDateTime.of(2026, 5, 12, 14, 0),
       data.lea(),
       "PENDING"
     );

@@ -154,9 +154,11 @@ public class MatchService {
     int bracketSize = nextPowerOfTwo(teamCount);
     int[] seeds = bracketSeeds(bracketSize);
 
-    LocalDateTime matchDate = tournament.getStartDate().atTime(10, 0);
+    int totalRounds = Integer.numberOfTrailingZeros(bracketSize);
     List<Match> matches = new ArrayList<>();
 
+    // Round 1 : équipes réelles, 2h d'écart entre chaque match
+    LocalDateTime matchDate = tournament.getStartDate().atTime(10, 0);
     for (int i = 0; i < bracketSize; i += 2) {
       int seed1 = seeds[i];
       int seed2 = seeds[i + 1];
@@ -181,6 +183,44 @@ public class MatchService {
       match.setScheduledDateTime(matchDate);
       match.setAdminResponsible(admin);
       matches.add(matchRepository.save(match));
+      matchDate = matchDate.plusHours(2);
+    }
+
+    // Rounds 2+ : auto-avance uniquement si les DEUX prédécesseurs sont des byes
+    List<Match> prevRoundMatches = new ArrayList<>(matches);
+    for (int round = 2; round <= totalRounds; round++) {
+      int matchesInRound = bracketSize / (1 << round);
+      LocalDateTime roundStart = tournament.getStartDate().atTime(10, 0)
+          .plusDays((long) (round - 1) * 2);
+      List<Match> thisRoundMatches = new ArrayList<>();
+      for (int i = 0; i < matchesInRound; i++) {
+        Team team1 = null;
+        Team team2 = null;
+        int idx1 = i * 2;
+        int idx2 = i * 2 + 1;
+        if (idx1 < prevRoundMatches.size() && idx2 < prevRoundMatches.size()) {
+          Match prev1 = prevRoundMatches.get(idx1);
+          Match prev2 = prevRoundMatches.get(idx2);
+          boolean prev1IsBye = prev1.getTeam1() != null && prev1.getTeam2() == null;
+          boolean prev2IsBye = prev2.getTeam1() != null && prev2.getTeam2() == null;
+          if (prev1IsBye && prev2IsBye) {
+            team1 = prev1.getTeam1();
+            team2 = prev2.getTeam1();
+          }
+        }
+        Match match = new Match();
+        match.setTournament(tournament);
+        match.setTeam1(team1);
+        match.setTeam2(team2);
+        match.setRound(round);
+        match.setScheduledDateTime(roundStart);
+        match.setAdminResponsible(admin);
+        Match saved = matchRepository.save(match);
+        matches.add(saved);
+        thisRoundMatches.add(saved);
+        roundStart = roundStart.plusHours(2);
+      }
+      prevRoundMatches = thisRoundMatches;
     }
 
     return matches;
