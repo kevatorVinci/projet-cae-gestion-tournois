@@ -38,7 +38,7 @@ import { getEquipeById } from '../../../services/teams';
 import {
   fetchAcceptedTournamentRegistrations,
   fetchPublicTournaments,
-  fetchTeamMatches,
+  fetchTeamMatchTimeline,
   TeamMatch,
 } from '../../../services/tournaments';
 import { Equipe, Tournoi } from '../../../types';
@@ -435,24 +435,21 @@ const MatchHistorySection = ({ teamId }: MatchHistorySectionProps) => {
   const [matchFilter, setMatchFilter] = useState<MatchFilterState>('ALL');
   const [matchSearch, setMatchSearch] = useState('');
 
- useEffect(() => {
-  console.log('🔍 teamId reçu:', teamId);
-  fetchTeamMatches(teamId)
-    .then((data) => {
-      console.log('✅ Matchs reçus:', data);
-      const sorted = [...data].sort((a, b) => {
-        const aTs = a.scheduledDateTime ? Date.parse(a.scheduledDateTime) : 0;
-        const bTs = b.scheduledDateTime ? Date.parse(b.scheduledDateTime) : 0;
-        return bTs - aTs;
-      });
-      setMatches(sorted);
-    })
-    .catch((err) => {
-      console.error('❌ Erreur fetchTeamMatches:', err);
-      setMatches([]);
-    })
-    .finally(() => setLoading(false));
-}, [teamId]);  
+  useEffect(() => {
+    fetchTeamMatchTimeline(teamId)
+      .then((data) => {
+        const sorted = [...data].sort((a, b) => {
+          const aTs = a.scheduledDateTime ? Date.parse(a.scheduledDateTime) : 0;
+          const bTs = b.scheduledDateTime ? Date.parse(b.scheduledDateTime) : 0;
+          return bTs - aTs;
+        });
+        setMatches(sorted);
+      })
+      .catch(() => {
+        setMatches([]);
+      })
+      .finally(() => setLoading(false));
+  }, [teamId]);
 
   const getMatchStatus = (
     match: TeamMatch,
@@ -616,11 +613,6 @@ const MatchHistorySection = ({ teamId }: MatchHistorySectionProps) => {
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Chip
-              label={`${filteredMatches.length}/${matches.length}`}
-              size="small"
-              sx={{ bgcolor: '#6366f1', color: 'white', fontWeight: 700 }}
-            />
             {hasMore && (
               <Button
                 size="small"
@@ -812,8 +804,16 @@ export default function TeamDetails() {
         try {
           const publicTournaments =
             (await fetchPublicTournaments()) as Tournoi[];
+          const teamMatches = await fetchTeamMatchTimeline(data.id);
+          const registeredTournamentIds = new Set(
+            teamMatches.map((match) => match.tournamentId),
+          );
           const checks = await Promise.all(
             publicTournaments.map(async (tournoi) => {
+              if (registeredTournamentIds.has(tournoi.id)) {
+                return tournoi;
+              }
+
               const acceptedRegistrations =
                 await fetchAcceptedTournamentRegistrations(tournoi.id);
               const isTeamRegistered = acceptedRegistrations.some(

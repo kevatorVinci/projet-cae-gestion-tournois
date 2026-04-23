@@ -52,7 +52,7 @@ import { useNavigate } from 'react-router-dom';
 import { decodeJwtPayload, getAuthenticatedUser } from '../../../utils/session';
 import {
   fetchTeamRegistrationsPublic,
-  fetchTeamMatches,
+  fetchTeamMatchTimeline,
   TeamRegistrationItem,
   TeamMatch,
 } from '../../../services/tournaments';
@@ -322,7 +322,7 @@ const MatchHistorySection = ({ teamId }: MatchHistorySectionProps) => {
   const [matchSearch, setMatchSearch] = useState('');
 
   useEffect(() => {
-    fetchTeamMatches(teamId)
+    fetchTeamMatchTimeline(teamId)
       .then((data) => {
         const sorted = [...data].sort((a, b) => {
           const aTs = a.scheduledDateTime ? Date.parse(a.scheduledDateTime) : 0;
@@ -492,11 +492,6 @@ const MatchHistorySection = ({ teamId }: MatchHistorySectionProps) => {
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Chip
-              label={`${filteredMatches.length}/${matches.length}`}
-              size="small"
-              sx={{ bgcolor: '#6366f1', color: 'white', fontWeight: 700 }}
-            />
             {hasMore && (
               <Button
                 size="small"
