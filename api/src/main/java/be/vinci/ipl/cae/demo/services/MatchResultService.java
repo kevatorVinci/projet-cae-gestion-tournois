@@ -36,37 +36,89 @@ public class MatchResultService {
     this.notificationService = notificationService;
   }
 
+  /**
+   * Encodes the result of a match (by an admin).
+   * If a result already exists (e.g., disputed match), updates it instead of creating a new one.
+   */
   @Transactional
   public MatchResult encodeResult(Long matchId, MatchResultCreateDto dto) {
-    Match match = matchRepository.findById(matchId).orElse(null);
-    User admin = userRepository.findById(dto.getAdminEncoderId()).orElse(null);
+    Match match = matchRepository.findById(matchId)
+            .orElseThrow(() -> new IllegalArgumentException("Match introuvable."));
 
-    if (match == null || admin == null) {
-      return null;
+    User admin = userRepository.findById(dto.getAdminEncoderId())
+            .orElseThrow(() -> new IllegalArgumentException("Administrateur introuvable."));
+
+    // On cherche s'il y a DEJA un résultat pour ce match
+    MatchResult result = matchResultRepository.findById(matchId).orElse(null);
+
+    if (result == null) {
+      // C'est un nouveau résultat, on le crée
+      result = new MatchResult();
+      result.setMatch(match);
+      result.setId(match.getId());
     }
 
-    MatchResult result = new MatchResult();
-    result.setMatch(match);
-    result.setAdminEncoder(admin);
+    // On met à jour les scores et les données
     result.setScoreTeam1(dto.getScoreTeam1());
     result.setScoreTeam2(dto.getScoreTeam2());
     result.setForfeitTeam1(dto.isForfeitTeam1());
     result.setForfeitTeam2(dto.isForfeitTeam2());
+    result.setAdminEncoder(admin);
     result.setEncodingDate(LocalDateTime.now());
-    result.setValidationStatusTeam1("PENDING");
-    result.setValidationStatusTeam2("PENDING");
-    result.setDefinitive(false);
 
-    match.setStatus("WAITING_VALIDATION");
+    // Statut en attente (ou validé si forfait)
+    if (dto.isForfeitTeam1() || dto.isForfeitTeam2()) {
+      result.setValidationStatusTeam1("VALIDATED");
+      result.setValidationStatusTeam2("VALIDATED");
+      match.setStatus("COMPLETED");
+    } else {
+      result.setValidationStatusTeam1("PENDING");
+      result.setValidationStatusTeam2("PENDING");
+      match.setStatus("WAITING_VALIDATION");
+    }
+
+    // On sauvegarde le match
     matchRepository.save(match);
+    MatchResult savedResult = matchResultRepository.save(result);
 
-    MatchResult saved = matchResultRepository.save(result);
+    // ✨ C'est ici qu'on crée LA notification parfaite pour le site web !
+    if (!dto.isForfeitTeam1() && !dto.isForfeitTeam2()) {
+      String messageNotif = "Le score du match #" + match.getId() + " a été encodé. Allez le valider !";
+      envoyerNotifAuxCapitaines(match.getTeam1(), messageNotif);
+      envoyerNotifAuxCapitaines(match.getTeam2(), messageNotif);
+    }
 
-    notifyTeamResponsibles(match, dto.getScoreTeam1(), dto.getScoreTeam2());
-
-    return saved;
+    return savedResult;
   }
 
+  /**
+   * Fonction magique pour envoyer la notification aux capitaines d'une équipe.
+   */
+  private void envoyerNotifAuxCapitaines(Team team, String message) {
+    if (team == null) return;
+
+    if (team.getPrimaryResponsible() != null) {
+      Notification n = new Notification();
+      n.setUser(team.getPrimaryResponsible());
+      n.setMessage(message);
+      n.setSentDate(LocalDateTime.now());
+      n.setIsRead(false);
+      notificationRepository.save(n);
+    }
+
+    if (team.getSecondaryResponsible() != null) {
+      Notification n = new Notification();
+      n.setUser(team.getSecondaryResponsible());
+      n.setMessage(message);
+      n.setSentDate(LocalDateTime.now());
+      n.setIsRead(false); 
+      notificationRepository.save(n);
+    }
+  }
+
+  /**
+   * Validates or rejects a match result by a team captain.
+   */
   @Transactional
   public MatchResult validateResult(Long matchId, Long teamId, boolean accepted) {
     MatchResult result = matchResultRepository.findById(matchId).orElse(null);
@@ -100,7 +152,7 @@ public class MatchResultService {
       matchRepository.save(match);
       notifyAdminDispute(match, result.getAdminEncoder(), isTeam1 ? team1 : team2);
     } else if ("VALIDATED".equals(result.getValidationStatusTeam1())
-        && "VALIDATED".equals(result.getValidationStatusTeam2())) {
+            && "VALIDATED".equals(result.getValidationStatusTeam2())) {
       match.setStatus("FINISHED");
       matchRepository.save(match);
       // 🔥 NOUVEAUTÉ : Le match est validé, on fait avancer le vainqueur
@@ -144,6 +196,9 @@ public class MatchResultService {
     return saved;
   }
 
+  /**
+   * Finds a result for a specific match.
+   */
   public MatchResult getResultForMatch(Long matchId) {
     return matchResultRepository.findById(matchId).orElse(null);
   }
@@ -166,6 +221,9 @@ public class MatchResultService {
       
       // 🔥 NOUVEAUTÉ : Auto-validation, on fait avancer le vainqueur
       advanceWinnerToNextRound(res.getMatch(), res);
+
+      System.out.println("🤖 ROBOT : Le match #" + res.getMatch().getId()
+              + " a été validé automatiquement après 2 heures !");
     }
   }
 
