@@ -21,7 +21,6 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import BackButton from '../../BackButton';
@@ -184,7 +183,6 @@ const TournamentMatchCompositionPage = () => {
           setResponsibleTeamId(effectiveResponsibleTeamId);
           setUserTeamId(myTeam?.id ?? null);
 
-          // Seul le responsable peut pré-charger l'éditeur de sa team, l'admin ne peut plus.
           const editableTeamIds = [selectedMatch.team1Id, selectedMatch.team2Id]
             .filter((teamId): teamId is number => typeof teamId === 'number')
             .filter((teamId) => teamId === effectiveResponsibleTeamId);
@@ -266,6 +264,14 @@ const TournamentMatchCompositionPage = () => {
     };
   }, [match]);
 
+  const userCanForfeit = useMemo(() => {
+    if (!match || !responsibleTeamId || isAdmin || isAutoQualifiedMatch)
+      return false;
+    return (
+      match.team1Id === responsibleTeamId || match.team2Id === responsibleTeamId
+    );
+  }, [match, responsibleTeamId, isAdmin, isAutoQualifiedMatch]);
+
   const canRequestEditor = (teamId?: number) => {
     if (!teamId) return false;
     if (isAdminView) return false;
@@ -273,7 +279,6 @@ const TournamentMatchCompositionPage = () => {
     if (matchStarted) return false;
     const token = getAuthenticatedUser()?.token;
     if (!token) return false;
-    // On retire isAdmin ici. Seul le responsable peut ouvrir l'éditeur de l'équipe
     return responsibleTeamId === teamId;
   };
 
@@ -281,9 +286,7 @@ const TournamentMatchCompositionPage = () => {
     if (!teamId) return false;
     if (isAdmin) return false;
     if (matchStarted) return false;
-    // Un membre (ou responsable) peut toujours voir la composition de sa propre équipe
     if (userTeamId === teamId) return false;
-    // La composition adverse est cachée jusqu'au début du match
     return true;
   };
 
@@ -330,7 +333,6 @@ const TournamentMatchCompositionPage = () => {
       return;
     }
 
-    // L'admin n'a plus de passe-droit pour sauvegarder une composition qui n'est pas la sienne
     if (responsibleTeamId !== teamId) {
       setFeedback('Tu ne peux modifier que la composition de ton équipe.');
       return;
@@ -355,8 +357,13 @@ const TournamentMatchCompositionPage = () => {
     }
   };
 
-  const openForfeitDialog = (teamId: number, teamName: string) => {
-    setForfeitingTeamId(teamId);
+  const openForfeitDialog = () => {
+    if (!responsibleTeamId || !match) return;
+    const teamName =
+      match.team1Id === responsibleTeamId
+        ? (match.team1Name ?? 'Votre équipe')
+        : (match.team2Name ?? 'Votre équipe');
+    setForfeitingTeamId(responsibleTeamId);
     setForfeitingTeamName(teamName);
     setForfeitDialogOpen(true);
   };
@@ -370,8 +377,8 @@ const TournamentMatchCompositionPage = () => {
       setFeedback(
         `L'équipe ${forfeitingTeamName} a déclaré forfait. Score: 0 - 5.`,
       );
-      // Refresh the match data
       await refreshSelections(token);
+      navigate(`/tournois/${id}/matchs`);
     } catch (e) {
       setFeedback(
         e instanceof Error ? e.message : 'Impossible de déclarer forfait.',
@@ -399,13 +406,6 @@ const TournamentMatchCompositionPage = () => {
       : [];
 
     const hiddenForViewer = shouldHideTeamSelection(teamId);
-
-    // Only the responsable of this specific team can see the forfeit option
-    const canForfeit =
-      !isAdmin &&
-      teamId !== undefined &&
-      responsibleTeamId === teamId &&
-      editor !== undefined;
 
     return (
       <Card
@@ -553,37 +553,12 @@ const TournamentMatchCompositionPage = () => {
                 </Button>
               ) : (
                 <Stack spacing={1.25}>
-                  {/* Sélection header with forfeit link on the other side */}
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
+                  <Typography
+                    variant="subtitle2"
+                    color="rgba(255,255,255,0.75)"
                   >
-                    <Typography
-                      variant="subtitle2"
-                      color="rgba(255,255,255,0.75)"
-                    >
-                      Sélection ({selectedIds.length}/{editor.maxPlayers})
-                    </Typography>
-                    {canForfeit && (
-                      <Typography
-                        variant="caption"
-                        onClick={() => openForfeitDialog(teamId, safeTeamName)}
-                        sx={{
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                          fontWeight: 900,
-                          letterSpacing: '0.02em',
-                          '&:hover': {
-                            textDecoration: 'underline',
-                            opacity: 0.8,
-                          },
-                        }}
-                      >
-                        Déclarer forfait
-                      </Typography>
-                    )}
-                  </Stack>
+                    Sélection ({selectedIds.length}/{editor.maxPlayers})
+                  </Typography>
 
                   {editor.members.map((member) => (
                     <FormControlLabel
@@ -759,20 +734,27 @@ const TournamentMatchCompositionPage = () => {
                 </Typography>
               </Box>
 
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={() => navigate(`/tournois/${id}/matchs`)}
-                sx={{
-                  color: '#93c5fd',
-                  borderColor: 'rgba(147,197,253,0.55)',
-                  py: 1,
-                  px: 3,
-                  borderRadius: 2,
-                }}
-              >
-                Retour au bracket
-              </Button>
+              {userCanForfeit && (
+                <Button
+                  variant="outlined"
+                  onClick={openForfeitDialog}
+                  sx={{
+                    color: '#ef4444',
+                    borderColor: '#ef4444',
+                    py: 1,
+                    px: 3,
+                    borderRadius: 2,
+                    backgroundColor: 'transparent',
+                    '&:hover': {
+                      backgroundColor: '#ef4444',
+                      borderColor: '#ef4444',
+                      color: 'white',
+                    },
+                  }}
+                >
+                  Déclarer forfait
+                </Button>
+              )}
             </Stack>
 
             {feedback && (
