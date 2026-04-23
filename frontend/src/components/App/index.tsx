@@ -42,7 +42,6 @@ import MatchValidationPage from '../pages/Match/MatchValidationPage';
 const appBlueGradient =
   'linear-gradient(180deg, #040a1a 0%, #080f2e 45%, #050812 100%)';
 
-// ✨ CORRECTION : Création du composant ScrollToTop manquant
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {

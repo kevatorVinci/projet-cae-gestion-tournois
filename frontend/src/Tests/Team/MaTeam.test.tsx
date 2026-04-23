@@ -15,7 +15,10 @@ import {
   depromoteResponsable,
   leaveEquipe,
 } from '../../services/teams';
-import { fetchTeamRegistrationsPublic } from '../../services/tournaments';
+import {
+  fetchTeamRegistrationsPublic,
+  fetchTeamMatchTimeline,
+} from '../../services/tournaments';
 import { getAuthenticatedUser, decodeJwtPayload } from '../../utils/session';
 
 vi.mock('react-router-dom', async () => {
@@ -36,6 +39,7 @@ vi.mock('../../services/teams', () => ({
 
 vi.mock('../../services/tournaments', () => ({
   fetchTeamRegistrationsPublic: vi.fn(),
+  fetchTeamMatchTimeline: vi.fn(),
 }));
 
 vi.mock('../../utils/session', () => ({
@@ -68,6 +72,7 @@ describe('MyTeam', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(fetchTeamRegistrationsPublic).mockResolvedValue([]);
+    vi.mocked(fetchTeamMatchTimeline).mockResolvedValue([]);
   });
 
   test("affiche le nom de l'équipe et les membres", async () => {
@@ -396,11 +401,14 @@ describe('MyTeam', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText('Tournoi Futur')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Historique des tournois'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Tournoi Futur')).toBeInTheDocument();
     expect(screen.getByText('Tournoi Live')).toBeInTheDocument();
     expect(screen.getByText('Tournoi Terminé')).toBeInTheDocument();
-    expect(screen.getByText(/tournois à venir/i)).toBeInTheDocument();
-    expect(screen.getByText(/tournois en cours/i)).toBeInTheDocument();
-    expect(screen.getByText(/tournois passés/i)).toBeInTheDocument();
+    expect(await screen.findAllByText(/^à venir$/i)).not.toHaveLength(0);
+    expect(screen.getAllByText(/^en cours$/i)).not.toHaveLength(0);
+    expect(screen.getAllByText(/^passés$/i)).not.toHaveLength(0);
   });
 });

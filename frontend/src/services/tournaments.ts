@@ -482,6 +482,62 @@ export const fetchTeamMatches = async (
   return await response.json();
 };
 
+export const fetchTeamMatchTimeline = async (
+  equipeId: string | number,
+): Promise<TeamMatch[]> => {
+  const [directMatches, registrations] = await Promise.all([
+    fetchTeamMatches(equipeId).catch(() => [] as TeamMatch[]),
+    fetchTeamRegistrationsPublic(equipeId).catch(
+      () => [] as TeamRegistrationItem[],
+    ),
+  ]);
+
+  const matchesById = new Map<number, TeamMatch>();
+  const teamId = Number(equipeId);
+
+  const addMatches = (matches: TeamMatch[]) => {
+    matches.forEach((match) => {
+      if (match.team1Id !== teamId && match.team2Id !== teamId) {
+        return;
+      }
+      matchesById.set(match.id, match);
+    });
+  };
+
+  addMatches(directMatches);
+
+  const tournamentIds = [
+    ...new Set(registrations.map((item) => item.tournoiId)),
+  ];
+  const tournamentMatches = await Promise.all(
+    tournamentIds.map(async (tournoiId) => {
+      const matches = await fetchTournamentMatches(tournoiId).catch(
+        () => [] as TeamMatch[],
+      );
+      return matches.filter(
+        (match) => match.team1Id === teamId || match.team2Id === teamId,
+      );
+    }),
+  );
+
+  tournamentMatches.forEach(addMatches);
+
+  return [...matchesById.values()].sort((a, b) => {
+    const aTime = a.scheduledDateTime ? Date.parse(a.scheduledDateTime) : 0;
+    const bTime = b.scheduledDateTime ? Date.parse(b.scheduledDateTime) : 0;
+
+    if (aTime !== bTime) {
+      return bTime - aTime;
+    }
+
+    if (a.round !== b.round) {
+      return a.round - b.round;
+    }
+
+    return b.id - a.id;
+  });
+};
+
 export const fetchMemberMatches = async (
   memberId: string | number,
 ): Promise<TeamMatch[]> => {
