@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,14 +32,15 @@ public class MatchResultController {
    * @param matchResultMapper  the mapper for results
    */
   public MatchResultController(
-        MatchResultService matchResultService,
-        MatchResultMapper matchResultMapper) {
+      MatchResultService matchResultService,
+      MatchResultMapper matchResultMapper) {
     this.matchResultService = matchResultService;
     this.matchResultMapper = matchResultMapper;
   }
 
   /**
-   * Encodes a new result for a given match.
+   * Encodes a new result for a given match. Sets match to WAITING_VALIDATION
+   * and notifies both team responsibles.
    *
    * @param matchId   the ID of the match
    * @param createDto the DTO containing the result details
@@ -46,18 +48,14 @@ public class MatchResultController {
    */
   @PostMapping("/match/{matchId}")
   public ResponseEntity<MatchResultDto> createResult(
-        @PathVariable Long matchId,
-        @RequestBody MatchResultCreateDto createDto) {
-
-    // Calls the service to encode the result
+      @PathVariable Long matchId,
+      @RequestBody MatchResultCreateDto createDto) {
     var savedResult = matchResultService.encodeResult(matchId, createDto);
 
-    // If the match or admin is not found, return a bad request
     if (savedResult == null) {
       return ResponseEntity.badRequest().build();
     }
 
-    // Return the created result with a 201 status
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(matchResultMapper.toDto(savedResult));
   }
@@ -70,43 +68,54 @@ public class MatchResultController {
    */
   @GetMapping("/match/{matchId}")
   public ResponseEntity<MatchResultDto> getResult(@PathVariable Long matchId) {
-
-    // Calls the service to get the result
     var result = matchResultService.getResultForMatch(matchId);
 
-    // If no result is found, return a 404 not found
     if (result == null) {
       return ResponseEntity.notFound().build();
     }
 
-    // Return the found result
     return ResponseEntity.ok(matchResultMapper.toDto(result));
   }
 
   /**
-   * Validates or disputes a match result.
-   * This is the endpoint called by the React frontend when a captain clicks "Accept" or "Dispute".
+   * A team validates or disputes a match result. Each team can only act once.
    *
-   * @param matchId    the ID of the match
-   * @param teamId     the ID of the team validating
-   * @param isAccepted true if accepted, false if disputed
-   * @return a response entity with the updated match result
+   * @param matchId  the ID of the match
+   * @param teamId   the ID of the team validating/disputing
+   * @param accepted true to validate, false to dispute
+   * @return the updated result, or 400 if invalid
    */
-  @PostMapping("/match/{matchId}/validate/{teamId}")
+  @PutMapping("/match/{matchId}/validate")
   public ResponseEntity<MatchResultDto> validateResult(
-        @PathVariable Long matchId,
-        @PathVariable Long teamId,
-        @RequestParam boolean isAccepted) {
+      @PathVariable Long matchId,
+      @RequestParam Long teamId,
+      @RequestParam boolean accepted) {
+    var updated = matchResultService.validateResult(matchId, teamId, accepted);
 
-    // Calls the service to update the validation status
-    var updatedResult = matchResultService.validateResultByCaptain(matchId, teamId, isAccepted);
-
-    // If the result doesn't exist, return a 404 not found
-    if (updatedResult == null) {
-      return ResponseEntity.notFound().build();
+    if (updated == null) {
+      return ResponseEntity.badRequest().build();
     }
 
-    // Returns the updated result to the frontend
-    return ResponseEntity.ok(matchResultMapper.toDto(updatedResult));
+    return ResponseEntity.ok(matchResultMapper.toDto(updated));
+  }
+
+  /**
+   * Admin re-encodes a definitive result after a dispute. No further dispute possible.
+   *
+   * @param matchId   the ID of the match
+   * @param createDto the new result details
+   * @return the updated definitive result, or 400 if match is not DISPUTED
+   */
+  @PutMapping("/match/{matchId}/definitive")
+  public ResponseEntity<MatchResultDto> encodeDefinitiveResult(
+      @PathVariable Long matchId,
+      @RequestBody MatchResultCreateDto createDto) {
+    var updated = matchResultService.encodeDefinitiveResult(matchId, createDto);
+
+    if (updated == null) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    return ResponseEntity.ok(matchResultMapper.toDto(updated));
   }
 }

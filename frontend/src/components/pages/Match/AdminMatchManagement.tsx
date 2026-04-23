@@ -88,9 +88,15 @@ const AdminMatchManagement = ({
       return;
     }
 
+    const isDisputed = selectedMatch.status === 'DISPUTED';
+    const url = isDisputed
+      ? `/api/results/match/${selectedMatch.id}/definitive`
+      : `/api/results/match/${selectedMatch.id}`;
+    const method = isDisputed ? 'PUT' : 'POST';
+
     try {
-      const response = await fetch(`/api/results/match/${selectedMatch.id}`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,

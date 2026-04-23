@@ -17,4 +17,5 @@ public class MatchResultDto {
   private Long adminEncoderId;
   private String validationStatusTeam1;
   private String validationStatusTeam2;
+  private boolean isDefinitive;
 }

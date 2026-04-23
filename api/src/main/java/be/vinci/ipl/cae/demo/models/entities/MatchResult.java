@@ -58,4 +58,7 @@ public class MatchResult {
 
   @Column(name = "validation_status_team2", nullable = false)
   private String validationStatusTeam2 = "PENDING";
+
+  @Column(name = "is_definitive", nullable = false)
+  private boolean isDefinitive = false;
 }

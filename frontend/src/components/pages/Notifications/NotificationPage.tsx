@@ -247,7 +247,14 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (startsWithAny(m, ['le score du match'])) {
+  if (
+    startsWithAny(m, [
+      'le score du match',
+      'résultat encodé :',
+      'résultat définitif :',
+      'contestation :',
+    ])
+  ) {
     return {
       type: 'score',
       color: '#f59e0b',
@@ -441,7 +448,12 @@ export default function Notifications() {
     ]);
 
   const isScoreValidationNotification = (message: string) =>
-    startsWithAny(message.toLowerCase(), ['le score du match']);
+    startsWithAny(message.toLowerCase(), [
+      'le score du match',
+      'résultat encodé :',
+      'résultat définitif :',
+      'contestation :',
+    ]);
 
   const isForfeitNotification = (message: string) =>
     startsWithAny(message.toLowerCase(), ['🏳️ forfait', 'forfait —']);
@@ -970,6 +982,14 @@ export default function Notifications() {
                   label: 'Voir mon équipe',
                   onClick: () => navigate('/maTeam'),
                 };
+              } else if (isScoreValidationNotification(n.message)) {
+                const matchId = extractMatchId(n.message);
+                if (matchId) {
+                  primaryAction = {
+                    label: 'Voir le match',
+                    onClick: () => navigate(`/match/${matchId}/validation`),
+                  };
+                }
               } else if (isDemandeResponsable) {
                 primaryAction = {
                   label: 'Voir les demandes',

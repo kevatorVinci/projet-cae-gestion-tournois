@@ -203,6 +203,42 @@ public class DemoDataInitializer extends AbstractDataInitializer {
 
     data.springBattle().setMatchSchedulePublished(true);
     tournamentRepo.save(data.springBattle());
+
+    seedEncodeResultTestTournament(data);
+  }
+
+  /**
+   * Creates a dedicated tournament for testing the encode-result feature.
+   * Match 1 (ALPHA vs DELTA) → status PENDING, ready to encode a result.
+   * Match 2 (IOTA vs OMEGA) → status WAITING_VALIDATION, ready to validate/dispute.
+   */
+  private void seedEncodeResultTestTournament(SeedData data) {
+    Tournament testCup = makeTournament(
+        "Test Encode Cup 2026",
+        "Tournoi de test pour encoder / valider / contester des résultats",
+        "2026-04-28", "2026-05-02", "2026-04-25",
+        "EN_COURS", 4
+    );
+    testCup.setMatchSchedulePublished(true);
+    tournamentRepo.save(testCup);
+
+    registerTeams(testCup,
+        List.of(data.alpha(), data.delta(), data.iota(), data.omega()),
+        "2026-04-25");
+
+    LocalDateTime now = LocalDateTime.now();
+
+    Match match1 = createMatch(testCup, data.alpha(), data.delta(), 1, now, data.lea(), "PENDING");
+    addPlayerSelections(match1, List.of(data.lea(), data.tom(), data.ines(), data.pol()), data.alpha());
+    addPlayerSelections(match1, List.of(data.max(), data.seb(), data.ali(), data.zed()), data.delta());
+
+    Match match2 = createMatch(testCup, data.iota(), data.omega(), 1, now, data.lea(), "PENDING");
+    addPlayerSelections(match2, List.of(data.lisa(), data.noa(), data.tim(), data.zoe()), data.iota());
+    addPlayerSelections(match2, List.of(data.tibo(), data.neo()), data.omega());
+
+    // Finale (R2)
+    createMatch(testCup, null, null, 2,
+        LocalDateTime.of(2026, 4, 23, 22, 25), data.lea(), "PENDING");
   }
 
   /**

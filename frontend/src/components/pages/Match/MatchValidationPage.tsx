@@ -159,9 +159,9 @@ export default function MatchValidationPage() {
     setError(null);
     try {
       const response = await fetch(
-        `/api/results/match/${id}/validate/${myTeamId}?isAccepted=${isAccepted}`,
+        `/api/results/match/${id}/validate?teamId=${myTeamId}&accepted=${isAccepted}`,
         {
-          method: 'POST',
+          method: 'PUT',
           headers: { Authorization: `Bearer ${token}` },
         },
       );

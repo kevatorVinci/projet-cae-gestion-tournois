@@ -28,6 +28,7 @@ public class MatchResultMapper {
     dto.setAdminEncoderId(result.getAdminEncoder().getId());
     dto.setValidationStatusTeam1(result.getValidationStatusTeam1());
     dto.setValidationStatusTeam2(result.getValidationStatusTeam2());
+    dto.setDefinitive(result.isDefinitive());
 
     return dto;
   }

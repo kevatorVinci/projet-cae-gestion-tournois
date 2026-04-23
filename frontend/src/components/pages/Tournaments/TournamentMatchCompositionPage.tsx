@@ -258,10 +258,21 @@ const TournamentMatchCompositionPage = () => {
     return Date.now() >= timestamp;
   }, [match?.scheduledDateTime]);
 
+  // --- LE CORRECTIF EST ICI ---
   const isAutoQualifiedMatch = useMemo(() => {
     if (!match) return false;
-    return match.team1Id == null || match.team2Id == null;
+    
+    // On vérifie explicitement la présence de chaque équipe
+    const hasTeam1 = match.team1Id != null || !!match.team1Name;
+    const hasTeam2 = match.team2Id != null || !!match.team2Name;
+
+    // C'est une qualification d'office (BYE) UNIQUEMENT SI :
+    // - L'équipe 1 est présente
+    // - L'équipe 2 est totalement absente
+    // - Cela n'arrive théoriquement qu'au round 1
+    return hasTeam1 && !hasTeam2 && (match.round === 1 || !match.round);
   }, [match]);
+  // -----------------------------
 
   const matchResult = useMemo(() => {
     if (!match) return null;
