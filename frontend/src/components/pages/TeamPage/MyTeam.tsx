@@ -878,7 +878,7 @@ export function MyTeam() {
                           color="white"
                           sx={{ fontSize: 11 }}
                         >
-                          {member.isResponsable ? 'Responsable' : 'Membre'}
+                          {member.isResponsable ? 'Responsable' : 'Promouvoir'}
                         </Typography>
                       }
                     />
