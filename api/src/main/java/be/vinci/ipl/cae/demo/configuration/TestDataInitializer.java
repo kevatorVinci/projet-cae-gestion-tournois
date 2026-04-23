@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
     
 /**
  * Seeds the database with a minimal dataset for automated testing.
@@ -23,6 +24,7 @@ public class TestDataInitializer extends AbstractDataInitializer {
    * @param args command line arguments
    */
   @Override
+  @Transactional
   public void run(String... args) {
     if (userRepo.count() > 0 || teamRepo.count() > 0 || tournamentRepo.count() > 0) {
       return;

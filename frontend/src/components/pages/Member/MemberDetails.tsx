@@ -20,9 +20,8 @@ import { getAuthenticatedUser } from '../../../utils/session';
 import { getRoundLabelFromMax } from '../../../utils/bracketLabels';
 import { getAllEquipes } from '../../../services/teams';
 import {
-  fetchTeamRegistrationsPublic,
   fetchMemberMatches,
-  TeamRegistrationItem,
+  fetchTournamentById,
   TeamMatch,
 } from '../../../services/tournaments';
 import BackButton from '../../BackButton';
@@ -36,6 +35,15 @@ interface Player {
   profileImage?: string;
   profileImageUrl?: string;
   isResponsable?: boolean;
+}
+
+interface UserLookupItem {
+  id?: number;
+  tag?: string;
+  email?: string;
+  specialty?: string;
+  profileImage?: string;
+  profileImageUrl?: string;
 }
 
 const pageGradient =
@@ -60,6 +68,19 @@ const formatMatchDateTime = (value?: string): string => {
   });
 };
 
+const findUserByParam = (
+  list: UserLookupItem[],
+  value: string,
+): UserLookupItem | null => {
+  const loweredValue = value.toLowerCase();
+  return (
+    list.find(
+      (item) =>
+        item.tag?.toLowerCase() === loweredValue || String(item.id) === value,
+    ) || null
+  );
+};
+
 export default function MemberDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -68,36 +89,12 @@ export default function MemberDetails() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamId, setTeamId] = useState<number | null>(null);
-  const [registrations, setRegistrations] = useState<TeamRegistrationItem[]>(
-    [],
-  );
   const [matches, setMatches] = useState<TeamMatch[]>([]);
+  const [participatedTournaments, setParticipatedTournaments] = useState<
+    { id: number; nom: string; etat?: string; dateDebut?: string }[]
+  >([]);
 
   const isOwnProfile = authenticatedUser?.tag === user?.tag;
-
-  const historyMatches = matches
-    .filter((match) => {
-      const normalizedStatus = (match.status ?? '').toLowerCase();
-      const hasScore =
-        typeof match.scoreTeam1 === 'number' &&
-        typeof match.scoreTeam2 === 'number';
-      const isFinishedStatus =
-        normalizedStatus === 'termine' ||
-        normalizedStatus === 'finished' ||
-        normalizedStatus === 'completed' ||
-        normalizedStatus === 'complete';
-
-      return hasScore || isFinishedStatus;
-    })
-    .sort((left, right) => {
-      const leftDate = left.scheduledDateTime
-        ? new Date(left.scheduledDateTime).getTime()
-        : 0;
-      const rightDate = right.scheduledDateTime
-        ? new Date(right.scheduledDateTime).getTime()
-        : 0;
-      return rightDate - leftDate;
-    });
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return undefined;
@@ -112,36 +109,74 @@ export default function MemberDetails() {
   };
 
   useEffect(() => {
-    const fetchUserAndTeam = async () => {
+    const fetchUserAndParticipations = async () => {
       if (!id || id === 'undefined') {
         setLoading(false);
         return;
       }
 
       const decodedId = decodeURIComponent(id);
+      const isNumericParam = !Number.isNaN(Number(decodedId));
       setLoading(true);
 
       try {
         const token =
           authenticatedUser?.token || getAuthenticatedUser()?.token || '';
 
-        let players: Player[] = [];
-        try {
-          const playersResponse = await fetch('/api/auths/players', {
-            headers: { Authorization: token ? `Bearer ${token}` : '' },
-          });
-          if (playersResponse.ok) {
-            players = await playersResponse.json();
-          }
-        } catch {
-          // Ignore player fetch errors and continue with team data.
+        // 1. RECHERCHE ROBUSTE DU JOUEUR (Même s'il n'a pas d'équipe)
+        let foundUser: UserLookupItem | null = null;
+
+        // a) C'est peut-être l'utilisateur connecté ?
+        const authenticatedUserWithId = authenticatedUser as
+          | (typeof authenticatedUser & { id?: number })
+          | undefined;
+        if (
+          authenticatedUserWithId &&
+          (authenticatedUserWithId.tag?.toLowerCase() ===
+            decodedId.toLowerCase() ||
+            String(authenticatedUserWithId.id) === decodedId)
+        ) {
+          foundUser = authenticatedUserWithId;
         }
 
-        const playerBase = players.find(
-          (player) =>
-            player.tag === decodedId || String(player.id) === decodedId,
-        );
+        // b) On cherche dans tous les utilisateurs
+        if (!foundUser) {
+          try {
+            const usersResponse = await fetch('/api/auths/users', {
+              headers: { Authorization: token ? `Bearer ${token}` : '' },
+            });
+            if (usersResponse.ok) {
+              const usersList =
+                (await usersResponse.json()) as UserLookupItem[];
+              foundUser = findUserByParam(usersList, decodedId);
+            }
+          } catch {
+            /* Ignore */
+          }
+        }
 
+        // c) Fallback sur endpoint players
+        if (!foundUser) {
+          try {
+            const playersResponse = await fetch('/api/auths/players', {
+              headers: { Authorization: token ? `Bearer ${token}` : '' },
+            });
+            if (playersResponse.ok) {
+              const playersList =
+                (await playersResponse.json()) as UserLookupItem[];
+              foundUser = findUserByParam(playersList, decodedId);
+            }
+          } catch {
+            /* Ignore */
+          }
+        }
+
+        // d) Dernier recours absolu : L'URL est un ID
+        if (!foundUser && isNumericParam) {
+          foundUser = { id: Number(decodedId), tag: `Joueur #${decodedId}` };
+        }
+
+        // 2. CHERCHER SON ÉQUIPE ACTUELLE
         const equipes = await getAllEquipes().catch(() => []);
         let foundUserInTeam: Player | null = null;
         let userTeamName = '';
@@ -150,9 +185,9 @@ export default function MemberDetails() {
         for (const equipe of equipes) {
           const listJoueurs = (equipe.members || []) as Player[];
           const member = listJoueurs.find(
-            (currentMember) =>
-              currentMember.tag === decodedId ||
-              String(currentMember.id) === decodedId,
+            (m) =>
+              m.tag?.toLowerCase() === decodedId.toLowerCase() ||
+              String(m.id) === decodedId,
           );
           if (member) {
             foundUserInTeam = member;
@@ -162,23 +197,25 @@ export default function MemberDetails() {
           }
         }
 
-        if (playerBase || foundUserInTeam) {
-          const finalId = playerBase?.id || foundUserInTeam?.id || 0;
-          const finalTag = playerBase?.tag || foundUserInTeam?.tag || '';
+        // 3. COMPILER LES DONNÉES
+        if (foundUser || foundUserInTeam) {
+          const finalId = foundUser?.id || foundUserInTeam?.id || 0;
+          const finalTag =
+            foundUser?.tag || foundUserInTeam?.tag || 'Joueur Inconnu';
           const finalSpecialty =
-            playerBase?.specialty ||
+            foundUser?.specialty ||
             foundUserInTeam?.specialty ||
             'Non spécifiée';
 
           setUser({
             id: finalId,
             tag: finalTag,
-            email: playerBase?.email || '',
+            email: foundUser?.email || '',
             specialty: finalSpecialty,
             team: userTeamName || 'Aucune équipe',
             profileImage:
-              playerBase?.profileImage ||
-              playerBase?.profileImageUrl ||
+              foundUser?.profileImage ||
+              foundUser?.profileImageUrl ||
               foundUserInTeam?.profileImageUrl ||
               '/luffy.png',
             isResponsable: foundUserInTeam?.isResponsable || false,
@@ -186,32 +223,83 @@ export default function MemberDetails() {
 
           setTeamId(foundTeamId);
 
-          const [regs, memberMatches] = await Promise.all([
-            foundTeamId
-              ? fetchTeamRegistrationsPublic(foundTeamId).catch(() => [])
-              : Promise.resolve<TeamRegistrationItem[]>([]),
-            fetchMemberMatches(finalId).catch(() => []),
-          ]);
-          setRegistrations(regs);
-          setMatches(memberMatches);
+          // 4. RÉCUPÉRER L'HISTORIQUE SÉCURISÉ (Même sans équipe actuelle)
+          if (finalId > 0) {
+            const allMatches = await fetchMemberMatches(finalId).catch(
+              () => [],
+            );
+
+            const finishedMatches = allMatches
+              .filter((match) => {
+                const normalizedStatus = (match.status ?? '').toLowerCase();
+                const hasScore =
+                  typeof match.scoreTeam1 === 'number' &&
+                  typeof match.scoreTeam2 === 'number';
+                return (
+                  hasScore ||
+                  normalizedStatus === 'termine' ||
+                  normalizedStatus === 'finished' ||
+                  normalizedStatus === 'completed' ||
+                  normalizedStatus === 'complete'
+                );
+              })
+              .sort((left, right) => {
+                const leftDate = left.scheduledDateTime
+                  ? new Date(left.scheduledDateTime).getTime()
+                  : 0;
+                const rightDate = right.scheduledDateTime
+                  ? new Date(right.scheduledDateTime).getTime()
+                  : 0;
+                return rightDate - leftDate;
+              });
+
+            setMatches(finishedMatches);
+
+            // Extraire les tournois uniques
+            const uniqueTournamentIds = [
+              ...new Set(finishedMatches.map((match) => match.tournamentId)),
+            ];
+            const tournaments = await Promise.all(
+              uniqueTournamentIds.map(async (tournamentId) => {
+                try {
+                  return await fetchTournamentById(tournamentId);
+                } catch {
+                  return null;
+                }
+              }),
+            );
+
+            setParticipatedTournaments(
+              tournaments.filter(
+                (
+                  t,
+                ): t is {
+                  id: number;
+                  nom: string;
+                  etat?: string;
+                  dateDebut?: string;
+                } => t !== null,
+              ),
+            );
+          }
         } else {
           setUser(null);
           setTeamId(null);
-          setRegistrations([]);
+          setParticipatedTournaments([]);
           setMatches([]);
         }
       } catch (error) {
         console.error('Erreur globale lors de la récupération:', error);
         setUser(null);
         setTeamId(null);
-        setRegistrations([]);
+        setParticipatedTournaments([]);
         setMatches([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserAndTeam();
+    fetchUserAndParticipations();
   }, [id, authenticatedUser]);
 
   if (loading) {
@@ -281,7 +369,8 @@ export default function MemberDetails() {
       <Container maxWidth="lg">
         <BackButton onClick={handleBack} />
 
-        <Stack spacing={4}>
+        <Stack spacing={4} sx={{ mt: 2 }}>
+          {/* HEADER JOUEUR */}
           <Paper
             elevation={0}
             sx={{
@@ -370,6 +459,7 @@ export default function MemberDetails() {
             </Stack>
           </Paper>
 
+          {/* INFOS PERSONNELLES & EQUIPE ACTUELLE */}
           <Box
             sx={{
               display: 'grid',
@@ -503,7 +593,7 @@ export default function MemberDetails() {
                 color="white"
                 sx={{ mb: 2.5 }}
               >
-                Équipe
+                Équipe actuelle
               </Typography>
 
               <Box
@@ -526,10 +616,7 @@ export default function MemberDetails() {
                   cursor: teamId ? 'pointer' : 'default',
                   transition: 'border-color 0.2s ease, transform 0.2s ease',
                   '&:hover': teamId
-                    ? {
-                        borderColor: '#e8822a',
-                        transform: 'translateY(-2px)',
-                      }
+                    ? { borderColor: '#e8822a', transform: 'translateY(-2px)' }
                     : undefined,
                 }}
               >
@@ -541,11 +628,9 @@ export default function MemberDetails() {
                     Équipe actuelle
                   </Typography>
                 </Box>
-
                 <Typography variant="h6" color="white" fontWeight={700}>
                   {user.team || 'Aucune équipe'}
                 </Typography>
-
                 <Typography
                   variant="body2"
                   color="rgba(255,255,255,0.5)"
@@ -559,7 +644,7 @@ export default function MemberDetails() {
             </Paper>
           </Box>
 
-          {/* ── Tournois & Matchs ── */}
+          {/* ── Tournois & Matchs historiques ── */}
           <Box
             sx={{
               display: 'grid',
@@ -582,18 +667,18 @@ export default function MemberDetails() {
               >
                 <EmojiEventsIcon sx={{ color: '#e8822a', fontSize: 22 }} />
                 <Typography variant="h6" fontWeight={700} color="white">
-                  Tournois
+                  Tournois participés
                 </Typography>
               </Box>
 
-              {registrations.length === 0 ? (
+              {participatedTournaments.length === 0 ? (
                 <Typography variant="body2" color="rgba(255,255,255,0.4)">
                   Aucun tournoi pour le moment.
                 </Typography>
               ) : (
                 <Stack spacing={1.5}>
-                  {registrations.map((reg) => {
-                    const etat = reg.tournoi?.etat;
+                  {participatedTournaments.map((tournament) => {
+                    const etat = tournament.etat;
                     const chipColor =
                       etat === 'EN_COURS'
                         ? '#e8822a'
@@ -612,16 +697,16 @@ export default function MemberDetails() {
                             : etat === 'CLOTURE'
                               ? 'Clôturé'
                               : 'Ouvert';
+
                     return (
                       <Box
-                        key={reg.tournoiId}
+                        key={tournament.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => navigate(`/tournois/${reg.tournoiId}`)}
+                        onClick={() => navigate(`/tournois/${tournament.id}`)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            navigate(`/tournois/${reg.tournoiId}`);
-                          }
+                          if (e.key === 'Enter' || e.key === ' ')
+                            navigate(`/tournois/${tournament.id}`);
                         }}
                         sx={{
                           p: 1.5,
@@ -634,7 +719,10 @@ export default function MemberDetails() {
                           alignItems: 'center',
                           gap: 1,
                           transition: 'border-color 0.2s',
-                          '&:hover': { borderColor: chipColor },
+                          '&:hover': {
+                            borderColor: chipColor,
+                            transform: 'translateY(-2px)',
+                          },
                         }}
                       >
                         <Box>
@@ -643,15 +731,15 @@ export default function MemberDetails() {
                             fontWeight={700}
                             color="white"
                           >
-                            {reg.tournoi?.nom}
+                            {tournament.nom}
                           </Typography>
-                          {reg.tournoi?.dateDebut && (
+                          {tournament.dateDebut && (
                             <Typography
                               variant="caption"
                               color="rgba(255,255,255,0.45)"
                             >
                               {new Date(
-                                reg.tournoi.dateDebut,
+                                tournament.dateDebut,
                               ).toLocaleDateString('fr-BE')}
                             </Typography>
                           )}
@@ -695,65 +783,71 @@ export default function MemberDetails() {
                 </Typography>
               </Box>
 
-              {historyMatches.length === 0 ? (
+              {matches.length === 0 ? (
                 <Typography variant="body2" color="rgba(255,255,255,0.4)">
                   Aucun match joué pour le moment.
                 </Typography>
               ) : (
                 <Stack spacing={1.5}>
-                  {historyMatches.map((match) => {
+                  {matches.map((match) => {
                     const isTeam1 = teamId != null && match.team1Id === teamId;
                     const isTeam2 = teamId != null && match.team2Id === teamId;
-                    const matchTitle = isTeam1
-                      ? `vs ${match.team2Name ?? '?'}`
-                      : isTeam2
-                        ? `vs ${match.team1Name ?? '?'}`
-                        : `${match.team1Name ?? '?'} vs ${match.team2Name ?? '?'}`;
+
+                    const matchTitle = `${match.team1Name ?? '?'} vs ${match.team2Name ?? '?'}`;
                     const tournamentName =
-                      registrations.find(
-                        (registration) =>
-                          registration.tournoiId === match.tournamentId,
-                      )?.tournoi?.nom ?? `Tournoi #${match.tournamentId}`;
+                      participatedTournaments.find(
+                        (t) => t.id === match.tournamentId,
+                      )?.nom ?? `Tournoi #${match.tournamentId}`;
                     const hasScore =
                       typeof match.scoreTeam1 === 'number' &&
                       typeof match.scoreTeam2 === 'number';
-                    let scoreLabel = 'Score non disponible';
+
+                    let scoreLabel = 'Score indisponible';
                     if (hasScore) {
-                      const score1 = Number(match.scoreTeam1);
-                      const score2 = Number(match.scoreTeam2);
-                      scoreLabel = isTeam1
-                        ? `${score1} - ${score2}`
-                        : isTeam2
-                          ? `${score2} - ${score1}`
-                          : `${score1} - ${score2}`;
+                      scoreLabel = `${match.scoreTeam1} - ${match.scoreTeam2}`;
                     }
 
-                    let outcomeLabel = 'Résultat indisponible';
+                    let outcomeLabel = 'Terminé';
                     let outcomeColor = '#94a3b8';
                     let outcomeBackground = 'rgba(148,163,184,0.20)';
                     let outcomeBorder = '1px solid rgba(148,163,184,0.35)';
 
-                    if (hasScore && (isTeam1 || isTeam2)) {
+                    if (hasScore) {
                       const score1 = Number(match.scoreTeam1);
                       const score2 = Number(match.scoreTeam2);
-                      const myScore = isTeam1 ? score1 : score2;
-                      const opponentScore = isTeam1 ? score2 : score1;
 
-                      if (myScore > opponentScore) {
-                        outcomeLabel = 'Victoire';
-                        outcomeColor = '#34d399';
-                        outcomeBackground = 'rgba(16,185,129,0.20)';
-                        outcomeBorder = '1px solid rgba(16,185,129,0.35)';
-                      } else if (myScore < opponentScore) {
-                        outcomeLabel = 'Défaite';
-                        outcomeColor = '#f87171';
-                        outcomeBackground = 'rgba(239,68,68,0.20)';
-                        outcomeBorder = '1px solid rgba(239,68,68,0.35)';
+                      if (isTeam1 || isTeam2) {
+                        const myScore = isTeam1 ? score1 : score2;
+                        const opponentScore = isTeam1 ? score2 : score1;
+
+                        if (myScore > opponentScore) {
+                          outcomeLabel = 'Victoire';
+                          outcomeColor = '#34d399';
+                          outcomeBackground = 'rgba(16,185,129,0.20)';
+                          outcomeBorder = '1px solid rgba(16,185,129,0.35)';
+                        } else if (myScore < opponentScore) {
+                          outcomeLabel = 'Défaite';
+                          outcomeColor = '#f87171';
+                          outcomeBackground = 'rgba(239,68,68,0.20)';
+                          outcomeBorder = '1px solid rgba(239,68,68,0.35)';
+                        } else {
+                          outcomeLabel = 'Nul';
+                          outcomeColor = '#93c5fd';
+                          outcomeBackground = 'rgba(59,130,246,0.20)';
+                          outcomeBorder = '1px solid rgba(59,130,246,0.35)';
+                        }
                       } else {
-                        outcomeLabel = 'Nul';
-                        outcomeColor = '#93c5fd';
-                        outcomeBackground = 'rgba(59,130,246,0.20)';
-                        outcomeBorder = '1px solid rgba(59,130,246,0.35)';
+                        // Le joueur n'a pas d'équipe actuellement, on affiche juste qui a gagné le match
+                        if (score1 > score2) {
+                          outcomeLabel = `Victoire de ${match.team1Name ?? 'Éq 1'}`;
+                          outcomeColor = '#34d399';
+                        } else if (score1 < score2) {
+                          outcomeLabel = `Victoire de ${match.team2Name ?? 'Éq 2'}`;
+                          outcomeColor = '#34d399';
+                        } else {
+                          outcomeLabel = 'Match nul';
+                          outcomeColor = '#93c5fd';
+                        }
                       }
                     }
 

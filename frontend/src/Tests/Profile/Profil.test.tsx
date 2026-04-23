@@ -4,6 +4,10 @@ import { describe, test, expect, vi } from 'vitest';
 import Profile from '../../components/pages/Dashbord/Profile';
 import { UserContext } from '../../contexts/UserContext';
 import { getUserTeam } from '../../services/teams';
+import {
+  fetchMemberMatches,
+  fetchTournamentById,
+} from '../../services/tournaments';
 
 // 1. Mock react-router-dom
 vi.mock('react-router-dom', async () => {
@@ -19,7 +23,13 @@ vi.mock('../../services/teams', () => ({
   getUserTeam: vi.fn(),
 }));
 
+vi.mock('../../services/tournaments', () => ({
+  fetchMemberMatches: vi.fn(),
+  fetchTournamentById: vi.fn(),
+}));
+
 const mockAuthenticatedUser = {
+  id: 42,
   email: 'test@vinci.be',
   token: 'fake-token',
   tag: 'Pedrinho08',
@@ -33,6 +43,33 @@ const mockTeam = {
   name: 'Les Tacticiens',
   members: [],
 };
+
+const mockRegistrations = [
+  {
+    id: 12,
+    nom: 'Spring Cup',
+    etat: 'EN_COURS',
+    dateDebut: '2026-03-20T10:00:00.000Z',
+    dateFin: '2026-03-30T10:00:00.000Z',
+    dateLimiteInscription: '2026-03-10T10:00:00.000Z',
+  },
+];
+
+const mockHistoryMatches = [
+  {
+    id: 44,
+    tournamentId: 12,
+    team1Id: 1,
+    team2Id: 2,
+    team1Name: 'Les Tacticiens',
+    team2Name: 'Les Champions',
+    round: 1,
+    scheduledDateTime: '2026-03-21T18:30:00.000Z',
+    status: 'TERMINE',
+    scoreTeam1: 2,
+    scoreTeam2: 1,
+  },
+];
 
 // Helper to wrap the component with required providers
 const renderProfile = (user = mockAuthenticatedUser) => {
@@ -56,6 +93,10 @@ const renderProfile = (user = mockAuthenticatedUser) => {
 describe('Profile', () => {
   test('displays the user tag, role and email', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce([]);
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
 
     renderProfile();
 
@@ -69,6 +110,10 @@ describe('Profile', () => {
 
   test('shows "Pas d\'équipe" when user has no team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce([]);
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
 
     renderProfile();
 
@@ -79,6 +124,10 @@ describe('Profile', () => {
 
   test('displays team name when user has a team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(mockTeam);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce([]);
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
 
     renderProfile();
 
@@ -89,6 +138,10 @@ describe('Profile', () => {
 
   test('shows create and join cards when user has no team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce([]);
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
 
     renderProfile();
 
@@ -100,6 +153,10 @@ describe('Profile', () => {
 
   test('hides create and join cards when user has a team', async () => {
     vi.mocked(getUserTeam).mockResolvedValueOnce(mockTeam);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce([]);
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
 
     renderProfile();
 
@@ -114,6 +171,10 @@ describe('Profile', () => {
     const navigateMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce([]);
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
 
     renderProfile();
 
@@ -126,11 +187,54 @@ describe('Profile', () => {
     const navigateMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
     vi.mocked(getUserTeam).mockResolvedValueOnce(null);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce([]);
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
 
     renderProfile();
 
     screen.getByRole('button', { name: /modifier le profil/i }).click();
 
     expect(navigateMock).toHaveBeenCalledWith('/profile');
+  });
+
+  test('displays tournament and match history when the user has a team', async () => {
+    vi.mocked(getUserTeam).mockResolvedValueOnce(mockTeam);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce(
+      mockHistoryMatches as never,
+    );
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
+
+    renderProfile();
+
+    await waitFor(() => {
+      expect(screen.getByText(/tournois participés/i)).toBeInTheDocument();
+      expect(screen.getByText(/historique des matchs/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/spring cup/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/vs les champions/i)).toBeInTheDocument();
+      expect(screen.getByText(/^2 - 1$/i)).toBeInTheDocument();
+    });
+  });
+
+  test('displays history even when the user has no team anymore', async () => {
+    vi.mocked(getUserTeam).mockResolvedValueOnce(null);
+    vi.mocked(fetchMemberMatches).mockResolvedValueOnce(
+      mockHistoryMatches as never,
+    );
+    vi.mocked(fetchTournamentById).mockResolvedValueOnce(
+      mockRegistrations[0] as never,
+    );
+
+    renderProfile();
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/spring cup/i).length).toBeGreaterThan(0);
+      expect(
+        screen.getByText(/les tacticiens vs les champions/i),
+      ).toBeInTheDocument();
+    });
   });
 });
