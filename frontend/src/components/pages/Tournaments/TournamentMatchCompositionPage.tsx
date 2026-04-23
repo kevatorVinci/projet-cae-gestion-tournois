@@ -300,11 +300,28 @@ const TournamentMatchCompositionPage = () => {
     );
   }, [match, responsibleTeamId, isAdmin, isAutoQualifiedMatch]);
 
+  const selectionLocked = useMemo(() => {
+    if (!match) return false;
+
+    const normalizedStatus = (match.status ?? '').toUpperCase();
+    const isFinishedStatus =
+      normalizedStatus === 'FINISHED' ||
+      normalizedStatus === 'TERMINE' ||
+      normalizedStatus === 'TERMINÉ';
+
+    const hasFinalScore =
+      typeof match.scoreTeam1 === 'number' &&
+      typeof match.scoreTeam2 === 'number';
+
+    return (
+      isAutoQualifiedMatch || matchStarted || isFinishedStatus || hasFinalScore
+    );
+  }, [match, isAutoQualifiedMatch, matchStarted]);
+
   const canRequestEditor = (teamId?: number) => {
     if (!teamId) return false;
     if (isAdminView) return false;
-    if (isAutoQualifiedMatch) return false;
-    if (matchStarted) return false;
+    if (selectionLocked) return false;
     const token = getAuthenticatedUser()?.token;
     if (!token) return false;
     return responsibleTeamId === teamId;
@@ -412,6 +429,16 @@ const TournamentMatchCompositionPage = () => {
 
     try {
       await declareForfeit(parsedMatchId!, forfeitingTeamId, token);
+      setMatch((current) => {
+        if (!current) return current;
+        const forfeitingIsTeam1 = current.team1Id === forfeitingTeamId;
+        return {
+          ...current,
+          status: 'FINISHED',
+          scoreTeam1: forfeitingIsTeam1 ? 0 : 5,
+          scoreTeam2: forfeitingIsTeam1 ? 5 : 0,
+        };
+      });
       setFeedback(
         `L'équipe ${forfeitingTeamName} a déclaré forfait. Score: 0 - 5.`,
       );
