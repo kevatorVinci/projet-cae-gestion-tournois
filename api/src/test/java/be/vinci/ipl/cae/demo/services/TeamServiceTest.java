@@ -39,6 +39,9 @@ class TeamServiceTest {
   @Mock
   private NotificationService notificationService;
 
+  @Mock
+  private PlayerSelectionCleanupService playerSelectionCleanupService;
+
   @InjectMocks
   private TeamService teamService;
 

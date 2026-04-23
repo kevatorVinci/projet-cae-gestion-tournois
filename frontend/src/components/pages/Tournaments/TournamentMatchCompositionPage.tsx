@@ -615,80 +615,91 @@ const TournamentMatchCompositionPage = () => {
                   </Stack>
 
                   {[...editor.members]
-                    .sort((a, b) => Number(Boolean(a.unavailable)) - Number(Boolean(b.unavailable)))
+                    .sort(
+                      (a, b) =>
+                        Number(Boolean(a.unavailable)) -
+                        Number(Boolean(b.unavailable)),
+                    )
                     .map((member) => (
-                    <FormControlLabel
-                      key={member.memberId}
-                      sx={{
-                        m: 0,
-                        px: 1,
-                        py: 0.6,
-                        borderRadius: 1.5,
-                        opacity: member.unavailable ? 0.55 : 1,
-                        bgcolor: member.unavailable
-                          ? 'rgba(148,163,184,0.12)'
-                          : selectedIds.includes(member.memberId)
-                            ? `${accentColor}26`
-                            : 'rgba(255,255,255,0.04)',
-                        border: member.unavailable
-                          ? '1px solid rgba(148,163,184,0.35)'
-                          : selectedIds.includes(member.memberId)
-                            ? `1px solid ${accentColor}77`
-                            : '1px solid rgba(255,255,255,0.08)',
-                      }}
-                      control={
-                        <Checkbox
-                          checked={selectedIds.includes(member.memberId)}
-                          onChange={() => toggleMember(teamId, member.memberId)}
-                          disabled={
-                            savingTeamId === teamId ||
-                            !editor.canEdit ||
-                            Boolean(member.unavailable)
-                          }
-                        />
-                      }
-                      label={
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Avatar
-                            src={normalizeImageSrc(member.profileImageUrl)}
-                            alt={member.tag}
-                            sx={{ width: 30, height: 30, cursor: 'pointer' }}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openPlayerProfile(member.memberId);
-                            }}
+                      <FormControlLabel
+                        key={member.memberId}
+                        sx={{
+                          m: 0,
+                          px: 1,
+                          py: 0.6,
+                          borderRadius: 1.5,
+                          opacity: member.unavailable ? 0.55 : 1,
+                          bgcolor: member.unavailable
+                            ? 'rgba(148,163,184,0.12)'
+                            : selectedIds.includes(member.memberId)
+                              ? `${accentColor}26`
+                              : 'rgba(255,255,255,0.04)',
+                          border: member.unavailable
+                            ? '1px solid rgba(148,163,184,0.35)'
+                            : selectedIds.includes(member.memberId)
+                              ? `1px solid ${accentColor}77`
+                              : '1px solid rgba(255,255,255,0.08)',
+                        }}
+                        control={
+                          <Checkbox
+                            checked={selectedIds.includes(member.memberId)}
+                            onChange={() =>
+                              toggleMember(teamId, member.memberId)
+                            }
+                            disabled={
+                              savingTeamId === teamId ||
+                              !editor.canEdit ||
+                              Boolean(member.unavailable)
+                            }
                           />
-                          <Box>
-                            <Typography
-                              variant="body2"
-                              color="white"
-                              fontWeight={700}
-                              sx={{
-                                cursor: 'pointer',
-                                textDecoration: 'underline',
-                              }}
+                        }
+                        label={
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                          >
+                            <Avatar
+                              src={normalizeImageSrc(member.profileImageUrl)}
+                              alt={member.tag}
+                              sx={{ width: 30, height: 30, cursor: 'pointer' }}
                               onClick={(event) => {
                                 event.stopPropagation();
                                 openPlayerProfile(member.memberId);
                               }}
-                            >
-                              {member.tag}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="rgba(255,255,255,0.65)"
-                            >
-                              {member.unavailable
-                                ? member.unavailableStartDate && member.unavailableEndDate
-                                  ? `Indisponible du ${formatShortDate(member.unavailableStartDate)} au ${formatShortDate(member.unavailableEndDate)}`
-                                  : 'Indisponible pour ce match'
-                                : member.specialty ??
-                                  'Spécialité non renseignée'}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      }
-                    />
+                            />
+                            <Box>
+                              <Typography
+                                variant="body2"
+                                color="white"
+                                fontWeight={700}
+                                sx={{
+                                  cursor: 'pointer',
+                                  textDecoration: 'underline',
+                                }}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  openPlayerProfile(member.memberId);
+                                }}
+                              >
+                                {member.tag}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="rgba(255,255,255,0.65)"
+                              >
+                                {member.unavailable
+                                  ? member.unavailableStartDate &&
+                                    member.unavailableEndDate
+                                    ? `Indisponible du ${formatShortDate(member.unavailableStartDate)} au ${formatShortDate(member.unavailableEndDate)}`
+                                    : 'Indisponible pour ce match'
+                                  : (member.specialty ??
+                                    'Spécialité non renseignée')}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        }
+                      />
                     ))}
 
                   {!editor.canEdit && (

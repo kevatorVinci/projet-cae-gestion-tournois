@@ -41,6 +41,8 @@ class UserServiceTest {
   @Mock
   private NotificationService notificationService;
   @Mock
+  private PlayerSelectionCleanupService playerSelectionCleanupService;
+  @Mock
   private UserMapper userMapper;
 
   @InjectMocks
