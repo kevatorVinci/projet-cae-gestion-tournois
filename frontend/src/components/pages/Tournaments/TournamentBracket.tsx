@@ -453,7 +453,7 @@ const TournamentBracket = ({
 
                   const baseAccent = isBye
                     ? STATUS_ACCENT.BYE
-                    : isPlaceholder || isAwaitingTeams
+                    : isAwaitingTeams
                       ? STATUS_ACCENT.PENDING
                       : isFinished
                         ? STATUS_ACCENT.FINISHED
@@ -465,7 +465,7 @@ const TournamentBracket = ({
 
                   const getTeamTextColor = (isWinner: boolean) => {
                     if (isBye) return '#ffffff';
-                    if (isPlaceholder) return 'rgba(203,213,225,0.75)';
+                    if (isAwaitingTeams) return 'rgba(203,213,225,0.75)';
                     if (isFinished) {
                       if (isDraw) return '#ffffff';
                       return isWinner ? '#ffffff' : 'rgba(255,255,255,0.45)';
@@ -632,7 +632,7 @@ const TournamentBracket = ({
                           label={
                             isBye
                               ? 'Tour automatique'
-                              : isPlaceholder || isAwaitingTeams
+                              : isAwaitingTeams
                                 ? 'En attente'
                                 : isFinished
                                   ? 'Terminé'

@@ -115,9 +115,8 @@ public class MatchService {
 
     int bracketSize = nextPowerOfTwo(teamCount);
     int[] seeds = bracketSeeds(bracketSize);
-
-    LocalDateTime matchDate = tournament.getStartDate().atTime(10, 0);
     List<Match> matches = new ArrayList<>();
+    List<BracketNode> previousRound = new ArrayList<>();
 
     for (int i = 0; i < bracketSize; i += 2) {
       int seed1 = seeds[i];
@@ -126,22 +125,35 @@ public class MatchService {
       Team team1 = seed1 <= teamCount ? teams.get(seed1 - 1) : null;
       Team team2 = seed2 <= teamCount ? teams.get(seed2 - 1) : null;
 
-      if (team1 == null && team2 == null) {
-        continue;
-      }
-      if (team1 == null) {
-        team1 = team2;
-        team2 = null;
+      Match match = createScheduledMatch(tournament, team1, team2, 1, i / 2, admin, true);
+      matches.add(match);
+
+      Team autoQualifiedWinner = match.getTeam2() == null ? match.getTeam1() : null;
+      previousRound.add(new BracketNode(match, autoQualifiedWinner));
+    }
+
+    int roundNumber = 2;
+    while (previousRound.size() > 1) {
+      List<BracketNode> nextRound = new ArrayList<>();
+
+      for (int i = 0; i < previousRound.size(); i += 2) {
+        BracketNode leftNode = previousRound.get(i);
+        BracketNode rightNode = i + 1 < previousRound.size() ? previousRound.get(i + 1) : null;
+
+        Team leftTeam = leftNode.resolvedWinner();
+        Team rightTeam = rightNode == null ? null : rightNode.resolvedWinner();
+
+        Match match =
+          createScheduledMatch(
+            tournament, leftTeam, rightTeam, roundNumber, i / 2, admin, false);
+        matches.add(match);
+
+        Team autoQualifiedWinner = null;
+        nextRound.add(new BracketNode(match, autoQualifiedWinner));
       }
 
-      Match match = new Match();
-      match.setTournament(tournament);
-      match.setTeam1(team1);
-      match.setTeam2(team2);
-      match.setRound(1);
-      match.setScheduledDateTime(matchDate);
-      match.setAdminResponsible(admin);
-      matches.add(matchRepository.save(match));
+      previousRound = nextRound;
+      roundNumber++;
     }
 
     return matches;
@@ -168,6 +180,32 @@ public class MatchService {
       seeds = expanded;
     }
     return seeds;
+  }
+
+  private Match createScheduledMatch(
+      Tournament tournament,
+      Team team1,
+      Team team2,
+      int round,
+      int matchIndex,
+      User admin,
+      boolean normalizeSingleTeamAsBye) {
+    if (normalizeSingleTeamAsBye && team1 == null && team2 != null) {
+      team1 = team2;
+      team2 = null;
+    }
+
+    LocalDateTime matchDate =
+        tournament.getStartDate().atTime(10, 0).plusDays(round - 1L).plusHours(matchIndex * 2L);
+
+    Match match = new Match();
+    match.setTournament(tournament);
+    match.setTeam1(team1);
+    match.setTeam2(team2);
+    match.setRound(round);
+    match.setScheduledDateTime(matchDate);
+    match.setAdminResponsible(admin);
+    return matchRepository.save(match);
   }
 
   /** Returns all matches where the team participates. */
@@ -231,6 +269,8 @@ public class MatchService {
 
     return savedResult;
   }
+
+  private record BracketNode(Match match, Team resolvedWinner) {}
 
   /** Advances the winner of a finished match into the next bracket round. */
   public void advanceWinnerToNextRound(Match match, MatchResult result) {

@@ -349,6 +349,15 @@ const TournamentMatchCompositionPage = () => {
     return hasTeam1 && !hasTeam2 && (match.round === 1 || !match.round);
   }, [match]);
 
+  const isPlayableScheduledMatch = useMemo(() => {
+    if (!match || isAutoQualifiedMatch) return false;
+
+    const hasTeam1 = match.team1Id != null || !!match.team1Name;
+    const hasTeam2 = match.team2Id != null || !!match.team2Name;
+
+    return hasTeam1 && hasTeam2 && !matchStarted;
+  }, [match, isAutoQualifiedMatch, matchStarted]);
+
   const matchResult = useMemo(() => {
     if (!match) return null;
     const { scoreTeam1, scoreTeam2 } = match;
@@ -799,7 +808,9 @@ const TournamentMatchCompositionPage = () => {
                 >
                   {isAutoQualifiedMatch
                     ? "Qualification d'office"
-                    : 'Composition des équipes'}
+                    : isPlayableScheduledMatch
+                      ? 'Match à jouer'
+                      : 'Composition des équipes'}
                 </Typography>
                 <Typography variant="body1" color="rgba(255,255,255,0.72)">
                   {formatDateTime(match.scheduledDateTime)} ·{' '}
@@ -833,6 +844,13 @@ const TournamentMatchCompositionPage = () => {
             {feedback && (
               <Alert severity="info" sx={{ mb: 4 }}>
                 {feedback}
+              </Alert>
+            )}
+
+            {isPlayableScheduledMatch && (
+              <Alert severity="info" sx={{ mb: 4 }}>
+                Les deux équipes sont déjà connues : la composition peut être
+                préparée avant le coup d'envoi.
               </Alert>
             )}
 
