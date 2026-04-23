@@ -7,13 +7,14 @@ import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.PlayerSelectionRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import be.vinci.ipl.cae.demo.services.PlayerSelectionCleanupService;
 import be.vinci.ipl.cae.demo.services.NotificationService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -37,8 +38,8 @@ public class UnavailabilityController {
   private final UnavailabilityRepository indisponibiliteRepository;
   private final UserRepository userRepository;
   private final UnavailabilityMapper unavailabilityMapper;
+  private final PlayerSelectionCleanupService playerSelectionCleanupService;
   private final PlayerSelectionRepository playerSelectionRepository;
-  private final MatchRepository matchRepository;
   private final NotificationService notificationService;
 
   /**
@@ -51,14 +52,14 @@ public class UnavailabilityController {
       UserRepository userRepository,
       UnavailabilityMapper unavailabilityMapper,
       PlayerSelectionRepository playerSelectionRepository,
-      MatchRepository matchRepository,
-      NotificationService notificationService) {
+      NotificationService notificationService,
+      PlayerSelectionCleanupService playerSelectionCleanupService) {
     this.indisponibiliteRepository = indisponibiliteRepository;
     this.userRepository = userRepository;
     this.unavailabilityMapper = unavailabilityMapper;
     this.playerSelectionRepository = playerSelectionRepository;
-    this.matchRepository = matchRepository;
     this.notificationService = notificationService;
+    this.playerSelectionCleanupService = playerSelectionCleanupService;
   }
 
   /**
@@ -158,11 +159,16 @@ public class UnavailabilityController {
     if (startDate == null || endDate == null) {
       return;
     }
+    LocalDateTime now = LocalDateTime.now();
 
     List<PlayerSelection> conflictingSelections = new ArrayList<>();
     for (PlayerSelection selection : playerSelectionRepository.findByMemberId(user.getId())) {
       Match match = selection.getMatch();
       if (match == null || match.getScheduledDateTime() == null) {
+        continue;
+      }
+
+      if (match.getScheduledDateTime().isBefore(now)) {
         continue;
       }
 
@@ -179,9 +185,13 @@ public class UnavailabilityController {
     }
 
     for (PlayerSelection selection : conflictingSelections) {
-      playerSelectionRepository.delete(selection);
-
       notificationService.notifySelectionRemovedDueToUnavailability(user, selection);
     }
+
+    playerSelectionCleanupService.removeMemberFromSelectionsForUnavailabilityPeriod(
+        user.getId(),
+        startDate,
+        endDate
+    );
   }
 }

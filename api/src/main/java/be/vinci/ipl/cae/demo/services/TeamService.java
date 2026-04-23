@@ -36,6 +36,11 @@ public class TeamService {
   private final NotificationService notificationService;
 
   /**
+   * Service for cleaning up future lineup selections.
+   */
+  private final PlayerSelectionCleanupService playerSelectionCleanupService;
+
+  /**
    * Constructor for TeamService.
    *
    * @param teamRepository      the team repository.
@@ -47,11 +52,13 @@ public class TeamService {
       TeamRepository teamRepository,
       UserRepository userRepository,
       DemandService demandService,
-      NotificationService notificationService) {
+      NotificationService notificationService,
+      PlayerSelectionCleanupService playerSelectionCleanupService) {
     this.teamRepository = teamRepository;
     this.userRepository = userRepository;
     this.demandService = demandService;
     this.notificationService = notificationService;
+    this.playerSelectionCleanupService = playerSelectionCleanupService;
   }
 
   /**
@@ -247,6 +254,7 @@ public class TeamService {
     normalizeResponsibleSlots(team);
     team.getMembers().removeIf(teamMember -> teamMember.getId().equals(member.getId()));
     member.setTeam(null);
+    playerSelectionCleanupService.removeMemberFromFutureSelections(member.getId());
 
     userRepository.save(member);
     teamRepository.save(team);
@@ -277,6 +285,7 @@ public class TeamService {
       persistedUser.setTeam(null);
       team.setPrimaryResponsible(null);
       team.setSecondaryResponsible(null);
+      playerSelectionCleanupService.removeMemberFromFutureSelections(persistedUser.getId());
 
       userRepository.save(persistedUser);
       teamRepository.save(team);
@@ -313,6 +322,7 @@ public class TeamService {
 
     team.getMembers().removeIf(member -> member.getId().equals(persistedUser.getId()));
     persistedUser.setTeam(null);
+    playerSelectionCleanupService.removeMemberFromFutureSelections(persistedUser.getId());
 
     userRepository.save(persistedUser);
     teamRepository.save(team);

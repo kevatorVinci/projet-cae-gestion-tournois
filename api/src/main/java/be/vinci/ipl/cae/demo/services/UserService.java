@@ -60,6 +60,11 @@ public class UserService {
   private final NotificationService notificationService;
 
   /**
+   * Service for cleaning up future lineup selections.
+   */
+  private final PlayerSelectionCleanupService playerSelectionCleanupService;
+
+  /**
    * Mapper for user DTO conversions.
    */
   private final UserMapper userMapper;
@@ -78,11 +83,13 @@ public class UserService {
       UserRepository userRepository,
       TeamRepository teamRepository,
       NotificationService notificationService,
+      PlayerSelectionCleanupService playerSelectionCleanupService,
       UserMapper userMapper) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.teamRepository = teamRepository;
     this.notificationService = notificationService;
+    this.playerSelectionCleanupService = playerSelectionCleanupService;
     this.userMapper = userMapper;
   }
 
@@ -296,6 +303,7 @@ public class UserService {
     if (reason != null && !reason.isBlank()) {
       user.setBanReason(reason.trim());
     }
+    playerSelectionCleanupService.removeMemberFromFutureSelections(user.getId());
     userRepository.save(user);
   }
 

@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelectionId;
+import java.time.LocalDateTime;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -44,4 +45,27 @@ public interface PlayerSelectionRepository
    * @return selections referencing this member.
    */
   Iterable<PlayerSelection> findByMemberId(Long memberId);
+
+  /**
+   * Deletes selections for a member when matches are still in the future.
+   *
+   * @param memberId member identifier.
+   * @param thresholdDateTime only matches strictly after this date-time are targeted.
+   * @return number of deleted selection rows.
+   */
+  long deleteByMemberIdAndMatchScheduledDateTimeAfter(Long memberId, LocalDateTime thresholdDateTime);
+
+  /**
+   * Deletes selections for a member in a date-time window.
+   *
+   * @param memberId member identifier.
+   * @param fromDateTime lower bound (inclusive).
+   * @param toDateTime upper bound (exclusive).
+   * @return number of deleted rows.
+   */
+  long deleteByMemberIdAndMatchScheduledDateTimeGreaterThanEqualAndMatchScheduledDateTimeLessThan(
+      Long memberId,
+      LocalDateTime fromDateTime,
+      LocalDateTime toDateTime
+  );
 }

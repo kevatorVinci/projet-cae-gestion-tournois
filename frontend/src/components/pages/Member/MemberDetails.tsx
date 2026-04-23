@@ -17,6 +17,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import { User, UserContextType } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
+import { getRoundLabelFromMax } from '../../../utils/bracketLabels';
 import { getAllEquipes } from '../../../services/teams';
 import {
   fetchTeamRegistrationsPublic,
@@ -806,7 +807,7 @@ export default function MemberDetails() {
                           >
                             {tournamentName}
                             {match.round != null
-                              ? ` · Tour ${match.round}`
+                              ? ` · ${getRoundLabelFromMax(match.round, Math.max(...historyMatches.map((m) => m.round ?? 1)))}`
                               : ''}
                           </Typography>
                         </Box>

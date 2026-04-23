@@ -5,11 +5,14 @@ import be.vinci.ipl.cae.demo.models.dtos.playerselection.PlayerSelectionTeamView
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
 import be.vinci.ipl.cae.demo.models.entities.Team;
+import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.PlayerSelectionRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
+import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -31,6 +34,7 @@ public class PlayerSelectionService {
   private final MatchRepository matchRepository;
   private final UserRepository userRepository;
   private final TeamRepository teamRepository;
+  private final UnavailabilityRepository unavailabilityRepository;
   private final NotificationService notificationService;
 
   /**
@@ -47,11 +51,13 @@ public class PlayerSelectionService {
       MatchRepository matchRepository,
       UserRepository userRepository,
       TeamRepository teamRepository,
+      UnavailabilityRepository unavailabilityRepository,
       NotificationService notificationService) {
     this.playerSelectionRepository = playerSelectionRepository;
     this.matchRepository = matchRepository;
     this.userRepository = userRepository;
     this.teamRepository = teamRepository;
+    this.unavailabilityRepository = unavailabilityRepository;
     this.notificationService = notificationService;
   }
 
@@ -91,6 +97,13 @@ public class PlayerSelectionService {
         throw new IllegalStateException(
             "Un joueur sélectionné n'appartient pas à cette équipe."
         );
+      }
+
+      User member = userRepository.findById(memberId)
+          .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
+
+      if (isUnavailableForMatch(member, match)) {
+        throw new IllegalStateException("Un joueur sélectionné est indisponible à cette date.");
       }
     }
 
@@ -235,12 +248,20 @@ public class PlayerSelectionService {
 
     List<PlayerSelectionMemberDto> members = new ArrayList<>();
     for (User member : selectedTeam.getMembers()) {
+      Unavailability unavailablePeriod = getUnavailablePeriodForMatch(member, match);
       PlayerSelectionMemberDto memberDto = new PlayerSelectionMemberDto();
       memberDto.setMemberId(member.getId());
       memberDto.setTag(member.getTag());
       memberDto.setSpecialty(member.getSpecialty());
       memberDto.setProfileImageUrl(member.getProfileImageUrl());
       memberDto.setSelected(selectedIds.contains(member.getId()));
+      memberDto.setUnavailable(unavailablePeriod != null || member.isBanned());
+      memberDto.setUnavailableStartDate(
+          unavailablePeriod == null ? null : unavailablePeriod.getStartDate()
+      );
+      memberDto.setUnavailableEndDate(
+          unavailablePeriod == null ? null : unavailablePeriod.getEndDate()
+      );
       members.add(memberDto);
     }
 
@@ -361,6 +382,33 @@ public class PlayerSelectionService {
 
   private boolean isByeMatch(Match match) {
     return match.getTeam1() == null || match.getTeam2() == null;
+  }
+
+  private boolean isUnavailableForMatch(User member, Match match) {
+    if (member == null || member.getId() == null || member.isBanned()) {
+      return true;
+    }
+
+    return getUnavailablePeriodForMatch(member, match) != null;
+  }
+
+  private Unavailability getUnavailablePeriodForMatch(User member, Match match) {
+    if (member == null || member.getId() == null) {
+      return null;
+    }
+
+    if (match == null || match.getScheduledDateTime() == null) {
+      return null;
+    }
+
+    LocalDate matchDate = match.getScheduledDateTime().toLocalDate();
+    return unavailabilityRepository
+        .findFirstByUserAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateAsc(
+            member,
+            matchDate,
+            matchDate
+        )
+        .orElse(null);
   }
 
   private List<PlayerSelection> toList(Iterable<PlayerSelection> selections) {
