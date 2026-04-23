@@ -34,6 +34,7 @@ import {
 import { getUserTeam, isCurrentUserResponsable } from '../../../services/teams';
 import { useAdminView } from '../../../contexts/useAdminView';
 import { getAuthenticatedUser } from '../../../utils/session';
+import { getRoundLabelFromMax } from '../../../utils/bracketLabels';
 
 const normalizeImageSrc = (image?: string) => {
   if (!image) return undefined;
@@ -60,6 +61,13 @@ const formatDateTime = (dateValue?: string): string => {
   });
 };
 
+const formatShortDate = (dateValue?: string): string => {
+  if (!dateValue) return '';
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) return dateValue;
+  return parsed.toLocaleDateString('fr-BE');
+};
+
 const TournamentMatchCompositionPage = () => {
   const { id, matchId } = useParams<{ id: string; matchId: string }>();
   const navigate = useNavigate();
@@ -83,6 +91,7 @@ const TournamentMatchCompositionPage = () => {
   const [userTeamId, setUserTeamId] = useState<number | null>(null);
   const [savingTeamId, setSavingTeamId] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [maxRound, setMaxRound] = useState(1);
 
   const parsedMatchId = toMatchId(matchId);
   const effectiveAdminFlag =
@@ -158,6 +167,16 @@ const TournamentMatchCompositionPage = () => {
           setLoading(false);
           return;
         }
+
+        const computedMaxRound = Math.max(
+          1,
+          ...matchList.map((item) =>
+            typeof item.round === 'number' && Number.isFinite(item.round)
+              ? item.round
+              : 1,
+          ),
+        );
+        setMaxRound(computedMaxRound);
 
         setMatch(selectedMatch);
         await refreshSelections(token);
@@ -279,6 +298,16 @@ const TournamentMatchCompositionPage = () => {
   const toggleMember = (teamId: number, memberId: number) => {
     const editor = editorViews[teamId];
     if (!editor) return;
+
+    const member = editor.members.find(
+      (currentMember) => currentMember.memberId === memberId,
+    );
+    if (member?.unavailable) {
+      setFeedback(
+        `${member.tag ?? 'Ce joueur'} est indisponible pour la date du match.`,
+      );
+      return;
+    }
 
     const maxPlayers = editor.maxPlayers ?? 4;
     const currentlySelected = selectedByTeam[teamId] ?? [];
@@ -514,7 +543,9 @@ const TournamentMatchCompositionPage = () => {
                     Sélection ({selectedIds.length}/{editor.maxPlayers})
                   </Typography>
 
-                  {editor.members.map((member) => (
+                  {[...editor.members]
+                    .sort((a, b) => Number(Boolean(a.unavailable)) - Number(Boolean(b.unavailable)))
+                    .map((member) => (
                     <FormControlLabel
                       key={member.memberId}
                       sx={{
@@ -522,18 +553,27 @@ const TournamentMatchCompositionPage = () => {
                         px: 1,
                         py: 0.6,
                         borderRadius: 1.5,
-                        bgcolor: selectedIds.includes(member.memberId)
-                          ? `${accentColor}26`
-                          : 'rgba(255,255,255,0.04)',
-                        border: selectedIds.includes(member.memberId)
-                          ? `1px solid ${accentColor}77`
-                          : '1px solid rgba(255,255,255,0.08)',
+                        opacity: member.unavailable ? 0.55 : 1,
+                        bgcolor: member.unavailable
+                          ? 'rgba(148,163,184,0.12)'
+                          : selectedIds.includes(member.memberId)
+                            ? `${accentColor}26`
+                            : 'rgba(255,255,255,0.04)',
+                        border: member.unavailable
+                          ? '1px solid rgba(148,163,184,0.35)'
+                          : selectedIds.includes(member.memberId)
+                            ? `1px solid ${accentColor}77`
+                            : '1px solid rgba(255,255,255,0.08)',
                       }}
                       control={
                         <Checkbox
                           checked={selectedIds.includes(member.memberId)}
                           onChange={() => toggleMember(teamId, member.memberId)}
-                          disabled={savingTeamId === teamId || !editor.canEdit}
+                          disabled={
+                            savingTeamId === teamId ||
+                            !editor.canEdit ||
+                            Boolean(member.unavailable)
+                          }
                         />
                       }
                       label={
@@ -567,13 +607,18 @@ const TournamentMatchCompositionPage = () => {
                               variant="caption"
                               color="rgba(255,255,255,0.65)"
                             >
-                              {member.specialty ?? 'Spécialité non renseignée'}
+                              {member.unavailable
+                                ? member.unavailableStartDate && member.unavailableEndDate
+                                  ? `Indisponible du ${formatShortDate(member.unavailableStartDate)} au ${formatShortDate(member.unavailableEndDate)}`
+                                  : 'Indisponible pour ce match'
+                                : member.specialty ??
+                                  'Spécialité non renseignée'}
                             </Typography>
                           </Box>
                         </Stack>
                       }
                     />
-                  ))}
+                    ))}
 
                   {!editor.canEdit && (
                     <Alert severity="warning">
@@ -684,7 +729,8 @@ const TournamentMatchCompositionPage = () => {
                     : 'Composition des équipes'}
                 </Typography>
                 <Typography variant="body1" color="rgba(255,255,255,0.72)">
-                  {formatDateTime(match.scheduledDateTime)} · Tour {match.round}
+                  {formatDateTime(match.scheduledDateTime)} ·{' '}
+                  {getRoundLabelFromMax(match.round ?? 1, maxRound)}
                 </Typography>
               </Box>
 

@@ -1,6 +1,7 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TeamMatch } from '../../../services/tournaments';
+import { getRoundLabel } from '../../../utils/bracketLabels';
 
 const BRACKET_CARD_HEIGHT = 108;
 const BRACKET_BASE_GAP = 18;
@@ -178,14 +179,6 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
   }
 
   return tree;
-};
-
-const getRoundLabel = (roundIndex: number, totalRounds: number): string => {
-  const distanceToFinal = totalRounds - roundIndex;
-  if (distanceToFinal === 1) return 'Finale';
-  if (distanceToFinal === 2) return 'Demi-finale';
-  if (distanceToFinal === 3) return 'Quart de finale';
-  return `Tour ${roundIndex + 1}`;
 };
 
 const formatMatchDateTime = (dateValue?: string): string => {
@@ -604,6 +597,7 @@ const TournamentBracket = ({
                       <Stack
                         direction="row"
                         spacing={1}
+                        alignItems="center"
                         sx={{ mt: isBye ? 1 : 'auto' }}
                       >
                         <Chip

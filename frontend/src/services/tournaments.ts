@@ -70,6 +70,9 @@ export interface MatchPlayerSelectionMember {
   specialty?: string;
   profileImageUrl?: string;
   selected: boolean;
+  unavailable?: boolean;
+  unavailableStartDate?: string;
+  unavailableEndDate?: string;
 }
 
 export interface MatchTeamSelectionView {

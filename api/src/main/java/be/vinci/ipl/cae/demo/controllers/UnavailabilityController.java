@@ -5,6 +5,7 @@ import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityCreateDto;
 import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityResponseDto;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import be.vinci.ipl.cae.demo.services.PlayerSelectionCleanupService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +28,7 @@ public class UnavailabilityController {
   private final UnavailabilityRepository indisponibiliteRepository;
   private final UserRepository userRepository;
   private final UnavailabilityMapper unavailabilityMapper;
+  private final PlayerSelectionCleanupService playerSelectionCleanupService;
 
   /**
    * Builds the controller.
@@ -36,10 +38,12 @@ public class UnavailabilityController {
   public UnavailabilityController(
       UnavailabilityRepository indisponibiliteRepository,
       UserRepository userRepository,
-      UnavailabilityMapper unavailabilityMapper) {
+      UnavailabilityMapper unavailabilityMapper,
+      PlayerSelectionCleanupService playerSelectionCleanupService) {
     this.indisponibiliteRepository = indisponibiliteRepository;
     this.userRepository = userRepository;
     this.unavailabilityMapper = unavailabilityMapper;
+    this.playerSelectionCleanupService = playerSelectionCleanupService;
   }
 
   /**
@@ -77,7 +81,13 @@ public class UnavailabilityController {
             HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié."));
     var entity = unavailabilityMapper.toEntity(indisponibilite);
     entity.setUser(currentUser);
-    return unavailabilityMapper.toDto(indisponibiliteRepository.save(entity));
+    var saved = indisponibiliteRepository.save(entity);
+    playerSelectionCleanupService.removeMemberFromSelectionsForUnavailabilityPeriod(
+      currentUser.getId(),
+      saved.getStartDate(),
+      saved.getEndDate()
+    );
+    return unavailabilityMapper.toDto(saved);
   }
 
   /**
