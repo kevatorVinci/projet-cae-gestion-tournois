@@ -404,67 +404,110 @@ const MatchHistorySection = ({ teamId }: MatchHistorySectionProps) => {
   const preview = filteredMatches.slice(0, 3);
   const hasMore = filteredMatches.length > 3;
 
-  const renderMatch = (m: TeamMatch, index: number, arr: TeamMatch[]) => (
-    <Box key={m.id}>
-      <ListItem
-        sx={{
-          py: 1.5,
-          px: 1,
-          borderRadius: 1,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 2,
-          cursor: 'pointer',
-          '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
-        }}
-        onClick={() => navigate(`/tournois/${m.tournamentId}/matchs/${m.id}`)}
-      >
-        <Box>
-          <Typography fontWeight={700} color="white" variant="body2">
-            {m.team1Name || `Équipe #${m.team1Id}`} vs{' '}
-            {m.team2Name || `Équipe #${m.team2Id}`}
-          </Typography>
-          <Typography variant="caption" color="rgba(255,255,255,0.6)">
-            {formatDateTime(m.scheduledDateTime)}
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1} alignItems="center">
-          {getMatchStatus(m) === 'TERMINE' && (
-            <Typography
-              variant="body2"
-              fontWeight={800}
-              sx={{ color: '#f59e0b', fontFamily: 'monospace' }}
-            >
-              {m.scoreTeam1} – {m.scoreTeam2}
+  const renderMatch = (m: TeamMatch, index: number, arr: TeamMatch[]) => {
+    const hasScore =
+      typeof m.scoreTeam1 === 'number' &&
+      typeof m.scoreTeam2 === 'number' &&
+      !(m.scoreTeam1 === 0 && m.scoreTeam2 === 0);
+
+    const score1 = Number(m.scoreTeam1);
+    const score2 = Number(m.scoreTeam2);
+    const scoreLabel = hasScore ? `${score1} - ${score2}` : null;
+
+    const status = getMatchStatus(m);
+
+    let outcomeLabel = getMatchStatusLabel(status);
+    let outcomeColor =
+      status === 'TERMINE'
+        ? '#cbd5e1'
+        : status === 'EN_COURS'
+          ? '#fde68a'
+          : '#bfdbfe';
+    let outcomeBg =
+      status === 'TERMINE'
+        ? 'rgba(100,116,139,0.3)'
+        : status === 'EN_COURS'
+          ? 'rgba(245,158,11,0.18)'
+          : 'rgba(59,130,246,0.2)';
+    let outcomeBorder =
+      status === 'TERMINE'
+        ? '1px solid rgba(100,116,139,0.4)'
+        : status === 'EN_COURS'
+          ? '1px solid rgba(245,158,11,0.35)'
+          : '1px solid rgba(59,130,246,0.35)';
+
+    if (hasScore && status === 'TERMINE') {
+      if (score1 > score2) {
+        outcomeLabel = `Victoire ${m.team1Name ?? 'Éq.1'}`;
+        outcomeColor = '#34d399';
+        outcomeBg = 'rgba(16,185,129,0.20)';
+        outcomeBorder = '1px solid rgba(16,185,129,0.35)';
+      } else if (score1 < score2) {
+        outcomeLabel = `Victoire ${m.team2Name ?? 'Éq.2'}`;
+        outcomeColor = '#34d399';
+        outcomeBg = 'rgba(16,185,129,0.20)';
+        outcomeBorder = '1px solid rgba(16,185,129,0.35)';
+      }
+    }
+
+    return (
+      <Box key={m.id}>
+        <ListItem
+          sx={{
+            py: 1.5,
+            px: 1,
+            borderRadius: 1,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+            cursor: 'pointer',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
+          }}
+          onClick={() => navigate(`/tournois/${m.tournamentId}/matchs/${m.id}`)}
+        >
+          <Box>
+            <Typography fontWeight={700} color="white" variant="body2">
+              {m.team1Name ?? `Équipe ${m.team1Id}`} vs{' '}
+              {m.team2Name ?? `Équipe ${m.team2Id}`}
             </Typography>
-          )}
-          <Chip
-            size="small"
-            label={getMatchStatusLabel(getMatchStatus(m))}
-            sx={{
-              bgcolor:
-                getMatchStatus(m) === 'TERMINE'
-                  ? 'rgba(100,116,139,0.3)'
-                  : getMatchStatus(m) === 'EN_COURS'
-                    ? 'rgba(245,158,11,0.18)'
-                    : 'rgba(59,130,246,0.2)',
-              color:
-                getMatchStatus(m) === 'TERMINE'
-                  ? '#cbd5e1'
-                  : getMatchStatus(m) === 'EN_COURS'
-                    ? '#fde68a'
-                    : '#bfdbfe',
-              fontWeight: 700,
-            }}
-          />
-        </Stack>
-      </ListItem>
-      {index < arr.length - 1 && (
-        <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)' }} />
-      )}
-    </Box>
-  );
+            <Typography variant="caption" color="rgba(255,255,255,0.6)">
+              {formatDateTime(m.scheduledDateTime)}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={0.8} alignItems="center">
+            {scoreLabel && (
+              <Chip
+                size="small"
+                label={scoreLabel}
+                sx={{
+                  bgcolor: 'rgba(59,130,246,0.20)',
+                  color: '#93c5fd',
+                  fontWeight: 700,
+                  fontSize: 10,
+                  border: '1px solid rgba(59,130,246,0.35)',
+                }}
+              />
+            )}
+            <Chip
+              size="small"
+              label={outcomeLabel}
+              sx={{
+                bgcolor: outcomeBg,
+                color: outcomeColor,
+                fontWeight: 700,
+                fontSize: 10,
+                border: outcomeBorder,
+              }}
+            />
+          </Stack>
+        </ListItem>
+        {index < arr.length - 1 && (
+          <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)' }} />
+        )}
+      </Box>
+    );
+  };
 
   return (
     <>
