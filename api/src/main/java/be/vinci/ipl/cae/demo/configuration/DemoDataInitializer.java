@@ -5,6 +5,7 @@ import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,6 +24,27 @@ import org.springframework.transaction.annotation.Transactional;
 @Profile("demo")
 public class DemoDataInitializer extends AbstractDataInitializer {
 
+  private static final List<String> PROFILE_IMAGES = List.of(
+      "luffy.png",
+      "miles.jpg",
+      "erza.jpg",
+      "kaido.png",
+      "flash.jpg",
+      "Pessi.jpg",
+      "itadori.jpg",
+      "makima.jpg",
+      "eren.png",
+      "garou.jpg"
+  );
+
+  private static final List<String> TEAM_IMAGES = List.of(
+      "akatsuki.jpg",
+      "espada.jpg",
+      "fairytail.jpg",
+      "onepiece.jpg",
+      "hunter.jpg"
+  );
+
   @Override
   @Transactional
   public void run(String... args) {
@@ -32,15 +54,12 @@ public class DemoDataInitializer extends AbstractDataInitializer {
 
     if (shouldSeedBase) {
       SeedData data = seedBaseData(pwd);
-      ensureDemoTournaments(data);
-      seedMassiveChecklistData(pwd, data);
-    } else {
-      ensureDemoTournaments(null);
+      processDemoRequirements(data);
+      System.out.println("[demo] Scénario client initialisé (strictement basé sur la fiche démo).");
+      return;
     }
 
-    System.out.println(
-        "[demo] DB initialized: Upcoming tournaments and ALL EDGE CASES ready for testing."
-    );
+    System.out.println("[demo] Base déjà présente: aucun tournoi additionnel n'a été créé.");
   }
 
   /**
@@ -54,6 +73,292 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     ChecklistTournaments tournaments = createChecklistTournaments(baseData, teams);
 
     createChecklistMatches(baseData, teams, tournaments);
+  }
+
+  /**
+   * Seeds the full customer demo scenario from the iteration-3 sheet.
+   */
+  private void processDemoRequirements(SeedData data) {
+    List<Team> regSpringArena = new ArrayList<>(List.of(data.omega()));
+    regSpringArena.addAll(data.dummyTeams().subList(0, 6)); // Total: 7
+    registerTeams(data.springArena(), regSpringArena, "2025-04-08");
+
+    List<Team> regElite25 = new ArrayList<>(List.of(data.iota(), data.omega()));
+    regElite25.addAll(data.dummyTeams().subList(0, 4)); // Total: 6
+    registerTeams(data.elite2025(), regElite25, "2025-05-10");
+
+    List<Team> regSummerPro = new ArrayList<>(List.of(data.alpha(), data.iota()));
+    regSummerPro.addAll(data.dummyTeams().subList(0, 12)); // Total: 14
+    registerTeams(data.summerPro(), regSummerPro, "2025-06-24");
+
+    List<Team> regWinterClash = new ArrayList<>(List.of(data.delta(), data.omega()));
+    regWinterClash.addAll(data.dummyTeams().subList(0, 10)); // Total: 12
+    registerTeams(data.winterClash(), regWinterClash, "2026-01-04");
+
+    List<Team> regEasterCup = new ArrayList<>(List.of(data.delta()));
+    regEasterCup.addAll(data.dummyTeams().subList(0, 6)); // Total: 7
+    registerTeams(data.easterCup(), regEasterCup, "2026-04-07");
+
+    List<Team> regSpringBattle = new ArrayList<>(
+        List.of(data.alpha(), data.delta(), data.iota(), data.omega()));
+    regSpringBattle.addAll(data.dummyTeams().subList(0, 4)); // Total: 8
+    registerTeams(data.springBattle(), regSpringBattle, "2026-04-30");
+
+    List<Team> regElite26 = new ArrayList<>(List.of(data.alpha(), data.iota()));
+    regElite26.addAll(data.dummyTeams().subList(0, 7)); // Total: 9 (sans DELTA)
+    registerTeams(data.elite2026(), regElite26, "2026-05-10");
+
+    simulatePastTournament(data.springArena(), regSpringArena, data.omega(), data.lea());
+    simulatePastTournament(data.elite2025(), regElite25, data.iota(), data.lea());
+    simulatePastTournament(data.summerPro(), regSummerPro, data.alpha(), data.lea());
+    simulatePastTournament(data.winterClash(), regWinterClash, data.delta(), data.lea());
+    simulatePastTournament(data.easterCup(), regEasterCup, data.delta(), data.lea());
+
+    LocalDateTime demoDateTime = LocalDateTime.of(2026, 5, 7, 11, 5);
+
+    Match matchDeltaIota = createMatch(
+      data.springBattle(),
+      data.delta(),
+      data.iota(),
+      1,
+      demoDateTime.minusMinutes(5),
+      data.lea(),
+      "PENDING"
+    );
+    addPlayerSelections(
+        matchDeltaIota,
+        List.of(data.max(), data.seb(), data.ali(), data.zed()),
+        data.delta()
+    );
+    addPlayerSelections(
+        matchDeltaIota,
+        List.of(data.lisa(), data.noa(), data.tim(), data.zoe()),
+        data.iota()
+    );
+
+    createMatch(
+        data.springBattle(),
+        data.omega(),
+        data.alpha(),
+        1,
+        demoDateTime.plusHours(3),
+        data.lea(),
+        "PENDING"
+    );
+
+    Match matchBetaGamma = createMatch(
+      data.springBattle(),
+      data.dummyTeams().get(0),
+      data.dummyTeams().get(1),
+      1,
+      demoDateTime.plusHours(4),
+      data.lea(),
+      "PENDING"
+    );
+    addSelectionsForMatch(matchBetaGamma);
+
+    Match matchEpsilonZeta = createMatch(
+      data.springBattle(),
+      data.dummyTeams().get(2),
+      data.dummyTeams().get(3),
+      1,
+      demoDateTime.plusHours(5),
+      data.lea(),
+      "PENDING"
+    );
+    addSelectionsForMatch(matchEpsilonZeta);
+
+    createMatch(
+      data.springBattle(),
+      null,
+      null,
+      2,
+      demoDateTime.plusHours(7),
+      data.lea(),
+      "PENDING"
+    );
+
+    data.springBattle().setMatchSchedulePublished(true);
+    tournamentRepo.save(data.springBattle());
+  }
+
+  /**
+   * Generates a complete elimination bracket while forcing the configured champion.
+   */
+  private void simulatePastTournament(Tournament tournament, List<Team> teams, Team winner, User admin) {
+    if (teams == null || teams.size() < 2 || winner == null) {
+      return;
+    }
+
+    tournament.setWinner(winner);
+    tournament.setMatchSchedulePublished(true);
+    tournamentRepo.save(tournament);
+
+    List<Team> orderedTeams = new ArrayList<>(teams);
+    orderedTeams.remove(winner);
+    orderedTeams.add(0, winner);
+
+    int teamCount = orderedTeams.size();
+    int bracketSize = nextPowerOfTwo(teamCount);
+    int byesInRound1 = bracketSize - teamCount;
+
+    int round = 1;
+    List<Team> currentRound;
+
+    // Byes are allowed only in round 1. Starting from round 2,
+    // every match is a real head-to-head with 2 teams.
+    if (byesInRound1 > 0) {
+      List<Team> nextRound = new ArrayList<>();
+      LocalDateTime round1Start = buildRoundStartDate(tournament.getStartDate(), 1);
+      int matchIndexInRound = 0;
+
+      for (int i = 0; i < byesInRound1; i++) {
+        Team autoQualified = orderedTeams.get(i);
+        createMatch(
+            tournament,
+            autoQualified,
+            null,
+            1,
+            round1Start.plusHours(matchIndexInRound * 2L),
+            admin,
+            "TERMINE"
+        );
+        nextRound.add(autoQualified);
+        matchIndexInRound++;
+      }
+
+      List<Team> playingRound1 = orderedTeams.subList(byesInRound1, teamCount);
+      for (int i = 0; i < playingRound1.size(); i += 2) {
+        Team t1 = playingRound1.get(i);
+        Team t2 = playingRound1.get(i + 1);
+
+        LocalDateTime matchDate = round1Start.plusHours(matchIndexInRound * 2L);
+        Match match = createMatch(tournament, t1, t2, 1, matchDate, admin, "TERMINE");
+
+        Team matchWinner = pickMatchWinner(t1, t2, winner, 1, matchIndexInRound);
+        int winnerScore = 3 + Math.floorMod(1 + matchIndexInRound, 3); // 3..5
+        int loserScore = Math.max(0, winnerScore - (2 + Math.floorMod(1 + matchIndexInRound, 2)));
+
+        if (matchWinner.equals(t1)) {
+          createMatchResult(match, winnerScore, loserScore, admin);
+          nextRound.add(t1);
+        } else {
+          createMatchResult(match, loserScore, winnerScore, admin);
+          nextRound.add(t2);
+        }
+
+        addSelectionsForMatch(match);
+        matchIndexInRound++;
+      }
+
+      currentRound = nextRound;
+      round = 2;
+    } else {
+      currentRound = new ArrayList<>(orderedTeams);
+    }
+
+    while (currentRound.size() > 1) {
+      if (round > 1 && currentRound.size() % 2 != 0) {
+        throw new IllegalStateException(
+            "Bracket invalide: un tour automatique est requis après le round 1.");
+      }
+
+      List<Team> nextRound = new ArrayList<>();
+      LocalDateTime roundStart = buildRoundStartDate(tournament.getStartDate(), round);
+      int matchIndexInRound = 0;
+
+      for (int i = 0; i < currentRound.size(); i += 2) {
+        Team t1 = currentRound.get(i);
+        Team t2 = currentRound.get(i + 1);
+
+        LocalDateTime matchDate = roundStart.plusHours(matchIndexInRound * 2L);
+        Match match = createMatch(tournament, t1, t2, round, matchDate, admin, "TERMINE");
+
+        Team matchWinner = pickMatchWinner(t1, t2, winner, round, matchIndexInRound);
+        int winnerScore = 3 + Math.floorMod(round + matchIndexInRound, 3); // 3..5
+        int loserScore = Math.max(0, winnerScore - (2 + Math.floorMod(round + matchIndexInRound, 2)));
+
+        if (matchWinner.equals(t1)) {
+          createMatchResult(match, winnerScore, loserScore, admin);
+          nextRound.add(t1);
+        } else {
+          createMatchResult(match, loserScore, winnerScore, admin);
+          nextRound.add(t2);
+        }
+
+        addSelectionsForMatch(match);
+        matchIndexInRound++;
+      }
+
+      currentRound = nextRound;
+      round++;
+    }
+
+    ensureAllRegisteredTeamsPlayed(tournament, teams);
+  }
+
+  private void ensureAllRegisteredTeamsPlayed(Tournament tournament, List<Team> registeredTeams) {
+    Set<Long> playedTeamIds = new HashSet<>();
+
+    for (Match match : matchRepo.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(tournament.getId())) {
+      if (match.getTeam1() != null) {
+        playedTeamIds.add(match.getTeam1().getId());
+      }
+      if (match.getTeam2() != null) {
+        playedTeamIds.add(match.getTeam2().getId());
+      }
+    }
+
+    for (Team team : registeredTeams) {
+      if (!playedTeamIds.contains(team.getId())) {
+        throw new IllegalStateException(
+            "Bracket invalide: l'équipe " + team.getName() + " ne joue aucun match.");
+      }
+    }
+  }
+
+  private int nextPowerOfTwo(int n) {
+    int value = 1;
+    while (value < n) {
+      value <<= 1;
+    }
+    return value;
+  }
+
+  private LocalDateTime buildRoundStartDate(LocalDate tournamentStart, int round) {
+    return tournamentStart.atTime(14, 0).plusDays((long) (round - 1) * 2);
+  }
+
+  private Team pickMatchWinner(
+      Team team1,
+      Team team2,
+      Team tournamentWinner,
+      int round,
+      int matchIndexInRound) {
+    if (team1.equals(tournamentWinner)) {
+      return team1;
+    }
+    if (team2.equals(tournamentWinner)) {
+      return team2;
+    }
+    // Deterministic alternation for non-final matches.
+    return Math.floorMod(round + matchIndexInRound, 2) == 0 ? team1 : team2;
+  }
+
+  private void addSelectionsForMatch(Match match) {
+    List<User> team1Members = new ArrayList<>();
+    List<User> team2Members = new ArrayList<>();
+
+    for (User user : userRepo.findAll()) {
+      if (match.getTeam1().equals(user.getTeam())) {
+        team1Members.add(user);
+      } else if (match.getTeam2().equals(user.getTeam())) {
+        team2Members.add(user);
+      }
+    }
+
+    addPlayerSelections(match, team1Members, match.getTeam1());
+    addPlayerSelections(match, team2Members, match.getTeam2());
   }
 
   private User buildMin4Lead(String pwd) {
@@ -374,7 +679,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
             "2026-01-01",
             false,
             pwd,
-            "default.png"
+            pickProfileImage(email)
         )
     );
   }
@@ -384,9 +689,19 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       User primaryResponsible,
       User secondaryResponsible,
       User... members) {
-    Team team = createTeam(name, primaryResponsible, secondaryResponsible, "default.png");
+    Team team = createTeam(name, primaryResponsible, secondaryResponsible, pickTeamImage(name));
     setTeamForUsers(team, members);
     return team;
+  }
+
+  private String pickProfileImage(String key) {
+    int index = Math.floorMod(key.hashCode(), PROFILE_IMAGES.size());
+    return PROFILE_IMAGES.get(index);
+  }
+
+  private String pickTeamImage(String key) {
+    int index = Math.floorMod(key.hashCode(), TEAM_IMAGES.size());
+    return TEAM_IMAGES.get(index);
   }
 
   private User saveUser(User user) {

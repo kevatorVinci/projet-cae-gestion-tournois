@@ -432,7 +432,7 @@ const TournamentMatchCompositionPage = () => {
     const winnerAccent = '#eab308';
 
     const teamSelections = teamId
-      ? selections.filter((selection) => selection.teamId === teamId)
+      ? selections.filter((selection) => selection.teamId === teamId).slice(0, 4)
       : [];
 
     const hiddenForViewer = shouldHideTeamSelection(teamId);
