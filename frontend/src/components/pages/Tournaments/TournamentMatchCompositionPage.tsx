@@ -267,6 +267,7 @@ const TournamentMatchCompositionPage = () => {
   const userCanForfeit = useMemo(() => {
     if (!match || !responsibleTeamId || isAdmin || isAutoQualifiedMatch)
       return false;
+    if (match.status === 'FINISHED') return false;
     return (
       match.team1Id === responsibleTeamId || match.team2Id === responsibleTeamId
     );
