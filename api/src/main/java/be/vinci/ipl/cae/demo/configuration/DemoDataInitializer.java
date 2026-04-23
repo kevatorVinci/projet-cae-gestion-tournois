@@ -121,7 +121,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
       data.delta(),
       data.iota(),
       1,
-      demoDateTime.minusMinutes(5),
+      LocalDateTime.of(2026, 5, 7, 10, 30),
       data.lea(),
       "PENDING"
     );
@@ -168,12 +168,35 @@ public class DemoDataInitializer extends AbstractDataInitializer {
     );
     addSelectionsForMatch(matchEpsilonZeta);
 
+    // R2 : gagnant(DELTA/IOTA) vs gagnant(OMEGA/ALPHA)
     createMatch(
       data.springBattle(),
       null,
       null,
       2,
       demoDateTime.plusHours(7),
+      data.lea(),
+      "PENDING"
+    );
+
+    // R2 : gagnant(BETA/GAMMA) vs gagnant(EPSILON/ZETA)
+    createMatch(
+      data.springBattle(),
+      null,
+      null,
+      2,
+      demoDateTime.plusHours(7).plusMinutes(90),
+      data.lea(),
+      "PENDING"
+    );
+
+    // Finale (R3)
+    createMatch(
+      data.springBattle(),
+      null,
+      null,
+      3,
+      demoDateTime.plusHours(10),
       data.lea(),
       "PENDING"
     );

@@ -70,7 +70,10 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
   if (round1.length === 0) return [];
 
   const round1Slots: BracketSlot[] = round1.map((match, i) => {
-    const isBye = match.team2Id == null && match.team2Name == null;
+    const isBye =
+      (match.team1Id != null || !!match.team1Name) &&
+      match.team2Id == null &&
+      match.team2Name == null;
     return {
       id: match.id,
       round: 1,
@@ -149,6 +152,10 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
       }
 
       if (realMatch) {
+        const realMatchIsBye =
+          (realMatch.team1Id != null || !!realMatch.team1Name) &&
+          realMatch.team2Id == null &&
+          realMatch.team2Name == null;
         nextRound.push({
           id: realMatch.id,
           round: roundNumber,
@@ -158,7 +165,7 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
           score2: realMatch.scoreTeam2,
           dateMatch: realMatch.scheduledDateTime,
           status: realMatch.status,
-          isBye: false,
+          isBye: realMatchIsBye,
           topY: myCenter - BRACKET_CARD_HEIGHT / 2,
         });
       } else {
@@ -404,9 +411,17 @@ const TournamentBracket = ({
                     typeof match.id === 'string' &&
                     match.id.startsWith('placeholder-');
                   const isBye = match.isBye === true;
+                  const isAwaitingTeams =
+                    !isBye &&
+                    (match.team1Name === '?' ||
+                      match.team2Name === '?' ||
+                      !match.team1Name ||
+                      !match.team2Name);
                   const numericMatchId = Number(match.id);
+                  const isLockedMatch =
+                    isPlaceholder || isBye || isAwaitingTeams;
                   const isMatchSelectable =
-                    !isPlaceholder && Number.isFinite(numericMatchId);
+                    !isLockedMatch && Number.isFinite(numericMatchId);
                   const isSelected =
                     isMatchSelectable && selectedMatchId === numericMatchId;
                   const top = match.topY - columnTopY;
@@ -426,7 +441,7 @@ const TournamentBracket = ({
 
                   const baseAccent = isBye
                     ? STATUS_ACCENT.BYE
-                    : isPlaceholder
+                    : isPlaceholder || isAwaitingTeams
                       ? STATUS_ACCENT.PENDING
                       : isFinished
                         ? STATUS_ACCENT.FINISHED
@@ -605,7 +620,7 @@ const TournamentBracket = ({
                           label={
                             isBye
                               ? 'Tour automatique'
-                              : isPlaceholder
+                              : isPlaceholder || isAwaitingTeams
                                 ? 'En attente'
                                 : isFinished
                                   ? 'Terminé'
