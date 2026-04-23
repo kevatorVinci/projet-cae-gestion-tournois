@@ -146,12 +146,9 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
       });
 
       // FIX: Since we splice the array below, matchIndexCursor logic is flawed.
-      // We just take the first element (index 0) if we couldn't find a direct match 
+      // We just take the first element (index 0) if we couldn't find a direct match
       // but there are still matches available for this round.
-      if (
-        realMatchIndex === -1 &&
-        currentRoundMatches.length > 0
-      ) {
+      if (realMatchIndex === -1 && currentRoundMatches.length > 0) {
         realMatchIndex = 0;
       }
 
@@ -162,13 +159,13 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
 
       if (realMatch) {
         // FIX: Add defensive check (roundNumber === 1) or stricter validation
-        // to prevent later rounds from falsely reporting "Qualifiée d'office" 
+        // to prevent later rounds from falsely reporting "Qualifiée d'office"
         // due to database nulls while waiting for teams to advance.
         const isDbBye =
           (realMatch.team1Id != null || !!realMatch.team1Name) &&
           realMatch.team2Id == null &&
           realMatch.team2Name == null;
-          
+
         const realMatchIsBye = isDbBye && roundNumber === 1;
 
         nextRound.push({

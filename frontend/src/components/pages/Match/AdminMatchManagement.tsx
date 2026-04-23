@@ -18,9 +18,12 @@ import {
 
 import { Match, Tournoi } from '../../../types';
 import { getEquipeById } from '../../../services/teams';
-import { fetchMatchSelections, MatchPlayerSelection } from '../../../services/tournaments';
+import {
+  fetchMatchSelections,
+  MatchPlayerSelection,
+} from '../../../services/tournaments';
 
-// Extended type to handle optional fields returned by the backend 
+// Extended type to handle optional fields returned by the backend
 // without resorting to ESLint-breaking 'any' casts.
 type ExtendedMatch = Match & {
   team1Id?: number;
@@ -52,11 +55,14 @@ const AdminMatchManagement = ({
   token,
   onRefresh,
 }: AdminMatchManagementProps) => {
-  const [selectedMatch, setSelectedMatch] = useState<ExtendedMatch | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<ExtendedMatch | null>(
+    null,
+  );
   const [scoreTeam1, setScoreTeam1] = useState<number | ''>('');
   const [scoreTeam2, setScoreTeam2] = useState<number | ''>('');
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [previousResult, setPreviousResult] = useState<PreviousResultState | null>(null);
+  const [previousResult, setPreviousResult] =
+    useState<PreviousResultState | null>(null);
 
   const [team1Image, setTeam1Image] = useState<string | null>(null);
   const [team2Image, setTeam2Image] = useState<string | null>(null);
@@ -64,7 +70,8 @@ const AdminMatchManagement = ({
 
   const normalizeAvatarUrl = (avatar?: string | null) => {
     if (!avatar) return undefined;
-    if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://'))
+      return avatar;
     if (avatar.startsWith('/')) return avatar;
     return `/${avatar}`;
   };
@@ -174,19 +181,22 @@ const AdminMatchManagement = ({
       handleCloseModal();
       onRefresh();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erreur inconnue';
       setSubmitError(`Impossible de contacter le serveur : ${errorMessage}`);
     }
   };
 
   const inProgressMatches = matches.filter((match) =>
-    isMatchInProgress(match.scheduledDateTime, match.status)
+    isMatchInProgress(match.scheduledDateTime, match.status),
   );
-  const finishedMatches = matches.filter((match) => isMatchFinished(match.status));
+  const finishedMatches = matches.filter((match) =>
+    isMatchFinished(match.status),
+  );
 
   const t1IdForFilter = selectedMatch?.team1Id || selectedMatch?.team1?.id;
   const t2IdForFilter = selectedMatch?.team2Id || selectedMatch?.team2?.id;
-  
+
   const team1Players = selections.filter((s) => s.teamId === t1IdForFilter);
   const team2Players = selections.filter((s) => s.teamId === t2IdForFilter);
 
@@ -222,8 +232,8 @@ const AdminMatchManagement = ({
                   borderLeft: isWaitingForCaptains
                     ? '4px solid #6b7280'
                     : isDisputed
-                    ? '4px solid #ef4444'
-                    : '4px solid #e8822a',
+                      ? '4px solid #ef4444'
+                      : '4px solid #e8822a',
                 }}
               >
                 <CardContent
@@ -246,7 +256,9 @@ const AdminMatchManagement = ({
                       🏆 {tournamentName}
                     </Typography>
                     <Typography variant="body2" color="gray">
-                      {new Date(match.scheduledDateTime).toLocaleString('fr-BE')}
+                      {new Date(match.scheduledDateTime).toLocaleString(
+                        'fr-BE',
+                      )}
                     </Typography>
 
                     <Chip
@@ -254,8 +266,8 @@ const AdminMatchManagement = ({
                         isWaitingForCaptains
                           ? 'En attente'
                           : isDisputed
-                          ? 'Contesté'
-                          : 'En cours'
+                            ? 'Contesté'
+                            : 'En cours'
                       }
                       size="small"
                       sx={{
@@ -263,13 +275,13 @@ const AdminMatchManagement = ({
                         backgroundColor: isWaitingForCaptains
                           ? 'rgba(107,114,128,0.2)'
                           : isDisputed
-                          ? 'rgba(239,68,68,0.2)'
-                          : 'rgba(232,130,42,0.1)',
+                            ? 'rgba(239,68,68,0.2)'
+                            : 'rgba(232,130,42,0.1)',
                         color: isWaitingForCaptains
                           ? '#9ca3af'
                           : isDisputed
-                          ? '#ef4444'
-                          : '#e8822a',
+                            ? '#ef4444'
+                            : '#e8822a',
                       }}
                     />
                   </Box>
@@ -364,7 +376,8 @@ const AdminMatchManagement = ({
                     >
                       <Box textAlign="left">
                         <Typography variant="h6" color="white" fontWeight={700}>
-                          {match.team1Name || 'TBD'} VS {match.team2Name || 'TBD'}
+                          {match.team1Name || 'TBD'} VS{' '}
+                          {match.team2Name || 'TBD'}
                         </Typography>
                         <Typography
                           variant="body2"
@@ -375,7 +388,9 @@ const AdminMatchManagement = ({
                           🏆 {tournamentName}
                         </Typography>
                         <Typography variant="body2" color="gray">
-                          {new Date(match.scheduledDateTime).toLocaleString('fr-BE')}
+                          {new Date(match.scheduledDateTime).toLocaleString(
+                            'fr-BE',
+                          )}
                         </Typography>
 
                         <Chip
@@ -416,7 +431,12 @@ const AdminMatchManagement = ({
         maxWidth="md"
         fullWidth
         PaperProps={{
-          sx: { backgroundColor: '#1a2540', color: 'white', p: 2, borderRadius: 3 },
+          sx: {
+            backgroundColor: '#1a2540',
+            color: 'white',
+            p: 2,
+            borderRadius: 3,
+          },
         }}
       >
         <DialogTitle
@@ -445,29 +465,41 @@ const AdminMatchManagement = ({
               <br />
               {previousResult.validationStatusTeam1 === 'REJECTED' && (
                 <span>
-                  🚨 <b>{selectedMatch.team1Name || "L'équipe 1"}</b> a contesté le score.
+                  🚨 <b>{selectedMatch.team1Name || "L'équipe 1"}</b> a contesté
+                  le score.
                   <br />
                 </span>
               )}
               {previousResult.validationStatusTeam2 === 'REJECTED' && (
                 <span>
-                  🚨 <b>{selectedMatch.team2Name || "L'équipe 2"}</b> a contesté le score.
+                  🚨 <b>{selectedMatch.team2Name || "L'équipe 2"}</b> a contesté
+                  le score.
                 </span>
               )}
               <br />
               <span style={{ fontSize: '0.85em' }}>
-                Veuillez vérifier la vidéo et entrer le score final. Il sera irrévocable.
+                Veuillez vérifier la vidéo et entrer le score final. Il sera
+                irrévocable.
               </span>
             </Alert>
           )}
 
           {selectedMatch && (
-            <Grid container spacing={4} alignItems="stretch" justifyContent="center">
+            <Grid
+              container
+              spacing={4}
+              alignItems="stretch"
+              justifyContent="center"
+            >
               {/* Team 1 Panel */}
               <Grid
                 item
                 xs={5}
-                sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}
               >
                 <Avatar
                   src={normalizeAvatarUrl(team1Image)}
@@ -514,7 +546,12 @@ const AdminMatchManagement = ({
                     team1Players.map((player) => (
                       <Box
                         key={player.memberId}
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          mb: 1,
+                        }}
                       >
                         <Avatar
                           src={normalizeAvatarUrl(player.memberProfileImageUrl)}
@@ -526,7 +563,12 @@ const AdminMatchManagement = ({
                       </Box>
                     ))
                   ) : (
-                    <Typography variant="body2" color="rgba(255,255,255,0.3)" textAlign="center" mt={3}>
+                    <Typography
+                      variant="body2"
+                      color="rgba(255,255,255,0.3)"
+                      textAlign="center"
+                      mt={3}
+                    >
                       Non encodée
                     </Typography>
                   )}
@@ -564,9 +606,18 @@ const AdminMatchManagement = ({
               <Grid
                 item
                 xs={2}
-                sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
               >
-                <Typography variant="h4" color="gray" fontWeight="bold" sx={{ opacity: 0.5 }}>
+                <Typography
+                  variant="h4"
+                  color="gray"
+                  fontWeight="bold"
+                  sx={{ opacity: 0.5 }}
+                >
                   VS
                 </Typography>
               </Grid>
@@ -575,7 +626,11 @@ const AdminMatchManagement = ({
               <Grid
                 item
                 xs={5}
-                sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}
               >
                 <Avatar
                   src={normalizeAvatarUrl(team2Image)}
@@ -622,7 +677,12 @@ const AdminMatchManagement = ({
                     team2Players.map((player) => (
                       <Box
                         key={player.memberId}
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          mb: 1,
+                        }}
                       >
                         <Avatar
                           src={normalizeAvatarUrl(player.memberProfileImageUrl)}
@@ -634,7 +694,12 @@ const AdminMatchManagement = ({
                       </Box>
                     ))
                   ) : (
-                    <Typography variant="body2" color="rgba(255,255,255,0.3)" textAlign="center" mt={3}>
+                    <Typography
+                      variant="body2"
+                      color="rgba(255,255,255,0.3)"
+                      textAlign="center"
+                      mt={3}
+                    >
                       Non encodée
                     </Typography>
                   )}
@@ -681,7 +746,10 @@ const AdminMatchManagement = ({
             justifyContent: 'center',
           }}
         >
-          <Button onClick={handleCloseModal} sx={{ color: 'gray', mr: 3, fontSize: '1.1rem' }}>
+          <Button
+            onClick={handleCloseModal}
+            sx={{ color: 'gray', mr: 3, fontSize: '1.1rem' }}
+          >
             Annuler
           </Button>
           <Button

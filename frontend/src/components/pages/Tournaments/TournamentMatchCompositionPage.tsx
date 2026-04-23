@@ -185,20 +185,27 @@ const TournamentMatchCompositionPage = () => {
         // Infer teams for advanced rounds if not yet populated in the database
         if (selectedMatch) {
           const currentRound = selectedMatch.round ?? 1;
-          
-          if (currentRound > 1 && (selectedMatch.team1Id == null || selectedMatch.team2Id == null)) {
+
+          if (
+            currentRound > 1 &&
+            (selectedMatch.team1Id == null || selectedMatch.team2Id == null)
+          ) {
             const sameRoundMatches = matchList
               .filter((m) => (m.round ?? 1) === currentRound)
               .sort((a, b) => String(a.id).localeCompare(String(b.id)));
 
-            const matchIndex = sameRoundMatches.findIndex((m) => m.id === selectedMatch?.id);
+            const matchIndex = sameRoundMatches.findIndex(
+              (m) => m.id === selectedMatch?.id,
+            );
 
             if (matchIndex !== -1) {
               const prevRoundMatches = matchList
                 .filter((m) => (m.round ?? 1) === currentRound - 1)
                 .sort((a, b) => {
                   if (a.scheduledDateTime && b.scheduledDateTime) {
-                    const diff = new Date(a.scheduledDateTime).getTime() - new Date(b.scheduledDateTime).getTime();
+                    const diff =
+                      new Date(a.scheduledDateTime).getTime() -
+                      new Date(b.scheduledDateTime).getTime();
                     if (diff !== 0) return diff;
                   }
                   return String(a.id).localeCompare(String(b.id));
@@ -210,20 +217,28 @@ const TournamentMatchCompositionPage = () => {
               // Utility function to extract the winner of the previous match
               const getWinner = (m?: TeamMatch) => {
                 if (!m) return { id: undefined, name: undefined };
-                
+
                 const statusVal = (m.status || '').toUpperCase();
-                if (['FINISHED', 'TERMINE', 'WAITING_VALIDATION'].includes(statusVal)) {
+                if (
+                  ['FINISHED', 'TERMINE', 'WAITING_VALIDATION'].includes(
+                    statusVal,
+                  )
+                ) {
                   const s1 = m.scoreTeam1 ?? 0;
                   const s2 = m.scoreTeam2 ?? 0;
                   if (s1 > s2) return { id: m.team1Id, name: m.team1Name };
                   if (s2 > s1) return { id: m.team2Id, name: m.team2Name };
                 }
-                
+
                 // Handle automatic qualification (BYE)
-                if ((m.team1Id != null || !!m.team1Name) && m.team2Id == null && m.team2Name == null) {
+                if (
+                  (m.team1Id != null || !!m.team1Name) &&
+                  m.team2Id == null &&
+                  m.team2Name == null
+                ) {
                   return { id: m.team1Id, name: m.team1Name };
                 }
-                
+
                 return { id: undefined, name: undefined };
               };
 
@@ -322,7 +337,7 @@ const TournamentMatchCompositionPage = () => {
 
   const isAutoQualifiedMatch = useMemo(() => {
     if (!match) return false;
-    
+
     // Explicitly check for the presence of each team
     const hasTeam1 = match.team1Id != null || !!match.team1Name;
     const hasTeam2 = match.team2Id != null || !!match.team2Name;
@@ -538,7 +553,9 @@ const TournamentMatchCompositionPage = () => {
     const winnerAccent = '#eab308';
 
     const teamSelections = teamId
-      ? selections.filter((selection) => selection.teamId === teamId).slice(0, 4)
+      ? selections
+          .filter((selection) => selection.teamId === teamId)
+          .slice(0, 4)
       : [];
 
     const hiddenForViewer = shouldHideTeamSelection(teamId);
