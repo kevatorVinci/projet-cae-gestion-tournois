@@ -25,14 +25,6 @@ public class MatchResultService {
   private final UserRepository userRepository;
   private final NotificationService notificationService;
 
-  /**
-   * Constructor.
-   *
-   * @param matchResultRepository the result repository
-   * @param matchRepository       the match repository
-   * @param userRepository        the user repository
-   * @param notificationService   the notification service
-   */
   public MatchResultService(
       MatchResultRepository matchResultRepository,
       MatchRepository matchRepository,
@@ -44,14 +36,6 @@ public class MatchResultService {
     this.notificationService = notificationService;
   }
 
-  /**
-   * Encodes a new result for a specific match. Sets match to WAITING_VALIDATION and notifies
-   * both team responsibles.
-   *
-   * @param matchId the match id
-   * @param dto     the data transfer object
-   * @return the saved result, or null if match/admin not found
-   */
   @Transactional
   public MatchResult encodeResult(Long matchId, MatchResultCreateDto dto) {
     Match match = matchRepository.findById(matchId).orElse(null);
@@ -83,24 +67,10 @@ public class MatchResultService {
     return saved;
   }
 
-  /**
-   * Handles a team's validation or dispute of a match result.
-   * Each team can only act once. If disputed, match becomes DISPUTED and admin is notified.
-   * If both teams validate, match becomes FINISHED.
-   *
-   * @param matchId  the match id
-   * @param teamId   the id of the team validating or disputing
-   * @param accepted true = validated, false = disputed
-   * @return the updated result, or null if not found / already definitive / team not in match
-   */
   @Transactional
   public MatchResult validateResult(Long matchId, Long teamId, boolean accepted) {
     MatchResult result = matchResultRepository.findById(matchId).orElse(null);
-    if (result == null) {
-      return null;
-    }
-
-    if (result.isDefinitive()) {
+    if (result == null || result.isDefinitive()) {
       return null;
     }
 
@@ -118,14 +88,10 @@ public class MatchResultService {
     String newStatus = accepted ? "VALIDATED" : "REJECTED";
 
     if (isTeam1) {
-      if (!"PENDING".equals(result.getValidationStatusTeam1())) {
-        return null;
-      }
+      if (!"PENDING".equals(result.getValidationStatusTeam1())) return null;
       result.setValidationStatusTeam1(newStatus);
     } else {
-      if (!"PENDING".equals(result.getValidationStatusTeam2())) {
-        return null;
-      }
+      if (!"PENDING".equals(result.getValidationStatusTeam2())) return null;
       result.setValidationStatusTeam2(newStatus);
     }
 
@@ -137,35 +103,24 @@ public class MatchResultService {
         && "VALIDATED".equals(result.getValidationStatusTeam2())) {
       match.setStatus("FINISHED");
       matchRepository.save(match);
+      // 🔥 NOUVEAUTÉ : Le match est validé, on fait avancer le vainqueur
+      advanceWinnerToNextRound(match, result);
     }
 
     return matchResultRepository.save(result);
   }
 
-  /**
-   * Admin re-encodes a definitive result after a dispute. No further dispute is possible.
-   *
-   * @param matchId the match id
-   * @param dto     the new result data
-   * @return the updated definitive result, or null if match/result not found or not in DISPUTED
-   */
   @Transactional
   public MatchResult encodeDefinitiveResult(Long matchId, MatchResultCreateDto dto) {
     Match match = matchRepository.findById(matchId).orElse(null);
     User admin = userRepository.findById(dto.getAdminEncoderId()).orElse(null);
 
-    if (match == null || admin == null) {
-      return null;
-    }
-
-    if (!"DISPUTED".equals(match.getStatus())) {
+    if (match == null || admin == null || !"DISPUTED".equals(match.getStatus())) {
       return null;
     }
 
     MatchResult result = matchResultRepository.findById(matchId).orElse(null);
-    if (result == null) {
-      return null;
-    }
+    if (result == null) return null;
 
     result.setAdminEncoder(admin);
     result.setScoreTeam1(dto.getScoreTeam1());
@@ -179,53 +134,102 @@ public class MatchResultService {
 
     match.setStatus("FINISHED");
     matchRepository.save(match);
-
     MatchResult saved = matchResultRepository.save(result);
 
     notifyTeamResponsiblesDefinitive(match, dto.getScoreTeam1(), dto.getScoreTeam2());
+    
+    // 🔥 NOUVEAUTÉ : Le résultat est définitif, on fait avancer le vainqueur
+    advanceWinnerToNextRound(match, saved);
 
     return saved;
   }
 
-  /**
-   * Finds a result for a specific match.
-   *
-   * @param matchId the match id
-   * @return the match result
-   */
   public MatchResult getResultForMatch(Long matchId) {
     return matchResultRepository.findById(matchId).orElse(null);
   }
 
-  /**
-   * Runs every 5 minutes and auto-validates results older than 2 hours where teams haven't acted.
-   */
   @Scheduled(fixedRate = 300000)
   @Transactional
   public void autoValidateResults() {
     LocalDateTime twoHoursAgo = LocalDateTime.now().minusHours(2);
-
-    List<MatchResult> pendingResults = matchResultRepository
-        .findPendingResultsOlderThan(twoHoursAgo);
+    List<MatchResult> pendingResults = matchResultRepository.findPendingResultsOlderThan(twoHoursAgo);
 
     for (MatchResult res : pendingResults) {
-      if (res.isDefinitive()) {
-        continue;
-      }
+      if (res.isDefinitive()) continue;
+      
       res.setValidationStatusTeam1("VALIDATED");
       res.setValidationStatusTeam2("VALIDATED");
       res.getMatch().setStatus("FINISHED");
+      
       matchRepository.save(res.getMatch());
       matchResultRepository.save(res);
+      
+      // 🔥 NOUVEAUTÉ : Auto-validation, on fait avancer le vainqueur
+      advanceWinnerToNextRound(res.getMatch(), res);
     }
   }
+
+  // --- NOUVELLE MÉTHODE PRIVÉE POUR FAIRE AVANCER LES GAGNANTS ---
+  private void advanceWinnerToNextRound(Match match, MatchResult result) {
+    if (match == null || result == null || match.getTournament() == null) return;
+
+    Team winner = null;
+    if (result.getScoreTeam1() > result.getScoreTeam2()) {
+      winner = match.getTeam1();
+    } else if (result.getScoreTeam2() > result.getScoreTeam1()) {
+      winner = match.getTeam2();
+    }
+
+    if (winner == null) return; // En cas de match nul (rare en élimination)
+
+    Integer currentRound = match.getRound();
+    if (currentRound == null) return;
+    int nextRound = currentRound + 1;
+
+    // Récupérer tous les matchs du tournoi
+    List<Match> allMatches = matchRepository.findByTournamentIdOrderByRoundAscScheduledDateTimeAscIdAsc(
+        match.getTournament().getId()
+    );
+
+    List<Match> currentRoundMatches = allMatches.stream()
+        .filter(m -> currentRound.equals(m.getRound()))
+        .toList();
+
+    List<Match> nextRoundMatches = allMatches.stream()
+        .filter(m -> Integer.valueOf(nextRound).equals(m.getRound()))
+        .toList();
+
+    int matchIndex = -1;
+    for (int i = 0; i < currentRoundMatches.size(); i++) {
+      if (currentRoundMatches.get(i).getId().equals(match.getId())) {
+        matchIndex = i;
+        break;
+      }
+    }
+
+    if (matchIndex == -1 || nextRoundMatches.isEmpty()) return;
+
+    int targetMatchIndex = matchIndex / 2;
+    if (targetMatchIndex >= nextRoundMatches.size()) return; // C'était la finale !
+
+    Match nextMatch = nextRoundMatches.get(targetMatchIndex);
+
+    // Assigne l'équipe dans le bon "slot" (team1 ou team2)
+    if (matchIndex % 2 == 0) {
+      nextMatch.setTeam1(winner);
+    } else {
+      nextMatch.setTeam2(winner);
+    }
+
+    matchRepository.save(nextMatch);
+  }
+  // -------------------------------------------------------------
 
   private void notifyTeamResponsibles(Match match, int score1, int score2) {
     String matchLabel = match.getTournament().getName() + " — "
         + match.getTeam1().getName() + " vs " + match.getTeam2().getName();
     String message = "Résultat encodé : " + matchLabel + " (" + score1 + " - " + score2
         + "). Veuillez confirmer ou contester ce résultat. #" + match.getId();
-
     notifyResponsibles(match.getTeam1(), match.getTeam2(), message);
   }
 
@@ -234,26 +238,17 @@ public class MatchResultService {
         + match.getTeam1().getName() + " vs " + match.getTeam2().getName();
     String message = "Résultat définitif : " + matchLabel + " (" + score1 + " - " + score2
         + "). Ce résultat est irrévocable. #" + match.getId();
-
     notifyResponsibles(match.getTeam1(), match.getTeam2(), message);
   }
 
   private void notifyResponsibles(Team team1, Team team2, String message) {
     if (team1 != null) {
-      if (team1.getPrimaryResponsible() != null) {
-        notificationService.createNotification(team1.getPrimaryResponsible(), message);
-      }
-      if (team1.getSecondaryResponsible() != null) {
-        notificationService.createNotification(team1.getSecondaryResponsible(), message);
-      }
+      if (team1.getPrimaryResponsible() != null) notificationService.createNotification(team1.getPrimaryResponsible(), message);
+      if (team1.getSecondaryResponsible() != null) notificationService.createNotification(team1.getSecondaryResponsible(), message);
     }
     if (team2 != null) {
-      if (team2.getPrimaryResponsible() != null) {
-        notificationService.createNotification(team2.getPrimaryResponsible(), message);
-      }
-      if (team2.getSecondaryResponsible() != null) {
-        notificationService.createNotification(team2.getSecondaryResponsible(), message);
-      }
+      if (team2.getPrimaryResponsible() != null) notificationService.createNotification(team2.getPrimaryResponsible(), message);
+      if (team2.getSecondaryResponsible() != null) notificationService.createNotification(team2.getSecondaryResponsible(), message);
     }
   }
 

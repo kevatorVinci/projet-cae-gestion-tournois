@@ -238,7 +238,7 @@ public class DemoDataInitializer extends AbstractDataInitializer {
 
     // Finale (R2)
     createMatch(testCup, null, null, 2,
-        LocalDateTime.of(2026, 4, 23, 22, 25), data.lea(), "PENDING");
+        LocalDateTime.of(2026, 4, 23, 23, 0), data.lea(), "PENDING");
   }
 
   /**

@@ -176,9 +176,71 @@ const TournamentMatchCompositionPage = () => {
           }
         }
 
-        const selectedMatch =
+        const selectedMatchRaw =
           matchList.find((item) => toMatchId(item.id) === parsedMatchId) ??
           null;
+
+        let selectedMatch = selectedMatchRaw;
+
+        // Infer teams for advanced rounds if not yet populated in the database
+        if (selectedMatch) {
+          const currentRound = selectedMatch.round ?? 1;
+          
+          if (currentRound > 1 && (selectedMatch.team1Id == null || selectedMatch.team2Id == null)) {
+            const sameRoundMatches = matchList
+              .filter((m) => (m.round ?? 1) === currentRound)
+              .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
+            const matchIndex = sameRoundMatches.findIndex((m) => m.id === selectedMatch?.id);
+
+            if (matchIndex !== -1) {
+              const prevRoundMatches = matchList
+                .filter((m) => (m.round ?? 1) === currentRound - 1)
+                .sort((a, b) => {
+                  if (a.scheduledDateTime && b.scheduledDateTime) {
+                    const diff = new Date(a.scheduledDateTime).getTime() - new Date(b.scheduledDateTime).getTime();
+                    if (diff !== 0) return diff;
+                  }
+                  return String(a.id).localeCompare(String(b.id));
+                });
+
+              const p1Match = prevRoundMatches[matchIndex * 2];
+              const p2Match = prevRoundMatches[matchIndex * 2 + 1];
+
+              // Utility function to extract the winner of the previous match
+              const getWinner = (m?: TeamMatch) => {
+                if (!m) return { id: undefined, name: undefined };
+                
+                const statusVal = (m.status || '').toUpperCase();
+                if (['FINISHED', 'TERMINE', 'WAITING_VALIDATION'].includes(statusVal)) {
+                  const s1 = m.scoreTeam1 ?? 0;
+                  const s2 = m.scoreTeam2 ?? 0;
+                  if (s1 > s2) return { id: m.team1Id, name: m.team1Name };
+                  if (s2 > s1) return { id: m.team2Id, name: m.team2Name };
+                }
+                
+                // Handle automatic qualification (BYE)
+                if ((m.team1Id != null || !!m.team1Name) && m.team2Id == null && m.team2Name == null) {
+                  return { id: m.team1Id, name: m.team1Name };
+                }
+                
+                return { id: undefined, name: undefined };
+              };
+
+              const winner1 = getWinner(p1Match);
+              const winner2 = getWinner(p2Match);
+
+              // Virtually populate the match with the inferred winners
+              selectedMatch = {
+                ...selectedMatch,
+                team1Id: selectedMatch.team1Id ?? winner1.id,
+                team1Name: selectedMatch.team1Name ?? winner1.name,
+                team2Id: selectedMatch.team2Id ?? winner2.id,
+                team2Name: selectedMatch.team2Name ?? winner2.name,
+              };
+            }
+          }
+        }
 
         if (!selectedMatch) {
           setError('Match introuvable dans ce tournoi.');
@@ -258,21 +320,19 @@ const TournamentMatchCompositionPage = () => {
     return Date.now() >= timestamp;
   }, [match?.scheduledDateTime]);
 
-  // --- LE CORRECTIF EST ICI ---
   const isAutoQualifiedMatch = useMemo(() => {
     if (!match) return false;
     
-    // On vérifie explicitement la présence de chaque équipe
+    // Explicitly check for the presence of each team
     const hasTeam1 = match.team1Id != null || !!match.team1Name;
     const hasTeam2 = match.team2Id != null || !!match.team2Name;
 
-    // C'est une qualification d'office (BYE) UNIQUEMENT SI :
-    // - L'équipe 1 est présente
-    // - L'équipe 2 est totalement absente
-    // - Cela n'arrive théoriquement qu'au round 1
+    // It's a BYE (automatic qualification) ONLY IF:
+    // - Team 1 is present
+    // - Team 2 is completely absent
+    // - This theoretically only happens in round 1
     return hasTeam1 && !hasTeam2 && (match.round === 1 || !match.round);
   }, [match]);
-  // -----------------------------
 
   const matchResult = useMemo(() => {
     if (!match) return null;
