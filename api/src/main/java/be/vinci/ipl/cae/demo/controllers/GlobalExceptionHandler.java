@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Global exception handler for REST endpoints.
- * Centralizes all exception handling to return consistent error responses.
+ * Global exception handler for REST endpoints. Centralizes all exception handling to return
+ * consistent error responses.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {

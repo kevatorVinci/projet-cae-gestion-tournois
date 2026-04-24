@@ -5,9 +5,7 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repository for team operations.
- */
+/** Repository for team operations. */
 @Repository
 public interface TeamRepository extends CrudRepository<Team, Long> {
 
@@ -37,7 +35,7 @@ public interface TeamRepository extends CrudRepository<Team, Long> {
   /**
    * Finds the team where the given user is a responsible (primary or secondary).
    *
-   * @param primaryId   the ID of the primary responsible.
+   * @param primaryId the ID of the primary responsible.
    * @param secondaryId the ID of the secondary responsible.
    * @return an optional containing the team if found.
    */

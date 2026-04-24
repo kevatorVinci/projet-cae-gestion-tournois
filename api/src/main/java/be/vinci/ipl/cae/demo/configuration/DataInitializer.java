@@ -1,9 +1,10 @@
 package be.vinci.ipl.cae.demo.configuration;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.annotation.Profile;
+import org.springframework.transaction.annotation.Transactional;
 
+/** Seeds only the base dataset for non-demo profiles. */
 @Configuration
 @Profile("!demo")
 public class DataInitializer extends AbstractDataInitializer {

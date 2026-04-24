@@ -28,6 +28,9 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SecurityIcon from '@mui/icons-material/Security';
 import EventIcon from '@mui/icons-material/Event';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import FlagIcon from '@mui/icons-material/Flag';
+import PersonOffIcon from '@mui/icons-material/PersonOff';
+import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import { NotificationItem } from '../../../types';
 import { getAuthenticatedUser } from '../../../utils/session';
 import {
@@ -50,7 +53,10 @@ type NotifType =
   | 'bienvenue'
   | 'admin'
   | 'tournoi'
-  | 'score';
+  | 'score'
+  | 'forfait'
+  | 'selection'
+  | 'indisponibilite';
 
 interface NotifMeta {
   type: NotifType;
@@ -230,10 +236,7 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (
-    startsWithAny(m, ['nouveau tournoi :', 'new tournament:']) ||
-    isMatchSelectionNotification(m)
-  ) {
+  if (startsWithAny(m, ['nouveau tournoi :', 'new tournament:'])) {
     return {
       type: 'tournoi',
       color: '#06b6d4',
@@ -244,7 +247,14 @@ const getNotifMeta = (message: string): NotifMeta => {
     };
   }
 
-  if (startsWithAny(m, ['le score du match'])) {
+  if (
+    startsWithAny(m, [
+      'le score du match',
+      'résultat encodé :',
+      'résultat définitif :',
+      'contestation :',
+    ])
+  ) {
     return {
       type: 'score',
       color: '#f59e0b',
@@ -252,6 +262,50 @@ const getNotifMeta = (message: string): NotifMeta => {
       border: 'rgba(245,158,11,0.45)',
       icon: <EmojiEventsIcon sx={{ fontSize: 16, color: '#f59e0b' }} />,
       label: 'Validation de Score',
+    };
+  }
+
+  if (startsWithAny(m, ['🏳️ forfait', 'forfait —'])) {
+    return {
+      type: 'forfait',
+      color: '#ef4444',
+      leftBar: '#ef4444',
+      border: 'rgba(239,68,68,0.45)',
+      icon: <FlagIcon sx={{ fontSize: 16, color: '#ef4444' }} />,
+      label: 'Forfait',
+    };
+  }
+
+  if (
+    startsWithAny(m, [
+      '🎮 composition —',
+      'composition confirmée :',
+      'lineup confirmed:',
+    ])
+  ) {
+    return {
+      type: 'selection',
+      color: '#06b6d4',
+      leftBar: '#06b6d4',
+      border: 'rgba(6,182,212,0.45)',
+      icon: <SportsMartialArtsIcon sx={{ fontSize: 16, color: '#06b6d4' }} />,
+      label: 'Sélection',
+    };
+  }
+
+  if (
+    startsWithAny(m, [
+      'indisponibilité prise en compte :',
+      'indisponibilité détectée :',
+    ])
+  ) {
+    return {
+      type: 'indisponibilite',
+      color: '#f59e0b',
+      leftBar: '#f59e0b',
+      border: 'rgba(245,158,11,0.45)',
+      icon: <PersonOffIcon sx={{ fontSize: 16, color: '#f59e0b' }} />,
+      label: 'Indisponibilité',
     };
   }
 
@@ -278,6 +332,9 @@ export default function Notifications() {
     | 'admin'
     | 'tournoi'
     | 'score'
+    | 'forfait'
+    | 'selection'
+    | 'indisponibilite'
   >('tous');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -391,7 +448,15 @@ export default function Notifications() {
     ]);
 
   const isScoreValidationNotification = (message: string) =>
-    startsWithAny(message.toLowerCase(), ['le score du match']);
+    startsWithAny(message.toLowerCase(), [
+      'le score du match',
+      'résultat encodé :',
+      'résultat définitif :',
+      'contestation :',
+    ]);
+
+  const isForfeitNotification = (message: string) =>
+    startsWithAny(message.toLowerCase(), ['🏳️ forfait', 'forfait —']);
 
   const extractMatchId = (message: string) => {
     const match = message.match(/#(\d+)/);
@@ -651,7 +716,10 @@ export default function Notifications() {
                   | 'equipe'
                   | 'admin'
                   | 'tournoi'
-                  | 'score',
+                  | 'score'
+                  | 'forfait'
+                  | 'selection'
+                  | 'indisponibilite',
               )
             }
             renderValue={(selected) => {
@@ -718,6 +786,35 @@ export default function Notifications() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
                     <span>Scores à valider</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'forfait') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FlagIcon sx={{ fontSize: 18, color: '#ef4444' }} />
+                    <span>Forfaits</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'selection') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SportsMartialArtsIcon
+                      sx={{ fontSize: 18, color: '#06b6d4' }}
+                    />
+                    <span>Sélections</span>
+                  </Box>
+                );
+              }
+
+              if (selected === 'indisponibilite') {
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PersonOffIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                    <span>Indisponibilités</span>
                   </Box>
                 );
               }
@@ -792,6 +889,29 @@ export default function Notifications() {
               </Box>
             </MenuItem>
 
+            <MenuItem value="forfait">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FlagIcon sx={{ fontSize: 18, color: '#ef4444' }} />
+                <span>Forfaits</span>
+              </Box>
+            </MenuItem>
+
+            <MenuItem value="selection">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SportsMartialArtsIcon
+                  sx={{ fontSize: 18, color: '#06b6d4' }}
+                />
+                <span>Sélections</span>
+              </Box>
+            </MenuItem>
+
+            <MenuItem value="indisponibilite">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <PersonOffIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
+                <span>Indisponibilités</span>
+              </Box>
+            </MenuItem>
+
             <MenuItem value="score">
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <EmojiEventsIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
@@ -857,6 +977,19 @@ export default function Notifications() {
                   label: 'Voir mon équipe',
                   onClick: () => navigate('/maTeam'),
                 };
+              } else if (isForfeitNotification(n.message)) {
+                primaryAction = {
+                  label: 'Voir mon équipe',
+                  onClick: () => navigate('/maTeam'),
+                };
+              } else if (isScoreValidationNotification(n.message)) {
+                const matchId = extractMatchId(n.message);
+                if (matchId) {
+                  primaryAction = {
+                    label: 'Voir le match',
+                    onClick: () => navigate(`/match/${matchId}/validation`),
+                  };
+                }
               } else if (isDemandeResponsable) {
                 primaryAction = {
                   label: 'Voir les demandes',

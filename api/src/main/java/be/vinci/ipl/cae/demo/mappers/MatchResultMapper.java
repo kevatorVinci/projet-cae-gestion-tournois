@@ -4,9 +4,7 @@ import be.vinci.ipl.cae.demo.models.dtos.match.MatchResultDto;
 import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for MatchResult entity.
- */
+/** Mapper for MatchResult entity. */
 @Component
 public class MatchResultMapper {
 
@@ -28,6 +26,7 @@ public class MatchResultMapper {
     dto.setAdminEncoderId(result.getAdminEncoder().getId());
     dto.setValidationStatusTeam1(result.getValidationStatusTeam1());
     dto.setValidationStatusTeam2(result.getValidationStatusTeam2());
+    dto.setDefinitive(result.isDefinitive());
 
     return dto;
   }

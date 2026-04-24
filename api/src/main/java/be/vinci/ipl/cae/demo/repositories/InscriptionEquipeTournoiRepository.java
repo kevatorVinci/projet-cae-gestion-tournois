@@ -8,9 +8,7 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repository for tournament-team registration persistence operations.
- */
+/** Repository for tournament-team registration persistence operations. */
 @Repository
 public interface InscriptionEquipeTournoiRepository
     extends CrudRepository<RegistrationTeamTournament, Long> {
@@ -35,9 +33,8 @@ public interface InscriptionEquipeTournoiRepository
    * Finds an existing registration for a team in a tournament.
    *
    * @param tournament the tournament entity.
-   * @param team       the team entity.
+   * @param team the team entity.
    * @return an optional registration if found.
    */
-  Optional<RegistrationTeamTournament> findByTournamentAndTeam(
-      Tournament tournament, Team team);
+  Optional<RegistrationTeamTournament> findByTournamentAndTeam(Tournament tournament, Team team);
 }

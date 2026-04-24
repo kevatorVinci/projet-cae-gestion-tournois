@@ -1,42 +1,34 @@
 package be.vinci.ipl.cae.demo.services;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-/**
- * Unit tests for TournamentService using Mockito.
- */
+/** Unit tests for TournamentService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class TournamentServiceTest {
 
-  @Mock
-  private TournamentRepository tournamentRepository;
+  @Mock private TournamentRepository tournamentRepository;
 
-  @Mock
-  private RegisterTeamTournamentService registrationService;
+  @Mock private RegisterTeamTournamentService registrationService;
 
-  @Mock
-  private NotificationService notificationService;
+  @Mock private NotificationService notificationService;
 
-  @Mock
-  private UserRepository userRepository;
+  @Mock private UserRepository userRepository;
 
-  @InjectMocks
-  private TournamentService service;
+  @InjectMocks private TournamentService service;
 
   private Tournament makeTournament(String name) {
     Tournament tournament = new Tournament();
@@ -60,9 +52,7 @@ class TournamentServiceTest {
     return user;
   }
 
-  /**
-   * Tests that creating a tournament only notifies admin users.
-   */
+  /** Tests that creating a tournament only notifies admin users. */
   @Test
   void createNotifiesOnlyAdmins() {
     Tournament tournament = makeTournament("Spring Cup 2026");
@@ -81,9 +71,7 @@ class TournamentServiceTest {
     verify(notificationService, times(2)).notifyDraftTournamentCreation(any(User.class), any());
   }
 
-  /**
-   * Tests that no notification is sent if the tournament name is already used.
-   */
+  /** Tests that no notification is sent if the tournament name is already used. */
   @Test
   void createDoesNotNotifyIfNameAlreadyUsed() {
     Tournament tournament = makeTournament("Spring Cup 2026");
@@ -97,9 +85,7 @@ class TournamentServiceTest {
     verify(notificationService, never()).notifyDraftTournamentCreation(any(User.class), any());
   }
 
-  /**
-   * Tests that publishing a tournament notifies all users.
-   */
+  /** Tests that publishing a tournament notifies all users. */
   @Test
   void publishNotifiesAllUsers() {
     Tournament tournament = makeTournament("Spring Cup 2026");
@@ -111,11 +97,13 @@ class TournamentServiceTest {
     User charlie = makeUser(3L, "Charlie");
 
     when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-    when(tournamentRepository.save(any())).thenAnswer(invocation -> {
-      Tournament t = invocation.getArgument(0);
-      assertThat(t.getStatus()).isEqualTo("OUVERT");
-      return t;
-    });
+    when(tournamentRepository.save(any()))
+        .thenAnswer(
+            invocation -> {
+              Tournament t = invocation.getArgument(0);
+              assertThat(t.getStatus()).isEqualTo("OUVERT");
+              return t;
+            });
     when(userRepository.findAll()).thenReturn(List.of(alice, bob, charlie));
 
     Tournament result = service.publish(1L);

@@ -14,39 +14,29 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-/**
- * Service managing all business logic related to tournaments.
- */
+/** Service managing all business logic related to tournaments. */
 @Service
 public class TournamentService {
 
-  /**
-   * Repository for tournament data access.
-   */
+  /** Repository for tournament data access. */
   private final TournamentRepository tournamentRepository;
 
-  /**
-   * Service handling team registrations.
-   */
+  /** Service handling team registrations. */
   private final RegisterTeamTournamentService registrationService;
 
-  /**
-   * Service for sending notifications to users.
-   */
+  /** Service for sending notifications to users. */
   private final NotificationService notificationService;
 
-  /**
-   * Repository for user data access.
-   */
+  /** Repository for user data access. */
   private final UserRepository userRepository;
 
   /**
    * Creates the service with repositories and registration service.
    *
    * @param tournamentRepository the repo for tournaments.
-   * @param registrationService  the service for team registrations.
-   * @param notificationService  the service for user notifications.
-   * @param userRepository       the repo for users.
+   * @param registrationService the service for team registrations.
+   * @param notificationService the service for user notifications.
+   * @param userRepository the repo for users.
    */
   public TournamentService(
       TournamentRepository tournamentRepository,
@@ -93,7 +83,7 @@ public class TournamentService {
    * Returns public tournaments filtered by optional state and/or name.
    *
    * @param status the status to filter by.
-   * @param name   the name to filter by.
+   * @param name the name to filter by.
    * @return filtered list of tournaments.
    */
   public Iterable<Tournament> getFiltered(String status, String name) {
@@ -109,8 +99,7 @@ public class TournamentService {
     } else if (hasName) {
       results = tournamentRepository.findByNameContainingIgnoreCase(name);
     } else {
-      results = StreamSupport.stream(
-          tournamentRepository.findAll().spliterator(), false).toList();
+      results = StreamSupport.stream(tournamentRepository.findAll().spliterator(), false).toList();
     }
 
     return results.stream().filter(t -> !"BROUILLON".equals(t.getStatus())).toList();
@@ -142,7 +131,7 @@ public class TournamentService {
   /**
    * Updates a tournament only when it is still in BROUILLON state.
    *
-   * @param id      the tournament id.
+   * @param id the tournament id.
    * @param payload the new data.
    * @return the updated tournament or null.
    */
@@ -253,7 +242,7 @@ public class TournamentService {
   /**
    * Cancels a tournament and adds a reason to its name.
    *
-   * @param id     the tournament id.
+   * @param id the tournament id.
    * @param reason the reason for cancellation.
    * @return the cancelled tournament.
    */
@@ -267,17 +256,14 @@ public class TournamentService {
 
     tournament.setStatus("ANNULE");
 
-    String sanitizedReason = (reason == null || reason.isBlank())
-        ? "unspecified reason"
-        : reason.trim();
+    String sanitizedReason =
+        (reason == null || reason.isBlank()) ? "unspecified reason" : reason.trim();
     tournament.setName(tournament.getName() + " (Cancelled: " + sanitizedReason + ")");
 
     return tournamentRepository.save(tournament);
   }
 
-  /**
-   * Daily task to check and close tournaments that reached their deadline.
-   */
+  /** Daily task to check and close tournaments that reached their deadline. */
   @Scheduled(cron = "0 0 0 * * *")
   public void checkAndCloseExpiredTournaments() {
     LocalDate today = LocalDate.now();
@@ -296,9 +282,7 @@ public class TournamentService {
           tournament.setStatus("CLOTURE");
         } else {
           tournament.setStatus("ANNULE");
-          tournament.setName(
-              tournament.getName() + " (Cancelled: less than 2 teams)"
-          );
+          tournament.setName(tournament.getName() + " (Cancelled: less than 2 teams)");
         }
         tournamentRepository.save(tournament);
       }

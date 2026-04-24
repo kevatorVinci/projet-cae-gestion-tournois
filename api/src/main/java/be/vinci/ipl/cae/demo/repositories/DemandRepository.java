@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repository for Demand (join requests) entities.
- * Provides database access for managing team join requests.
+ * Repository for Demand (join requests) entities. Provides database access for managing team join
+ * requests.
  */
 @Repository
 public interface DemandRepository extends JpaRepository<Demand, Long> {
@@ -32,7 +32,7 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Finds team demands filtered by their current state.
    *
    * @param teamId the ID of the team.
-   * @param state  the target state of the demands.
+   * @param state the target state of the demands.
    * @return an iterable of matching demands.
    */
   Iterable<Demand> findByTeamIdAndState(Long teamId, DemandState state);
@@ -41,8 +41,8 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Checks if a pending demand already exists for a specific member and team.
    *
    * @param memberId the ID of the member.
-   * @param teamId   the ID of the team.
-   * @param state    the state to check for.
+   * @param teamId the ID of the team.
+   * @param state the state to check for.
    * @return true if a matching demand exists, false otherwise.
    */
   boolean existsByMemberIdAndTeamIdAndState(Long memberId, Long teamId, DemandState state);
@@ -51,7 +51,7 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Deletes all demands of a team that match a specific state.
    *
    * @param teamId the ID of the team.
-   * @param state  the state of the demands to delete.
+   * @param state the state of the demands to delete.
    */
   void deleteByTeamIdAndState(Long teamId, DemandState state);
 
@@ -59,7 +59,7 @@ public interface DemandRepository extends JpaRepository<Demand, Long> {
    * Deletes all demands of a member that match a specific state.
    *
    * @param memberId the ID of the member.
-   * @param state    the state of the demands to delete.
+   * @param state the state of the demands to delete.
    */
   void deleteByMemberIdAndState(Long memberId, DemandState state);
 }

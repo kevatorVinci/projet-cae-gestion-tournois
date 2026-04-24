@@ -16,9 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Entity representing a player's unavailable time period.
- */
+/** Entity representing a player's unavailable time period. */
 @Entity
 @Table(name = "indisponibilites")
 @Getter
@@ -30,25 +28,19 @@ public class Unavailability {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /**
-   * The start date of the unavailability period.
-   */
+  /** The start date of the unavailability period. */
   @Column(name = "date_debut", nullable = false)
   @NotNull
   @JsonProperty("dateDebut")
   private LocalDate startDate;
 
-  /**
-   * The end date of the unavailability period.
-   */
+  /** The end date of the unavailability period. */
   @Column(name = "date_fin", nullable = false)
   @NotNull
   @JsonProperty("dateFin")
   private LocalDate endDate;
 
-  /**
-   * The user associated with this unavailability.
-   */
+  /** The user associated with this unavailability. */
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   @JsonIgnore

@@ -3,9 +3,7 @@ package be.vinci.ipl.cae.demo.models.dtos.playerselection;
 import java.util.List;
 import lombok.Data;
 
-/**
- * DTO representing a team's lineup state for one match.
- */
+/** DTO representing a team's lineup state for one match. */
 @Data
 public class PlayerSelectionTeamViewDto {
   private Long matchId;

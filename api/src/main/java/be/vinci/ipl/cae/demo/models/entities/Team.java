@@ -18,9 +18,7 @@ import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entity representing a team in the application.
- */
+/** Entity representing a team in the application. */
 @Entity
 @Table(name = "equipes")
 @Data
@@ -31,45 +29,33 @@ public class Team {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /**
-   * The unique name of the team.
-   */
+  /** The unique name of the team. */
   @Column(unique = true)
   @NotBlank
   private String name;
 
-  /**
-   * The URL or path to the team's profile image.
-   */
+  /** The URL or path to the team's profile image. */
   @Column(name = "profile_image")
   private String profileImage;
 
-  /**
-   * The list of users who are members of this team.
-   */
+  /** The list of users who are members of this team. */
   @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
   @JsonManagedReference
   private List<User> members = new ArrayList<>();
 
-  /**
-   * The primary user responsible for the team.
-   */
+  /** The primary user responsible for the team. */
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "primary_responsible_id", unique = true)
   @JsonIgnore
   private User primaryResponsible;
 
-  /**
-   * The secondary user responsible for the team.
-   */
+  /** The secondary user responsible for the team. */
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "secondary_responsible_id", unique = true)
   @JsonIgnore
   private User secondaryResponsible;
 
-  /**
-   * The list of tournament registrations for this team.
-   */
+  /** The list of tournament registrations for this team. */
   @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
   @JsonManagedReference("equipe-inscriptions")
   private List<RegistrationTeamTournament> registrations = new ArrayList<>();

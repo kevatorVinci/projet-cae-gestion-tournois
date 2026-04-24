@@ -6,9 +6,7 @@ import java.time.LocalDateTime;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repository for PlayerSelection.
- */
+/** Repository for PlayerSelection. */
 @Repository
 public interface PlayerSelectionRepository
     extends CrudRepository<PlayerSelection, PlayerSelectionId> {
@@ -25,7 +23,7 @@ public interface PlayerSelectionRepository
    * Finds selections for a specific match and team.
    *
    * @param matchId the match ID.
-   * @param teamId  the team ID.
+   * @param teamId the team ID.
    * @return selections for the team in the match.
    */
   Iterable<PlayerSelection> findByMatchIdAndTeamId(Long matchId, Long teamId);
@@ -34,7 +32,7 @@ public interface PlayerSelectionRepository
    * Deletes all selections for one team in one match.
    *
    * @param matchId the match ID.
-   * @param teamId  the team ID.
+   * @param teamId the team ID.
    */
   void deleteByMatchIdAndTeamId(Long matchId, Long teamId);
 
@@ -53,7 +51,8 @@ public interface PlayerSelectionRepository
    * @param thresholdDateTime only matches strictly after this date-time are targeted.
    * @return number of deleted selection rows.
    */
-  long deleteByMemberIdAndMatchScheduledDateTimeAfter(Long memberId, LocalDateTime thresholdDateTime);
+  long deleteByMemberIdAndMatchScheduledDateTimeAfter(
+      Long memberId, LocalDateTime thresholdDateTime);
 
   /**
    * Deletes selections for a member in a date-time window.
@@ -64,8 +63,5 @@ public interface PlayerSelectionRepository
    * @return number of deleted rows.
    */
   long deleteByMemberIdAndMatchScheduledDateTimeGreaterThanEqualAndMatchScheduledDateTimeLessThan(
-      Long memberId,
-      LocalDateTime fromDateTime,
-      LocalDateTime toDateTime
-  );
+      Long memberId, LocalDateTime fromDateTime, LocalDateTime toDateTime);
 }

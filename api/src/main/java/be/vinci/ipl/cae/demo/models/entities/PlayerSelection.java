@@ -9,9 +9,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entity representing which member plays in which match for which team.
- */
+/** Entity representing which member plays in which match for which team. */
 @Data
 @NoArgsConstructor
 @Entity

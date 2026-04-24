@@ -16,9 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/**
- * Entity representing a match in a tournament.
- */
+/** Entity representing a match in a tournament. */
 @Data
 @NoArgsConstructor
 @Entity
@@ -55,9 +53,7 @@ public class Match {
   @JoinColumn(name = "admin_responsible_id", nullable = false)
   private User adminResponsible;
 
-  /**
-   * The link to the match result.
-   */
+  /** The link to the match result. */
   @OneToOne(mappedBy = "match", cascade = CascadeType.ALL)
   @ToString.Exclude
   @EqualsAndHashCode.Exclude

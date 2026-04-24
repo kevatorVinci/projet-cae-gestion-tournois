@@ -3,9 +3,7 @@ package be.vinci.ipl.cae.demo.models.dtos.demand;
 import be.vinci.ipl.cae.demo.models.entities.Demand.DemandState;
 import java.time.LocalDateTime;
 
-/**
- * Data Transfer Object representing a team join demand.
- */
+/** Data Transfer Object representing a team join demand. */
 public record DemandDto(
     Long id,
     Long memberId,
@@ -18,5 +16,4 @@ public record DemandDto(
     DemandState state,
     LocalDateTime requestDate,
     LocalDateTime processingDate,
-    String rejectionReason) {
-}
+    String rejectionReason) {}

@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper component to convert Notification entities into Data Transfer Objects.
- */
+/** Mapper component to convert Notification entities into Data Transfer Objects. */
 @Component
 public class NotificationMapper {
 
@@ -27,8 +25,7 @@ public class NotificationMapper {
         notification.getId(),
         notification.getMessage(),
         notification.getSentDate(),
-        notification.getIsRead()
-    );
+        notification.getIsRead());
   }
 
   /**

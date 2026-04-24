@@ -6,9 +6,7 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repository for tournament persistence operations.
- */
+/** Repository for tournament persistence operations. */
 @Repository
 public interface TournamentRepository extends CrudRepository<Tournament, Long> {
 
@@ -40,7 +38,7 @@ public interface TournamentRepository extends CrudRepository<Tournament, Long> {
    * Finds tournaments by status and name fragment, case-insensitive on name.
    *
    * @param status the status to filter by.
-   * @param name   the text to search for in names.
+   * @param name the text to search for in names.
    * @return a list of matching tournaments.
    */
   List<Tournament> findByStatusAndNameContainingIgnoreCase(String status, String name);

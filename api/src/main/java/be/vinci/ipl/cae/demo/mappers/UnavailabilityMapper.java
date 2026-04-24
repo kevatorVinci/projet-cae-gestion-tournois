@@ -5,9 +5,7 @@ import be.vinci.ipl.cae.demo.models.dtos.unavailability.UnavailabilityResponseDt
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for unavailability DTO conversions.
- */
+/** Mapper for unavailability DTO conversions. */
 @Component
 public class UnavailabilityMapper {
 
@@ -23,9 +21,7 @@ public class UnavailabilityMapper {
     }
 
     return new UnavailabilityResponseDto(
-        unavailability.getId(),
-        unavailability.getStartDate(),
-        unavailability.getEndDate());
+        unavailability.getId(), unavailability.getStartDate(), unavailability.getEndDate());
   }
 
   /**

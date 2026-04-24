@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for PlayerSelection entity.
- */
+/** Mapper for PlayerSelection entity. */
 @Component
 public class PlayerSelectionMapper {
 

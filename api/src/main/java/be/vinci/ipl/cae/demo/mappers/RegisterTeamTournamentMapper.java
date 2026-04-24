@@ -8,9 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper component to convert tournament registration entities into various DTOs.
- */
+/** Mapper component to convert tournament registration entities into various DTOs. */
 @Component
 public class RegisterTeamTournamentMapper {
 
@@ -30,8 +28,7 @@ public class RegisterTeamTournamentMapper {
         registration.getTeam().getId(),
         registration.getTeam().getName(),
         registration.getTeam().getProfileImage(),
-        registration.getRegistrationDate()
-    );
+        registration.getRegistrationDate());
   }
 
   /**
@@ -63,20 +60,19 @@ public class RegisterTeamTournamentMapper {
       return null;
     }
 
-    TournamentAbstractDto tournamentDto = new TournamentAbstractDto(
-        registration.getTournament().getId(),
-        registration.getTournament().getName(),
-        registration.getTournament().getStatus(),
-        registration.getTournament().getStartDate(),
-        registration.getTournament().getMaxParticipants()
-    );
+    TournamentAbstractDto tournamentDto =
+        new TournamentAbstractDto(
+            registration.getTournament().getId(),
+            registration.getTournament().getName(),
+            registration.getTournament().getStatus(),
+            registration.getTournament().getStartDate(),
+            registration.getTournament().getMaxParticipants());
 
     return new TeamTournamentRegistrationDto(
         registration.getTournament().getId(),
         registration.getTeam().getId(),
         registration.getRegistrationDate(),
-        tournamentDto
-    );
+        tournamentDto);
   }
 
   /**

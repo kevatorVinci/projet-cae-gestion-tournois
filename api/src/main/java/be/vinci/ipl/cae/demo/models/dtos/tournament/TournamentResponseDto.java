@@ -4,9 +4,7 @@ import be.vinci.ipl.cae.demo.models.dtos.team.TeamReferenceDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 
-/**
- * DTO for returning tournament data.
- */
+/** DTO for returning tournament data. */
 public record TournamentResponseDto(
     Long id,
     @JsonProperty("nom") String name,
@@ -17,5 +15,4 @@ public record TournamentResponseDto(
     @JsonProperty("etat") String status,
     @JsonProperty("nombresParticipantsMax") Integer maxParticipants,
     @JsonProperty("planningMatchPublie") boolean matchSchedulePublished,
-    @JsonProperty("gagnant") TeamReferenceDto winner) {
-}
+    @JsonProperty("gagnant") TeamReferenceDto winner) {}

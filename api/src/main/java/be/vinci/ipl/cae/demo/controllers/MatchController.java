@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST Controller providing endpoints for match operations.
- */
+/** REST Controller providing endpoints for match operations. */
 @RestController
 @RequestMapping("/matches")
 public class MatchController {
@@ -28,7 +26,7 @@ public class MatchController {
    * Constructor for MatchController.
    *
    * @param matchService the match service
-   * @param matchMapper  the match mapper
+   * @param matchMapper the match mapper
    */
   public MatchController(MatchService matchService, MatchMapper matchMapper) {
     this.matchService = matchService;
@@ -67,7 +65,7 @@ public class MatchController {
    * Endpoint to declare a forfeit for a team in a match.
    *
    * @param matchId the ID of the match.
-   * @param teamId  the ID of the forfeiting team.
+   * @param teamId the ID of the forfeiting team.
    * @param currentUser the authenticated user.
    * @return 200 OK if successful.
    */

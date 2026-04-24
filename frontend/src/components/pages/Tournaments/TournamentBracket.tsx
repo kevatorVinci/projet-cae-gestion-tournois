@@ -37,8 +37,17 @@ const STATUS_ACCENT = {
 const getWinnerName = (slot: BracketSlot): string => {
   if (slot.isBye) return slot.team1Name;
 
+  // Use scores whenever they are available (FINISHED, WAITING_VALIDATION, DISPUTED…)
+  if (slot.score1 != null || slot.score2 != null) {
+    const s1 = slot.score1 ?? 0;
+    const s2 = slot.score2 ?? 0;
+    if (s1 > s2) return slot.team1Name;
+    if (s2 > s1) return slot.team2Name;
+  }
+
+  // FIX: Make sure we also evaluate statuses like WAITING_VALIDATION properly
   const statusVal = slot.status?.toUpperCase() || '';
-  if (statusVal === 'FINISHED' || statusVal === 'TERMINE') {
+  if (['FINISHED', 'TERMINE', 'WAITING_VALIDATION'].includes(statusVal)) {
     const s1 = slot.score1 ?? 0;
     const s2 = slot.score2 ?? 0;
     if (s1 > s2) return slot.team1Name;
@@ -136,6 +145,8 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
         );
       });
 
+      // We just take the first element (index 0) if we couldn't find a direct match
+      // but there are still matches available for this round.
       if (realMatchIndex === -1 && currentRoundMatches.length > 0) {
         realMatchIndex = 0;
       }
@@ -147,7 +158,11 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
 
       if (realMatch) {
         // Rounds 2+ are never byes — a null team means "awaiting previous winner"
-        const realMatchIsBye = false;
+        const isDbBye =
+          (realMatch.team1Id != null || !!realMatch.team1Name) &&
+          realMatch.team2Id == null &&
+          realMatch.team2Name == null;
+        const realMatchIsBye = isDbBye && roundNumber === 1;
         nextRound.push({
           id: realMatch.id,
           round: roundNumber,
@@ -433,7 +448,7 @@ const TournamentBracket = ({
 
                   const baseAccent = isBye
                     ? STATUS_ACCENT.BYE
-                    : isPlaceholder || isAwaitingTeams
+                    : isAwaitingTeams
                       ? STATUS_ACCENT.PENDING
                       : isFinished
                         ? STATUS_ACCENT.FINISHED
@@ -445,7 +460,7 @@ const TournamentBracket = ({
 
                   const getTeamTextColor = (isWinner: boolean) => {
                     if (isBye) return '#ffffff';
-                    if (isPlaceholder) return 'rgba(203,213,225,0.75)';
+                    if (isAwaitingTeams) return 'rgba(203,213,225,0.75)';
                     if (isFinished) {
                       if (isDraw) return '#ffffff';
                       return isWinner ? '#ffffff' : 'rgba(255,255,255,0.45)';
@@ -612,7 +627,7 @@ const TournamentBracket = ({
                           label={
                             isBye
                               ? 'Tour automatique'
-                              : isPlaceholder || isAwaitingTeams
+                              : isAwaitingTeams
                                 ? 'En attente'
                                 : isFinished
                                   ? 'Terminé'

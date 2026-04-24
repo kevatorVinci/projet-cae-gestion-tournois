@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST endpoints for user notifications.
- */
+/** REST endpoints for user notifications. */
 @RestController
 @RequestMapping("/notifications")
 @PreAuthorize("isAuthenticated()")
@@ -29,8 +27,7 @@ public class NotificationController {
    * @param notificationService notification business service.
    */
   public NotificationController(
-      NotificationService notificationService,
-      NotificationMapper notificationMapper) {
+      NotificationService notificationService, NotificationMapper notificationMapper) {
     this.notificationService = notificationService;
     this.notificationMapper = notificationMapper;
   }
@@ -38,7 +35,7 @@ public class NotificationController {
   /**
    * Toutes les notifications d'un membre (lues + non lues), les plus récentes en premier.
    *
-   * @param userId      the user ID.
+   * @param userId the user ID.
    * @return list of all notifications.
    */
   @GetMapping("/users/{userId}")
@@ -49,7 +46,7 @@ public class NotificationController {
   /**
    * Uniquement les notifications non lues d'un membre.
    *
-   * @param userId      the user ID.
+   * @param userId the user ID.
    * @return list of unread notifications.
    */
   @GetMapping("/users/{userId}/non-lues")
@@ -62,7 +59,7 @@ public class NotificationController {
    *
    * @param idNotification the notification ID.
    * @return the updated notification.
-    */
+   */
   @PatchMapping("/{idNotification}/lue")
   public ResponseEntity<NotificationDto> markAsRead(@PathVariable Long idNotification) {
     return ResponseEntity.ok(
@@ -72,7 +69,7 @@ public class NotificationController {
   /**
    * Marque toutes les notifications d'un membre comme lues.
    *
-   * @param userId      the user ID.
+   * @param userId the user ID.
    * @return no content.
    */
   @PatchMapping("/users/{userId}/tous-lues")

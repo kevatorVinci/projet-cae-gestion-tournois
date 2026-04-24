@@ -22,9 +22,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service handling business logic for player selections.
- */
+/** Service handling business logic for player selections. */
 @Service
 public class PlayerSelectionService {
 
@@ -72,12 +70,11 @@ public class PlayerSelectionService {
    */
   @Transactional
   public List<PlayerSelection> updateTeamSelections(
-      Long matchId,
-      Long teamId,
-      List<Long> memberIds,
-      User currentUser) {
-    Match match = matchRepository.findById(matchId)
-        .orElseThrow(() -> new IllegalArgumentException("Match introuvable."));
+      Long matchId, Long teamId, List<Long> memberIds, User currentUser) {
+    Match match =
+        matchRepository
+            .findById(matchId)
+            .orElseThrow(() -> new IllegalArgumentException("Match introuvable."));
 
     Team selectedTeam = resolveSelectedTeam(match, teamId);
     validateCanEditSelection(match, selectedTeam, currentUser);
@@ -92,37 +89,37 @@ public class PlayerSelectionService {
       throw new IllegalStateException("La sélection est limitée à 4 joueurs.");
     }
 
-    Set<Long> teamMemberIds = selectedTeam.getMembers().stream()
-        .map(User::getId)
-        .collect(Collectors.toSet());
+    Set<Long> teamMemberIds =
+        selectedTeam.getMembers().stream().map(User::getId).collect(Collectors.toSet());
 
     for (Long memberId : uniqueMemberIds) {
       if (!teamMemberIds.contains(memberId)) {
-        throw new IllegalStateException(
-            "Un joueur sélectionné n'appartient pas à cette équipe."
-        );
+        throw new IllegalStateException("Un joueur sélectionné n'appartient pas à cette équipe.");
       }
 
-      User member = userRepository.findById(memberId)
-          .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
+      User member =
+          userRepository
+              .findById(memberId)
+              .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
 
       if (isUnavailableForMatch(member, match)) {
         throw new IllegalStateException("Un joueur sélectionné est indisponible à cette date.");
       }
     }
 
-    Set<Long> previouslySelectedMemberIds = toList(
-        playerSelectionRepository.findByMatchIdAndTeamId(matchId, teamId)
-    ).stream()
-        .map(selection -> selection.getMember().getId())
-        .collect(Collectors.toSet());
+    Set<Long> previouslySelectedMemberIds =
+        toList(playerSelectionRepository.findByMatchIdAndTeamId(matchId, teamId)).stream()
+            .map(selection -> selection.getMember().getId())
+            .collect(Collectors.toSet());
 
     playerSelectionRepository.deleteByMatchIdAndTeamId(matchId, teamId);
 
     List<PlayerSelection> savedSelections = new ArrayList<>();
     for (Long memberId : uniqueMemberIds) {
-      User member = userRepository.findById(memberId)
-          .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
+      User member =
+          userRepository
+              .findById(memberId)
+              .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
 
       PlayerSelection selection = new PlayerSelection();
       selection.setMatch(match);
@@ -144,12 +141,12 @@ public class PlayerSelectionService {
    * @return visible selections list.
    */
   public List<PlayerSelection> getSelectionsForMatch(Long matchId, User currentUser) {
-    Match match = matchRepository.findById(matchId)
-        .orElseThrow(() -> new IllegalArgumentException("Match introuvable."));
+    Match match =
+        matchRepository
+            .findById(matchId)
+            .orElseThrow(() -> new IllegalArgumentException("Match introuvable."));
 
-    List<PlayerSelection> allSelections = toList(
-        playerSelectionRepository.findByMatchId(matchId)
-    );
+    List<PlayerSelection> allSelections = toList(playerSelectionRepository.findByMatchId(matchId));
 
     // Publicly visible as soon as the match starts.
     if (isMatchStarted(match) || isAdmin(currentUser)) {
@@ -158,20 +155,12 @@ public class PlayerSelectionService {
 
     if (belongsToTeam(match.getTeam1(), currentUser)) {
       return toList(
-          playerSelectionRepository.findByMatchIdAndTeamId(
-              matchId,
-              match.getTeam1().getId()
-          )
-      );
+          playerSelectionRepository.findByMatchIdAndTeamId(matchId, match.getTeam1().getId()));
     }
 
     if (belongsToTeam(match.getTeam2(), currentUser)) {
       return toList(
-          playerSelectionRepository.findByMatchIdAndTeamId(
-              matchId,
-              match.getTeam2().getId()
-          )
-      );
+          playerSelectionRepository.findByMatchIdAndTeamId(matchId, match.getTeam2().getId()));
     }
 
     return List.of();
@@ -186,9 +175,7 @@ public class PlayerSelectionService {
    * @return selected players for the requested team.
    */
   public List<PlayerSelection> getSelectionsForMatchTeam(
-      Long matchId,
-      Long teamId,
-      User currentUser) {
+      Long matchId, Long teamId, User currentUser) {
     Match match = findMatchOrThrow(matchId);
     resolveAndValidateViewAccess(match, teamId, currentUser);
 
@@ -196,8 +183,8 @@ public class PlayerSelectionService {
   }
 
   /**
-   * Returns all matches where the given member was selected in a lineup.
-   * Only matches from published schedules are returned.
+   * Returns all matches where the given member was selected in a lineup. Only matches from
+   * published schedules are returned.
    *
    * @param memberId the member id.
    * @return distinct matches the member played in.
@@ -207,9 +194,7 @@ public class PlayerSelectionService {
       return List.of();
     }
 
-    List<PlayerSelection> selections = toList(
-        playerSelectionRepository.findByMemberId(memberId)
-    );
+    List<PlayerSelection> selections = toList(playerSelectionRepository.findByMemberId(memberId));
 
     Set<Long> seenMatchIds = new LinkedHashSet<>();
     List<Match> matches = new ArrayList<>();
@@ -237,18 +222,16 @@ public class PlayerSelectionService {
    * @return editor view with members, selected state and permissions.
    */
   public PlayerSelectionTeamViewDto getTeamSelectionView(
-      Long matchId,
-      Long teamId,
-      User currentUser) {
+      Long matchId, Long teamId, User currentUser) {
     Match match = findMatchOrThrow(matchId);
     Team selectedTeam = resolveAndValidateViewAccess(match, teamId, currentUser);
 
-    List<PlayerSelection> selections = toList(
-        playerSelectionRepository.findByMatchIdAndTeamId(matchId, teamId)
-    );
-    Set<Long> selectedIds = selections.stream()
-        .map(selection -> selection.getMember().getId())
-        .collect(Collectors.toSet());
+    List<PlayerSelection> selections =
+        toList(playerSelectionRepository.findByMatchIdAndTeamId(matchId, teamId));
+    Set<Long> selectedIds =
+        selections.stream()
+            .map(selection -> selection.getMember().getId())
+            .collect(Collectors.toSet());
 
     List<PlayerSelectionMemberDto> members = new ArrayList<>();
     for (User member : selectedTeam.getMembers()) {
@@ -261,20 +244,19 @@ public class PlayerSelectionService {
       memberDto.setSelected(selectedIds.contains(member.getId()));
       memberDto.setUnavailable(unavailablePeriod != null || member.isBanned());
       memberDto.setUnavailableStartDate(
-          unavailablePeriod == null ? null : unavailablePeriod.getStartDate()
-      );
+          unavailablePeriod == null ? null : unavailablePeriod.getStartDate());
       memberDto.setUnavailableEndDate(
-          unavailablePeriod == null ? null : unavailablePeriod.getEndDate()
-      );
+          unavailablePeriod == null ? null : unavailablePeriod.getEndDate());
       members.add(memberDto);
     }
 
     PlayerSelectionTeamViewDto response = new PlayerSelectionTeamViewDto();
     response.setMatchId(matchId);
     response.setTeamId(teamId);
-    response.setCanEdit(!isByeMatch(match)
-        && !isMatchStarted(match)
-        && (isAdmin(currentUser) || isResponsible(selectedTeam, currentUser)));
+    response.setCanEdit(
+        !isByeMatch(match)
+            && !isMatchStarted(match)
+            && (isAdmin(currentUser) || isResponsible(selectedTeam, currentUser)));
     response.setMaxPlayers(MAX_PLAYERS_PER_MATCH);
     response.setSelectedCount(selectedIds.size());
     response.setMembers(members);
@@ -282,14 +264,12 @@ public class PlayerSelectionService {
   }
 
   private Match findMatchOrThrow(Long matchId) {
-    return matchRepository.findById(matchId)
+    return matchRepository
+        .findById(matchId)
         .orElseThrow(() -> new IllegalArgumentException("Match introuvable."));
   }
 
-  private Team resolveAndValidateViewAccess(
-      Match match,
-      Long teamId,
-      User currentUser) {
+  private Team resolveAndValidateViewAccess(Match match, Long teamId, User currentUser) {
     Team selectedTeam = resolveSelectedTeam(match, teamId);
     validateCanViewTeamSelection(match, selectedTeam, currentUser);
     return selectedTeam;
@@ -308,14 +288,12 @@ public class PlayerSelectionService {
   private void validateCanEditSelection(Match match, Team selectedTeam, User currentUser) {
     if (isByeMatch(match)) {
       throw new IllegalStateException(
-          "La composition ne peut pas être modifiée pour un match qualifié d'office."
-      );
+          "La composition ne peut pas être modifiée pour un match qualifié d'office.");
     }
 
     if (isMatchStarted(match)) {
       throw new IllegalStateException(
-          "La composition ne peut plus être modifiée après le début du match."
-      );
+          "La composition ne peut plus être modifiée après le début du match.");
     }
 
     if (isAdmin(currentUser)) {
@@ -323,9 +301,7 @@ public class PlayerSelectionService {
     }
 
     if (!isResponsible(selectedTeam, currentUser)) {
-      throw new SecurityException(
-          "Seul le responsable de l'équipe peut modifier la composition."
-      );
+      throw new SecurityException("Seul le responsable de l'équipe peut modifier la composition.");
     }
   }
 
@@ -360,8 +336,8 @@ public class PlayerSelectionService {
       return false;
     }
 
-    boolean isMember = team.getMembers().stream()
-        .anyMatch(member -> member.getId().equals(user.getId()));
+    boolean isMember =
+        team.getMembers().stream().anyMatch(member -> member.getId().equals(user.getId()));
 
     return isMember || isResponsible(team, user);
   }
@@ -371,10 +347,12 @@ public class PlayerSelectionService {
       return false;
     }
 
-    boolean isPrimary = team.getPrimaryResponsible() != null
-        && team.getPrimaryResponsible().getId().equals(user.getId());
-    boolean isSecondary = team.getSecondaryResponsible() != null
-        && team.getSecondaryResponsible().getId().equals(user.getId());
+    boolean isPrimary =
+        team.getPrimaryResponsible() != null
+            && team.getPrimaryResponsible().getId().equals(user.getId());
+    boolean isSecondary =
+        team.getSecondaryResponsible() != null
+            && team.getSecondaryResponsible().getId().equals(user.getId());
     return isPrimary || isSecondary;
   }
 
@@ -408,10 +386,7 @@ public class PlayerSelectionService {
     LocalDate matchDate = match.getScheduledDateTime().toLocalDate();
     return unavailabilityRepository
         .findFirstByUserAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateAsc(
-            member,
-            matchDate,
-            matchDate
-        )
+            member, matchDate, matchDate)
         .orElse(null);
   }
 
@@ -433,11 +408,7 @@ public class PlayerSelectionService {
       if (previouslySelectedMemberIds.contains(memberId)) {
         continue;
       }
-      notificationService.notifySelectedForMatch(
-          savedSelection.getMember(),
-          match,
-          selectedTeam
-      );
+      notificationService.notifySelectedForMatch(savedSelection.getMember(), match, selectedTeam);
     }
   }
 }
