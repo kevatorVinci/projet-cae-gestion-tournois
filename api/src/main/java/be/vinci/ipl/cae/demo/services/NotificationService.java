@@ -11,18 +11,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
-/**
- * Service managing all business logic related to user notifications.
- */
+/** Service managing all business logic related to user notifications. */
 @Service
 public class NotificationService {
 
   private static final DateTimeFormatter MATCH_DATETIME_FORMATTER =
       DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
-  /**
-   * Repository used to access and persist notifications.
-   */
+  /** Repository used to access and persist notifications. */
   private final NotificationRepository notificationRepository;
 
   /**
@@ -61,9 +57,10 @@ public class NotificationService {
    * @return the updated notification entity.
    */
   public Notification markAsRead(Long notificationId) {
-    Notification n = notificationRepository
-        .findById(notificationId)
-        .orElseThrow(() -> new RuntimeException("Notification introuvable"));
+    Notification n =
+        notificationRepository
+            .findById(notificationId)
+            .orElseThrow(() -> new RuntimeException("Notification introuvable"));
 
     n.setIsRead(true);
     return notificationRepository.save(n);
@@ -75,8 +72,8 @@ public class NotificationService {
    * @param userId the unique identifier of the user.
    */
   public void markAllAsRead(Long userId) {
-    List<Notification> unread = notificationRepository
-        .findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
+    List<Notification> unread =
+        notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
 
     unread.forEach(n -> n.setIsRead(true));
     notificationRepository.saveAll(unread);
@@ -103,7 +100,7 @@ public class NotificationService {
   /**
    * Core method to create and save a new notification.
    *
-   * @param user    the user receiving the notification.
+   * @param user the user receiving the notification.
    * @param message the text content of the notification.
    * @return the saved notification entity.
    */
@@ -129,66 +126,59 @@ public class NotificationService {
   /**
    * Notifies the user that their team has been successfully created.
    *
-   * @param user     the user who created the team.
+   * @param user the user who created the team.
    * @param teamName the name of the new team.
    */
   public void notifyTeamCreation(User user, String teamName) {
     createNotification(
-        user,
-        "Équipe créée : vous êtes maintenant le responsable de l'équipe '" + teamName + "'."
-    );
+        user, "Équipe créée : vous êtes maintenant le responsable de l'équipe '" + teamName + "'.");
   }
 
   /**
    * Notifies the user that their join request has been sent.
    *
-   * @param user     the user applying.
+   * @param user the user applying.
    * @param teamName the name of the target team.
    */
   public void sendApplicationNotification(User user, String teamName) {
     createNotification(
         user,
-        "Demande envoyée : votre requête pour rejoindre l'équipe '" + teamName
-            + "' est en attente."
-    );
+        "Demande envoyée : votre requête pour rejoindre l'équipe '"
+            + teamName
+            + "' est en attente.");
   }
 
   /**
    * Notifies a team manager about a new application.
    *
-   * @param manager      the team manager.
+   * @param manager the team manager.
    * @param candidateTag the nickname/tag of the applicant.
-   * @param teamName     the name of the team.
+   * @param teamName the name of the team.
    */
-  public void notifyNewRequestToManager(
-      User manager,
-      String candidateTag,
-      String teamName) {
+  public void notifyNewRequestToManager(User manager, String candidateTag, String teamName) {
     createNotification(
         manager,
-        "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe '" + teamName + "'."
-    );
+        "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe '" + teamName + "'.");
   }
 
   /**
    * Notifies the user that their application was accepted.
    *
-   * @param user     the applicant.
+   * @param user the applicant.
    * @param teamName the team they joined.
    */
   public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
         user,
-        "Accepté : votre demande pour rejoindre '" + teamName + "' a été acceptée. Bienvenue !"
-    );
+        "Accepté : votre demande pour rejoindre '" + teamName + "' a été acceptée. Bienvenue !");
   }
 
   /**
    * Notifies the user that their application was denied with a reason.
    *
-   * @param user     the applicant.
+   * @param user the applicant.
    * @param teamName the team they tried to join.
-   * @param reason   the explanation for denial.
+   * @param reason the explanation for denial.
    */
   public void notifyRequestDenied(User user, String teamName, String reason) {
     String displayedReason =
@@ -196,50 +186,52 @@ public class NotificationService {
 
     createNotification(
         user,
-        "Refusé : votre demande pour rejoindre l'équipe '" + teamName
-            + "' a été refusée. Raison : " + displayedReason
-    );
+        "Refusé : votre demande pour rejoindre l'équipe '"
+            + teamName
+            + "' a été refusée. Raison : "
+            + displayedReason);
   }
 
   /**
    * Notifies admins that a draft tournament has been created.
    *
-   * @param admin          the administrator.
+   * @param admin the administrator.
    * @param tournamentName the name of the draft tournament.
    */
   public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
         admin,
-        "Admin : le tournoi brouillon '" + tournamentName
-            + "' a été créé. Publiez-le quand vous êtes prêt."
-    );
+        "Admin : le tournoi brouillon '"
+            + tournamentName
+            + "' a été créé. Publiez-le quand vous êtes prêt.");
   }
 
   /**
    * Notifies users that a tournament is now open for registration.
    *
-   * @param user           the user to notify.
+   * @param user the user to notify.
    * @param tournamentName the name of the published tournament.
    */
   public void notifyTournamentPublished(User user, String tournamentName) {
     createNotification(
         user,
-        "Nouveau tournoi : le tournoi '" + tournamentName
-            + "' vient d'être publié. Inscrivez-vous vite !"
-    );
+        "Nouveau tournoi : le tournoi '"
+            + tournamentName
+            + "' vient d'être publié. Inscrivez-vous vite !");
   }
 
   /**
    * Notifies a member that they are selected to participate in a match.
    *
-   * @param user         selected member.
-   * @param match        target match.
+   * @param user selected member.
+   * @param match target match.
    * @param selectedTeam team for which the member is selected.
    */
   public void notifySelectedForMatch(User user, Match match, Team selectedTeam) {
-    String teamName = selectedTeam != null && selectedTeam.getName() != null
-        ? selectedTeam.getName()
-        : "votre équipe";
+    String teamName =
+        selectedTeam != null && selectedTeam.getName() != null
+            ? selectedTeam.getName()
+            : "votre équipe";
 
     Team opponent = null;
     if (match != null && selectedTeam != null && selectedTeam.getId() != null) {
@@ -251,20 +243,19 @@ public class NotificationService {
       }
     }
 
-    String opponentPart = opponent != null && opponent.getName() != null
-        ? " contre l'équipe '" + opponent.getName() + "'"
-        : "";
+    String opponentPart =
+        opponent != null && opponent.getName() != null
+            ? " contre l'équipe '" + opponent.getName() + "'"
+            : "";
 
-    String tournamentPart = match != null
-        && match.getTournament() != null
-        && match.getTournament().getName() != null
-        ? " dans le tournoi '" + match.getTournament().getName() + "'"
-        : "";
+    String tournamentPart =
+        match != null && match.getTournament() != null && match.getTournament().getName() != null
+            ? " dans le tournoi '" + match.getTournament().getName() + "'"
+            : "";
 
     LocalDateTime matchDateTime = match == null ? null : match.getScheduledDateTime();
-    String schedulePart = matchDateTime == null
-        ? ""
-        : " (" + matchDateTime.format(MATCH_DATETIME_FORMATTER) + ")";
+    String schedulePart =
+        matchDateTime == null ? "" : " (" + matchDateTime.format(MATCH_DATETIME_FORMATTER) + ")";
 
     createNotification(
         user,
@@ -274,8 +265,7 @@ public class NotificationService {
             + opponentPart
             + tournamentPart
             + schedulePart
-            + "."
-    );
+            + ".");
   }
 
   /**
@@ -290,21 +280,19 @@ public class NotificationService {
           member,
           "🏳️ Forfait — "
               + tournamentName
-              + " : Votre équipe a déclaré forfait. Vous êtes éliminés du tournoi."
-      );
+              + " : Votre équipe a déclaré forfait. Vous êtes éliminés du tournoi.");
     }
   }
 
   /**
-   * Notifies the affected player and team responsibles that a selection was removed because of
-   * an unavailability period.
+   * Notifies the affected player and team responsibles that a selection was removed because of an
+   * unavailability period.
    *
    * @param unavailableUser the unavailable player.
    * @param selection the removed selection.
    */
   public void notifySelectionRemovedDueToUnavailability(
-      User unavailableUser,
-      PlayerSelection selection) {
+      User unavailableUser, PlayerSelection selection) {
     if (unavailableUser == null || selection == null) {
       return;
     }
@@ -312,9 +300,10 @@ public class NotificationService {
     Match match = selection.getMatch();
     Team team = selection.getTeam();
 
-    String matchDateLabel = match != null && match.getScheduledDateTime() != null
-        ? match.getScheduledDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        : "une date inconnue";
+    String matchDateLabel =
+        match != null && match.getScheduledDateTime() != null
+            ? match.getScheduledDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            : "une date inconnue";
     String teamName = team != null && team.getName() != null ? team.getName() : "votre équipe";
 
     createNotification(
@@ -323,16 +312,16 @@ public class NotificationService {
             + matchDateLabel
             + " avec l'équipe '"
             + teamName
-            + "' a été retirée."
-    );
+            + "' a été retirée.");
 
-    String message = "Indisponibilité détectée : "
-        + unavailableUser.getTag()
-        + " n'est plus disponible pour le match du "
-        + matchDateLabel
-        + " dans l'équipe '"
-        + teamName
-        + "'. La sélection a été retirée.";
+    String message =
+        "Indisponibilité détectée : "
+            + unavailableUser.getTag()
+            + " n'est plus disponible pour le match du "
+            + matchDateLabel
+            + " dans l'équipe '"
+            + teamName
+            + "'. La sélection a été retirée.";
 
     notifyTeamResponsibles(team, message);
   }
@@ -354,7 +343,9 @@ public class NotificationService {
 
     if (team.getSecondaryResponsible() != null
         && (team.getPrimaryResponsible() == null
-        || !team.getSecondaryResponsible().getId().equals(team.getPrimaryResponsible().getId()))) {
+            || !team.getSecondaryResponsible()
+                .getId()
+                .equals(team.getPrimaryResponsible().getId()))) {
       createNotification(team.getSecondaryResponsible(), message);
     }
   }

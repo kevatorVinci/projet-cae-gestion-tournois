@@ -1,5 +1,9 @@
 package be.vinci.ipl.cae.demo.services;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import be.vinci.ipl.cae.demo.exceptions.ConflictException;
 import be.vinci.ipl.cae.demo.exceptions.ForbiddenException;
 import be.vinci.ipl.cae.demo.exceptions.NotFoundException;
@@ -10,6 +14,9 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.DemandRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,40 +24,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-/**
- * Unit tests for DemandService using Mockito.
- */
+/** Unit tests for DemandService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class DemandServiceTest {
 
-  @Mock
-  private DemandRepository demandRepo;
-  @Mock
-  private UserRepository userRepo;
-  @Mock
-  private TeamRepository teamRepo;
-  @Mock
-  private NotificationService notificationService;
+  @Mock private DemandRepository demandRepo;
+  @Mock private UserRepository userRepo;
+  @Mock private TeamRepository teamRepo;
+  @Mock private NotificationService notificationService;
 
-  @InjectMocks
-  private DemandService demandService;
+  @InjectMocks private DemandService demandService;
 
   private User member;
   private User responsible;
   private Team team;
   private Demand demand;
 
-  /**
-   * Set up mock data before each test.
-   */
+  /** Set up mock data before each test. */
   @BeforeEach
   void setUp() {
     responsible = new User();
@@ -73,9 +63,7 @@ class DemandServiceTest {
     demand.setState(DemandState.PENDING);
   }
 
-  /**
-   * Tests creating a join request when the member has no team.
-   */
+  /** Tests creating a join request when the member has no team. */
   @Test
   void createJoinRequestMemberWithoutTeamOk() {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
@@ -89,9 +77,7 @@ class DemandServiceTest {
     verify(demandRepo).save(any());
   }
 
-  /**
-   * Tests that a member already in a team cannot create a request.
-   */
+  /** Tests that a member already in a team cannot create a request. */
   @Test
   void createJoinRequestMemberAlreadyInTeamThrowsRuntime() {
     member.setTeam(team);
@@ -102,9 +88,7 @@ class DemandServiceTest {
     verify(demandRepo, never()).save(any());
   }
 
-  /**
-   * Tests creating a request for a non-existent member.
-   */
+  /** Tests creating a request for a non-existent member. */
   @Test
   void createJoinRequestNonExistentMemberThrowsRuntime() {
     when(userRepo.findById(99L)).thenReturn(Optional.empty());
@@ -112,9 +96,7 @@ class DemandServiceTest {
     assertThrows(NotFoundException.class, () -> demandService.createJoinRequest(99L, 10L));
   }
 
-  /**
-   * Tests creating a request for a non-existent team.
-   */
+  /** Tests creating a request for a non-existent team. */
   @Test
   void createJoinRequestNonExistentTeamThrowsRuntime() {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
@@ -123,9 +105,7 @@ class DemandServiceTest {
     assertThrows(NotFoundException.class, () -> demandService.createJoinRequest(2L, 99L));
   }
 
-  /**
-   * Tests creating a request for a team without responsibles.
-   */
+  /** Tests creating a request for a team without responsibles. */
   @Test
   void createJoinRequestTeamWithoutResponsibleThrowsRuntime() {
     team.setPrimaryResponsible(null);
@@ -138,9 +118,7 @@ class DemandServiceTest {
     verify(demandRepo, never()).save(any());
   }
 
-  /**
-   * Tests that a join request is rejected when a member already has the same tag in team.
-   */
+  /** Tests that a join request is rejected when a member already has the same tag in team. */
   @Test
   void createJoinRequestDuplicateTagInTeamThrowsConflictUppercaseCase() {
     member.setTag("Kevator");
@@ -153,29 +131,24 @@ class DemandServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
 
-    ConflictException ex = assertThrows(
-      ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
+    ConflictException ex =
+        assertThrows(ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
 
     assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
     verify(demandRepo, never()).save(any());
   }
 
-  /**
-   * Tests retrieving pending requests for a team.
-   */
+  /** Tests retrieving pending requests for a team. */
   @Test
   void getPendingRequestsForTeamReturnsList() {
-    when(demandRepo.findByTeamIdAndState(10L, DemandState.PENDING))
-        .thenReturn(List.of(demand));
+    when(demandRepo.findByTeamIdAndState(10L, DemandState.PENDING)).thenReturn(List.of(demand));
 
     Iterable<Demand> result = demandService.getPendingRequestsForTeam(10L);
 
     assertTrue(result.iterator().hasNext());
   }
 
-  /**
-   * Tests behavior when no pending requests exist for a team.
-   */
+  /** Tests behavior when no pending requests exist for a team. */
   @Test
   void getPendingRequestsForTeamNoDemandsReturnsEmpty() {
     when(demandRepo.findByTeamIdAndState(10L, DemandState.PENDING)).thenReturn(List.of());
@@ -185,9 +158,7 @@ class DemandServiceTest {
     assertFalse(result.iterator().hasNext());
   }
 
-  /**
-   * Tests successful demand acceptance by a responsible user.
-   */
+  /** Tests successful demand acceptance by a responsible user. */
   @Test
   void acceptDemandByResponsibleOk() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
@@ -203,9 +174,7 @@ class DemandServiceTest {
     assertTrue(team.getMembers().contains(member));
   }
 
-  /**
-   * Verifies that the member is correctly saved into the team upon acceptance.
-   */
+  /** Verifies that the member is correctly saved into the team upon acceptance. */
   @Test
   void acceptDemandMemberAddedToTeam() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
@@ -219,9 +188,7 @@ class DemandServiceTest {
     verify(teamRepo).save(team);
   }
 
-  /**
-   * Tests accepting a non-existent demand.
-   */
+  /** Tests accepting a non-existent demand. */
   @Test
   void acceptDemandNonExistentDemandThrowsRuntime() {
     when(demandRepo.findById(999L)).thenReturn(Optional.empty());
@@ -229,9 +196,7 @@ class DemandServiceTest {
     assertThrows(NotFoundException.class, () -> demandService.acceptDemand(999L, responsible));
   }
 
-  /**
-   * Tests that a non-responsible user cannot accept a demand.
-   */
+  /** Tests that a non-responsible user cannot accept a demand. */
   @Test
   void acceptDemandNonResponsibleUserThrowsSecurity() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
@@ -239,9 +204,7 @@ class DemandServiceTest {
     assertThrows(ForbiddenException.class, () -> demandService.acceptDemand(100L, member));
   }
 
-  /**
-   * Tests that a secondary responsible can also accept a demand.
-   */
+  /** Tests that a secondary responsible can also accept a demand. */
   @Test
   void acceptDemandSecondaryResponsibleOk() {
     User secondaryResp = new User();
@@ -256,9 +219,7 @@ class DemandServiceTest {
     assertDoesNotThrow(() -> demandService.acceptDemand(100L, secondaryResp));
   }
 
-  /**
-   * Tests that accepting a demand fails when a duplicate tag already exists in the team.
-   */
+  /** Tests that accepting a demand fails when a duplicate tag already exists in the team. */
   @Test
   void acceptDemandDuplicateTagInTeamThrowsConflictUppercaseCase() {
     member.setTag("Kevator");
@@ -269,8 +230,8 @@ class DemandServiceTest {
 
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
-    ConflictException ex = assertThrows(
-      ConflictException.class, () -> demandService.acceptDemand(100L, responsible));
+    ConflictException ex =
+        assertThrows(ConflictException.class, () -> demandService.acceptDemand(100L, responsible));
 
     assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
     verify(userRepo, never()).save(any());
@@ -278,9 +239,7 @@ class DemandServiceTest {
     verify(demandRepo, never()).save(any());
   }
 
-  /**
-   * Tests successful demand rejection with a reason.
-   */
+  /** Tests successful demand rejection with a reason. */
   @Test
   void rejectDemandWithReasonOk() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
@@ -293,9 +252,7 @@ class DemandServiceTest {
     assertNotNull(result.getProcessingDate());
   }
 
-  /**
-   * Tests that a secondary responsible can reject a demand.
-   */
+  /** Tests that a secondary responsible can reject a demand. */
   @Test
   void rejectDemandSecondaryResponsibleOk() {
     User secondaryResp = new User();
@@ -305,13 +262,10 @@ class DemandServiceTest {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
     when(demandRepo.save(any())).thenReturn(demand);
 
-    assertDoesNotThrow(
-        () -> demandService.rejectDemand(100L, "Lack of experience", secondaryResp));
+    assertDoesNotThrow(() -> demandService.rejectDemand(100L, "Lack of experience", secondaryResp));
   }
 
-  /**
-   * Tests that a non-responsible user cannot reject a demand.
-   */
+  /** Tests that a non-responsible user cannot reject a demand. */
   @Test
   void rejectDemandNonResponsibleUserThrowsSecurity() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
@@ -320,9 +274,7 @@ class DemandServiceTest {
         ForbiddenException.class, () -> demandService.rejectDemand(100L, "reason", member));
   }
 
-  /**
-   * Tests rejecting a non-existent demand.
-   */
+  /** Tests rejecting a non-existent demand. */
   @Test
   void rejectDemandNonExistentDemandThrowsRuntime() {
     when(demandRepo.findById(999L)).thenReturn(Optional.empty());
@@ -331,9 +283,7 @@ class DemandServiceTest {
         NotFoundException.class, () -> demandService.rejectDemand(999L, "reason", responsible));
   }
 
-  /**
-   * Verifies that a rejected member does not join the team.
-   */
+  /** Verifies that a rejected member does not join the team. */
   @Test
   void rejectDemandMemberDoesNotJoinTeam() {
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
@@ -346,9 +296,7 @@ class DemandServiceTest {
     verify(teamRepo, never()).save(any());
   }
 
-  /**
-   * Tests that a join request is rejected when a member already has the same tag in team.
-   */
+  /** Tests that a join request is rejected when a member already has the same tag in team. */
   @Test
   void createJoinRequestDuplicateTagInTeamThrowsConflict() {
     member.setTag("Kevator");
@@ -361,16 +309,14 @@ class DemandServiceTest {
     when(userRepo.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepo.findById(10L)).thenReturn(Optional.of(team));
 
-    ConflictException ex = assertThrows(
-        ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
+    ConflictException ex =
+        assertThrows(ConflictException.class, () -> demandService.createJoinRequest(2L, 10L));
 
     assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
     verify(demandRepo, never()).save(any());
   }
 
-  /**
-   * Tests that accepting a demand fails when a duplicate tag already exists in the team.
-   */
+  /** Tests that accepting a demand fails when a duplicate tag already exists in the team. */
   @Test
   void acceptDemandDuplicateTagInTeamThrowsConflict() {
     member.setTag("Kevator");
@@ -381,8 +327,8 @@ class DemandServiceTest {
 
     when(demandRepo.findById(100L)).thenReturn(Optional.of(demand));
 
-    ConflictException ex = assertThrows(
-        ConflictException.class, () -> demandService.acceptDemand(100L, responsible));
+    ConflictException ex =
+        assertThrows(ConflictException.class, () -> demandService.acceptDemand(100L, responsible));
 
     assertEquals("Il y a déjà un Kevator dans cette équipe.", ex.getMessage());
     verify(userRepo, never()).save(any());

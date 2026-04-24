@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper class to convert Match entities to MatchDtos.
- */
+/** Mapper class to convert Match entities to MatchDtos. */
 @Component
 public class MatchMapper {
 

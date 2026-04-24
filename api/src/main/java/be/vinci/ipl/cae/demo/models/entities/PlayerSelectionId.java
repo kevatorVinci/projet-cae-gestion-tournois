@@ -5,9 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Composite key class for PlayerSelection.
- */
+/** Composite key class for PlayerSelection. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -6,16 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for user-facing authentication DTO conversions.
- */
+/** Mapper for user-facing authentication DTO conversions. */
 @Component
 public class UserMapper {
 
   /**
    * Converts a user to authenticated payload and injects an already-generated token.
    *
-   * @param user  the user entity.
+   * @param user the user entity.
    * @param token the JWT token.
    * @return the authenticated user DTO.
    */

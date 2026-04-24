@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST controller for managing join demands.
- */
+/** REST controller for managing join demands. */
 @RestController
 @RequestMapping("/demands")
 public class DemandController {
@@ -30,7 +28,7 @@ public class DemandController {
    * Constructor for DemandController.
    *
    * @param demandService the service to handle demand logic.
-   * @param demandMapper  the mapper to convert entities to DTOs.
+   * @param demandMapper the mapper to convert entities to DTOs.
    */
   public DemandController(DemandService demandService, DemandMapper demandMapper) {
     this.demandService = demandService;
@@ -52,23 +50,21 @@ public class DemandController {
   /**
    * Accepts a specific join demand.
    *
-   * @param demandId    the ID of the demand to accept.
+   * @param demandId the ID of the demand to accept.
    * @param currentUser the currently authenticated user.
    */
   @PostMapping("/{demandId}/accepter")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @IsResponsable
-  public void acceptDemand(
-      @PathVariable Long demandId,
-      @AuthenticationPrincipal User currentUser) {
+  public void acceptDemand(@PathVariable Long demandId, @AuthenticationPrincipal User currentUser) {
     demandService.acceptDemand(demandId, currentUser);
   }
 
   /**
    * Rejects a specific join demand with an optional reason.
    *
-   * @param demandId    the ID of the demand to reject.
-   * @param body        the request body containing the rejection reason.
+   * @param demandId the ID of the demand to reject.
+   * @param body the request body containing the rejection reason.
    * @param currentUser the currently authenticated user.
    */
   @PostMapping("/{demandId}/refuser")

@@ -1,11 +1,18 @@
 package be.vinci.ipl.cae.demo.services;
 
-import be.vinci.ipl.cae.demo.models.entities.Notification;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import be.vinci.ipl.cae.demo.models.entities.Match;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,32 +21,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-/**
- * Unit tests for NotificationService using Mockito.
- */
+/** Unit tests for NotificationService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
 
-  @Mock
-  private NotificationRepository notificationRepository;
+  @Mock private NotificationRepository notificationRepository;
 
-  @InjectMocks
-  private NotificationService notificationService;
+  @InjectMocks private NotificationService notificationService;
 
   private User user;
   private Notification notification;
 
-  /**
-   * Set up mock data before each test.
-   */
+  /** Set up mock data before each test. */
   @BeforeEach
   void setUp() {
     user = new User();
@@ -53,9 +46,7 @@ class NotificationServiceTest {
     notification.setIsRead(false);
   }
 
-  /**
-   * Tests retrieving notifications for a user.
-   */
+  /** Tests retrieving notifications for a user. */
   @Test
   void getByUserReturnsSortedList() {
     when(notificationRepository.findByUserIdOrderBySentDateDesc(1L))
@@ -68,9 +59,7 @@ class NotificationServiceTest {
     verify(notificationRepository).findByUserIdOrderBySentDateDesc(1L);
   }
 
-  /**
-   * Tests retrieving notifications when the user has none.
-   */
+  /** Tests retrieving notifications when the user has none. */
   @Test
   void getByUserNoNotificationsReturnsEmptyList() {
     when(notificationRepository.findByUserIdOrderBySentDateDesc(1L)).thenReturn(List.of());
@@ -80,9 +69,7 @@ class NotificationServiceTest {
     assertTrue(result.isEmpty());
   }
 
-  /**
-   * Tests retrieving only unread notifications.
-   */
+  /** Tests retrieving only unread notifications. */
   @Test
   void getUnreadReturnsOnlyUnread() {
     when(notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(1L, false))
@@ -94,9 +81,7 @@ class NotificationServiceTest {
     assertFalse(result.get(0).getIsRead());
   }
 
-  /**
-   * Tests marking a specific notification as read.
-   */
+  /** Tests marking a specific notification as read. */
   @Test
   void markAsReadNotificationBecomesRead() {
     when(notificationRepository.findById(100L)).thenReturn(Optional.of(notification));
@@ -108,9 +93,7 @@ class NotificationServiceTest {
     verify(notificationRepository).save(notification);
   }
 
-  /**
-   * Tests marking a non-existent notification as read.
-   */
+  /** Tests marking a non-existent notification as read. */
   @Test
   void markAsReadNonExistentNotificationThrowsRuntime() {
     when(notificationRepository.findById(999L)).thenReturn(Optional.empty());
@@ -119,9 +102,7 @@ class NotificationServiceTest {
     verify(notificationRepository, never()).save(any());
   }
 
-  /**
-   * Tests marking all notifications as read for a user.
-   */
+  /** Tests marking all notifications as read for a user. */
   @Test
   void markAllAsReadAllNotificationsBecomeRead() {
     Notification n2 = new Notification();
@@ -139,18 +120,14 @@ class NotificationServiceTest {
     verify(notificationRepository).saveAll(List.of(notification, n2));
   }
 
-  /**
-   * Tests deleting all notifications for a user.
-   */
+  /** Tests deleting all notifications for a user. */
   @Test
   void deleteByUserRemovesAllNotifications() {
     notificationService.deleteByUser(1L);
     verify(notificationRepository).deleteByUserId(1L);
   }
 
-  /**
-   * Tests creating a notification with correct field values.
-   */
+  /** Tests creating a notification with correct field values. */
   @Test
   void createNotificationSavesWithCorrectValues() {
     when(notificationRepository.save(any())).thenReturn(notification);
@@ -167,9 +144,7 @@ class NotificationServiceTest {
     assertNotNull(saved.getSentDate());
   }
 
-  /**
-   * Tests the account creation notification message.
-   */
+  /** Tests the account creation notification message. */
   @Test
   void notifyAccountCreationMessageStartsWithWelcome() {
     when(notificationRepository.save(any())).thenReturn(notification);
@@ -181,9 +156,7 @@ class NotificationServiceTest {
     assertTrue(captor.getValue().getMessage().startsWith("Bienvenue"));
   }
 
-  /**
-   * Tests the team creation notification message.
-   */
+  /** Tests the team creation notification message. */
   @Test
   void notifyTeamCreationMessageContainsTeamName() {
     when(notificationRepository.save(any())).thenReturn(notification);
@@ -195,9 +168,7 @@ class NotificationServiceTest {
     assertTrue(captor.getValue().getMessage().contains("The Invincibles"));
   }
 
-  /**
-   * Tests the request accepted notification message.
-   */
+  /** Tests the request accepted notification message. */
   @Test
   void notifyRequestAcceptedMessageStartsWithAccepted() {
     when(notificationRepository.save(any())).thenReturn(notification);
@@ -209,9 +180,7 @@ class NotificationServiceTest {
     assertTrue(captor.getValue().getMessage().startsWith("Accepté :"));
   }
 
-  /**
-   * Tests the request denied notification message with a reason.
-   */
+  /** Tests the request denied notification message with a reason. */
   @Test
   void notifyRequestDeniedWithReasonShowsReason() {
     when(notificationRepository.save(any())).thenReturn(notification);
@@ -225,9 +194,7 @@ class NotificationServiceTest {
     assertTrue(msg.contains("Insufficient level"));
   }
 
-  /**
-   * Tests the request denied notification message without a specific reason.
-   */
+  /** Tests the request denied notification message without a specific reason. */
   @Test
   void notifyRequestDeniedNoReasonShowsDefaultMsg() {
     when(notificationRepository.save(any())).thenReturn(notification);
@@ -239,9 +206,7 @@ class NotificationServiceTest {
     assertTrue(captor.getValue().getMessage().contains("Aucune raison fournie"));
   }
 
-  /**
-   * Tests the match selection notification message.
-   */
+  /** Tests the match selection notification message. */
   @Test
   void notifySelectedForMatchMessageContainsContext() {
     when(notificationRepository.save(any())).thenReturn(notification);

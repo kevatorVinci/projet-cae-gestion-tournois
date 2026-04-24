@@ -10,50 +10,36 @@ import java.time.LocalDate;
 import java.util.Collection;
 import org.springframework.stereotype.Service;
 
-/**
- * Service managing all business logic related to team registrations for tournaments.
- */
+/** Service managing all business logic related to team registrations for tournaments. */
 @Service
 public class RegisterTeamTournamentService {
 
-  /**
-   * Minimum number of members required for a team to register.
-   */
+  /** Minimum number of members required for a team to register. */
   private static final int MIN_MEMBERS_FOR_REGISTRATION = 4;
 
-  /**
-   * Repository for managing registration persistence.
-   */
+  /** Repository for managing registration persistence. */
   private final InscriptionEquipeTournoiRepository inscriptionRepository;
 
-  /**
-   * Repository for managing tournament persistence.
-   */
+  /** Repository for managing tournament persistence. */
   private final TournamentRepository tournamentRepository;
 
-  /**
-   * Repository for managing team persistence.
-   */
+  /** Repository for managing team persistence. */
   private final TeamRepository teamRepository;
 
-  /**
-   * Service for tournament-related business logic.
-   */
+  /** Service for tournament-related business logic. */
   private final TournamentService tournamentService;
 
-  /**
-   * Service for sending notifications to users.
-   */
+  /** Service for sending notifications to users. */
   private final NotificationService notificationService;
 
   /**
    * Constructor with dependency injection.
    *
    * @param inscriptionRepository the registration repository.
-   * @param tournamentRepository  the tournament repository.
-   * @param teamRepository        the team repository.
-   * @param tournamentService     the tournament service.
-   * @param notificationService   the notification service.
+   * @param tournamentRepository the tournament repository.
+   * @param teamRepository the team repository.
+   * @param tournamentService the tournament service.
+   * @param notificationService the notification service.
    */
   public RegisterTeamTournamentService(
       InscriptionEquipeTournoiRepository inscriptionRepository,
@@ -100,7 +86,7 @@ public class RegisterTeamTournamentService {
    * Registers a team for a tournament if all criteria are met.
    *
    * @param tournamentId the unique identifier of the tournament.
-   * @param teamId       the unique identifier of the team.
+   * @param teamId the unique identifier of the team.
    * @return the saved registration entity, or null if registration is not possible.
    * @throws IllegalArgumentException if the team has fewer than the required members.
    */
@@ -131,19 +117,19 @@ public class RegisterTeamTournamentService {
 
     RegistrationTeamTournament saved = inscriptionRepository.save(registration);
 
-    String message = "Team: registration confirmed for your team '"
-        + team.getName()
-        + "' in the tournament '"
-        + tournament.getName()
-        + "'.";
+    String message =
+        "Team: registration confirmed for your team '"
+            + team.getName()
+            + "' in the tournament '"
+            + tournament.getName()
+            + "'.";
 
     for (var member : team.getMembers()) {
       notificationService.createNotification(member, message);
     }
 
     if (tournament.getMaxParticipants() != null) {
-      Collection<?> registered =
-          (Collection<?>) inscriptionRepository.findByTournament(tournament);
+      Collection<?> registered = (Collection<?>) inscriptionRepository.findByTournament(tournament);
       if (registered.size() >= tournament.getMaxParticipants()) {
         tournamentService.closeRegistrations(tournament.getId());
       }
@@ -159,9 +145,8 @@ public class RegisterTeamTournamentService {
    * @return true if unregistration succeeded, false otherwise.
    */
   public boolean unregister(Long registrationId) {
-    RegistrationTeamTournament registration = inscriptionRepository
-        .findById(registrationId)
-        .orElse(null);
+    RegistrationTeamTournament registration =
+        inscriptionRepository.findById(registrationId).orElse(null);
 
     if (registration == null) {
       return false;
@@ -181,7 +166,7 @@ public class RegisterTeamTournamentService {
    * Cancels a registration for a specific tournament and team.
    *
    * @param tournamentId the unique identifier of the tournament.
-   * @param teamId       the unique identifier of the team.
+   * @param teamId the unique identifier of the team.
    * @return true if unregistration succeeded, false otherwise.
    */
   public boolean unregisterByTournamentAndTeam(Long tournamentId, Long teamId) {
@@ -192,9 +177,8 @@ public class RegisterTeamTournamentService {
       return false;
     }
 
-    RegistrationTeamTournament registration = inscriptionRepository
-        .findByTournamentAndTeam(tournament, team)
-        .orElse(null);
+    RegistrationTeamTournament registration =
+        inscriptionRepository.findByTournamentAndTeam(tournament, team).orElse(null);
 
     if (registration == null) {
       return false;
@@ -228,6 +212,6 @@ public class RegisterTeamTournamentService {
   private boolean isUnregisterAllowed(Tournament tournament) {
     return "OUVERT".equals(tournament.getStatus())
         && (tournament.getRegistrationDeadline() == null
-        || !tournament.getRegistrationDeadline().isBefore(LocalDate.now()));
+            || !tournament.getRegistrationDeadline().isBefore(LocalDate.now()));
   }
 }

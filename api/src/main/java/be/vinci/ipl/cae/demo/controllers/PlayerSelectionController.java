@@ -24,9 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Controller for managing player selections in matches.
- */
+/** Controller for managing player selections in matches. */
 @RestController
 @RequestMapping("/selections")
 public class PlayerSelectionController {
@@ -39,8 +37,8 @@ public class PlayerSelectionController {
    * Constructor.
    *
    * @param playerSelectionService the service
-   * @param playerSelectionMapper  the selection mapper
-   * @param matchMapper            the match mapper
+   * @param playerSelectionMapper the selection mapper
+   * @param matchMapper the match mapper
    */
   public PlayerSelectionController(
       PlayerSelectionService playerSelectionService,
@@ -68,13 +66,13 @@ public class PlayerSelectionController {
       @RequestBody PlayerSelectionUpdateDto payload,
       @AuthenticationPrincipal User currentUser) {
     try {
-      List<PlayerSelectionDto> dtos = playerSelectionMapper.toDtos(
-          playerSelectionService.updateTeamSelections(
-          matchId,
-          teamId,
-          payload == null ? List.of() : payload.getMemberIds(),
-          currentUser
-      ));
+      List<PlayerSelectionDto> dtos =
+          playerSelectionMapper.toDtos(
+              playerSelectionService.updateTeamSelections(
+                  matchId,
+                  teamId,
+                  payload == null ? List.of() : payload.getMemberIds(),
+                  currentUser));
 
       return ResponseEntity.status(HttpStatus.CREATED).body(dtos);
     } catch (IllegalArgumentException e) {
@@ -94,14 +92,11 @@ public class PlayerSelectionController {
    */
   @GetMapping("/match/{matchId}")
   public ResponseEntity<Iterable<PlayerSelectionDto>> getAllForMatch(
-      @PathVariable Long matchId,
-      @AuthenticationPrincipal User currentUser) {
+      @PathVariable Long matchId, @AuthenticationPrincipal User currentUser) {
     try {
-      List<PlayerSelectionDto> dtos = playerSelectionMapper.toDtos(
-          playerSelectionService.getSelectionsForMatch(
-          matchId,
-          currentUser
-      ));
+      List<PlayerSelectionDto> dtos =
+          playerSelectionMapper.toDtos(
+              playerSelectionService.getSelectionsForMatch(matchId, currentUser));
       return ResponseEntity.ok(dtos);
     } catch (IllegalArgumentException e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
@@ -127,8 +122,8 @@ public class PlayerSelectionController {
   /**
    * Returns one team's lineup state (eligible members + selected state) for one match.
    *
-   * @param matchId     the match id.
-   * @param teamId      the team id.
+   * @param matchId the match id.
+   * @param teamId the team id.
    * @param currentUser the current authenticated user.
    * @return lineup context for selection screen.
    */
@@ -139,11 +134,8 @@ public class PlayerSelectionController {
       @PathVariable Long teamId,
       @AuthenticationPrincipal User currentUser) {
     try {
-      PlayerSelectionTeamViewDto response = playerSelectionService.getTeamSelectionView(
-          matchId,
-          teamId,
-          currentUser
-      );
+      PlayerSelectionTeamViewDto response =
+          playerSelectionService.getTeamSelectionView(matchId, teamId, currentUser);
       return ResponseEntity.ok(response);
     } catch (IllegalArgumentException e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);

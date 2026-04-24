@@ -4,9 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/**
- * Tests for the TournoiController.
- */
+/** Tests for the TournoiController. */
 @ExtendWith(MockitoExtension.class)
 class TournoiControllerTest {
 

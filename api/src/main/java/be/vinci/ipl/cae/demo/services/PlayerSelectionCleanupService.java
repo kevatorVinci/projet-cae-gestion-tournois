@@ -6,9 +6,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service responsible for cleanup actions on match player selections.
- */
+/** Service responsible for cleanup actions on match player selections. */
 @Service
 public class PlayerSelectionCleanupService {
 
@@ -34,14 +32,12 @@ public class PlayerSelectionCleanupService {
       return;
     }
     playerSelectionRepository.deleteByMemberIdAndMatchScheduledDateTimeAfter(
-        memberId,
-        LocalDateTime.now()
-    );
+        memberId, LocalDateTime.now());
   }
 
   /**
-   * Removes a member from upcoming match selections that fall inside a
-   * date-based unavailability period.
+   * Removes a member from upcoming match selections that fall inside a date-based unavailability
+   * period.
    *
    * @param memberId member identifier.
    * @param startDate start date of unavailability (inclusive).
@@ -49,10 +45,7 @@ public class PlayerSelectionCleanupService {
    */
   @Transactional
   public void removeMemberFromSelectionsForUnavailabilityPeriod(
-      Long memberId,
-      LocalDate startDate,
-      LocalDate endDate
-  ) {
+      Long memberId, LocalDate startDate, LocalDate endDate) {
     if (memberId == null || startDate == null || endDate == null) {
       return;
     }
@@ -74,9 +67,6 @@ public class PlayerSelectionCleanupService {
 
     playerSelectionRepository
         .deleteByMemberIdAndMatchScheduledDateTimeGreaterThanEqualAndMatchScheduledDateTimeLessThan(
-            memberId,
-            fromDateTime,
-            toDateTimeExclusive
-        );
+            memberId, fromDateTime, toDateTimeExclusive);
   }
 }

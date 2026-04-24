@@ -1,5 +1,12 @@
 package be.vinci.ipl.cae.demo.services;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
@@ -14,36 +21,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-/**
- * Unit tests for TeamService using Mockito.
- */
+/** Unit tests for TeamService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
 
-  @Mock
-  private TeamRepository teamRepository;
+  @Mock private TeamRepository teamRepository;
 
-  @Mock
-  private UserRepository userRepository;
+  @Mock private UserRepository userRepository;
 
-  @Mock
-  private DemandService demandService;
+  @Mock private DemandService demandService;
 
-  @Mock
-  private NotificationService notificationService;
+  @Mock private NotificationService notificationService;
 
-  @Mock
-  private PlayerSelectionCleanupService playerSelectionCleanupService;
+  @Mock private PlayerSelectionCleanupService playerSelectionCleanupService;
 
-  @InjectMocks
-  private TeamService teamService;
+  @InjectMocks private TeamService teamService;
 
   private User currentUser;
   private User member;

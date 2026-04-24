@@ -9,43 +9,31 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service managing the business logic related to teams.
- */
+/** Service managing the business logic related to teams. */
 @Service
 public class TeamService {
 
-  /**
-   * Repository for team data access.
-   */
+  /** Repository for team data access. */
   private final TeamRepository teamRepository;
 
-  /**
-   * Repository for user data access.
-   */
+  /** Repository for user data access. */
   private final UserRepository userRepository;
 
-  /**
-   * Service for handling join requests.
-   */
+  /** Service for handling join requests. */
   private final DemandService demandService;
 
-  /**
-   * Service for sending notifications.
-   */
+  /** Service for sending notifications. */
   private final NotificationService notificationService;
 
-  /**
-   * Service for cleaning up future lineup selections.
-   */
+  /** Service for cleaning up future lineup selections. */
   private final PlayerSelectionCleanupService playerSelectionCleanupService;
 
   /**
    * Constructor for TeamService.
    *
-   * @param teamRepository      the team repository.
-   * @param userRepository      the user repository.
-   * @param demandService       the demand service.
+   * @param teamRepository the team repository.
+   * @param userRepository the user repository.
+   * @param demandService the demand service.
    * @param notificationService the notification service.
    */
   public TeamService(
@@ -92,8 +80,8 @@ public class TeamService {
   /**
    * Allows a user to create a team and become primary responsible.
    *
-   * @param user         the user creating the team.
-   * @param teamName     the unique name of the team.
+   * @param user the user creating the team.
+   * @param teamName the unique name of the team.
    * @param profileImage the profile image URL or path.
    * @return the saved team, or null if name already exists.
    * @throws IllegalStateException if the user already belongs to a team.
@@ -126,7 +114,7 @@ public class TeamService {
   /**
    * Allows a user to request joining an existing team.
    *
-   * @param user   the user who wants to join.
+   * @param user the user who wants to join.
    * @param teamId the unique identifier of the team.
    */
   public void requestJoinTeam(User user, Long teamId) {
@@ -146,11 +134,12 @@ public class TeamService {
     }
 
     Long userId = user.getId();
-    boolean isPrimary = team.getPrimaryResponsible() != null
-        && team.getPrimaryResponsible().getId().equals(userId);
+    boolean isPrimary =
+        team.getPrimaryResponsible() != null && team.getPrimaryResponsible().getId().equals(userId);
 
-    boolean isSecondary = team.getSecondaryResponsible() != null
-        && team.getSecondaryResponsible().getId().equals(userId);
+    boolean isSecondary =
+        team.getSecondaryResponsible() != null
+            && team.getSecondaryResponsible().getId().equals(userId);
 
     return isPrimary || isSecondary;
   }
@@ -175,7 +164,7 @@ public class TeamService {
    * Promotes a team member to a responsible role.
    *
    * @param currentUser the authenticated user performing the action.
-   * @param memberId    the ID of the member to promote.
+   * @param memberId the ID of the member to promote.
    * @throws IllegalStateException if the user is already responsible or team is full.
    */
   @Transactional
@@ -204,7 +193,7 @@ public class TeamService {
    * Removes a responsible role from a team member.
    *
    * @param currentUser the authenticated user performing the action.
-   * @param memberId    the ID of the member to demote.
+   * @param memberId the ID of the member to demote.
    * @throws IllegalStateException if the member is not responsible or is the last one.
    */
   @Transactional
@@ -231,7 +220,7 @@ public class TeamService {
    * Excludes a member from the current user's team.
    *
    * @param currentUser the authenticated user performing the action.
-   * @param memberId    the ID of the member to exclude.
+   * @param memberId the ID of the member to exclude.
    * @throws IllegalStateException if the member is not in the team or the user is not allowed.
    */
   @Transactional
@@ -263,16 +252,17 @@ public class TeamService {
   /**
    * Allows a user to leave their team.
    *
-   * @param user             the user who wants to leave.
+   * @param user the user who wants to leave.
    * @param newResponsibleId the ID of the new responsible if needed.
    * @throws IllegalStateException if rules are violated during the process.
    */
   @Transactional
   public void leaveTeam(User user, Long newResponsibleId) {
-    User persistedUser = userRepository.findById(user.getId())
-        .orElseThrow(() -> new IllegalStateException(
-            "The member does not belong to any team."
-        ));
+    User persistedUser =
+        userRepository
+            .findById(user.getId())
+            .orElseThrow(
+                () -> new IllegalStateException("The member does not belong to any team."));
 
     Team team = resolveCurrentUserTeam(persistedUser);
 
@@ -331,16 +321,18 @@ public class TeamService {
   /**
    * Updates the profile image of a team.
    *
-   * @param teamId      the unique identifier of the team.
-   * @param imageName   the name or URL of the new image.
+   * @param teamId the unique identifier of the team.
+   * @param imageName the name or URL of the new image.
    * @param currentUser the authenticated user.
    * @throws IllegalArgumentException if team is not found.
-   * @throws IllegalStateException    if user is not responsible.
+   * @throws IllegalStateException if user is not responsible.
    */
   @Transactional
   public void updateTeamImage(Long teamId, String imageName, User currentUser) {
-    Team team = teamRepository.findById(teamId)
-        .orElseThrow(() -> new IllegalArgumentException("Team not found."));
+    Team team =
+        teamRepository
+            .findById(teamId)
+            .orElseThrow(() -> new IllegalArgumentException("Team not found."));
 
     User persistedUser = loadPersistedUser(currentUser);
 
@@ -379,8 +371,8 @@ public class TeamService {
     }
 
     for (Team team : teamRepository.findAll()) {
-      boolean isMember = team.getMembers().stream()
-          .anyMatch(member -> member.getId().equals(currentUser.getId()));
+      boolean isMember =
+          team.getMembers().stream().anyMatch(member -> member.getId().equals(currentUser.getId()));
 
       if (isMember || isUserResponsible(team, currentUser)) {
         return team;
@@ -393,7 +385,7 @@ public class TeamService {
   /**
    * Verifies that the current user is a responsible for the given team.
    *
-   * @param team        the team to verify.
+   * @param team the team to verify.
    * @param currentUser the user to check.
    * @throws IllegalStateException if the user is not a responsible.
    */
@@ -406,7 +398,7 @@ public class TeamService {
   /**
    * Finds a specific member within a team.
    *
-   * @param team     the team to search.
+   * @param team the team to search.
    * @param memberId the ID of the member to find.
    * @return the found member.
    * @throws IllegalStateException if member is not in the team.
@@ -415,9 +407,7 @@ public class TeamService {
     return team.getMembers().stream()
         .filter(member -> member.getId().equals(memberId))
         .findFirst()
-        .orElseThrow(() -> new IllegalStateException(
-            "The member does not belong to the team."
-        ));
+        .orElseThrow(() -> new IllegalStateException("The member does not belong to the team."));
   }
 
   /**
@@ -432,10 +422,9 @@ public class TeamService {
       throw new IllegalStateException("Ce membre n'appartient à aucune équipe.");
     }
 
-    return userRepository.findById(currentUser.getId())
-        .orElseThrow(() -> new IllegalStateException(
-            "The member does not belong to any team."
-        ));
+    return userRepository
+        .findById(currentUser.getId())
+        .orElseThrow(() -> new IllegalStateException("The member does not belong to any team."));
   }
 
   /**
@@ -458,7 +447,7 @@ public class TeamService {
   /**
    * Internal helper to nullify a responsible slot based on user ID.
    *
-   * @param team   the team to modify.
+   * @param team the team to modify.
    * @param userId the ID of the user to remove.
    */
   private void removeResponsibleRole(Team team, Long userId) {

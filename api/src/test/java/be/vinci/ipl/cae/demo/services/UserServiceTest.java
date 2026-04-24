@@ -1,5 +1,9 @@
 package be.vinci.ipl.cae.demo.services;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
@@ -7,6 +11,8 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,16 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.time.LocalDate;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-/**
- * Unit tests for UserService using Mockito.
- */
+/** Unit tests for UserService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -32,28 +29,19 @@ class UserServiceTest {
   private static final String PASSWORD = "password123";
   private static final String HASHED = "$2a$10$hashedpassword";
 
-  @Mock
-  private UserRepository userRepository;
-  @Mock
-  private TeamRepository teamRepository;
-  @Mock
-  private BCryptPasswordEncoder passwordEncoder;
-  @Mock
-  private NotificationService notificationService;
-  @Mock
-  private PlayerSelectionCleanupService playerSelectionCleanupService;
-  @Mock
-  private UserMapper userMapper;
+  @Mock private UserRepository userRepository;
+  @Mock private TeamRepository teamRepository;
+  @Mock private BCryptPasswordEncoder passwordEncoder;
+  @Mock private NotificationService notificationService;
+  @Mock private PlayerSelectionCleanupService playerSelectionCleanupService;
+  @Mock private UserMapper userMapper;
 
-  @InjectMocks
-  private UserService userService;
+  @InjectMocks private UserService userService;
 
   private User user;
   private Credentials credentials;
 
-  /**
-   * Set up mock data before each test.
-   */
+  /** Set up mock data before each test. */
   @BeforeEach
   void setUp() {
     user = new User();
@@ -91,9 +79,7 @@ class UserServiceTest {
             });
   }
 
-  /**
-   * Tests registration of a new member.
-   */
+  /** Tests registration of a new member. */
   @Test
   void registerNewMemberOk() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(null);
@@ -108,9 +94,7 @@ class UserServiceTest {
     verify(userRepository).save(any());
   }
 
-  /**
-   * Verifies that the plain password is not stored directly.
-   */
+  /** Verifies that the plain password is not stored directly. */
   @Test
   void registerHashedPasswordNotStoredInPlain() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(null);
@@ -127,9 +111,7 @@ class UserServiceTest {
     verify(passwordEncoder).encode(PASSWORD);
   }
 
-  /**
-   * Tests login with correct credentials.
-   */
+  /** Tests login with correct credentials. */
   @Test
   void loginCorrectCredentialsReturnsToken() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
@@ -142,9 +124,7 @@ class UserServiceTest {
     assertNotNull(result.getToken());
   }
 
-  /**
-   * Tests that the JWT token contains public user data.
-   */
+  /** Tests that the JWT token contains public user data. */
   @Test
   void createJwtTokenIncludesPublicData() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
@@ -155,9 +135,7 @@ class UserServiceTest {
     assertEquals("tactician", result.getSpecialty());
   }
 
-  /**
-   * Tests JWT token verification.
-   */
+  /** Tests JWT token verification. */
   @Test
   void verifyJwtTokenValidTokenReturnsEmail() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
@@ -166,9 +144,7 @@ class UserServiceTest {
     assertEquals(EMAIL, userService.verifyJwtToken(token));
   }
 
-  /**
-   * Tests updating the user profile.
-   */
+  /** Tests updating the user profile. */
   @Test
   void updateProfileSpecialtyAndImageOk() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
@@ -180,9 +156,7 @@ class UserServiceTest {
     verify(userRepository).save(user);
   }
 
-  /**
-   * Tests banning a simple user.
-   */
+  /** Tests banning a simple user. */
   @Test
   void banUserExistingUserActivatesSoftBan() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
@@ -195,9 +169,7 @@ class UserServiceTest {
     verify(userRepository).save(user);
   }
 
-  /**
-   * Tests banning a primary responsible and promoting the secondary.
-   */
+  /** Tests banning a primary responsible and promoting the secondary. */
   @Test
   void banUserPrimaryResponsibleWithSecondaryPromotesSecondary() {
     User secondary = new User();
@@ -227,9 +199,7 @@ class UserServiceTest {
     verify(userRepository).save(user);
   }
 
-  /**
-   * Tests banning a responsible without a secondary, picking the oldest member.
-   */
+  /** Tests banning a responsible without a secondary, picking the oldest member. */
   @Test
   void banUserPrimaryResponsibleWithoutSecondaryPicksOldestMember() {
     User oldest = new User();
@@ -261,9 +231,7 @@ class UserServiceTest {
     verify(teamRepository).save(team);
   }
 
-  /**
-   * Tests that a banned member is removed from their team.
-   */
+  /** Tests that a banned member is removed from their team. */
   @Test
   void banUserMemberIsRemovedFromTeam() {
     User principal = new User();

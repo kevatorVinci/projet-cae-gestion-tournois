@@ -18,65 +18,45 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service for user authentication and profile management.
- */
+/** Service for user authentication and profile management. */
 @Service
 public class UserService {
 
-  /**
-   * Secret key used to sign JWT tokens.
-   */
+  /** Secret key used to sign JWT tokens. */
   private static final String JWT_SECRET = "ilovemypizza!";
 
-  /**
-   * Token lifetime set to 24 hours in milliseconds.
-   */
+  /** Token lifetime set to 24 hours in milliseconds. */
   private static final long LIFETIME_JWT = 24 * 60 * 60 * 1000;
 
-  /**
-   * Algorithm used for JWT signing.
-   */
+  /** Algorithm used for JWT signing. */
   private static final Algorithm ALGORITHM = Algorithm.HMAC256(JWT_SECRET);
 
-  /**
-   * Encoder for password security.
-   */
+  /** Encoder for password security. */
   private final BCryptPasswordEncoder passwordEncoder;
 
-  /**
-   * Repository for user data.
-   */
+  /** Repository for user data. */
   private final UserRepository userRepository;
 
-  /**
-   * Repository for team data.
-   */
+  /** Repository for team data. */
   private final TeamRepository teamRepository;
 
-  /**
-   * Service for user notifications.
-   */
+  /** Service for user notifications. */
   private final NotificationService notificationService;
 
-  /**
-   * Service for cleaning up future lineup selections.
-   */
+  /** Service for cleaning up future lineup selections. */
   private final PlayerSelectionCleanupService playerSelectionCleanupService;
 
-  /**
-   * Mapper for user DTO conversions.
-   */
+  /** Mapper for user DTO conversions. */
   private final UserMapper userMapper;
 
   /**
    * Builds the user service.
    *
-   * @param passwordEncoder     encoder used for password hashing.
-   * @param userRepository      user repository.
-   * @param teamRepository      team repository.
+   * @param passwordEncoder encoder used for password hashing.
+   * @param userRepository user repository.
+   * @param teamRepository team repository.
    * @param notificationService notification service.
-   * @param userMapper          user mapper.
+   * @param userMapper user mapper.
    */
   public UserService(
       BCryptPasswordEncoder passwordEncoder,
@@ -102,16 +82,16 @@ public class UserService {
   public AuthenticatedUser createJwtToken(String email) {
     User user = userRepository.findByEmail(email);
 
-    var tokenBuilder = JWT.create()
-        .withIssuer("auth0")
-        .withClaim("email", email)
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
+    var tokenBuilder =
+        JWT.create()
+            .withIssuer("auth0")
+            .withClaim("email", email)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + LIFETIME_JWT));
 
     if (user != null && user.getId() != null) {
-      tokenBuilder = tokenBuilder
-          .withSubject(String.valueOf(user.getId()))
-          .withClaim("id", user.getId());
+      tokenBuilder =
+          tokenBuilder.withSubject(String.valueOf(user.getId())).withClaim("id", user.getId());
     }
 
     String token = tokenBuilder.sign(ALGORITHM);
@@ -140,7 +120,7 @@ public class UserService {
   /**
    * Verifies user credentials when a player attempts to log in.
    *
-   * @param email    user email.
+   * @param email user email.
    * @param password plain-text password.
    * @return authenticated user payload or null.
    */
@@ -209,19 +189,15 @@ public class UserService {
   /**
    * Updates a player's profile display data.
    *
-   * @param email        player email.
-   * @param specialty    updated specialty.
+   * @param email player email.
+   * @param specialty updated specialty.
    * @param profileImage updated image.
-   * @param oldPassword  current password.
-   * @param newPassword  new password.
+   * @param oldPassword current password.
+   * @param newPassword new password.
    * @return updated authenticated user payload or null.
    */
   public AuthenticatedUser updateProfile(
-      String email,
-      String specialty,
-      String profileImage,
-      String oldPassword,
-      String newPassword) {
+      String email, String specialty, String profileImage, String oldPassword, String newPassword) {
 
     User user = userRepository.findByEmail(email);
 
@@ -284,7 +260,7 @@ public class UserService {
   /**
    * Soft-bans a user from the platform with an optional reason.
    *
-   * @param email  email of the user to ban.
+   * @param email email of the user to ban.
    * @param reason optional reason for the ban.
    */
   @Transactional
@@ -317,9 +293,10 @@ public class UserService {
       return;
     }
 
-    Team team = teamRepository
-        .findByPrimaryResponsibleIdOrSecondaryResponsibleId(user.getId(), user.getId())
-        .orElse(user.getTeam());
+    Team team =
+        teamRepository
+            .findByPrimaryResponsibleIdOrSecondaryResponsibleId(user.getId(), user.getId())
+            .orElse(user.getTeam());
 
     if (team == null) {
       return;
@@ -327,10 +304,12 @@ public class UserService {
 
     Long bannedUserId = user.getId();
 
-    boolean wasPrimary = team.getPrimaryResponsible() != null
-        && team.getPrimaryResponsible().getId().equals(bannedUserId);
-    boolean wasSecondary = team.getSecondaryResponsible() != null
-        && team.getSecondaryResponsible().getId().equals(bannedUserId);
+    boolean wasPrimary =
+        team.getPrimaryResponsible() != null
+            && team.getPrimaryResponsible().getId().equals(bannedUserId);
+    boolean wasSecondary =
+        team.getSecondaryResponsible() != null
+            && team.getSecondaryResponsible().getId().equals(bannedUserId);
 
     if (wasPrimary) {
       team.setPrimaryResponsible(null);
@@ -348,27 +327,22 @@ public class UserService {
     }
 
     if (team.getPrimaryResponsible() == null) {
-      User replacement = team.getMembers().stream()
-          .filter(member -> member.getId() != null)
-          .filter(member -> !member.getId().equals(bannedUserId))
-          .filter(member -> !member.isBanned())
-          .min(
-              Comparator.comparing(
-                  User::getCreationDate,
-                  Comparator.nullsLast(Comparator.naturalOrder())
-              ).thenComparing(
-                  User::getId,
-                  Comparator.nullsLast(Long::compareTo)
-              )
-          )
-          .orElse(null);
+      User replacement =
+          team.getMembers().stream()
+              .filter(member -> member.getId() != null)
+              .filter(member -> !member.getId().equals(bannedUserId))
+              .filter(member -> !member.isBanned())
+              .min(
+                  Comparator.comparing(
+                          User::getCreationDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                      .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
+              .orElse(null);
 
       team.setPrimaryResponsible(replacement);
     }
 
-    team.getMembers().removeIf(
-        member -> member.getId() != null && member.getId().equals(bannedUserId)
-    );
+    team.getMembers()
+        .removeIf(member -> member.getId() != null && member.getId().equals(bannedUserId));
     user.setTeam(null);
 
     teamRepository.save(team);
