@@ -10,6 +10,7 @@ import be.vinci.ipl.cae.demo.repositories.MatchResultRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -187,7 +188,8 @@ public class MatchResultService {
   }
 
   private void ensureMatchCanBeEncoded(Match match) {
-    String currentStatus = match.getStatus() == null ? "" : match.getStatus().toUpperCase();
+    String currentStatus =
+        match.getStatus() == null ? "" : match.getStatus().toUpperCase(Locale.ROOT);
     if ("FINISHED".equals(currentStatus) || "COMPLETED".equals(currentStatus)) {
       throw new IllegalStateException(
           "Ce match est déjà finalisé par forfait ou résultat validé. Encodage impossible.");
@@ -231,7 +233,9 @@ public class MatchResultService {
       matchService.advanceWinnerToNextRound(match, res);
 
       System.out.println(
-          "🤖 ROBOT : Le match #" + match.getId() + " a été validé automatiquement après 2 heures !");
+          "🤖 ROBOT : Le match #"
+              + match.getId()
+              + " a été validé automatiquement après 2 heures !");
     }
   }
 
