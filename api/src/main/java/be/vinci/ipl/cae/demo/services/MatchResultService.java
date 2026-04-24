@@ -81,7 +81,9 @@ public class MatchResultService {
     matchRepository.save(match);
     MatchResult savedResult = matchResultRepository.save(result);
 
-    if (!dto.isForfeitTeam1() && !dto.isForfeitTeam2()) {
+    if (dto.isForfeitTeam1() || dto.isForfeitTeam2()) {
+      matchService.advanceWinnerToNextRound(match, savedResult);
+    } else {
       String messageNotif =
           "Le score du match #" + match.getId() + " a été encodé. Allez le valider !";
       envoyerNotifAuxCapitaines(match.getTeam1(), messageNotif);

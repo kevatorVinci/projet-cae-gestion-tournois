@@ -312,7 +312,15 @@ public class MatchService {
       }
     }
 
-    if (matchIndex == -1 || nextRoundMatches.isEmpty()) {
+    if (matchIndex == -1) {
+      return;
+    }
+
+    if (nextRoundMatches.isEmpty()) {
+      Tournament tournament = match.getTournament();
+      tournament.setWinner(winner);
+      tournament.setStatus("TERMINE");
+      tournamentRepository.save(tournament);
       return;
     }
 
