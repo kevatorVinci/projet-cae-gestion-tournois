@@ -23,8 +23,6 @@ import {
   MatchPlayerSelection,
 } from '../../../services/tournaments';
 
-// Extended type to handle optional fields returned by the backend
-// without resorting to ESLint-breaking 'any' casts.
 type ExtendedMatch = Match & {
   team1Id?: number;
   team2Id?: number;
@@ -138,10 +136,6 @@ const AdminMatchManagement = ({
     return matchDate <= now && status !== 'FINISHED' && status !== 'COMPLETED';
   };
 
-  const isMatchFinished = (status: string) => {
-    return status === 'FINISHED' || status === 'COMPLETED';
-  };
-
   const handleSubmitResult = async () => {
     if (!selectedMatch) return;
     setSubmitError(null);
@@ -175,23 +169,33 @@ const AdminMatchManagement = ({
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Code ${response.status} - ${errorText}`);
+        let cleanMessage = errorText;
+
+        // On essaie de lire le message depuis le JSON renvoyé par le Java
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.message) {
+            cleanMessage = errorJson.message; // On ne garde que la phrase utile !
+          }
+        } catch (e) {
+          // Si ce n'est pas du JSON, on laisse le texte de base
+        }
+
+        throw new Error(cleanMessage);
       }
 
       handleCloseModal();
       onRefresh();
     } catch (error: unknown) {
+      // On affiche uniquement le message, sans le texte "Impossible de contacter le serveur"
       const errorMessage =
         error instanceof Error ? error.message : 'Erreur inconnue';
-      setSubmitError(`Impossible de contacter le serveur : ${errorMessage}`);
+      setSubmitError(errorMessage);
     }
   };
 
   const inProgressMatches = matches.filter((match) =>
     isMatchInProgress(match.scheduledDateTime, match.status),
-  );
-  const finishedMatches = matches.filter((match) =>
-    isMatchFinished(match.status),
   );
 
   const t1IdForFilter = selectedMatch?.team1Id || selectedMatch?.team1?.id;
@@ -336,93 +340,6 @@ const AdminMatchManagement = ({
           </Typography>
         )}
       </Grid>
-
-      {/* Finished Matches Section */}
-      {finishedMatches.length > 0 && (
-        <Box sx={{ mt: 6 }}>
-          <Typography
-            variant="h5"
-            color="gray"
-            mb={3}
-            borderBottom="2px solid #2a3b55"
-            pb={1}
-            textAlign="left"
-          >
-            Matchs terminés ({finishedMatches.length})
-          </Typography>
-          <Grid container spacing={2}>
-            {finishedMatches.map((rawMatch) => {
-              const match = rawMatch as ExtendedMatch;
-              const tournamentName =
-                tournaments.find((t) => t.id === match.tournamentId)?.nom ||
-                `Tournoi #${match.tournamentId}`;
-
-              return (
-                <Grid item xs={12} key={match.id}>
-                  <Card
-                    sx={{
-                      backgroundColor: '#111827',
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      borderLeft: '4px solid #10b981',
-                      opacity: 0.7,
-                    }}
-                  >
-                    <CardContent
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Box textAlign="left">
-                        <Typography variant="h6" color="white" fontWeight={700}>
-                          {match.team1Name || 'TBD'} VS{' '}
-                          {match.team2Name || 'TBD'}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="#60a5fa"
-                          fontWeight="bold"
-                          sx={{ mb: 0.5 }}
-                        >
-                          🏆 {tournamentName}
-                        </Typography>
-                        <Typography variant="body2" color="gray">
-                          {new Date(match.scheduledDateTime).toLocaleString(
-                            'fr-BE',
-                          )}
-                        </Typography>
-
-                        <Chip
-                          label="Résultat Validé"
-                          size="small"
-                          sx={{
-                            mt: 1,
-                            backgroundColor: 'rgba(16,185,129,0.2)',
-                            color: '#10b981',
-                          }}
-                        />
-                      </Box>
-
-                      <Button
-                        variant="contained"
-                        disabled
-                        sx={{
-                          backgroundColor: '#064e3b !important',
-                          color: '#34d399 !important',
-                          cursor: 'not-allowed',
-                        }}
-                      >
-                        Match terminé
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Box>
-      )}
 
       {/* Encoding Modal */}
       <Dialog
