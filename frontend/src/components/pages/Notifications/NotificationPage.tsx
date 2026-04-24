@@ -168,6 +168,11 @@ const translateMessage = (message: string): string => {
     return `Nouveau tournoi : '${newTournament[1]}' vient d'être publié. Inscrivez-vous maintenant !`;
   }
 
+  // ✨ NOUVEAU : Ajout de la phrase pour le délai de contestation !
+  if (message.includes('a été encodé. Allez le valider !')) {
+    return `${message} Vous avez 2 heures pour le contester.`;
+  }
+
   return message;
 };
 
@@ -415,7 +420,6 @@ export default function Notifications() {
     return parsed.toLocaleString('fr-BE');
   };
 
-  // ✨ VOICI LA FONCTION QUI MANQUAIT ! On l'a remise à sa place.
   const isJoinRequestNotification = (message: string) => {
     const normalized = message.toLowerCase();
     return startsWithAny(normalized, [
