@@ -85,14 +85,6 @@ const formatDateTime = (value?: string): string => {
   });
 };
 
-const statusChipColor = (etat?: string): string => {
-  const normalized = (etat || '').toUpperCase();
-  if (normalized === 'EN_COURS') return '#f59e0b';
-  if (normalized === 'OUVERT') return '#3b82f6';
-  if (normalized === 'CLOTURE') return '#0ea5e9';
-  return '#64748b';
-};
-
 // Style partagé pour les inputs de date et texte (dark theme)
 const darkInputSx = {
   '& .MuiOutlinedInput-root': {
@@ -558,15 +550,7 @@ export function TournoisResponsable() {
                           {formatDateTime(row.match.scheduledDateTime)}
                         </Typography>
                         <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                          <Chip
-                            size="small"
-                            label={row.tournamentEtat}
-                            sx={{
-                              bgcolor: statusChipColor(row.tournamentEtat),
-                              color: 'white',
-                              fontWeight: 700,
-                            }}
-                          />
+                          {/* ❌ L'ÉTAT DU TOURNOI ÉTAIT ICI ET A ÉTÉ RETIRÉ ! */}
                           <Chip
                             size="small"
                             label={
