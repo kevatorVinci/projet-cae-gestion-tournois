@@ -120,9 +120,8 @@ public class MatchService {
   }
 
   /**
-   * Generates the first-round schedule for a tournament using standard bracket seeding.
-   * Teams are placed using the classic single-elimination bracket order so that top seeds
-   * receive byes when the number of teams is not a power of two.
+   * Generates the schedule for a tournament using standard bracket seeding.
+   * Bye matches are immediately resolved and their winners advance to the next round.
    *
    * @param tournamentId the unique identifier of the tournament.
    * @param admin        the admin user responsible for the schedule.
@@ -159,6 +158,7 @@ public class MatchService {
 
     // Round 1 : équipes réelles, 2h d'écart entre chaque match
     LocalDateTime matchDate = tournament.getStartDate().atTime(10, 0);
+    List<Match> round1Matches = new ArrayList<>();
     for (int i = 0; i < bracketSize; i += 2) {
       int seed1 = seeds[i];
       int seed2 = seeds[i + 1];
@@ -182,48 +182,103 @@ public class MatchService {
       match.setRound(1);
       match.setScheduledDateTime(matchDate);
       match.setAdminResponsible(admin);
-      matches.add(matchRepository.save(match));
+      Match saved = matchRepository.save(match);
+      round1Matches.add(saved);
+      matches.add(saved);
       matchDate = matchDate.plusHours(2);
     }
 
-    // Rounds 2+ : auto-avance uniquement si les DEUX prédécesseurs sont des byes
-    List<Match> prevRoundMatches = new ArrayList<>(matches);
+    // Rounds 2+ : toujours créer des matchs vides (les équipes seront remplies à l'avancement)
     for (int round = 2; round <= totalRounds; round++) {
       int matchesInRound = bracketSize / (1 << round);
       LocalDateTime roundStart = tournament.getStartDate().atTime(10, 0)
           .plusDays((long) (round - 1) * 2);
-      List<Match> thisRoundMatches = new ArrayList<>();
       for (int i = 0; i < matchesInRound; i++) {
-        Team team1 = null;
-        Team team2 = null;
-        int idx1 = i * 2;
-        int idx2 = i * 2 + 1;
-        if (idx1 < prevRoundMatches.size() && idx2 < prevRoundMatches.size()) {
-          Match prev1 = prevRoundMatches.get(idx1);
-          Match prev2 = prevRoundMatches.get(idx2);
-          boolean prev1IsBye = prev1.getTeam1() != null && prev1.getTeam2() == null;
-          boolean prev2IsBye = prev2.getTeam1() != null && prev2.getTeam2() == null;
-          if (prev1IsBye && prev2IsBye) {
-            team1 = prev1.getTeam1();
-            team2 = prev2.getTeam1();
-          }
-        }
         Match match = new Match();
         match.setTournament(tournament);
-        match.setTeam1(team1);
-        match.setTeam2(team2);
+        match.setTeam1(null);
+        match.setTeam2(null);
         match.setRound(round);
         match.setScheduledDateTime(roundStart);
         match.setAdminResponsible(admin);
-        Match saved = matchRepository.save(match);
-        matches.add(saved);
-        thisRoundMatches.add(saved);
+        matches.add(matchRepository.save(match));
         roundStart = roundStart.plusHours(2);
       }
-      prevRoundMatches = thisRoundMatches;
+    }
+
+    // Résoudre immédiatement les matchs byes et avancer l'équipe qualifiée d'office
+    for (Match byeMatch : round1Matches) {
+      if (byeMatch.getTeam1() != null && byeMatch.getTeam2() == null) {
+        finishByeMatch(byeMatch, admin);
+      }
     }
 
     return matches;
+  }
+
+  /**
+   * Terminates a bye match immediately and advances the team to the next round.
+   */
+  private void finishByeMatch(Match byeMatch, User admin) {
+    byeMatch.setStatus("FINISHED");
+    matchRepository.save(byeMatch);
+
+    MatchResult byeResult = new MatchResult();
+    byeResult.setMatch(byeMatch);
+    byeResult.setScoreTeam1(1);
+    byeResult.setScoreTeam2(0);
+    byeResult.setEncodingDate(LocalDateTime.now());
+    byeResult.setAdminEncoder(admin);
+    byeResult.setValidationStatusTeam1("VALIDATED");
+    byeResult.setValidationStatusTeam2("VALIDATED");
+    matchResultRepository.save(byeResult);
+
+    advanceWinnerToNextRound(byeMatch, byeMatch.getTeam1());
+  }
+
+  /**
+   * Places the winner of a finished match into the correct slot of the next-round match.
+   *
+   * @param finishedMatch the match that just finished.
+   * @param winner        the winning team.
+   */
+  public void advanceWinnerToNextRound(Match finishedMatch, Team winner) {
+    if (winner == null) {
+      return;
+    }
+
+    Long tournamentId = finishedMatch.getTournament().getId();
+    int currentRound = finishedMatch.getRound();
+
+    List<Match> currentRoundMatches = matchRepository
+        .findByTournamentIdAndRoundOrderByScheduledDateTimeAscIdAsc(tournamentId, currentRound);
+
+    int matchIndex = -1;
+    for (int i = 0; i < currentRoundMatches.size(); i++) {
+      if (currentRoundMatches.get(i).getId().equals(finishedMatch.getId())) {
+        matchIndex = i;
+        break;
+      }
+    }
+    if (matchIndex == -1) {
+      return;
+    }
+
+    List<Match> nextRoundMatches = matchRepository
+        .findByTournamentIdAndRoundOrderByScheduledDateTimeAscIdAsc(tournamentId, currentRound + 1);
+
+    int nextMatchIndex = matchIndex / 2;
+    if (nextMatchIndex >= nextRoundMatches.size()) {
+      return;
+    }
+
+    Match nextMatch = nextRoundMatches.get(nextMatchIndex);
+    if (matchIndex % 2 == 0) {
+      nextMatch.setTeam1(winner);
+    } else {
+      nextMatch.setTeam2(winner);
+    }
+    matchRepository.save(nextMatch);
   }
 
   /**
@@ -316,6 +371,7 @@ public class MatchService {
     matchRepository.save(match);
 
     Team forfeitingTeam = isTeam1 ? match.getTeam1() : match.getTeam2();
+    Team winningTeam = isTeam1 ? match.getTeam2() : match.getTeam1();
     String tournamentName = match.getTournament() != null
         ? match.getTournament().getName()
         : "Tournoi";
@@ -325,6 +381,8 @@ public class MatchService {
       notificationService.notifyForfeit(members, tournamentName);
     }
 
-    return matchResultRepository.save(result);
+    MatchResult savedResult = matchResultRepository.save(result);
+    advanceWinnerToNextRound(match, winningTeam);
+    return savedResult;
   }
 }

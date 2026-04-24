@@ -84,6 +84,10 @@ public class PlayerSelectionService {
 
     Set<Long> uniqueMemberIds = sanitizeMemberIds(memberIds);
 
+    if (uniqueMemberIds.isEmpty()) {
+      throw new IllegalStateException("Au moins 1 joueur doit être sélectionné pour un match.");
+    }
+
     if (uniqueMemberIds.size() > MAX_PLAYERS_PER_MATCH) {
       throw new IllegalStateException("La sélection est limitée à 4 joueurs.");
     }

@@ -146,10 +146,8 @@ const buildBracketTree = (matches: TeamMatch[]): BracketSlot[][] => {
       }
 
       if (realMatch) {
-        const realMatchIsBye =
-          (realMatch.team1Id != null || !!realMatch.team1Name) &&
-          realMatch.team2Id == null &&
-          realMatch.team2Name == null;
+        // Rounds 2+ are never byes — a null team means "awaiting previous winner"
+        const realMatchIsBye = false;
         nextRound.push({
           id: realMatch.id,
           round: roundNumber,

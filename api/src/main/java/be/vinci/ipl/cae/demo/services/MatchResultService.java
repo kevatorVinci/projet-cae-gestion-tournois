@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.models.dtos.match.MatchResultCreateDto;
 import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.MatchResult;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.MatchRepository;
 import be.vinci.ipl.cae.demo.repositories.MatchResultRepository;
@@ -25,6 +26,7 @@ public class MatchResultService {
   private final MatchRepository matchRepository;
   private final UserRepository userRepository;
   private final NotificationRepository notificationRepository;
+  private final MatchService matchService;
 
   /**
    * Constructor.
@@ -33,16 +35,19 @@ public class MatchResultService {
    * @param matchRepository       the match repository
    * @param userRepository        the user repository
    * @param notificationRepository the notification repository
+   * @param matchService          the match service for bracket advancement
    */
   public MatchResultService(
         MatchResultRepository matchResultRepository,
         MatchRepository matchRepository,
         UserRepository userRepository,
-        NotificationRepository notificationRepository) {
+        NotificationRepository notificationRepository,
+        MatchService matchService) {
     this.matchResultRepository = matchResultRepository;
     this.matchRepository = matchRepository;
     this.userRepository = userRepository;
     this.notificationRepository = notificationRepository;
+    this.matchService = matchService;
   }
 
   /**
@@ -132,7 +137,15 @@ public class MatchResultService {
     }
 
     matchRepository.save(match);
-    return matchResultRepository.save(result);
+    MatchResult saved = matchResultRepository.save(result);
+
+    if ("FINISHED".equals(match.getStatus())) {
+      Team winner = result.getScoreTeam1() > result.getScoreTeam2()
+          ? match.getTeam1() : match.getTeam2();
+      matchService.advanceWinnerToNextRound(match, winner);
+    }
+
+    return saved;
   }
 
   /**
@@ -161,12 +174,16 @@ public class MatchResultService {
       res.setValidationStatusTeam1("VALIDATED");
       res.setValidationStatusTeam2("VALIDATED");
 
-      res.getMatch().setStatus("FINISHED");
-      matchRepository.save(res.getMatch());
-
+      Match match = res.getMatch();
+      match.setStatus("FINISHED");
+      matchRepository.save(match);
       matchResultRepository.save(res);
 
-      System.out.println("🤖 ROBOT : Le match #" + res.getMatch().getId()
+      Team winner = res.getScoreTeam1() > res.getScoreTeam2()
+          ? match.getTeam1() : match.getTeam2();
+      matchService.advanceWinnerToNextRound(match, winner);
+
+      System.out.println("🤖 ROBOT : Le match #" + match.getId()
           + " a été validé automatiquement après 2 heures !");
     }
   }
