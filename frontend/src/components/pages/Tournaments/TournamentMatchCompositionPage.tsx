@@ -390,10 +390,11 @@ const TournamentMatchCompositionPage = () => {
     if (!match || !responsibleTeamId || isAdmin || isAutoQualifiedMatch)
       return false;
     if (match.status === 'FINISHED') return false;
+    if (matchStarted) return false;
     return (
       match.team1Id === responsibleTeamId || match.team2Id === responsibleTeamId
     );
-  }, [match, responsibleTeamId, isAdmin, isAutoQualifiedMatch]);
+  }, [match, responsibleTeamId, isAdmin, isAutoQualifiedMatch, matchStarted]);
 
   const selectionLocked = useMemo(() => {
     if (!match) return false;

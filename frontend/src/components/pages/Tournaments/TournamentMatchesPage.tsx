@@ -105,7 +105,7 @@ const TournamentMatchesPage = () => {
       }
     };
     load();
-  }, [id, queryMatchId]);
+  }, [id, queryMatchId, location.key]);
 
   if (loading) {
     return (
