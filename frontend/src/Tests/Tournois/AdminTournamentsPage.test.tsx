@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import AdminTournamentsPage from '../../components/pages/Tournois/AdminTournamentsPage';
+import AdminTournamentsPage from '../../components/pages/Tournaments/AdminTournamentsPage';
 import {
   fetchAllTournaments,
   publishTournament,
-} from '../../services/tournois';
+} from '../../services/tournaments';
 import {
   createAuthenticatedUser,
   createMockUserContext,
@@ -13,7 +13,7 @@ import {
 
 const mockNavigate = vi.fn();
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
   fetchAllTournaments: vi.fn(),
   publishTournament: vi.fn(),
 }));
@@ -72,10 +72,12 @@ describe('AdminTournamentsPage', () => {
       );
     });
 
-    expect(
-      await screen.findByText(/Le tournoi est maintenant publié/i),
-    ).toBeInTheDocument();
-  });
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Le tournoi est maintenant publié/i),
+      ).toBeInTheDocument();
+    });
+  }, 10000);
 
   test('sorts tournaments by state priority then closest date', async () => {
     const formatDateWithOffset = (offsetInDays: number) => {

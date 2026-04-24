@@ -1,8 +1,8 @@
 package be.vinci.ipl.cae.demo.repositories;
 
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
-import be.vinci.ipl.cae.demo.models.entities.InscriptionEquipeTournoi;
-import be.vinci.ipl.cae.demo.models.entities.Tournoi;
+import be.vinci.ipl.cae.demo.models.entities.RegistrationTeamTournament;
+import be.vinci.ipl.cae.demo.models.entities.Team;
+import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
@@ -11,32 +11,30 @@ import org.springframework.stereotype.Repository;
 /** Repository for tournament-team registration persistence operations. */
 @Repository
 public interface InscriptionEquipeTournoiRepository
-    extends CrudRepository<InscriptionEquipeTournoi, Long> {
+    extends CrudRepository<RegistrationTeamTournament, Long> {
 
   /**
    * Finds all registrations for a given tournament.
    *
-   * @param tournoi tournament entity
-   * @return list of tournament registrations
+   * @param tournament the tournament entity.
+   * @return the list of tournament registrations.
    */
-  List<InscriptionEquipeTournoi> findByTournoi(Tournoi tournoi);
+  List<RegistrationTeamTournament> findByTournament(Tournament tournament);
 
   /**
    * Finds all registrations for a given team.
    *
-   * @param equipe team entity
-   * @return list of team registrations
+   * @param team the team entity.
+   * @return the list of team registrations.
    */
-  List<InscriptionEquipeTournoi> findByEquipe(Equipe equipe);
-
-
+  List<RegistrationTeamTournament> findByTeam(Team team);
 
   /**
    * Finds an existing registration for a team in a tournament.
    *
-   * @param tournoi tournament entity
-   * @param equipe team entity
-   * @return optional registration if found
+   * @param tournament the tournament entity.
+   * @param team the team entity.
+   * @return an optional registration if found.
    */
-  Optional<InscriptionEquipeTournoi> findByTournoiAndEquipe(Tournoi tournoi, Equipe equipe);
+  Optional<RegistrationTeamTournament> findByTournamentAndTeam(Tournament tournament, Team team);
 }

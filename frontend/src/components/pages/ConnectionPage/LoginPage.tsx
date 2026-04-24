@@ -1,6 +1,6 @@
 import { useState, SyntheticEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '../../BoutonRetour';
+import BackButton from '../../BackButton';
 import {
   Box,
   Button,

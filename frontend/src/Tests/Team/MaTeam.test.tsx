@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { beforeEach, describe, test, expect, vi } from 'vitest';
-import { MyTeam } from '../../components/pages/TeamPage/MaTeam';
+import { MyTeam } from '../../components/pages/TeamPage/MyTeam';
 import {
   getUserTeam,
   isCurrentUserResponsable,
@@ -15,7 +15,10 @@ import {
   depromoteResponsable,
   leaveEquipe,
 } from '../../services/teams';
-import { fetchTeamRegistrationsPublic } from '../../services/tournois';
+import {
+  fetchTeamRegistrationsPublic,
+  fetchTeamMatchTimeline,
+} from '../../services/tournaments';
 import { getAuthenticatedUser, decodeJwtPayload } from '../../utils/session';
 
 vi.mock('react-router-dom', async () => {
@@ -34,8 +37,9 @@ vi.mock('../../services/teams', () => ({
   depromoteResponsable: vi.fn(),
 }));
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
   fetchTeamRegistrationsPublic: vi.fn(),
+  fetchTeamMatchTimeline: vi.fn(),
 }));
 
 vi.mock('../../utils/session', () => ({
@@ -68,6 +72,7 @@ describe('MyTeam', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(fetchTeamRegistrationsPublic).mockResolvedValue([]);
+    vi.mocked(fetchTeamMatchTimeline).mockResolvedValue([]);
   });
 
   test("affiche le nom de l'équipe et les membres", async () => {
@@ -140,7 +145,7 @@ describe('MyTeam', () => {
       admin: false,
     });
     vi.mocked(decodeJwtPayload).mockReturnValue({ id: 1 });
-    vi.mocked(getUserTeam).mockRejectedValueOnce(new Error('Session expiree'));
+    vi.mocked(getUserTeam).mockRejectedValueOnce(new Error('Session expirée'));
 
     render(
       <MemoryRouter>
@@ -229,9 +234,11 @@ describe('MyTeam', () => {
       </MemoryRouter>,
     );
 
-    const promoteBtn = await screen.findByRole('button', {
-      name: /nommer responsable/i,
-    });
+    const joueur2Name = await screen.findByText(/joueur2/i);
+    const joueur2Card = joueur2Name.closest('.MuiPaper-root');
+    expect(joueur2Card).not.toBeNull();
+
+    const promoteBtn = within(joueur2Card as HTMLElement).getByRole('checkbox');
     fireEvent.click(promoteBtn);
 
     const confirmBtn = await screen.findByRole('button', {
@@ -269,9 +276,13 @@ describe('MyTeam', () => {
       </MemoryRouter>,
     );
 
-    const depromoteBtn = await screen.findByRole('button', {
-      name: /retirer le rôle de responsable/i,
-    });
+    const joueur2Name = await screen.findByText(/joueur2/i);
+    const joueur2Card = joueur2Name.closest('.MuiPaper-root');
+    expect(joueur2Card).not.toBeNull();
+
+    const depromoteBtn = within(joueur2Card as HTMLElement).getByRole(
+      'checkbox',
+    );
 
     fireEvent.click(depromoteBtn);
 
@@ -390,11 +401,14 @@ describe('MyTeam', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText('Tournoi Futur')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Historique des tournois'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Tournoi Futur')).toBeInTheDocument();
     expect(screen.getByText('Tournoi Live')).toBeInTheDocument();
     expect(screen.getByText('Tournoi Terminé')).toBeInTheDocument();
-    expect(screen.getByText(/tournois à venir/i)).toBeInTheDocument();
-    expect(screen.getByText(/tournois en cours/i)).toBeInTheDocument();
-    expect(screen.getByText(/tournois passés/i)).toBeInTheDocument();
+    expect(await screen.findAllByText(/^à venir$/i)).not.toHaveLength(0);
+    expect(screen.getAllByText(/^en cours$/i)).not.toHaveLength(0);
+    expect(screen.getAllByText(/^passés$/i)).not.toHaveLength(0);
   });
 });

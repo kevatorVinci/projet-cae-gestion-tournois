@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
-import { CreateEquipe } from '../../components/pages/TeamPage/CreeEquipe';
+import { CreateEquipe } from '../../components/pages/TeamPage/CreateTeam';
 import { UserContext } from '../../contexts/UserContext';
 import { createEquipe } from '../../services/teams';
 import { Equipe } from '../../types';
@@ -44,7 +44,7 @@ describe('CreateEquipe', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/créer une team/i)).toBeDefined();
+    expect(screen.getByText(/créer une équipe/i)).toBeDefined();
     expect(screen.getByLabelText(/nom de l'équipe/i)).toBeDefined();
     expect(
       screen.getByRole('button', { name: /fonder l'équipe/i }),

@@ -1,10 +1,11 @@
 package be.vinci.ipl.cae.demo.models.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
-/** Public payload representing one notification item. */
+/** Data Transfer Object for notifications. */
 public record NotificationDto(
-    Long idNotification,
+    @JsonProperty("idNotification") Long idNotification,
     String message,
-    LocalDateTime dateEnvoi,
-    Boolean estLue) {}
+    @JsonProperty("dateEnvoi") LocalDateTime dateEnvoi,
+    @JsonProperty("estLue") Boolean estLue) {}

@@ -1,16 +1,23 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
-import TournoiDetailPage from '../../components/pages/Tournois/TournoiDetailPage';
+import TournoiDetailPage from '../../components/pages/Tournaments/TournoiDetailPage';
 import {
   getEquipeById,
   getUserTeam,
   isCurrentUserResponsable,
 } from '../../services/teams';
 import {
+  cancelTournamentWithReason,
+  fetchTournamentMatches,
+  fetchTournamentMatchesAdmin,
   fetchTeamRegistrations,
+  finishTournament,
+  generateTournamentSchedule,
+  publishTournamentSchedule,
   registerTeamToTournament,
-} from '../../services/tournois';
+  startTournament,
+} from '../../services/tournaments';
 
 vi.mock('../../utils/session', () => ({
   getAuthenticatedUser: vi.fn(() => undefined),
@@ -22,9 +29,16 @@ vi.mock('../../services/teams', () => ({
   isCurrentUserResponsable: vi.fn(),
 }));
 
-vi.mock('../../services/tournois', () => ({
+vi.mock('../../services/tournaments', () => ({
+  cancelTournamentWithReason: vi.fn(),
+  fetchTournamentMatches: vi.fn(),
+  fetchTournamentMatchesAdmin: vi.fn(),
   fetchTeamRegistrations: vi.fn(),
+  finishTournament: vi.fn(),
+  generateTournamentSchedule: vi.fn(),
+  publishTournamentSchedule: vi.fn(),
   registerTeamToTournament: vi.fn(),
+  startTournament: vi.fn(),
 }));
 
 const tournoiMock = {
@@ -45,8 +59,15 @@ describe('TournoiDetailPage', () => {
     global.fetch = vi.fn() as Mock;
     vi.mocked(isCurrentUserResponsable).mockResolvedValue(false);
     vi.mocked(getUserTeam).mockResolvedValue(null as never);
+    vi.mocked(cancelTournamentWithReason).mockResolvedValue(undefined as never);
+    vi.mocked(fetchTournamentMatches).mockResolvedValue([]);
+    vi.mocked(fetchTournamentMatchesAdmin).mockResolvedValue([]);
     vi.mocked(fetchTeamRegistrations).mockResolvedValue([]);
+    vi.mocked(finishTournament).mockResolvedValue(undefined as never);
+    vi.mocked(generateTournamentSchedule).mockResolvedValue([]);
+    vi.mocked(publishTournamentSchedule).mockResolvedValue(undefined as never);
     vi.mocked(registerTeamToTournament).mockResolvedValue(undefined as never);
+    vi.mocked(startTournament).mockResolvedValue(undefined as never);
   });
 
   const renderPage = () =>

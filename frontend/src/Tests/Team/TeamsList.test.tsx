@@ -177,9 +177,7 @@ describe('TeamsList', () => {
       </MemoryRouter>,
     );
 
-    expect(
-      await screen.findByText(/aucune équipe trouvée/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/aucune team trouvée/i)).toBeInTheDocument();
   });
 
   test('affiche "Votre équipe" pour l\'équipe de l\'utilisateur connecté', async () => {
@@ -339,7 +337,9 @@ describe('TeamsList', () => {
 
     fireEvent.click(playerCard as HTMLElement);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/players/Joueur1');
+    expect(mockNavigate).toHaveBeenCalledWith('/players/Joueur1', {
+      state: { from: 'players' },
+    });
   });
 
   test('affiche les équipes triées par ordre alphabétique', async () => {

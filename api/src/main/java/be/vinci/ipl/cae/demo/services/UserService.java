@@ -3,15 +3,17 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,41 +22,62 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserService {
 
+  /** Secret key used to sign JWT tokens. */
   private static final String JWT_SECRET = "ilovemypizza!";
+
+  /** Token lifetime set to 24 hours in milliseconds. */
   private static final long LIFETIME_JWT = 24 * 60 * 60 * 1000;
+
+  /** Algorithm used for JWT signing. */
   private static final Algorithm ALGORITHM = Algorithm.HMAC256(JWT_SECRET);
 
+  /** Encoder for password security. */
   private final BCryptPasswordEncoder passwordEncoder;
+
+  /** Repository for user data. */
   private final UserRepository userRepository;
-  private final EquipeRepository equipeRepository;
+
+  /** Repository for team data. */
+  private final TeamRepository teamRepository;
+
+  /** Service for user notifications. */
   private final NotificationService notificationService;
+
+  /** Service for cleaning up future lineup selections. */
+  private final PlayerSelectionCleanupService playerSelectionCleanupService;
+
+  /** Mapper for user DTO conversions. */
   private final UserMapper userMapper;
 
   /**
    * Builds the user service.
    *
-   * @param passwordEncoder encoder used for password hashing
-   * @param userRepository user repository
-   * @param notificationService notification service
+   * @param passwordEncoder encoder used for password hashing.
+   * @param userRepository user repository.
+   * @param teamRepository team repository.
+   * @param notificationService notification service.
+   * @param userMapper user mapper.
    */
   public UserService(
       BCryptPasswordEncoder passwordEncoder,
       UserRepository userRepository,
-      EquipeRepository equipeRepository,
+      TeamRepository teamRepository,
       NotificationService notificationService,
+      PlayerSelectionCleanupService playerSelectionCleanupService,
       UserMapper userMapper) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
-    this.equipeRepository = equipeRepository;
+    this.teamRepository = teamRepository;
     this.notificationService = notificationService;
+    this.playerSelectionCleanupService = playerSelectionCleanupService;
     this.userMapper = userMapper;
   }
 
   /**
-   * Fabrique un ticket (Token) pour permettre au joueur de naviguer sur le site.
+   * Builds a JWT token that allows the player to navigate the application.
    *
-   * @param email l'email de l'utilisateur
-   * @return les infos de l'utilisateur authentifié
+   * @param email user email.
+   * @return authenticated user payload.
    */
   public AuthenticatedUser createJwtToken(String email) {
     User user = userRepository.findByEmail(email);
@@ -73,6 +96,7 @@ public class UserService {
 
     String token = tokenBuilder.sign(ALGORITHM);
     AuthenticatedUser authenticatedUser = userMapper.toAuthenticatedUser(user, token);
+
     if (authenticatedUser.getEmail() == null) {
       authenticatedUser.setEmail(email);
     }
@@ -82,8 +106,8 @@ public class UserService {
   /**
    * Verify and decode a JWT token.
    *
-   * @param token JWT token
-   * @return user email when token is valid, otherwise null
+   * @param token JWT token.
+   * @return user email when token is valid, otherwise null.
    */
   public String verifyJwtToken(String token) {
     try {
@@ -94,11 +118,11 @@ public class UserService {
   }
 
   /**
-   * Vérifie si le mot de passe est bon quand un joueur essaie de se connecter.
+   * Verifies user credentials when a player attempts to log in.
    *
-   * @param email l'email
-   * @param password le mot de passe
-   * @return l'utilisateur authentifié ou null
+   * @param email user email.
+   * @param password plain-text password.
+   * @return authenticated user payload or null.
    */
   public AuthenticatedUser login(String email, String password) {
     User user = userRepository.findByEmail(email);
@@ -115,10 +139,10 @@ public class UserService {
   }
 
   /**
-   * Inscrit un tout nouveau joueur dans la base de données.
+   * Registers a brand-new player in the database.
    *
-   * @param credentials les identifiants fournis
-   * @return l'utilisateur authentifié ou null
+   * @param credentials credentials provided by the user.
+   * @return authenticated user payload or null.
    */
   public AuthenticatedUser register(Credentials credentials) {
     User user = userRepository.findByEmail(credentials.getEmail());
@@ -132,18 +156,18 @@ public class UserService {
   /**
    * Read a user by email.
    *
-   * @param email user email
-   * @return user or null
+   * @param email user email.
+   * @return user or null.
    */
   public User readOneFromEmail(String email) {
     return userRepository.findByEmail(email);
   }
 
   /**
-   * Crée une entité utilisateur à partir des credentials.
+   * Creates a user entity from credentials.
    *
-   * @param credentials les données
-   * @return l'utilisateur sauvegardé
+   * @param credentials input data.
+   * @return saved user.
    */
   public User createOne(Credentials credentials) {
     User user = new User();
@@ -154,28 +178,27 @@ public class UserService {
     user.setSpecialty(credentials.getSpecialty());
     user.setProfileImageUrl(credentials.getProfileImage());
 
-    // On note la date/heure actuelle comme date d'inscription
     user.setCreationDate(java.time.LocalDate.now());
-    user.setDateCreationProfil(LocalDateTime.now());
+    user.setProfileCreationDate(LocalDateTime.now());
 
-    // On sauvegarde définitivement !
     User savedUser = userRepository.save(user);
-    notificationService.notifierCreationCompte(savedUser);
+    notificationService.notifyAccountCreation(savedUser);
     return savedUser;
   }
 
   /**
-   * Met à jour les informations visuelles du joueur.
+   * Updates a player's profile display data.
    *
-   * @param email email du joueur
-   * @param specialty nouvelle spécialité
-   * @param profileImage nouvelle image
-   * @param oldPassword ancien mdp
-   * @param newPassword nouveau mdp
-   * @return l'utilisateur mis à jour ou null
+   * @param email player email.
+   * @param specialty updated specialty.
+   * @param profileImage updated image.
+   * @param oldPassword current password.
+   * @param newPassword new password.
+   * @return updated authenticated user payload or null.
    */
   public AuthenticatedUser updateProfile(
       String email, String specialty, String profileImage, String oldPassword, String newPassword) {
+
     User user = userRepository.findByEmail(email);
 
     if (user != null) {
@@ -200,18 +223,18 @@ public class UserService {
   }
 
   /**
-   * Récupère tous les utilisateurs pour le panneau admin.
+   * Gets all users for the admin panel.
    *
-   * @return la liste des utilisateurs
+   * @return list of users.
    */
-  public java.util.List<AuthenticatedUser> getAllUsersForAdmin() {
+  public List<AuthenticatedUser> getAllUsersForAdmin() {
     return userMapper.toAuthenticatedUsers(userRepository.findAll());
   }
 
   /**
-   * Ajoute un administrateur.
+   * Grants admin role to a user.
    *
-   * @param email email de l'utilisateur
+   * @param email user email.
    */
   public void addAdmin(String email) {
     User user = userRepository.findByEmail(email);
@@ -222,9 +245,9 @@ public class UserService {
   }
 
   /**
-   * Retire un administrateur.
+   * Revokes admin role from a user.
    *
-   * @param email email de l'utilisateur
+   * @param email user email.
    */
   public void removeAdmin(String email) {
     User user = userRepository.findByEmail(email);
@@ -237,8 +260,8 @@ public class UserService {
   /**
    * Soft-bans a user from the platform with an optional reason.
    *
-   * @param email email of the user to ban
-   * @param reason optional reason for the ban
+   * @param email email of the user to ban.
+   * @param reason optional reason for the ban.
    */
   @Transactional
   public void banUser(String email, String reason) {
@@ -256,50 +279,56 @@ public class UserService {
     if (reason != null && !reason.isBlank()) {
       user.setBanReason(reason.trim());
     }
+    playerSelectionCleanupService.removeMemberFromFutureSelections(user.getId());
     userRepository.save(user);
   }
 
+  /**
+   * Logic to handle team reassignments when a user is banned.
+   *
+   * @param user the user being banned.
+   */
   private void detachUserFromTeamAndReassignResponsibilitiesIfNeeded(User user) {
     if (user.getId() == null) {
       return;
     }
 
-    Equipe equipe =
-        equipeRepository
-            .findByResponsablePrincipalIdOrResponsableSecondaireId(user.getId(), user.getId())
-            .orElse(user.getEquipe());
+    Team team =
+        teamRepository
+            .findByPrimaryResponsibleIdOrSecondaryResponsibleId(user.getId(), user.getId())
+            .orElse(user.getTeam());
 
-    if (equipe == null) {
+    if (team == null) {
       return;
     }
 
     Long bannedUserId = user.getId();
 
-    boolean wasPrincipal =
-        equipe.getResponsablePrincipal() != null
-            && equipe.getResponsablePrincipal().getId().equals(bannedUserId);
-    boolean wasSecondaire =
-        equipe.getResponsableSecondaire() != null
-            && equipe.getResponsableSecondaire().getId().equals(bannedUserId);
+    boolean wasPrimary =
+        team.getPrimaryResponsible() != null
+            && team.getPrimaryResponsible().getId().equals(bannedUserId);
+    boolean wasSecondary =
+        team.getSecondaryResponsible() != null
+            && team.getSecondaryResponsible().getId().equals(bannedUserId);
 
-    if (wasPrincipal) {
-      equipe.setResponsablePrincipal(null);
+    if (wasPrimary) {
+      team.setPrimaryResponsible(null);
     }
-    if (wasSecondaire) {
-      equipe.setResponsableSecondaire(null);
+    if (wasSecondary) {
+      team.setSecondaryResponsible(null);
     }
 
-    if (equipe.getResponsablePrincipal() == null && equipe.getResponsableSecondaire() != null) {
-      User secondary = equipe.getResponsableSecondaire();
+    if (team.getPrimaryResponsible() == null && team.getSecondaryResponsible() != null) {
+      User secondary = team.getSecondaryResponsible();
       if (!secondary.isBanned() && !secondary.getId().equals(bannedUserId)) {
-        equipe.setResponsablePrincipal(secondary);
+        team.setPrimaryResponsible(secondary);
       }
-      equipe.setResponsableSecondaire(null);
+      team.setSecondaryResponsible(null);
     }
 
-    if (equipe.getResponsablePrincipal() == null) {
+    if (team.getPrimaryResponsible() == null) {
       User replacement =
-          equipe.getMembres().stream()
+          team.getMembers().stream()
               .filter(member -> member.getId() != null)
               .filter(member -> !member.getId().equals(bannedUserId))
               .filter(member -> !member.isBanned())
@@ -309,24 +338,23 @@ public class UserService {
                       .thenComparing(User::getId, Comparator.nullsLast(Long::compareTo)))
               .orElse(null);
 
-      equipe.setResponsablePrincipal(replacement);
+      team.setPrimaryResponsible(replacement);
     }
 
-    equipe
-        .getMembres()
+    team.getMembers()
         .removeIf(member -> member.getId() != null && member.getId().equals(bannedUserId));
-    user.setEquipe(null);
+    user.setTeam(null);
 
-    equipeRepository.save(equipe);
+    teamRepository.save(team);
   }
 
   /**
-   * Récupère un utilisateur par son ID.
+   * Gets a user by ID.
    *
-   * @param id identifiant unique
-   * @return un Optional contenant l'utilisateur
+   * @param id unique identifier.
+   * @return optional containing the user.
    */
-  public java.util.Optional<User> getById(Long id) {
+  public Optional<User> getById(Long id) {
     return userRepository.findById(id);
   }
 }

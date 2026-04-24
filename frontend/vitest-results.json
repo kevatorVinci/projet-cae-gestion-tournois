@@ -1,0 +1,1185 @@
+{
+  "numTotalTestSuites": 38,
+  "numPassedTestSuites": 36,
+  "numFailedTestSuites": 2,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 109,
+  "numPassedTests": 108,
+  "numFailedTests": 1,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1775727300339,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service getCurrentUserIdFromToken returns the payload id",
+          "status": "passed",
+          "title": "getCurrentUserIdFromToken returns the payload id",
+          "duration": 5.404199999999946,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service getCurrentUserIdFromToken throws when session is missing",
+          "status": "passed",
+          "title": "getCurrentUserIdFromToken throws when session is missing",
+          "duration": 2.2466999999996915,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service getCurrentUserIdFromToken throws when payload has no id",
+          "status": "passed",
+          "title": "getCurrentUserIdFromToken throws when payload has no id",
+          "duration": 0.9579000000003361,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service getNotificationsByUser returns notifications",
+          "status": "passed",
+          "title": "getNotificationsByUser returns notifications",
+          "duration": 19.276800000000094,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service getUnreadNotificationsByUser returns unread notifications",
+          "status": "passed",
+          "title": "getUnreadNotificationsByUser returns unread notifications",
+          "duration": 1.9611999999997352,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service getNotificationsByUser surfaces backend error message",
+          "status": "passed",
+          "title": "getNotificationsByUser surfaces backend error message",
+          "duration": 3.858299999999872,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service markNotificationAsRead sends an authenticated PATCH",
+          "status": "passed",
+          "title": "markNotificationAsRead sends an authenticated PATCH",
+          "duration": 2.6195999999999913,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["notifications service"],
+          "fullName": "notifications service markAllNotificationsAsRead uses fallback message when body is not JSON",
+          "status": "passed",
+          "title": "markAllNotificationsAsRead uses fallback message when body is not JSON",
+          "duration": 2.7649999999998727,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728670587,
+      "endTime": 1775728670626.765,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/services/notifications.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["App"],
+          "fullName": "App affiche la barre de navigation et le contenu de base",
+          "status": "passed",
+          "title": "affiche la barre de navigation et le contenu de base",
+          "duration": 491.5072999999975,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728666733,
+      "endTime": 1775728667224.5073,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/App.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils decodeJwtPayload retourne undefined pour un token invalide",
+          "status": "passed",
+          "title": "decodeJwtPayload retourne undefined pour un token invalide",
+          "duration": 5.099799999999959,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils decodeJwtPayload retourne le contenu du payload",
+          "status": "passed",
+          "title": "decodeJwtPayload retourne le contenu du payload",
+          "duration": 3.963999999999942,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils isTokenExpired retourne true si le payload n a pas de exp",
+          "status": "passed",
+          "title": "isTokenExpired retourne true si le payload n a pas de exp",
+          "duration": 0.9438000000000102,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils isTokenExpired retourne false pour un token non expire",
+          "status": "passed",
+          "title": "isTokenExpired retourne false pour un token non expire",
+          "duration": 2.6299000000003616,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils isTokenExpired retourne true pour un token expire",
+          "status": "passed",
+          "title": "isTokenExpired retourne true pour un token expire",
+          "duration": 1.3278000000000247,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils storeAuthenticatedUser stocke en localStorage si rememberMe=true",
+          "status": "passed",
+          "title": "storeAuthenticatedUser stocke en localStorage si rememberMe=true",
+          "duration": 1.8414999999999964,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils storeAuthenticatedUser stocke en sessionStorage si rememberMe=false",
+          "status": "passed",
+          "title": "storeAuthenticatedUser stocke en sessionStorage si rememberMe=false",
+          "duration": 1.6037000000001171,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils getAuthenticatedUser retourne undefined quand rien n est stocke",
+          "status": "passed",
+          "title": "getAuthenticatedUser retourne undefined quand rien n est stocke",
+          "duration": 1.1012000000000626,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils getAuthenticatedUser retourne l utilisateur quand le token est valide",
+          "status": "passed",
+          "title": "getAuthenticatedUser retourne l utilisateur quand le token est valide",
+          "duration": 2.1350000000002183,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils getAuthenticatedUser nettoie et retourne undefined quand le token est expire",
+          "status": "passed",
+          "title": "getAuthenticatedUser nettoie et retourne undefined quand le token est expire",
+          "duration": 1.4979000000002998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["session utils"],
+          "fullName": "session utils clearAuthenticatedUser supprime localStorage et sessionStorage",
+          "status": "passed",
+          "title": "clearAuthenticatedUser supprime localStorage et sessionStorage",
+          "duration": 1.0205999999998312,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728673936,
+      "endTime": 1775728673960.0205,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/utils/session.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["AdminPage"],
+          "fullName": "AdminPage charge les joueurs et filtre la liste de recherche",
+          "status": "passed",
+          "title": "charge les joueurs et filtre la liste de recherche",
+          "duration": 2304.4960999999967,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["AdminPage"],
+          "fullName": "AdminPage met a jour le role admin puis recharge les utilisateurs",
+          "status": "passed",
+          "title": "met a jour le role admin puis recharge les utilisateurs",
+          "duration": 927.2831000000006,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["AdminPage"],
+          "fullName": "AdminPage affiche une erreur si le chargement initial echoue",
+          "status": "passed",
+          "title": "affiche une erreur si le chargement initial echoue",
+          "duration": 158.17280000000028,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["AdminPage"],
+          "fullName": "AdminPage affiche les admins en premier puis trie par tag",
+          "status": "passed",
+          "title": "affiche les admins en premier puis trie par tag",
+          "duration": 155.1542999999947,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["AdminPage"],
+          "fullName": "AdminPage place les comptes bannis en bas avec une mention visible",
+          "status": "passed",
+          "title": "place les comptes bannis en bas avec une mention visible",
+          "duration": 207.06620000000112,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728471652,
+      "endTime": 1775728475405.0662,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Authentification/AdminPage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["LoginPage"],
+          "fullName": "LoginPage permet de basculer l’affichage du mot de passe",
+          "status": "passed",
+          "title": "permet de basculer l’affichage du mot de passe",
+          "duration": 742.5046000000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["LoginPage"],
+          "fullName": "LoginPage soumet les identifiants et redirige vers l’accueil",
+          "status": "passed",
+          "title": "soumet les identifiants et redirige vers l’accueil",
+          "duration": 202.59100000000035,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["LoginPage"],
+          "fullName": "LoginPage affiche un message d’erreur si la connexion échoue",
+          "status": "passed",
+          "title": "affiche un message d’erreur si la connexion échoue",
+          "duration": 240.53170000000318,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728328536,
+      "endTime": 1775728329721.5317,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Authentification/LoginPage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["RegisterPage"],
+          "fullName": "RegisterPage renders all form fields and submit button",
+          "status": "passed",
+          "title": "renders all form fields and submit button",
+          "duration": 1536.7669999999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RegisterPage"],
+          "fullName": "RegisterPage shows error when no avatar is selected",
+          "status": "passed",
+          "title": "shows error when no avatar is selected",
+          "duration": 620.2746000000043,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RegisterPage"],
+          "fullName": "RegisterPage navigates to /login on successful registration",
+          "status": "passed",
+          "title": "navigates to /login on successful registration",
+          "duration": 519.9743999999992,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RegisterPage"],
+          "fullName": "RegisterPage shows error when email already used (401)",
+          "status": "passed",
+          "title": "shows error when email already used (401)",
+          "duration": 917.1923000000024,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775727521650,
+      "endTime": 1775727525244.1924,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Authentification/RegisterPage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HomePage"],
+          "fullName": "HomePage affiche les CTA visiteurs et navigue vers les pages publiques",
+          "status": "passed",
+          "title": "affiche les CTA visiteurs et navigue vers les pages publiques",
+          "duration": 555.6546000000017,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["HomePage"],
+          "fullName": "HomePage affiche l’alerte des notifications non lues pour un utilisateur connecté",
+          "status": "passed",
+          "title": "affiche l’alerte des notifications non lues pour un utilisateur connecté",
+          "duration": 88.60859999999957,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["HomePage"],
+          "fullName": "HomePage retombe silencieusement à zero si le chargement des notifications échoue",
+          "status": "passed",
+          "title": "retombe silencieusement à zero si le chargement des notifications échoue",
+          "duration": 45.42159999999785,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728288440,
+      "endTime": 1775728289130.4216,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/HomePage/HomePage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["MemberDetails Component"],
+          "fullName": "MemberDetails Component renders loading state initially",
+          "status": "passed",
+          "title": "renders loading state initially",
+          "duration": 215.33690000000206,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MemberDetails Component"],
+          "fullName": "MemberDetails Component fetches and displays user data correctly from the API",
+          "status": "passed",
+          "title": "fetches and displays user data correctly from the API",
+          "duration": 207.28120000000126,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MemberDetails Component"],
+          "fullName": "MemberDetails Component shows email and specialty fields on own profile",
+          "status": "passed",
+          "title": "shows email and specialty fields on own profile",
+          "duration": 60.627300000000105,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MemberDetails Component"],
+          "fullName": "MemberDetails Component hides sensitive information when tags do not match",
+          "status": "passed",
+          "title": "hides sensitive information when tags do not match",
+          "duration": 51.247699999999895,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MemberDetails Component"],
+          "fullName": "MemberDetails Component handles API errors gracefully",
+          "status": "passed",
+          "title": "handles API errors gracefully",
+          "duration": 34.123100000000704,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MemberDetails Component"],
+          "fullName": "MemberDetails Component navigates to team detail when clicking the team block",
+          "status": "passed",
+          "title": "navigates to team detail when clicking the team block",
+          "duration": 43.42399999999907,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728586858,
+      "endTime": 1775728587470.424,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Member/MemberDetails.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["CreateEquipe"],
+          "fullName": "CreateEquipe renders title, team name field and submit button",
+          "status": "passed",
+          "title": "renders title, team name field and submit button",
+          "duration": 674.1712000000043,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CreateEquipe"],
+          "fullName": "CreateEquipe submit button is disabled when the field is empty",
+          "status": "passed",
+          "title": "submit button is disabled when the field is empty",
+          "duration": 145.5158999999985,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CreateEquipe"],
+          "fullName": "CreateEquipe redirects to /login when user is not authenticated",
+          "status": "passed",
+          "title": "redirects to /login when user is not authenticated",
+          "duration": 186.46220000000176,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CreateEquipe"],
+          "fullName": "CreateEquipe calls createEquipe and navigates to /maTeam on success",
+          "status": "passed",
+          "title": "calls createEquipe and navigates to /maTeam on success",
+          "duration": 265.6589000000022,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CreateEquipe"],
+          "fullName": "CreateEquipe shows error message when createEquipe fails",
+          "status": "passed",
+          "title": "shows error message when createEquipe fails",
+          "duration": 285.17729999999574,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728565319,
+      "endTime": 1775728566876.1772,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Team/CreeEquipe.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DemandesAdhesion"],
+          "fullName": "DemandesAdhesion displays pending join requests",
+          "status": "passed",
+          "title": "displays pending join requests",
+          "duration": 1564.6602999999886,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DemandesAdhesion"],
+          "fullName": "DemandesAdhesion shows message when there are no pending requests",
+          "status": "passed",
+          "title": "shows message when there are no pending requests",
+          "duration": 81.67220000000088,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DemandesAdhesion"],
+          "fullName": "DemandesAdhesion shows error message when loading fails",
+          "status": "passed",
+          "title": "shows error message when loading fails",
+          "duration": 114.20709999999963,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DemandesAdhesion"],
+          "fullName": "DemandesAdhesion opens accept dialog when clicking \"Accepter\"",
+          "status": "passed",
+          "title": "opens accept dialog when clicking \"Accepter\"",
+          "duration": 1031.125,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DemandesAdhesion"],
+          "fullName": "DemandesAdhesion calls accepterDemande and removes the request after confirmation",
+          "status": "passed",
+          "title": "calls accepterDemande and removes the request after confirmation",
+          "duration": 811.7630999999819,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DemandesAdhesion"],
+          "fullName": "DemandesAdhesion opens refuse dialog when clicking \"Refuser\"",
+          "status": "passed",
+          "title": "opens refuse dialog when clicking \"Refuser\"",
+          "duration": 963.2013000000152,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DemandesAdhesion"],
+          "fullName": "DemandesAdhesion calls refuserDemande with reason and removes the request",
+          "status": "passed",
+          "title": "calls refuserDemande with reason and removes the request",
+          "duration": 1228.9751000000106,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728216018,
+      "endTime": 1775728221815.975,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Team/Demande.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam affiche le nom de l'équipe et les membres",
+          "status": "passed",
+          "title": "affiche le nom de l'équipe et les membres",
+          "duration": 2055.0303999999887,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam affiche un message si l'utilisateur n'a pas d'équipe",
+          "status": "passed",
+          "title": "affiche un message si l'utilisateur n'a pas d'équipe",
+          "duration": 101.812099999981,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam affiche une erreur si le chargement échoue",
+          "status": "passed",
+          "title": "affiche une erreur si le chargement échoue",
+          "duration": 153.80509999999776,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam redirige vers /login si la session est expirée",
+          "status": "passed",
+          "title": "redirige vers /login si la session est expirée",
+          "duration": 90.05879999999888,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam ouvre le dialogue de confirmation pour quitter l'équipe",
+          "status": "passed",
+          "title": "ouvre le dialogue de confirmation pour quitter l'équipe",
+          "duration": 1629.283599999966,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam appelle leaveEquipe et navigue vers /equipes après confirmation",
+          "status": "passed",
+          "title": "appelle leaveEquipe et navigue vers /equipes après confirmation",
+          "duration": 871.8021000000299,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam appelle promoteResponsable au clic sur nommer responsable",
+          "status": "passed",
+          "title": "appelle promoteResponsable au clic sur nommer responsable",
+          "duration": 2456.3371000000043,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam appelle depromoteResponsable au clic sur retirer le rôle",
+          "status": "passed",
+          "title": "appelle depromoteResponsable au clic sur retirer le rôle",
+          "duration": 918.4662999999709,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam affiche les responsables en haut puis trie les membres par tag",
+          "status": "passed",
+          "title": "affiche les responsables en haut puis trie les membres par tag",
+          "duration": 348.42560000001686,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MyTeam"],
+          "fullName": "MyTeam affiche les tournois à venir, en cours et passés",
+          "status": "passed",
+          "title": "affiche les tournois à venir, en cours et passés",
+          "duration": 829.1303999999654,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728013165,
+      "endTime": 1775728022652.1304,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Team/MaTeam.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList affiche la liste des équipes chargées",
+          "status": "passed",
+          "title": "affiche la liste des équipes chargées",
+          "duration": 872.9889000000039,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList filtre les équipes selon la recherche",
+          "status": "passed",
+          "title": "filtre les équipes selon la recherche",
+          "duration": 390.4818000000014,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList affiche un message si aucune équipe trouvée",
+          "status": "passed",
+          "title": "affiche un message si aucune équipe trouvée",
+          "duration": 116.61879999999655,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList affiche \"Votre équipe\" pour l'équipe de l'utilisateur connecté",
+          "status": "passed",
+          "title": "affiche \"Votre équipe\" pour l'équipe de l'utilisateur connecté",
+          "duration": 176.98140000000421,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList affiche \"Équipe indisponible\" pour une équipe sans membres",
+          "status": "passed",
+          "title": "affiche \"Équipe indisponible\" pour une équipe sans membres",
+          "duration": 202.94080000000395,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList appelle joinEquipe et navigue vers /notifications après postulation",
+          "status": "passed",
+          "title": "appelle joinEquipe et navigue vers /notifications après postulation",
+          "duration": 852.7275999999983,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList navigue vers le détail équipe quand on clique sur la carte",
+          "status": "passed",
+          "title": "navigue vers le détail équipe quand on clique sur la carte",
+          "duration": 344.07630000000063,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList navigue vers le profil joueur quand on clique sur la carte joueur",
+          "status": "passed",
+          "title": "navigue vers le profil joueur quand on clique sur la carte joueur",
+          "duration": 1093.2537000000011,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList affiche les équipes triées par ordre alphabétique",
+          "status": "passed",
+          "title": "affiche les équipes triées par ordre alphabétique",
+          "duration": 452.9068999999945,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TeamsList"],
+          "fullName": "TeamsList affiche une erreur si l'utilisateur est déjà dans une équipe",
+          "status": "passed",
+          "title": "affiche une erreur si l'utilisateur est déjà dans une équipe",
+          "duration": 517.6565999999948,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728256253,
+      "endTime": 1775728261274.6565,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Team/TeamsList.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications affiche les notifications chargées depuis l'API",
+          "status": "passed",
+          "title": "affiche les notifications chargées depuis l'API",
+          "duration": 1142.516499999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications affiche le nombre de notifications non lues",
+          "status": "passed",
+          "title": "affiche le nombre de notifications non lues",
+          "duration": 251.56300000000192,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications affiche un message si aucune notification",
+          "status": "passed",
+          "title": "affiche un message si aucune notification",
+          "duration": 154.92059999999765,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications affiche une erreur si l'API échoue",
+          "status": "passed",
+          "title": "affiche une erreur si l'API échoue",
+          "duration": 311.26920000000246,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications filtre les notifications non lues avec l'onglet Non lues",
+          "status": "passed",
+          "title": "filtre les notifications non lues avec l'onglet Non lues",
+          "duration": 1370.0036999999938,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications filtre les notifications lues avec l'onglet Historique",
+          "status": "passed",
+          "title": "filtre les notifications lues avec l'onglet Historique",
+          "duration": 569.8441999999995,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications appelle markAllNotificationsAsRead au clic sur tout marquer comme lu",
+          "status": "passed",
+          "title": "appelle markAllNotificationsAsRead au clic sur tout marquer comme lu",
+          "duration": 483.9176000000007,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications appelle markNotificationAsRead au clic sur marquer comme lu",
+          "status": "passed",
+          "title": "appelle markNotificationAsRead au clic sur marquer comme lu",
+          "duration": 433.6618000000017,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Notifications"],
+          "fullName": "Notifications affiche un lien vers Ma Team sur une notification d'acceptation",
+          "status": "passed",
+          "title": "affiche un lien vers Ma Team sur une notification d'acceptation",
+          "duration": 262.67689999999857,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775727346339,
+      "endTime": 1775727351320.677,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Notification/NotificationPage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DisponibilitesPage"],
+          "fullName": "DisponibilitesPage renders the title and section headers",
+          "status": "passed",
+          "title": "renders the title and section headers",
+          "duration": 1524.8824999999997,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DisponibilitesPage"],
+          "fullName": "DisponibilitesPage displays periods loaded from the API",
+          "status": "passed",
+          "title": "displays periods loaded from the API",
+          "duration": 303.9589000000051,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DisponibilitesPage"],
+          "fullName": "DisponibilitesPage shows empty state message when there are no periods",
+          "status": "passed",
+          "title": "shows empty state message when there are no periods",
+          "duration": 178.06719999999768,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DisponibilitesPage"],
+          "fullName": "DisponibilitesPage shows error message when loading fails",
+          "status": "passed",
+          "title": "shows error message when loading fails",
+          "duration": 141.1981999999989,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DisponibilitesPage"],
+          "fullName": "DisponibilitesPage shows error when clicking \"Ajouter\" without selecting dates",
+          "status": "passed",
+          "title": "shows error when clicking \"Ajouter\" without selecting dates",
+          "duration": 653.1517999999996,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DisponibilitesPage"],
+          "fullName": "DisponibilitesPage calls deleteIndisponibilite when clicking the delete button",
+          "status": "passed",
+          "title": "calls deleteIndisponibilite when clicking the delete button",
+          "duration": 290.49870000000374,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["DisponibilitesPage"],
+          "fullName": "DisponibilitesPage navigates to /profil when clicking the back button",
+          "status": "passed",
+          "title": "navigates to /profil when clicking the back button",
+          "duration": 159.5469000000012,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728512080,
+      "endTime": 1775728515336.5469,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Profile/DisponibilitesPage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Profile"],
+          "fullName": "Profile displays the user tag, role and email",
+          "status": "passed",
+          "title": "displays the user tag, role and email",
+          "duration": 578.9045999999944,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Profile"],
+          "fullName": "Profile shows \"Pas d'équipe\" when user has no team",
+          "status": "passed",
+          "title": "shows \"Pas d'équipe\" when user has no team",
+          "duration": 171.68240000000515,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Profile"],
+          "fullName": "Profile displays team name when user has a team",
+          "status": "passed",
+          "title": "displays team name when user has a team",
+          "duration": 355.94719999999506,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Profile"],
+          "fullName": "Profile shows create and join cards when user has no team",
+          "status": "passed",
+          "title": "shows create and join cards when user has no team",
+          "duration": 167.16689999999653,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Profile"],
+          "fullName": "Profile hides create and join cards when user has a team",
+          "status": "passed",
+          "title": "hides create and join cards when user has a team",
+          "duration": 266.11019999999553,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Profile"],
+          "fullName": "Profile navigates to /disponibilites when clicking \"Mes indisponibilités\"",
+          "status": "passed",
+          "title": "navigates to /disponibilites when clicking \"Mes indisponibilités\"",
+          "duration": 1218.118100000007,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Profile"],
+          "fullName": "Profile navigates to /profile when clicking \"Modifier le profil\"",
+          "status": "passed",
+          "title": "navigates to /profile when clicking \"Modifier le profil\"",
+          "duration": 1833.2340000000113,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728425338,
+      "endTime": 1775728429933.234,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Profile/Profil.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["ProfilePage"],
+          "fullName": "ProfilePage affiche le titre et les champs du formulaire",
+          "status": "passed",
+          "title": "affiche le titre et les champs du formulaire",
+          "duration": 1862.3781000000017,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["ProfilePage"],
+          "fullName": "ProfilePage affiche une erreur si les nouveaux mots de passe ne correspondent pas",
+          "status": "passed",
+          "title": "affiche une erreur si les nouveaux mots de passe ne correspondent pas",
+          "duration": 635.1651999999958,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["ProfilePage"],
+          "fullName": "ProfilePage navigue vers / après une sauvegarde réussie",
+          "status": "passed",
+          "title": "navigue vers / après une sauvegarde réussie",
+          "duration": 391.7047999999995,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["ProfilePage"],
+          "fullName": "ProfilePage affiche une erreur si l'ancien mot de passe est incorrect",
+          "status": "passed",
+          "title": "affiche une erreur si l'ancien mot de passe est incorrect",
+          "duration": 538.6719000000012,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["ProfilePage"],
+          "fullName": "ProfilePage affiche une erreur si le serveur est inaccessible",
+          "status": "passed",
+          "title": "affiche une erreur si le serveur est inaccessible",
+          "duration": 374.3487000000023,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775727485982,
+      "endTime": 1775727489784.3486,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Profile/ProfilePage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["AdminTournamentsPage"],
+          "fullName": "AdminTournamentsPage publishes a draft tournament and shows a success message",
+          "status": "passed",
+          "title": "publishes a draft tournament and shows a success message",
+          "duration": 936.0547999999999,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["AdminTournamentsPage"],
+          "fullName": "AdminTournamentsPage sorts tournaments by state priority then closest date",
+          "status": "passed",
+          "title": "sorts tournaments by state priority then closest date",
+          "duration": 201.3811999999998,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728346184,
+      "endTime": 1775728347321.381,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Tournois/AdminTournamentsPage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TournoiDetailPage"],
+          "fullName": "TournoiDetailPage charge le logo équipe en fallback via getEquipeById quand absent dans accepted",
+          "status": "passed",
+          "title": "charge le logo équipe en fallback via getEquipeById quand absent dans accepted",
+          "duration": 434.9494999999988,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TournoiDetailPage"],
+          "fullName": "TournoiDetailPage utilise directement equipeProfileImage quand déjà fournie",
+          "status": "passed",
+          "title": "utilise directement equipeProfileImage quand déjà fournie",
+          "duration": 83.28050000000076,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775728306124,
+      "endTime": 1775728306643.2805,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Tournois/TournoiDetailPage.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TournoiPage"],
+          "fullName": "TournoiPage displays tournaments by categories in the default view",
+          "status": "failed",
+          "title": "displays tournaments by categories in the default view",
+          "duration": 33791.828299999994,
+          "failureMessages": [
+            "Error: STACK_TRACE_ERROR\n    at task (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:638:27)\n    at Object.<anonymous> (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:662:16)\n    at Object.<anonymous> (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:458:28)\n    at Module.chain (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:369:14)\n    at C:\\Ecole\\CAE\\Project\\cae-group-35\\frontend\\src\\Tests\\Tournois\\TournoiPage.test.tsx:30:3\n    at file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:734:40\n    at runWithSuite (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:1849:8)\n    at Object.collect (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:734:10)\n    at Object.collect (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:738:54)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at collectTests (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:1179:25)\n    at startTests (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/@vitest/runner/dist/chunk-hooks.js:1817:17)\n    at file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/vitest/dist/chunks/runBaseTests.9Ij9_de-.js:117:26\n    at withEnv (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/vitest/dist/chunks/runBaseTests.9Ij9_de-.js:84:3)\n    at run (file:///C:/Ecole/CAE/Project/cae-group-35/frontend/node_modules/vitest/dist/chunks/runBaseTests.9Ij9_de-.js:109:2)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TournoiPage"],
+          "fullName": "TournoiPage shows an error message when tournaments cannot be loaded",
+          "status": "passed",
+          "title": "shows an error message when tournaments cannot be loaded",
+          "duration": 814.8463999999949,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TournoiPage"],
+          "fullName": "TournoiPage filters by search term and refetches data",
+          "status": "passed",
+          "title": "filters by search term and refetches data",
+          "duration": 1001.1266000000032,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TournoiPage"],
+          "fullName": "TournoiPage resets search and state filters with the reset button",
+          "status": "passed",
+          "title": "resets search and state filters with the reset button",
+          "duration": 3789.271999999997,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1775727406165,
+      "endTime": 1775727445563.272,
+      "status": "failed",
+      "message": "",
+      "name": "C:/Ecole/CAE/Project/cae-group-35/frontend/src/Tests/Tournois/TournoiPage.test.tsx"
+    }
+  ]
+}

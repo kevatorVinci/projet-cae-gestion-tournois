@@ -22,17 +22,18 @@ public class Notification {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id_notification")
-  private Long idNotification;
+  private Long id;
 
   @Column(name = "message", nullable = false)
   private String message;
 
   @Column(name = "date_envoi", nullable = false)
-  private LocalDateTime dateEnvoi = LocalDateTime.now();
+  private LocalDateTime sentDate = LocalDateTime.now();
 
   @Column(name = "est_lue", nullable = false)
-  private Boolean estLue = false;
+  private Boolean isRead = false;
 
+  /** The user who receives this notification. */
   @ManyToOne
   @JoinColumn(name = "id_membre", nullable = false)
   private User user;

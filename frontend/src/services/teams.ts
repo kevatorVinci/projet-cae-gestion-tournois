@@ -31,7 +31,7 @@ function getAuthHeaders(): HeadersInit {
 function getRequiredAuthToken(): string {
   const token = getAuthenticatedUser()?.token;
   if (!token) {
-    throw new Error('Session expiree. Veuillez vous reconnecter.');
+    throw new Error('Session expirée. Veuillez vous reconnecter.');
   }
   return token;
 }
@@ -90,7 +90,7 @@ function resolveUserId(userId?: number): number {
     }
   }
 
-  throw new Error('Utilisateur non authentifie. Veuillez vous reconnecter.');
+  throw new Error('Utilisateur non authentifié. Veuillez vous reconnecter.');
 }
 
 export async function getAllEquipes(): Promise<Equipe[]> {
@@ -101,7 +101,7 @@ export async function getAllEquipes(): Promise<Equipe[]> {
   });
   if (!response.ok) {
     throw new Error(
-      await parseError(response, 'Erreur lors de la recuperation des equipes'),
+      await parseError(response, 'Erreur lors de la récupération des équipes.'),
     );
   }
   const data = (await response.json()) as BackendEquipe[];
@@ -116,7 +116,7 @@ export async function getEquipeById(id: string | number): Promise<Equipe> {
   });
   if (!response.ok) {
     throw new Error(
-      await parseError(response, 'Impossible de trouver cette equipe'),
+      await parseError(response, 'Impossible de trouver cette équipe.'),
     );
   }
   const data = (await response.json()) as BackendEquipe;
@@ -147,7 +147,7 @@ export async function createEquipe(
 
   if (!response.ok) {
     throw new Error(
-      await parseError(response, "Erreur lors de la creation de l'equipe"),
+      await parseError(response, "Erreur lors de la création de l'équipe."),
     );
   }
 
@@ -182,13 +182,13 @@ export async function joinEquipe(
         'Content-Type': 'application/json',
         Authorization: token,
       },
-      body: JSON.stringify({ equipeId: teamId }),
+      body: JSON.stringify({ teamId }),
     },
   );
 
   if (!response.ok) {
     throw new Error(
-      await parseError(response, 'Impossible de rejoindre cette equipe.'),
+      await parseError(response, 'Impossible de rejoindre cette équipe.'),
     );
   }
 }
@@ -209,14 +209,14 @@ export async function leaveEquipe(
         Authorization: token,
       },
       body: JSON.stringify(
-        nouveauResponsableId ? { nouveauResponsableId } : {},
+        nouveauResponsableId ? { newResponsibleId: nouveauResponsableId } : {},
       ),
     },
   );
 
   if (!response.ok) {
     throw new Error(
-      await parseError(response, "Impossible de quitter l'equipe."),
+      await parseError(response, "Impossible de quitter l'équipe."),
     );
   }
 }
@@ -238,7 +238,7 @@ export async function promoteResponsable(membreId: number): Promise<void> {
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error(
-        'Votre session a expire. Reconnectez-vous pour nommer un responsable.',
+        'Votre session a expiré. Reconnectez-vous pour nommer un responsable.',
       );
     }
     throw new Error(
@@ -263,7 +263,34 @@ export async function depromoteResponsable(membreId: number): Promise<void> {
 
   if (!response.ok) {
     throw new Error(
-      await parseError(response, 'Impossible de retirer le role responsable.'),
+      await parseError(response, 'Impossible de retirer le rôle responsable.'),
+    );
+  }
+}
+
+export async function kickMember(membreId: number): Promise<void> {
+  const token = getRequiredAuthToken();
+  const resolvedUserId = resolveUserId();
+
+  const response = await fetch(
+    `${API_BASE}/equipes/${resolvedUserId}/equipes/membres/${membreId}/exclure`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: token,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error(
+        'Votre session a expiré. Reconnectez-vous pour exclure un membre.',
+      );
+    }
+
+    throw new Error(
+      await parseError(response, "Impossible d'exclure ce membre."),
     );
   }
 }

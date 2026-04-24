@@ -1,181 +1,352 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.PlayerSelection;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
-/** Service layer for notification retrieval, creation and state updates. */
+/** Service managing all business logic related to user notifications. */
 @Service
 public class NotificationService {
 
+  private static final DateTimeFormatter MATCH_DATETIME_FORMATTER =
+      DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+
+  /** Repository used to access and persist notifications. */
   private final NotificationRepository notificationRepository;
 
   /**
-   * Builds the notification service.
+   * Constructor for dependency injection.
    *
-   * @param notificationRepository notification repository
+   * @param notificationRepository the repository to manage notifications in DB.
    */
   public NotificationService(NotificationRepository notificationRepository) {
     this.notificationRepository = notificationRepository;
   }
 
-  // ─── Lecture ─────────────────────────────────────────────────────────────────
-
   /**
-   * Gets all notifications for a user.
+   * Retrieves all notifications for a specific user, sorted by date.
    *
-   * @param userId user id
-   * @return notifications ordered by newest first
+   * @param userId the unique identifier of the user.
+   * @return a list of notifications for the user.
    */
   public List<Notification> getByUser(Long userId) {
-    return notificationRepository.findByUserIdOrderByDateEnvoiDesc(userId);
+    return notificationRepository.findByUserIdOrderBySentDateDesc(userId);
   }
 
   /**
-   * Gets unread notifications for a user.
+   * Retrieves only unread notifications for a specific user.
    *
-   * @param userId user id
-   * @return unread notifications
+   * @param userId the unique identifier of the user.
+   * @return a list of unread notifications.
    */
   public List<Notification> getUnread(Long userId) {
-    return notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
+    return notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
   }
 
-  // ─── Marquage ────────────────────────────────────────────────────────────────
-
   /**
-   * Marks one notification as read.
+   * Marks a specific notification as read.
    *
-   * @param idNotification notification id
-   * @return updated notification
+   * @param notificationId the unique identifier of the notification.
+   * @return the updated notification entity.
    */
-  public Notification markAsRead(Long idNotification) {
+  public Notification markAsRead(Long notificationId) {
     Notification n =
         notificationRepository
-            .findById(idNotification)
+            .findById(notificationId)
             .orElseThrow(() -> new RuntimeException("Notification introuvable"));
-    n.setEstLue(true);
+
+    n.setIsRead(true);
     return notificationRepository.save(n);
   }
 
   /**
-   * Marks all notifications of a user as read.
+   * Marks all unread notifications of a user as read.
    *
-   * @param userId user id
+   * @param userId the unique identifier of the user.
    */
   public void markAllAsRead(Long userId) {
     List<Notification> unread =
-        notificationRepository.findByUserIdAndEstLueOrderByDateEnvoiDesc(userId, false);
-    unread.forEach(n -> n.setEstLue(true));
+        notificationRepository.findByUserIdAndIsReadOrderBySentDateDesc(userId, false);
+
+    unread.forEach(n -> n.setIsRead(true));
     notificationRepository.saveAll(unread);
   }
 
-  // ─── Suppression ─────────────────────────────────────────────────────────────
-
   /**
-   * Deletes all notifications of a user.
+   * Deletes all notifications associated with a user.
    *
-   * @param userId user id
+   * @param userId the unique identifier of the user.
    */
   public void deleteByUser(Long userId) {
     notificationRepository.deleteByUserId(userId);
   }
 
   /**
-   * Deletes one notification by id.
+   * Deletes a single notification by its ID.
    *
-   * @param idNotification notification id
+   * @param notificationId the unique identifier of the notification.
    */
-  public void delete(Long idNotification) {
-    notificationRepository.deleteById(idNotification);
+  public void delete(Long notificationId) {
+    notificationRepository.deleteById(notificationId);
   }
 
-  // ─── Création (méthode de base) ───────────────────────────────────────────────
-
   /**
-   * Creates one notification message.
+   * Core method to create and save a new notification.
    *
-   * @param user recipient
-   * @param message notification text
-   * @return persisted notification
+   * @param user the user receiving the notification.
+   * @param message the text content of the notification.
+   * @return the saved notification entity.
    */
   public Notification createNotification(User user, String message) {
     Notification notification = new Notification();
     notification.setUser(user);
     notification.setMessage(message);
-    notification.setEstLue(false);
+    notification.setIsRead(false);
     return notificationRepository.save(notification);
   }
 
-  // ─── Notifications métier (préfixes pour le front React) ─────────────────────
-
-  /** Envoyée au membre quand il crée son compte. */
-  public void notifierCreationCompte(User user) {
+  /**
+   * Sends a welcome notification upon account creation.
+   *
+   * @param user the new user.
+   */
+  public void notifyAccountCreation(User user) {
     createNotification(
         user,
-        "Bienvenue : ton compte a bien été créé. Rejoins ou crée une équipe pour commencer !");
+        "Bienvenue : votre compte a été créé. Rejoignez ou créez une équipe pour commencer !");
   }
 
-  /** Envoyée au membre quand il crée une équipe. */
-  public void notifierCreationEquipe(User user, String nomEquipe) {
+  /**
+   * Notifies the user that their team has been successfully created.
+   *
+   * @param user the user who created the team.
+   * @param teamName the name of the new team.
+   */
+  public void notifyTeamCreation(User user, String teamName) {
     createNotification(
-        user, "Équipe créée : tu es maintenant responsable de l'équipe '" + nomEquipe + "'.");
+        user, "Équipe créée : vous êtes maintenant le responsable de l'équipe '" + teamName + "'.");
   }
 
-  /** Envoyée au membre quand un tournoi est créé. */
-  public void notifierCreationTournoi(User user, String nomTournoi) {
-    createNotification(
-        user,
-        "Nouveau tournoi : '" + nomTournoi + "' vient d'être créé. Consulte la liste des tournois !");
-  }
-
-  /** Envoyée au membre quand sa demande est envoyée. */
-  public void notifierDemandEnvoyee(User user, String nomEquipe) {
-    createNotification(
-        user,
-        "Demande envoyée : ta candidature pour rejoindre '" + nomEquipe + "' est en attente.");
-  }
-
-  /** Envoyée au responsable principal quand une nouvelle candidature est reçue. */
-  public void notifierNouvelleDemandeResponsable(
-      User responsable, String tagCandidat, String nomEquipe) {
-    createNotification(
-        responsable,
-        "Nouvelle demande : " + tagCandidat + " souhaite rejoindre l'équipe '" + nomEquipe + "'.");
-  }
-
-  /** Envoyée au membre quand sa demande est acceptée. */
-  public void notifierDemandeAcceptee(User user, String nomEquipe) {
+  /**
+   * Notifies the user that their join request has been sent.
+   *
+   * @param user the user applying.
+   * @param teamName the name of the target team.
+   */
+  public void sendApplicationNotification(User user, String teamName) {
     createNotification(
         user,
-        "Accepté : ta demande pour rejoindre '" + nomEquipe + "' a été acceptée. Bienvenue !");
+        "Demande envoyée : votre requête pour rejoindre l'équipe '"
+            + teamName
+            + "' est en attente.");
   }
 
-  /** Envoyée au membre quand sa demande est refusée. */
-  public void notifierDemandeRefusee(User user, String nomEquipe, String raison) {
-    String raionAffichee =
-        (raison == null || raison.isBlank()) ? "Aucune raison précisée." : raison;
+  /**
+   * Notifies a team manager about a new application.
+   *
+   * @param manager the team manager.
+   * @param candidateTag the nickname/tag of the applicant.
+   * @param teamName the name of the team.
+   */
+  public void notifyNewRequestToManager(User manager, String candidateTag, String teamName) {
+    createNotification(
+        manager,
+        "Nouvelle demande : " + candidateTag + " souhaite rejoindre l'équipe '" + teamName + "'.");
+  }
+
+  /**
+   * Notifies the user that their application was accepted.
+   *
+   * @param user the applicant.
+   * @param teamName the team they joined.
+   */
+  public void notifyRequestAccepted(User user, String teamName) {
     createNotification(
         user,
-        "Refus : ta demande pour rejoindre '"
-            + nomEquipe
+        "Accepté : votre demande pour rejoindre '" + teamName + "' a été acceptée. Bienvenue !");
+  }
+
+  /**
+   * Notifies the user that their application was denied with a reason.
+   *
+   * @param user the applicant.
+   * @param teamName the team they tried to join.
+   * @param reason the explanation for denial.
+   */
+  public void notifyRequestDenied(User user, String teamName, String reason) {
+    String displayedReason =
+        (reason == null || reason.isBlank()) ? "Aucune raison fournie." : reason;
+
+    createNotification(
+        user,
+        "Refusé : votre demande pour rejoindre l'équipe '"
+            + teamName
             + "' a été refusée. Raison : "
-            + raionAffichee);
+            + displayedReason);
   }
 
-  /** Envoyée à l'admin quand un tournoi est créé en brouillon. */
-  public void notifierCreationTournoiBrouillon(User admin, String nomTournoi) {
+  /**
+   * Notifies admins that a draft tournament has been created.
+   *
+   * @param admin the administrator.
+   * @param tournamentName the name of the draft tournament.
+   */
+  public void notifyDraftTournamentCreation(User admin, String tournamentName) {
     createNotification(
         admin,
-        "Admin : nouveau tournoi en brouillon '" + nomTournoi + "'. À publier quand prêt.");
+        "Admin : le tournoi brouillon '"
+            + tournamentName
+            + "' a été créé. Publiez-le quand vous êtes prêt.");
   }
 
-  /** Envoyée à tous les joueurs quand un tournoi est publié. */
-  public void notifierPublicationTournoi(User user, String nomTournoi) {
+  /**
+   * Notifies users that a tournament is now open for registration.
+   *
+   * @param user the user to notify.
+   * @param tournamentName the name of the published tournament.
+   */
+  public void notifyTournamentPublished(User user, String tournamentName) {
     createNotification(
         user,
-        "Nouveau tournoi : '" + nomTournoi + "' vient d'être publié. Inscris-toi maintenant !");
+        "Nouveau tournoi : le tournoi '"
+            + tournamentName
+            + "' vient d'être publié. Inscrivez-vous vite !");
+  }
+
+  /**
+   * Notifies a member that they are selected to participate in a match.
+   *
+   * @param user selected member.
+   * @param match target match.
+   * @param selectedTeam team for which the member is selected.
+   */
+  public void notifySelectedForMatch(User user, Match match, Team selectedTeam) {
+    String teamName =
+        selectedTeam != null && selectedTeam.getName() != null
+            ? selectedTeam.getName()
+            : "votre équipe";
+
+    Team opponent = null;
+    if (match != null && selectedTeam != null && selectedTeam.getId() != null) {
+      if (match.getTeam1() != null && selectedTeam.getId().equals(match.getTeam1().getId())) {
+        opponent = match.getTeam2();
+      } else if (match.getTeam2() != null
+          && selectedTeam.getId().equals(match.getTeam2().getId())) {
+        opponent = match.getTeam1();
+      }
+    }
+
+    String opponentPart =
+        opponent != null && opponent.getName() != null
+            ? " contre l'équipe '" + opponent.getName() + "'"
+            : "";
+
+    String tournamentPart =
+        match != null && match.getTournament() != null && match.getTournament().getName() != null
+            ? " dans le tournoi '" + match.getTournament().getName() + "'"
+            : "";
+
+    LocalDateTime matchDateTime = match == null ? null : match.getScheduledDateTime();
+    String schedulePart =
+        matchDateTime == null ? "" : " (" + matchDateTime.format(MATCH_DATETIME_FORMATTER) + ")";
+
+    createNotification(
+        user,
+        "Composition confirmée : vous avez été sélectionné pour représenter l'équipe '"
+            + teamName
+            + "'"
+            + opponentPart
+            + tournamentPart
+            + schedulePart
+            + ".");
+  }
+
+  /**
+   * Notifies all members of a team that they have forfeited and are eliminated.
+   *
+   * @param members the list of team members to notify
+   * @param tournamentName the name of the tournament
+   */
+  public void notifyForfeit(List<User> members, String tournamentName) {
+    for (User member : members) {
+      createNotification(
+          member,
+          "🏳️ Forfait — "
+              + tournamentName
+              + " : Votre équipe a déclaré forfait. Vous êtes éliminés du tournoi.");
+    }
+  }
+
+  /**
+   * Notifies the affected player and team responsibles that a selection was removed because of an
+   * unavailability period.
+   *
+   * @param unavailableUser the unavailable player.
+   * @param selection the removed selection.
+   */
+  public void notifySelectionRemovedDueToUnavailability(
+      User unavailableUser, PlayerSelection selection) {
+    if (unavailableUser == null || selection == null) {
+      return;
+    }
+
+    Match match = selection.getMatch();
+    Team team = selection.getTeam();
+
+    String matchDateLabel =
+        match != null && match.getScheduledDateTime() != null
+            ? match.getScheduledDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            : "une date inconnue";
+    String teamName = team != null && team.getName() != null ? team.getName() : "votre équipe";
+
+    createNotification(
+        unavailableUser,
+        "Indisponibilité prise en compte : votre sélection pour le match du "
+            + matchDateLabel
+            + " avec l'équipe '"
+            + teamName
+            + "' a été retirée.");
+
+    String message =
+        "Indisponibilité détectée : "
+            + unavailableUser.getTag()
+            + " n'est plus disponible pour le match du "
+            + matchDateLabel
+            + " dans l'équipe '"
+            + teamName
+            + "'. La sélection a été retirée.";
+
+    notifyTeamResponsibles(team, message);
+  }
+
+  /**
+   * Sends a notification to the responsibles of a team, without duplicating the same user.
+   *
+   * @param team the affected team.
+   * @param message the message to send.
+   */
+  private void notifyTeamResponsibles(Team team, String message) {
+    if (team == null || message == null || message.isBlank()) {
+      return;
+    }
+
+    if (team.getPrimaryResponsible() != null) {
+      createNotification(team.getPrimaryResponsible(), message);
+    }
+
+    if (team.getSecondaryResponsible() != null
+        && (team.getPrimaryResponsible() == null
+            || !team.getSecondaryResponsible()
+                .getId()
+                .equals(team.getPrimaryResponsible().getId()))) {
+      createNotification(team.getSecondaryResponsible(), message);
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { ReactNode, useContext, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType } from '../../types';
 import { isCurrentUserResponsable } from '../../services/teams';
@@ -39,7 +40,18 @@ export default function ResponsableRoute({ children }: ResponsableRouteProps) {
   }
 
   if (isResponsable === null) {
-    return null;
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+        }}
+      >
+        <CircularProgress sx={{ color: '#e8822a' }} />
+      </Box>
+    );
   }
 
   if (!isResponsable) {

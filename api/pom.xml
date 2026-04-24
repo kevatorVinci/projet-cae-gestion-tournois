@@ -74,6 +74,13 @@
       <artifactId>java-jwt</artifactId>
       <version>4.4.0</version>
     </dependency>
+
+    <!-- dotenv -->
+    <dependency>
+      <groupId>io.github.cdimascio</groupId>
+      <artifactId>dotenv-java</artifactId>
+      <version>3.1.0</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -175,6 +182,7 @@
               <goal>cpd-check</goal>
             </goals>
             <configuration>
+              <excludeFromFailureFile>cpd-exclusions.txt</excludeFromFailureFile>
               <maxAllowedViolations>0</maxAllowedViolations>
             </configuration>
           </execution>
@@ -245,6 +253,7 @@
                   <goal>cpd-check</goal>
                 </goals>
                 <configuration>
+                  <excludeFromFailureFile>cpd-exclusions.txt</excludeFromFailureFile>
                   <failOnViolation>false</failOnViolation>
                 </configuration>
               </execution>

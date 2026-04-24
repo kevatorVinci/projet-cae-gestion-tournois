@@ -14,9 +14,9 @@ type RegisterResult =
   | { ok: false; status: number };
 
 /**
- * Service d'authentification - Registration
- * @param {Object} credentials - Les données d'inscription de l'utilisateur
- * @return {Promise<Object>} Un objet contenant l'utilisateur et son token
+ * Authentication service - Registration
+ * @param {Object} credentials - User registration payload
+ * @return {Promise<Object>} An object containing the user and token
  */
 export async function register(credentials: {
   email: string;
@@ -27,14 +27,14 @@ export async function register(credentials: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
   });
-  if (!response.ok) throw new Error('Registration failed');
+  if (!response.ok) throw new Error("Échec de l'inscription.");
   return response.json();
 }
 
 /**
- * Service d'authentification - Login
- * @param {Object} credentials - Les identifiants de connexion
- * @return {Promise<Object>} Un objet contenant l'utilisateur et son token
+ * Authentication service - Login
+ * @param {Object} credentials - Login credentials
+ * @return {Promise<Object>} An object containing the user and token
  */
 export async function login(credentials: {
   email: string;
@@ -45,14 +45,14 @@ export async function login(credentials: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
   });
-  if (!response.ok) throw new Error('Login failed');
+  if (!response.ok) throw new Error('Échec de la connexion.');
   return response.json();
 }
 
 /**
- * Service d'inscription utilisé par la page Register.
- * Retourne le statut HTTP pour laisser le composant gérer les messages UX.
- * @param {RegisterPayload} payload - Données du formulaire d'inscription.
+ * Registration service used by the Register page.
+ * Returns the HTTP status so the component can handle UX messages.
+ * @param {RegisterPayload} payload - Registration form data.
  */
 export async function registerUser(
   payload: RegisterPayload,

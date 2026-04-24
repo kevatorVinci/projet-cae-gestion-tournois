@@ -45,17 +45,17 @@ export async function toggleAdminRole(
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
-      'Content-Type': 'text/plain',
+      'Content-Type': 'application/json',
       Authorization: token,
     },
-    body: email,
+    body: JSON.stringify({ email }),
   });
 
   if (!response.ok) {
     throw new Error(
       await parseError(
         response,
-        'Erreur lors de la modification. Verifiez le serveur Java.',
+        'Erreur lors de la modification. Vérifiez le serveur Java.',
       ),
     );
   }

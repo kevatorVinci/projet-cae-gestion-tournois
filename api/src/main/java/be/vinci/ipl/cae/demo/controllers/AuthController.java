@@ -4,10 +4,11 @@ import be.vinci.ipl.cae.demo.annotations.IsAdmin;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.dtos.UpdateProfileDto;
+import be.vinci.ipl.cae.demo.models.dtos.auth.AdminEmailDto;
+import be.vinci.ipl.cae.demo.models.dtos.auth.BanUserDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,9 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * AuthController to handle user authentication and profiles.
- */
+/** AuthController to handle user authentication and profiles. */
 @RestController
 @RequestMapping("/auths")
 public class AuthController {
@@ -39,14 +38,14 @@ public class AuthController {
   /**
    * Register a new user.
    *
-   * @param credentials register payload
-   * @return authenticated user with token
+   * @param credentials register payload.
+   * @return authenticated user with token.
    */
   @PostMapping("/register")
   public AuthenticatedUser register(@RequestBody @Valid Credentials credentials) {
     AuthenticatedUser user = userService.register(credentials);
     if (user == null) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT);
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Cet email est déjà utilisé.");
     }
     return user;
   }
@@ -54,8 +53,8 @@ public class AuthController {
   /**
    * Authenticate an existing user.
    *
-   * @param credentials login payload
-   * @return authenticated user with token
+   * @param credentials login payload.
+   * @return authenticated user with token.
    */
   @PostMapping("/login")
   public AuthenticatedUser login(@RequestBody @Valid Credentials credentials) {
@@ -71,11 +70,11 @@ public class AuthController {
     }
 
     AuthenticatedUser user = userService.login(credentials.getEmail(), credentials.getPassword());
+
     if (user == null) {
       boolean emailExists = existingUser != null;
-      String errorMessage = emailExists
-              ? "Le mot de passe est incorrect."
-              : "Cet email n'existe pas.";
+      String errorMessage =
+          emailExists ? "Le mot de passe est incorrect." : "Cet email n'existe pas.";
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
     return user;
@@ -84,23 +83,23 @@ public class AuthController {
   /**
    * Entry point to update the user profile.
    *
-   * @param dto the payload sent by React
-   * @return the updated profile with a new token
+   * @param dto the payload sent by React.
+   * @return the updated profile with a new token.
    */
   @PutMapping("/update")
   @PreAuthorize("isAuthenticated()")
   public AuthenticatedUser updateProfile(@RequestBody @Valid UpdateProfileDto dto) {
     AuthenticatedUser user =
-            userService.updateProfile(
-                    dto.getEmail(),
-                    dto.getSpecialty(),
-                    dto.getProfileImage(),
-                    dto.getOldPassword(),
-                    dto.getNewPassword());
+        userService.updateProfile(
+            dto.getEmail(),
+            dto.getSpecialty(),
+            dto.getProfileImage(),
+            dto.getOldPassword(),
+            dto.getNewPassword());
 
     if (user == null) {
       throw new ResponseStatusException(
-              HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
+          HttpStatus.BAD_REQUEST, "Mauvais mot de passe ou utilisateur introuvable");
     }
     return user;
   }
@@ -108,7 +107,7 @@ public class AuthController {
   /**
    * Returns the list of all users for the administration panel.
    *
-   * @return the list of authenticated users
+   * @return the list of authenticated users.
    */
   @GetMapping("/users")
   @IsAdmin
@@ -119,46 +118,40 @@ public class AuthController {
   /**
    * Adds the administrator role to a user.
    *
-   * @param email the email address of the user to promote
+   * @param payload the payload containing the email address of the user to promote.
    */
   @PutMapping("/addAdmin")
   @IsAdmin
-  public void addAdmin(@RequestBody String email) {
-    userService.addAdmin(email);
+  public void addAdmin(@RequestBody @Valid AdminEmailDto payload) {
+    userService.addAdmin(payload.email());
   }
 
   /**
    * Removes the administrator role from a user.
    *
-   * @param email the email address of the user to demote
+   * @param payload the payload containing the email address of the user to demote.
    */
   @PutMapping("/removeAdmin")
   @IsAdmin
-  public void removeAdmin(@RequestBody String email) {
-    userService.removeAdmin(email);
+  public void removeAdmin(@RequestBody @Valid AdminEmailDto payload) {
+    userService.removeAdmin(payload.email());
   }
 
   /**
    * Bans a user from the platform.
    *
-   * @param payload a map containing the email of the user to ban
+   * @param payload a map containing the email of the user to ban.
    */
   @PostMapping("/ban")
   @IsAdmin
-  public void banUser(@RequestBody Map<String, String> payload) {
-    String email = payload.get("email");
-    if (email == null || email.isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requis pour bannir.");
-    }
-    String reason = payload.get("reason");
-    userService.banUser(email, reason);
+  public void banUser(@RequestBody @Valid BanUserDto payload) {
+    userService.banUser(payload.email(), payload.reason());
   }
 
   /**
    * Retrieves all users for the public directory.
-   * We reuse the admin method because it already filters out banned users and sorts them!
    *
-   * @return the list of players
+   * @return the list of players.
    */
   @GetMapping("/players")
   public List<AuthenticatedUser> getAllPlayers() {

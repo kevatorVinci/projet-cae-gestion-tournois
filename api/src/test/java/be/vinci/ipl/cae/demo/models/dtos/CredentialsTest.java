@@ -1,73 +1,78 @@
 package be.vinci.ipl.cae.demo.models.dtos;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+/** Unit tests for Credentials DTO validation logic. */
 class CredentialsTest {
 
-    private static Validator validator;
+  private static Validator validator;
 
-    @BeforeAll
-    static void setUp() {
-        // On initialise le validateur de Spring Boot (celui qui lit les @Pattern)
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
-    }
+  /** Initializes the validator before running tests. */
+  @BeforeAll
+  static void setUp() {
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    validator = factory.getValidator();
+  }
 
-    @Test
-    void password_motDePasseFort_passeLaValidation() {
-        Credentials credentials = new Credentials();
-        credentials.setEmail("test@vinci.be");
-        credentials.setPassword("SuperPizza!2026"); // 8+ chars, 1 Maj, 1 Min, 1 Chiffre, 1 Spécial
+  /** Tests that a strong password passes validation. */
+  @Test
+  void passwordMotDePasseFortPasseLaValidation() {
+    Credentials credentials = new Credentials();
+    credentials.setEmail("test@vinci.be");
+    credentials.setPassword("SuperPizza!2026");
 
-        Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
+    Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
 
-        // Il ne doit y avoir aucune erreur (la liste des violations est vide)
-        assertTrue(violations.isEmpty(), "Le mot de passe devrait être considéré comme valide.");
-    }
+    assertTrue(violations.isEmpty(), "Le mot de passe devrait être considéré comme valide.");
+  }
 
-    @Test
-    void password_tropCourt_echoueLaValidation() {
-        Credentials credentials = new Credentials();
-        credentials.setPassword("A1!aaaa"); // 7 caractères seulement
+  /** Tests that a password that is too short fails validation. */
+  @Test
+  void passwordTropCourtEchoueLaValidation() {
+    Credentials credentials = new Credentials();
+    credentials.setPassword("A1!aaaa");
 
-        Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
-        assertFalse(violations.isEmpty(), "Le mot de passe de 7 caractères devrait être rejeté.");
-    }
+    Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
+    assertFalse(violations.isEmpty(), "Le mot de passe de 7 caractères devrait être rejeté.");
+  }
 
-    @Test
-    void password_sansMajuscule_echoueLaValidation() {
-        Credentials credentials = new Credentials();
-        credentials.setPassword("superpizza!2026"); // Pas de majuscule
+  /** Tests that a password without uppercase letters fails validation. */
+  @Test
+  void passwordSansMajusculeEchoueLaValidation() {
+    Credentials credentials = new Credentials();
+    credentials.setPassword("superpizza!2026");
 
-        Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
-        assertFalse(violations.isEmpty(), "Le mot de passe sans majuscule devrait être rejeté.");
-    }
+    Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
+    assertFalse(violations.isEmpty(), "Le mot de passe sans majuscule devrait être rejeté.");
+  }
 
-    @Test
-    void password_sansChiffre_echoueLaValidation() {
-        Credentials credentials = new Credentials();
-        credentials.setPassword("SuperPizza!"); // Pas de chiffre
+  /** Tests that a password without numbers fails validation. */
+  @Test
+  void passwordSansChiffreEchoueLaValidation() {
+    Credentials credentials = new Credentials();
+    credentials.setPassword("SuperPizza!");
 
-        Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
-        assertFalse(violations.isEmpty(), "Le mot de passe sans chiffre devrait être rejeté.");
-    }
+    Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
+    assertFalse(violations.isEmpty(), "Le mot de passe sans chiffre devrait être rejeté.");
+  }
 
-    @Test
-    void password_sansCaractereSpecial_echoueLaValidation() {
-        Credentials credentials = new Credentials();
-        credentials.setPassword("SuperPizza2026"); // Pas de caractère spécial
+  /** Tests that a password without special characters fails validation. */
+  @Test
+  void passwordSansCaractereSpecialEchoueLaValidation() {
+    Credentials credentials = new Credentials();
+    credentials.setPassword("SuperPizza2026");
 
-        Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
-        assertFalse(violations.isEmpty(), "Le mot de passe sans caractère spécial devrait être rejeté.");
-    }
+    Set<ConstraintViolation<Credentials>> violations = validator.validate(credentials);
+    assertFalse(
+        violations.isEmpty(), "Le mot de passe sans caractère spécial devrait être rejeté.");
+  }
 }

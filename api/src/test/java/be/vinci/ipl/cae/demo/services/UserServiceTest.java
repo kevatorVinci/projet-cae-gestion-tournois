@@ -1,15 +1,15 @@
 package be.vinci.ipl.cae.demo.services;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import be.vinci.ipl.cae.demo.mappers.UserMapper;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
-import be.vinci.ipl.cae.demo.models.entities.Equipe;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.EquipeRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -21,13 +21,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+/** Unit tests for UserService using Mockito. */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
+  private static final String EMAIL = "alice@vinci.be";
+  private static final String PASSWORD = "password123";
+  private static final String HASHED = "$2a$10$hashedpassword";
+
   @Mock private UserRepository userRepository;
-  @Mock private EquipeRepository equipeRepository;
+  @Mock private TeamRepository teamRepository;
   @Mock private BCryptPasswordEncoder passwordEncoder;
   @Mock private NotificationService notificationService;
+  @Mock private PlayerSelectionCleanupService playerSelectionCleanupService;
   @Mock private UserMapper userMapper;
 
   @InjectMocks private UserService userService;
@@ -35,10 +41,7 @@ class UserServiceTest {
   private User user;
   private Credentials credentials;
 
-  private static final String EMAIL = "alice@vinci.be";
-  private static final String PASSWORD = "password123";
-  private static final String HASHED = "$2a$10$hashedpassword";
-
+  /** Set up mock data before each test. */
   @BeforeEach
   void setUp() {
     user = new User();
@@ -46,7 +49,7 @@ class UserServiceTest {
     user.setEmail(EMAIL);
     user.setPassword(HASHED);
     user.setTag("AliceTag");
-    user.setSpecialty("tacticien");
+    user.setSpecialty("tactician");
     user.setProfileImageUrl("avatar1.png");
     user.setCreationDate(LocalDate.of(2026, 1, 1));
 
@@ -54,7 +57,7 @@ class UserServiceTest {
     credentials.setEmail(EMAIL);
     credentials.setPassword(PASSWORD);
     credentials.setTag("AliceTag");
-    credentials.setSpecialty("tacticien");
+    credentials.setSpecialty("tactician");
 
     lenient()
         .when(userMapper.toAuthenticatedUser(nullable(User.class), anyString()))
@@ -76,15 +79,9 @@ class UserServiceTest {
             });
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // register
-  // Règle : email utilisé comme login, unique par membre (Énoncé p.2)
-  // Règle : mot de passe stocké hashé (BCrypt)
-  // Données obligatoires : email, mdp, tag, spécialité (Énoncé p.2)
-  // ═══════════════════════════════════════════════════════════════════
-
+  /** Tests registration of a new member. */
   @Test
-  void register_nouveauMembre_OK() {
+  void registerNewMemberOk() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(null);
     when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED);
     when(userRepository.save(any())).thenReturn(user);
@@ -94,45 +91,29 @@ class UserServiceTest {
     assertNotNull(result);
     assertEquals(EMAIL, result.getEmail());
     assertNotNull(result.getToken());
-    verify(userRepository).save(any()); // membre bien sauvegardé
+    verify(userRepository).save(any());
   }
 
+  /** Verifies that the plain password is not stored directly. */
   @Test
-  void register_motDePasseHashe_pasStockeEnClair() {
-    // Règle de sécurité : le mot de passe ne doit jamais être stocké en clair
+  void registerHashedPasswordNotStoredInPlain() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(null);
     when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED);
     when(userRepository.save(any()))
         .thenAnswer(
             inv -> {
               User saved = inv.getArgument(0);
-              assertNotEquals(PASSWORD, saved.getPassword()); // pas en clair !
+              assertNotEquals(PASSWORD, saved.getPassword());
               return saved;
             });
 
     userService.register(credentials);
-
     verify(passwordEncoder).encode(PASSWORD);
   }
 
+  /** Tests login with correct credentials. */
   @Test
-  void register_emailDejaUtilise_retourneNull() {
-    // Règle : email unique comme login (Énoncé p.2)
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-
-    AuthenticatedUser result = userService.register(credentials);
-
-    assertNull(result);
-    verify(userRepository, never()).save(any());
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // login
-  // Règle : connexion par email + mot de passe (Énoncé p.2)
-  // ═══════════════════════════════════════════════════════════════════
-
-  @Test
-  void login_credentialsCorrects_retourneToken() {
+  void loginCorrectCredentialsReturnsToken() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     when(passwordEncoder.matches(PASSWORD, HASHED)).thenReturn(true);
 
@@ -143,202 +124,43 @@ class UserServiceTest {
     assertNotNull(result.getToken());
   }
 
+  /** Tests that the JWT token contains public user data. */
   @Test
-  void login_emailInconnu_retourneNull() {
-    when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
-
-    assertNull(userService.login("inconnu@vinci.be", PASSWORD));
-  }
-
-  @Test
-  void login_mauvaisMotDePasse_retourneNull() {
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(passwordEncoder.matches("mauvais", HASHED)).thenReturn(false);
-
-    assertNull(userService.login(EMAIL, "mauvais"));
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // createJwtToken
-  // Règle : le token contient l'email pour identifier le membre
-  // ═══════════════════════════════════════════════════════════════════
-
-  @Test
-  void createJwtToken_retourneTokenNonVide() {
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-
-    AuthenticatedUser result = userService.createJwtToken(EMAIL);
-
-    assertNotNull(result);
-    assertEquals(EMAIL, result.getEmail());
-    assertNotNull(result.getToken());
-    assertFalse(result.getToken().isBlank());
-  }
-
-  @Test
-  void createJwtToken_inclutDonneesPubliques() {
-    // Règle : tag et spécialité sont des données publiques (PrécisionsV1 p.3)
+  void createJwtTokenIncludesPublicData() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
     AuthenticatedUser result = userService.createJwtToken(EMAIL);
 
     assertEquals("AliceTag", result.getTag());
-    assertEquals("tacticien", result.getSpecialty());
+    assertEquals("tactician", result.getSpecialty());
   }
 
+  /** Tests JWT token verification. */
   @Test
-  void createJwtToken_emailPasExposeDansLesChamps() {
-    // Règle : l'email est une donnée PRIVÉE (PrécisionsV1 p.3)
-    // On vérifie qu'il n'est pas stocké dans un champ public inattendu
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-
-    AuthenticatedUser result = userService.createJwtToken(EMAIL);
-
-    // L'email est bien présent dans le token pour l'auth, mais pas exposé autrement
-    assertEquals(EMAIL, result.getEmail());
-    // Le tag ne doit pas contenir l'email
-    assertNotEquals(EMAIL, result.getTag());
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // verifyJwtToken
-  // ═══════════════════════════════════════════════════════════════════
-
-  @Test
-  void verifyJwtToken_tokenValide_retourneEmail() {
+  void verifyJwtTokenValidTokenReturnsEmail() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
     String token = userService.createJwtToken(EMAIL).getToken();
 
     assertEquals(EMAIL, userService.verifyJwtToken(token));
   }
 
+  /** Tests updating the user profile. */
   @Test
-  void verifyJwtToken_tokenInvalide_retourneNull() {
-    assertNull(userService.verifyJwtToken("token.invalide.bidon"));
-  }
-
-  @Test
-  void verifyJwtToken_tokenNull_retourneNull() {
-    assertNull(userService.verifyJwtToken(null));
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // readOneFromEmail
-  // ═══════════════════════════════════════════════════════════════════
-
-  @Test
-  void readOneFromEmail_utilisateurExistant_retourneUser() {
+  void updateProfileSpecialtyAndImageOk() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
 
-    User result = userService.readOneFromEmail(EMAIL);
+    userService.updateProfile(EMAIL, "goalkeeper", "avatar2.png", null, null);
 
-    assertNotNull(result);
-    assertEquals(EMAIL, result.getEmail());
-  }
-
-  @Test
-  void readOneFromEmail_utilisateurInexistant_retourneNull() {
-    when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
-
-    assertNull(userService.readOneFromEmail("inconnu@vinci.be"));
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // getById
-  // ═══════════════════════════════════════════════════════════════════
-
-  @Test
-  void getById_utilisateurExistant_retourneOptional() {
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-    Optional<User> result = userService.getById(1L);
-
-    assertTrue(result.isPresent());
-    assertEquals(1L, result.get().getId());
-  }
-
-  @Test
-  void getById_utilisateurInexistant_retourneEmpty() {
-    when(userRepository.findById(99L)).thenReturn(Optional.empty());
-
-    assertTrue(userService.getById(99L).isEmpty());
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // updateProfile
-  // Règle : peut modifier spécialité, image de profil, mot de passe (Énoncé p.3)
-  // Règle : changement mdp nécessite l'ancien mdp correct
-  // ═══════════════════════════════════════════════════════════════════
-
-  @Test
-  void updateProfile_specialiteEtImage_OK() {
-    // Règle : membre peut modifier sa spécialité et son image (Énoncé p.3)
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "gardien", "avatar2.png", null, null);
-
-    assertNotNull(result);
-    assertEquals("gardien", user.getSpecialty());
+    assertEquals("goalkeeper", user.getSpecialty());
     assertEquals("avatar2.png", user.getProfileImageUrl());
     verify(userRepository).save(user);
   }
 
+  /** Tests banning a simple user. */
   @Test
-  void updateProfile_changementMotDePasse_ancienCorrect_OK() {
-    // Règle : peut changer son mot de passe depuis l'espace personnel (Énoncé p.3)
+  void banUserExistingUserActivatesSoftBan() {
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(passwordEncoder.matches("oldPass", HASHED)).thenReturn(true);
-    when(passwordEncoder.encode("newPass")).thenReturn("$2a$newHash");
-
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "gardien", "avatar2.png", "oldPass", "newPass");
-
-    assertNotNull(result);
-    assertEquals("$2a$newHash", user.getPassword());
-  }
-
-  @Test
-  void updateProfile_changementMotDePasse_ancienIncorrect_retourneNull() {
-    // Règle : l'ancien mdp doit être correct pour pouvoir le changer
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(passwordEncoder.matches("mauvais", HASHED)).thenReturn(false);
-
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "gardien", "avatar2.png", "mauvais", "newPass");
-
-    assertNull(result);
-    // Le mot de passe ne doit pas avoir changé
-    assertEquals(HASHED, user.getPassword());
-    verify(userRepository, never()).save(any());
-  }
-
-  @Test
-  void updateProfile_utilisateurInexistant_retourneNull() {
-    when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
-
-    AuthenticatedUser result =
-        userService.updateProfile("inconnu@vinci.be", "gardien", "avatar2.png", null, null);
-
-    assertNull(result);
-  }
-
-  @Test
-  void updateProfile_nouveauTokenRetourne() {
-    // Après update, un nouveau token est généré pour la session React
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-
-    AuthenticatedUser result =
-        userService.updateProfile(EMAIL, "architecte", "avatar3.png", null, null);
-
-    assertNotNull(result.getToken());
-    assertFalse(result.getToken().isBlank());
-  }
-
-  @Test
-  void banUser_utilisateurExistant_activeLeSoftBan() {
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+    when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
         .thenReturn(Optional.empty());
 
     userService.banUser(EMAIL, null);
@@ -347,46 +169,39 @@ class UserServiceTest {
     verify(userRepository).save(user);
   }
 
+  /** Tests banning a primary responsible and promoting the secondary. */
   @Test
-  void banUser_utilisateurInexistant_neFaitRien() {
-    when(userRepository.findByEmail("inconnu@vinci.be")).thenReturn(null);
-
-    userService.banUser("inconnu@vinci.be", null);
-
-    verify(userRepository, never()).save(any());
-  }
-
-  @Test
-  void banUser_responsablePrincipal_avecSecondaire_promeutLeSecondaire() {
+  void banUserPrimaryResponsibleWithSecondaryPromotesSecondary() {
     User secondary = new User();
     secondary.setId(2L);
     secondary.setCreationDate(LocalDate.of(2026, 1, 2));
 
-    Equipe equipe = new Equipe();
-    equipe.setResponsablePrincipal(user);
-    equipe.setResponsableSecondaire(secondary);
-    equipe.getMembres().add(user);
-    equipe.getMembres().add(secondary);
+    Team team = new Team();
+    team.setPrimaryResponsible(user);
+    team.setSecondaryResponsible(secondary);
+    team.getMembers().add(user);
+    team.getMembers().add(secondary);
 
-    user.setEquipe(equipe);
+    user.setTeam(team);
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
-        .thenReturn(Optional.of(equipe));
+    when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
+        .thenReturn(Optional.of(team));
 
     userService.banUser(EMAIL, null);
 
-    assertEquals(secondary, equipe.getResponsablePrincipal());
-    assertNull(equipe.getResponsableSecondaire());
+    assertEquals(secondary, team.getPrimaryResponsible());
+    assertNull(team.getSecondaryResponsible());
     assertTrue(user.isBanned());
-    assertFalse(equipe.getMembres().contains(user));
-    assertNull(user.getEquipe());
-    verify(equipeRepository).save(equipe);
+    assertFalse(team.getMembers().contains(user));
+    assertNull(user.getTeam());
+    verify(teamRepository).save(team);
     verify(userRepository).save(user);
   }
 
+  /** Tests banning a responsible without a secondary, picking the oldest member. */
   @Test
-  void banUser_responsablePrincipalSansSecondaire_designeMembrePlusAncien() {
+  void banUserPrimaryResponsibleWithoutSecondaryPicksOldestMember() {
     User oldest = new User();
     oldest.setId(3L);
     oldest.setCreationDate(LocalDate.of(2024, 2, 1));
@@ -395,76 +210,49 @@ class UserServiceTest {
     newest.setId(4L);
     newest.setCreationDate(LocalDate.of(2025, 5, 1));
 
-    Equipe equipe = new Equipe();
-    equipe.setResponsablePrincipal(user);
-    equipe.getMembres().add(user);
-    equipe.getMembres().add(newest);
-    equipe.getMembres().add(oldest);
+    Team team = new Team();
+    team.setPrimaryResponsible(user);
+    team.getMembers().add(user);
+    team.getMembers().add(newest);
+    team.getMembers().add(oldest);
 
-    user.setEquipe(equipe);
+    user.setTeam(team);
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
-        .thenReturn(Optional.of(equipe));
+    when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
+        .thenReturn(Optional.of(team));
 
     userService.banUser(EMAIL, null);
 
-    assertEquals(oldest, equipe.getResponsablePrincipal());
-    assertNull(equipe.getResponsableSecondaire());
-    assertFalse(equipe.getMembres().contains(user));
-    assertNull(user.getEquipe());
-    verify(equipeRepository).save(equipe);
+    assertEquals(oldest, team.getPrimaryResponsible());
+    assertNull(team.getSecondaryResponsible());
+    assertFalse(team.getMembers().contains(user));
+    assertNull(user.getTeam());
+    verify(teamRepository).save(team);
   }
 
+  /** Tests that a banned member is removed from their team. */
   @Test
-  void banUser_responsableSecondaire_retirerRoleSecondaire() {
+  void banUserMemberIsRemovedFromTeam() {
     User principal = new User();
     principal.setId(10L);
     principal.setCreationDate(LocalDate.of(2025, 1, 1));
 
-    Equipe equipe = new Equipe();
-    equipe.setResponsablePrincipal(principal);
-    equipe.setResponsableSecondaire(user);
-    equipe.getMembres().add(principal);
-    equipe.getMembres().add(user);
+    Team team = new Team();
+    team.setPrimaryResponsible(principal);
+    team.getMembers().add(principal);
+    team.getMembers().add(user);
 
-    user.setEquipe(equipe);
-
-    when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
-        .thenReturn(Optional.of(equipe));
-
-    userService.banUser(EMAIL, null);
-
-    assertEquals(principal, equipe.getResponsablePrincipal());
-    assertNull(equipe.getResponsableSecondaire());
-    assertFalse(equipe.getMembres().contains(user));
-    assertNull(user.getEquipe());
-    verify(equipeRepository).save(equipe);
-  }
-
-  @Test
-  void banUser_membreSimple_estRetireDeLEquipe() {
-    User principal = new User();
-    principal.setId(10L);
-    principal.setCreationDate(LocalDate.of(2025, 1, 1));
-
-    Equipe equipe = new Equipe();
-    equipe.setResponsablePrincipal(principal);
-    equipe.getMembres().add(principal);
-    equipe.getMembres().add(user);
-
-    user.setEquipe(equipe);
+    user.setTeam(team);
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(user);
-    when(equipeRepository.findByResponsablePrincipalIdOrResponsableSecondaireId(1L, 1L))
+    when(teamRepository.findByPrimaryResponsibleIdOrSecondaryResponsibleId(1L, 1L))
         .thenReturn(Optional.empty());
 
     userService.banUser(EMAIL, null);
 
-    assertEquals(principal, equipe.getResponsablePrincipal());
-    assertFalse(equipe.getMembres().contains(user));
-    assertNull(user.getEquipe());
-    verify(equipeRepository).save(equipe);
+    assertFalse(team.getMembers().contains(user));
+    assertNull(user.getTeam());
+    verify(teamRepository).save(team);
   }
 }

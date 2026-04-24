@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -9,13 +9,14 @@ import {
   IconButton,
   Avatar,
   Badge,
-  Chip, // Permet d'afficher l'étiquette ADMIN orange
+  Chip,
 } from '@mui/material';
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import AddBoxIcon from '@mui/icons-material/AddBox';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import logo from '../../assets/images/logo.png';
 import { UserContext } from '../../contexts/UserContext';
+import { useAdminView } from '../../contexts/useAdminView';
 import { UserContextType } from '../../types';
 import { getUserTeam } from '../../services/teams';
 import {
@@ -28,10 +29,13 @@ const Navbar = () => {
   const location = useLocation();
   const { authenticatedUser, clearUser }: UserContextType =
     useContext(UserContext);
+  const {
+    isAdminView,
+    setIsAdminView,
+    toggleAdminView: contextToggle,
+  } = useAdminView();
   const [hasTeam, setHasTeam] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-
-  const [isAdminView, setIsAdminView] = useState(false);
 
   const normalizeAvatarUrl = (avatar?: string) => {
     if (!avatar) return '/luffy.png';
@@ -93,13 +97,26 @@ const Navbar = () => {
   };
 
   const toggleAdminView = () => {
+    contextToggle();
     if (!isAdminView) {
-      setIsAdminView(true);
       navigate('/admin');
     } else {
-      setIsAdminView(false);
       navigate('/');
     }
+  };
+
+  const isActive = (path: string, exact = false) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+
+    if (exact) {
+      return location.pathname === path;
+    }
+
+    return (
+      location.pathname === path || location.pathname.startsWith(`${path}/`)
+    );
   };
 
   return (
@@ -130,42 +147,85 @@ const Navbar = () => {
           )}
         </Box>
 
-        {/* --- L'ESPACE QUI POUSSE TOUT LE RESTE À DROITE (Comme ton code original) --- */}
+        {/* --- Spacer that pushes the rest to the right (as in the original code) --- */}
         <Typography sx={{ flexGrow: 1 }} />
 
-        {/* --- LES ONGLETS (Alignés à droite) --- */}
+        {/* --- TABS (right-aligned) --- */}
         {!isAdminView ? (
           <>
-            <Button color="inherit" onClick={() => navigate('/')}>
-              Accueil
-            </Button>
-            <Button color="inherit" onClick={() => navigate('/tournois')}>
-              Tournois
-            </Button>
-            <Button color="inherit" onClick={() => navigate('/equipes')}>
-              Teams
-            </Button>
-            {authenticatedUser && hasTeam && (
-              <Button color="inherit" onClick={() => navigate('/maTeam')}>
-                Ma Team
+            {[
+              { label: 'Accueil', path: '/' },
+              { label: 'Tournois', path: '/tournois' },
+              { label: 'Teams', path: '/equipes' },
+              ...(authenticatedUser && hasTeam
+                ? [{ label: 'MaTeam', path: '/maTeam' }]
+                : []),
+            ].map(({ label, path }) => (
+              <Button
+                key={path}
+                color="inherit"
+                onClick={() => navigate(path)}
+                sx={{
+                  position: 'relative',
+                  color: isActive(path) ? '#e8822a' : 'white',
+                  fontWeight: isActive(path) ? 700 : 400,
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 6,
+                    left: '20%',
+                    width: '60%',
+                    height: '2px',
+                    borderRadius: '2px',
+                    backgroundColor: '#e8822a',
+                    opacity: isActive(path) ? 1 : 0,
+                    transition: 'opacity 0.2s ease',
+                  },
+                }}
+              >
+                {label}
               </Button>
-            )}
+            ))}
           </>
         ) : (
           <>
-            <Button
-              color="inherit"
-              onClick={() => navigate('/admin/tournaments')}
-            >
-              Gestion Tournoi
-            </Button>
-            <Button color="inherit" onClick={() => navigate('/admin')}>
-              Admin
-            </Button>
+            {[
+              {
+                label: 'Gestion des tournois',
+                path: '/admin/tournaments',
+                exact: false,
+              },
+              { label: 'Admin', path: '/admin', exact: true },
+            ].map(({ label, path, exact }) => (
+              <Button
+                key={path}
+                color="inherit"
+                onClick={() => navigate(path)}
+                sx={{
+                  position: 'relative',
+                  color: isActive(path, exact) ? '#e8822a' : 'white',
+                  fontWeight: isActive(path, exact) ? 700 : 400,
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 6,
+                    left: '20%',
+                    width: '60%',
+                    height: '2px',
+                    borderRadius: '2px',
+                    backgroundColor: '#e8822a',
+                    opacity: isActive(path, exact) ? 1 : 0,
+                    transition: 'opacity 0.2s ease',
+                  },
+                }}
+              >
+                {label}
+              </Button>
+            ))}
           </>
         )}
 
-        {/* --- LES BOUTONS DE PROFIL (Toujours à droite, collés aux onglets) --- */}
+        {/* --- PROFILE BUTTONS (always right-aligned, next to tabs) --- */}
         {!authenticatedUser ? (
           <>
             <Button color="inherit" onClick={() => navigate('/login')}>
@@ -200,7 +260,7 @@ const Navbar = () => {
                   isAdminView ? (
                     <LogoutIcon sx={{ transform: 'rotate(180deg)' }} />
                   ) : (
-                    <AddBoxIcon />
+                    <AdminPanelSettingsIcon />
                   )
                 }
                 onClick={toggleAdminView}
@@ -241,7 +301,14 @@ const Navbar = () => {
                   aria-label="notifications"
                   onClick={() => navigate('/notifications')}
                 >
-                  <NotificationsNoneIcon />
+                  <NotificationsIcon
+                    sx={{
+                      color: isActive('/notifications')
+                        ? '#e8822a'
+                        : 'rgba(255,255,255,0.7)',
+                      transition: 'color 0.2s',
+                    }}
+                  />
                 </IconButton>
               </Badge>
             )}
@@ -258,14 +325,20 @@ const Navbar = () => {
                 sx={{
                   width: 45,
                   height: 45,
-                  border: '2px solid white',
-                  transition: 'transform 0.2s',
+                  border: isActive('/profil')
+                    ? '2px solid #e8822a'
+                    : '2px solid rgba(255,255,255,0.4)',
+                  boxShadow: isActive('/profil')
+                    ? '0 0 0 3px rgba(232,130,42,0.25)'
+                    : 'none',
+                  transition:
+                    'transform 0.2s, border-color 0.2s, box-shadow 0.2s',
                   '&:hover': { transform: 'scale(1.1)' },
                 }}
               />
             </IconButton>
 
-            {/* Le bouton se déconnecter, toujours visible */}
+            {/* Sign-out button, always visible */}
             <Button
               variant="contained"
               onClick={handleLogout}
