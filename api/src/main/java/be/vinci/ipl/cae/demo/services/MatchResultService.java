@@ -49,6 +49,9 @@ public class MatchResultService {
             .findById(matchId)
             .orElseThrow(() -> new IllegalArgumentException("Match introuvable."));
 
+    ensureMatchCanBeEncoded(match);
+    ensureNonDraw(dto);
+
     MatchResult result = matchResultRepository.findById(matchId).orElse(null);
 
     if (result == null) {
@@ -68,7 +71,7 @@ public class MatchResultService {
     if (dto.isForfeitTeam1() || dto.isForfeitTeam2()) {
       result.setValidationStatusTeam1("VALIDATED");
       result.setValidationStatusTeam2("VALIDATED");
-      match.setStatus("COMPLETED");
+      match.setStatus("FINISHED");
     } else {
       result.setValidationStatusTeam1("PENDING");
       result.setValidationStatusTeam2("PENDING");
@@ -157,6 +160,9 @@ public class MatchResultService {
       return null;
     }
 
+    ensureMatchCanBeEncoded(match);
+    ensureNonDraw(dto);
+
     MatchResult result = matchResultRepository.findById(matchId).orElse(null);
     if (result == null) {
       return null;
@@ -176,6 +182,22 @@ public class MatchResultService {
     matchService.advanceWinnerToNextRound(match, saved);
 
     return saved;
+  }
+
+  private void ensureMatchCanBeEncoded(Match match) {
+    String currentStatus = match.getStatus() == null ? "" : match.getStatus().toUpperCase();
+    if ("FINISHED".equals(currentStatus) || "COMPLETED".equals(currentStatus)) {
+      throw new IllegalStateException(
+          "Ce match est déjà finalisé par forfait ou résultat validé. Encodage impossible.");
+    }
+  }
+
+  private void ensureNonDraw(MatchResultCreateDto dto) {
+    if (!dto.isForfeitTeam1()
+        && !dto.isForfeitTeam2()
+        && dto.getScoreTeam1() == dto.getScoreTeam2()) {
+      throw new IllegalStateException("Impossible d'encoder un match nul.");
+    }
   }
 
   /** Finds a result for a specific match. */

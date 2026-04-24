@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /** Controller for managing match results. */
 @RestController
@@ -46,13 +47,17 @@ public class MatchResultController {
   @PostMapping("/match/{matchId}")
   public ResponseEntity<MatchResultDto> createResult(
       @PathVariable Long matchId, @RequestBody MatchResultCreateDto createDto) {
-    var savedResult = matchResultService.encodeResult(matchId, createDto);
+    try {
+      var savedResult = matchResultService.encodeResult(matchId, createDto);
 
-    if (savedResult == null) {
-      return ResponseEntity.badRequest().build();
+      if (savedResult == null) {
+        return ResponseEntity.badRequest().build();
+      }
+
+      return ResponseEntity.status(HttpStatus.CREATED).body(matchResultMapper.toDto(savedResult));
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
     }
-
-    return ResponseEntity.status(HttpStatus.CREATED).body(matchResultMapper.toDto(savedResult));
   }
 
   /**
@@ -102,12 +107,16 @@ public class MatchResultController {
   @PutMapping("/match/{matchId}/definitive")
   public ResponseEntity<MatchResultDto> encodeDefinitiveResult(
       @PathVariable Long matchId, @RequestBody MatchResultCreateDto createDto) {
-    var updated = matchResultService.encodeDefinitiveResult(matchId, createDto);
+    try {
+      var updated = matchResultService.encodeDefinitiveResult(matchId, createDto);
 
-    if (updated == null) {
-      return ResponseEntity.badRequest().build();
+      if (updated == null) {
+        return ResponseEntity.badRequest().build();
+      }
+
+      return ResponseEntity.ok(matchResultMapper.toDto(updated));
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
     }
-
-    return ResponseEntity.ok(matchResultMapper.toDto(updated));
   }
 }
